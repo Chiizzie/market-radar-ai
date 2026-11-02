@@ -8,6 +8,7 @@ from market_radar_ai.market_data.providers import KrakenProvider, CoinGeckoProvi
 def session(payload):
     client = Mock()
     client.get.return_value.json.return_value = payload
+    client.get.return_value.status_code = 200
     return client
 
 

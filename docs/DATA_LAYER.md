@@ -67,3 +67,50 @@ It is an offline boundary over supplied provider results, not a network schedule
 Eligibility and FX schemas validate evidence structure, not its authenticity.
 Only trusted, verified catalogue/FX adapters should supply them. Tests use explicit
 fixtures; no live broker catalogue or FX integration is claimed in this increment.
+
+## Live retrieval and bounded scans
+
+Run `python -m market_radar_ai.market_data.research_scan --limit 3` for a small
+public-data scan. It discovers online Kraken EUR pairs, retrieves candles, reports
+unfetched pairs as deferred, and passes received series through admission. Without
+broker evidence the shortlist is deliberately empty. Alphabetic sample selection
+is for connectivity testing, not opportunity ranking or full-market coverage.
+
+The shared GET-only JSON client bounds attempts, request count, per-request timeout,
+spacing and retry delay. It retries transient errors and respects Retry-After; a
+wait above its budget is rejected. Successful JSON responses have an in-memory TTL
+cache, with no stale fallback. Credentials and response bodies are never logged.
+Metrics expose requests, cache hits, retries and response failures. Limits and cache
+are per client/process, not a distributed scheduler. A batch time budget is checked
+between calls; a single in-flight request can extend past it. Use transport timeouts.
+Yahoo and the Robinhood HTML adapter do not use the shared JSON transport.
+
+CoinGecko discovery now supports bounded pagination (up to 2,500 requested assets),
+retains provider IDs, and labels incomplete retrieval as partial. This is not a
+claim that 2,500 assets are broker eligible. Kraken's public AssetPairs catalogue
+provides exact exchange keys and aliases; no ticker-only cross-provider joins occur.
+
+`YahooFxProvider.fetch('USD')` retrieves EURUSD 5-minute candles and inverts the
+native-units-per-EUR rate. USD, GBP, CHF and JPY pairs are explicitly mapped. It
+retains the candle timestamp, requires completed recent data, and rejects unsupported
+currencies and stale rates. These are indicative research rates, not broker fills.
+
+`Trading212Catalogue.fetch()` uses only GET `/equity/metadata/instruments`, preserving
+broker ticker, ISIN, quote currency and working schedule ID. It reads
+`TRADING212_API_KEY` and `TRADING212_API_SECRET` from the process environment, with
+50-second spacing and a 10-minute cache. Use a metadata-only key; do not commit or
+paste credentials into source. No account, portfolio or order endpoints are used.
+Credentialed connectivity has NOT been tested. Exchange/schedule and provider-ID
+mapping must be verified before these rows become admission evidence.
+
+`RobinhoodEuropeCatalogue.fetch()` reads only the official Europe support page.
+Its parser is restricted to the Supported crypto section and rejects unexpected
+list structure. Returned names/symbols are public availability discovery, not token
+identity resolution or account-specific eligibility. Cross-provider mappings and
+account restrictions must be checked before producing eligibility evidence.
+
+Sources checked 2 November 2026:
+- https://docs.trading212.com/api/section/authentication
+- https://docs.trading212.com/_bundle/api.json
+- https://docs.kraken.com/api-reference/market-data/get-tradable-asset-pairs
+- https://robinhood.com/eu/en/support/articles/about-robinhood-crypto/

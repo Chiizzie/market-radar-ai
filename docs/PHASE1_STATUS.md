@@ -69,3 +69,26 @@ Automated tests cover FX direction/provenance, invalid rates, expired/mismatched
 broker evidence, stale/future FX, forming/stale candles, symbol collisions and
 rejection accounting. Live broker catalogue ingestion, live FX retrieval and
 network scheduling are still pending; no paid AI or live orders are connected.
+
+## Retrieval increment — 2 November 2026
+
+Implemented bounded read-only JSON transport, paginated CoinGecko discovery,
+Kraken EUR catalogue retrieval, indicative intraday EUR FX retrieval, Trading 212
+metadata adapter, Robinhood Europe support-list parser, and sequential batch
+retrieval with explicit deferrals. A public research-scan CLI connects discovery,
+retrieval and the existing admission gate. No paid models, schedules or orders.
+
+Local verification: **51 tests passed** and compileall passed. New tests exercise
+retry/cache/request limits, missing credentials, catalogue filtering, FX inversion,
+partial discovery, time/count deferrals and support-page parsing. Live results:
+- Kraken: 490 online EUR pairs discovered; 3 sampled, 487 deferred.
+- All 3 samples returned 720 completed candles and were rejected as broker-unverified.
+- Yahoo USD/EUR: recent quote retrieved with source timestamp retained.
+- Robinhood Europe: 97 public support-list assets parsed; not account verification.
+- Trading 212: credentials absent, so live verification not performed.
+
+Machine-readable smoke evidence: `retrieval-smoke-2026-11-02.json`.
+Remaining: authenticated Trading 212 catalogue check; verified cross-provider asset
+mapping; broker eligibility evidence creation; session calendars; broad equity
+provider mapping; persistent/distributed scheduling and cache; full-universe live
+coverage validation; AI and paper-trade lifecycle work from the earlier gates.

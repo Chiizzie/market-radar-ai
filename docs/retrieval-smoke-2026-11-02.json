@@ -1,0 +1,74 @@
+{
+  "kraken_batch": {
+    "status": "research_only",
+    "as_of": "2026-11-02T14:47:43.511500+00:00",
+    "catalogue_count": 490,
+    "attempted": 3,
+    "deferred_count": 487,
+    "duplicate_count": 0,
+    "provider_metrics": {
+      "requests": 3,
+      "cache_hits": 0,
+      "retries": 0,
+      "errors": 0
+    },
+    "screening": {
+      "discovered": 3,
+      "fetched": 3,
+      "quality_passed": 0,
+      "shortlisted": 0,
+      "rejected": {
+        "broker_unverified": 3
+      },
+      "provider_errors": {}
+    },
+    "results": {
+      "0GEUR": {
+        "status": "ok",
+        "candle_count": 720,
+        "latest": "2026-11-02T14:40:00+00:00",
+        "admission_failures": [
+          "broker_unverified"
+        ]
+      },
+      "1INCHEUR": {
+        "status": "ok",
+        "candle_count": 720,
+        "latest": "2026-11-02T14:40:00+00:00",
+        "admission_failures": [
+          "broker_unverified"
+        ]
+      },
+      "2ZEUR": {
+        "status": "ok",
+        "candle_count": 720,
+        "latest": "2026-11-02T14:40:00+00:00",
+        "admission_failures": [
+          "broker_unverified"
+        ]
+      }
+    },
+    "note": "No broker evidence supplied. No trade recommendations or AI calls."
+  },
+  "fx": {
+    "checked_at": "2026-11-02T14:47:53.656918+00:00",
+    "status": "ok",
+    "quote": {
+      "native_currency": "USD",
+      "eur_per_unit": "0.8919000442621693790002454042",
+      "observed_at": "2026-11-02T14:40:00Z",
+      "source": "yahoo_finance:EURUSD=X:5m"
+    }
+  },
+  "robinhood": {
+    "source": "https://robinhood.com/eu/en/support/articles/about-robinhood-crypto/",
+    "retrieved_at": "2026-11-02T14:48:45.902763+00:00",
+    "scope": "public_europe_support_list_not_account_verification",
+    "status": "ok",
+    "asset_count": 97
+  },
+  "trading212": {
+    "status": "not_tested",
+    "reason": "credentials_not_configured"
+  }
+}
