@@ -24,6 +24,9 @@ def setup(monkeypatch, wrong_citation=False, fail=False, mutate=None, packet_ove
         if 'role' in payload:data.update(role=payload['role'],summary='Fixture assessment.',concerns=['Broker remains unverified.'])
         elif 'debate' in payload:data.update(verdict='MORE_RESEARCH_NEEDED',rationale='No plan authorized.')
         else:data.update(discussion='Unresolved evidence remains.')
+        if 'role' not in payload:
+            data.update(reviewed_concern_ids=[c['id'] for c in payload['unresolved_concerns']],
+                        acknowledged_missing_data=payload['mandatory_missing_data'])
         if mutate:mutate(data,payload)
         class Response:
             status_code=200
@@ -210,3 +213,62 @@ def test_oversized_rejected_draft_is_not_retained(tmp_path,monkeypatch):
     assert call['rejected_response']['data'] is None
     assert call['rejected_response']['omitted_for_size'] is True
     assert call['validation_details'][0]['field']==['summary']
+
+
+@pytest.mark.parametrize('stage', ['debate','conclusion'])
+@pytest.mark.parametrize('kind', ['omit_concern','duplicate_concern','invent_concern','omit_gap','duplicate_gap','invent_gap'])
+def test_review_cannot_drop_or_replace_objections(tmp_path,monkeypatch,stage,kind):
+    def mutate(data,payload):
+        target=('discussion' in data) if stage=='debate' else ('rationale' in data)
+        if not target:return
+        field='reviewed_concern_ids' if kind.endswith('concern') else 'acknowledged_missing_data'
+        values=list(data[field])
+        if kind.startswith('omit'):values=values[1:]
+        elif kind.startswith('duplicate'):values[-1]=values[0]
+        else:values[-1]='invented'
+        data[field]=values
+    packet,client,store,requests=setup(monkeypatch,mutate=mutate)
+    path=tmp_path/'review.json'
+    with pytest.raises(RuntimeError):run_research(client,packet,path=path,clock=lambda:NOW,enabled=True)
+    report=json.loads(path.read_text())
+    assert report['calls'][-1]['state']=='rejected'
+    assert report['calls'][-1]['validation_details'][0]['type'] in (
+        'concern_review_mismatch','missing_data_review_mismatch')
+    assert len(requests)==(7 if stage=='debate' else 8)
+    assert report['conclusion'] is None and len(report['unresolved_concerns'])==6
+
+
+def test_full_objection_register_and_risk_policy_reach_review(tmp_path,monkeypatch):
+    def mutate(data,payload):
+        if 'role' in data:
+            data['concerns']=['Broker eligibility is unknown.','Cost evidence is missing.','No plan is supplied.']
+    packet,client,store,requests=setup(monkeypatch,mutate=mutate)
+    report=run_research(client,packet,path=tmp_path/'full.json',clock=lambda:NOW,enabled=True)
+    ids=[c['id'] for c in report['unresolved_concerns']]
+    assert len(ids)==len(set(ids))==18
+    for result in [report['debate'],report['conclusion']]:
+        assert list(result['reviewed_concern_ids'])==ids
+        assert list(result['acknowledged_missing_data'])==list(packet.missing_data)
+    for request in requests:
+        payload=json.loads(request['input'])
+        policy=payload['risk_policy']
+        assert policy['maximum_planned_loss_eur']=='20'
+        assert policy['entry_cutoff_dublin']=='22:00'
+        assert policy['broker_eligibility']=='unverified'
+        assert policy['overnight_positions_allowed'] is False
+        assert policy['trade_authorized'] is False
+    assert report['version']=='live-research-v3'
+    assert report['instruction_version']=='live-research-instructions-v3'
+
+
+def test_live_prompt_uses_current_contract_without_legacy_tasks():
+    from market_radar_ai.agents.live_prompts import live_instruction
+    from market_radar_ai.agents.roles import AgentRole
+    for role in AgentRole:
+        prompt=live_instruction(role)
+        assert 'support/oppose/abstain stance' not in prompt
+        assert 'Assess liquidity' not in prompt
+        assert 'Check EUR risk, fees, liquidity' not in prompt
+        assert 'UNKNOWN_NO_SPREAD_OR_DEPTH' in prompt
+        assert 'computed_metrics exactly' in prompt
+    assert 'reviewed_concern_ids' in live_instruction()
