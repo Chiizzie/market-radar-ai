@@ -22,8 +22,8 @@ def main():
         prefix={k:v for k,v in state['entries'].items() if k.startswith(VERSION+':')}
         prior=None
         if prefix:
-            prior=json.loads(Path('docs/evaluations/research-eval-v3-partial.json').read_text())
-            saved={c['request_id']:c for c in prior['calls']}
+            prior=json.loads(Path('docs/evaluations/research-eval-v3-checkpoint.json').read_text())
+            saved={c['request_id']:c for c in prior['calls']+prior.get('rejected_calls',[])}
             if set(prefix)!=set(saved): raise RuntimeError('Unreconciled V3 attempts')
             for identity,row in prefix.items():
                 if (row['actual'] is None or row['actual']!=saved[identity]['estimated_cost_microeur']

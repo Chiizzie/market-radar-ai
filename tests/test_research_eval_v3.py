@@ -70,3 +70,16 @@ def test_source_schema_and_resume_preserve_rejected_evidence(tmp_path):
     assert result['reused_responses']==8 and result['new_model_requests']==8
     assert len(result['rejected_calls'])==1 and all(result['checks'].values())
     assert client.requests[0]['request_id'].endswith(':source-schema-repair')
+
+
+def test_wrapping_quotes_are_formatting_but_numbers_are_not(tmp_path):
+    from market_radar_ai.agents.research_eval_v3 import normalize_quote
+    assert normalize_quote('“VWAP is 99.4”')=='VWAP is 99.4'
+    assert normalize_quote('“VWAP is 95.4”')!='VWAP is 99.4'
+    saved=json.loads(Path('docs/evaluations/research-eval-v3-checkpoint.json').read_text())
+    client=V3Client()
+    result=run(client,now=datetime.now(timezone.utc),path=tmp_path/'result.json',prior_report=saved)
+    assert result['reused_responses']==10 and result['new_model_requests']==6
+    assert len(result['rejected_calls'])==1
+    assert all(result['checks'].values())
+    assert any(c['request_id'].endswith(':source-schema-repair') for c in result['calls'])

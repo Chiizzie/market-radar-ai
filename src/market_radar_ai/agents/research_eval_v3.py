@@ -78,7 +78,10 @@ POLICY=('Assess only the supplied synthetic snapshot at its own timestamp. This 
 
 
 def normalize_quote(text):
-    return ' '.join(text.split())
+    text=' '.join(text.split())
+    if len(text)>=2 and (text[0],text[-1]) in {('“','”'),('"','"'),('‘','’'),("'","'")}:
+        text=text[1:-1].strip()
+    return text
 
 
 def validate_report(report,role,case):
@@ -144,6 +147,7 @@ def run(client,*,now,path,prior_report=None):
     if prior_report is not None:
         if prior_report.get('version')!=VERSION or prior_report.get('model')!=MODEL:
             raise ValueError('resume_provenance')
+        rejected=list(prior_report.get('rejected_calls',[]))
         expected={c['case_id']:c for c,_ in fixtures()}
         if any(item['evidence']!=expected.get(item['case_id']) for item in prior_report['cases']):
             raise ValueError('resume_evidence')
@@ -151,8 +155,9 @@ def run(client,*,now,path,prior_report=None):
             if call['request_id']==repair_identity:
                 rejected.append(call)
             else:
-                if call['request_id'] in cached: raise ValueError('duplicate_cached_identity')
-                cached[call['request_id']]=call
+                lookup=call['request_id'].removesuffix(':source-schema-repair')
+                if lookup in cached: raise ValueError('duplicate_cached_identity')
+                cached[lookup]=call
     report={'version':VERSION,'mode':'REAL_MODEL_SYNTHETIC_EVIDENCE','model':MODEL,'state':'running',
             'started_at':now.isoformat(),'cases':[],'calls':[],'trade_authorized':False,
             'rejected_calls':rejected,'new_model_requests':0,'reused_responses':0}
@@ -161,6 +166,7 @@ def run(client,*,now,path,prior_report=None):
         request_id=f'{VERSION}:{case["case_id"]}:{stage}'
         if request_id in cached:
             old=cached[request_id]
+            request_id=old['request_id']
             result=SimpleNamespace(**{key:old[key] for key in ('data','response_id','input_tokens','output_tokens','estimated_cost_microeur')},
                                    cost_usd=Decimal(old['cost_usd']))
             report['reused_responses']+=1
