@@ -74,3 +74,13 @@ The temporary activation trigger was removed. No further setup action is needed
 from the owner for connectivity. Next is integrating real research responses with
 the six-role protocol and evaluating evidence handling; the scanner remains
 research/paper-only, with no live-order APIs.
+
+## Real six-role evaluation completed
+
+See `evaluations/RESEARCH_EVAL_V1.md` and the full JSON response record. All 16
+model calls completed across two fictional cases. The evaluation quality gate
+failed on inconsistent support with unresolved objections; the application kept
+NO_ACTION. The unsafe broker case was rejected. Unit/integration tests: 157
+passed. Total recorded pilot usage, including connectivity: EUR 0.042577.
+Temporary evaluation activation was removed. Further work should refine blocker
+classification and evaluate held-out cases before considering actionable output.

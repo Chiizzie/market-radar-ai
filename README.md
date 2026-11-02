@@ -152,3 +152,20 @@ environment variable `OPENAI_API_KEY`. Recorded model cost: USD 0.00009,
 estimated EUR 0.000081; 42 input tokens and 13 output tokens. No held reservation
 remains. This verifies connectivity and accounting only; the six-role team is
 still mock-only. The temporary activation trigger was removed after the check.
+
+### First real six-role evaluation
+
+`research_eval` runs six independent real-model assessments, a structured debate
+and final decision against explicitly fictional evidence. It is separate from
+the production/offline scanner gateway and never authorizes a trade. The two-case
+smoke evaluation completed 16 paid calls, with recorded estimated model cost
+EUR 0.042496. The unsafe case was rejected. One final response supported a case
+while preserving unresolved objections, so the application forced NO_ACTION
+and the evaluation quality check failed. This is not a passed trading-quality test.
+
+[Evaluation findings](docs/evaluations/RESEARCH_EVAL_V1.md) and
+[complete response record](docs/evaluations/research-eval-v1-result.json).
+Saved paid responses were reconciled with the persistent budget and reused after
+interruptions; they were not regenerated. The normal workflow does not run paid
+evaluations. `RUN_RESEARCH_EVAL` is an explicit opt-in variable; completed request
+identities cannot be reused, so a new evaluated revision is required for new tests.
