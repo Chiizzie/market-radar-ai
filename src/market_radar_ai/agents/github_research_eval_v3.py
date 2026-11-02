@@ -19,13 +19,23 @@ def main():
     try:
         store=GitHubBudgetStore(os.environ.get('GH_BUDGET_TOKEN',''))
         state,_=store.load()
-        if any(k.startswith(VERSION+':') for k in state['entries']):
-            raise RuntimeError('V3 already attempted; inspect before retry')
+        prefix={k:v for k,v in state['entries'].items() if k.startswith(VERSION+':')}
+        prior=None
+        if prefix:
+            prior=json.loads(Path('docs/evaluations/research-eval-v3-partial.json').read_text())
+            saved={c['request_id']:c for c in prior['calls']}
+            if set(prefix)!=set(saved): raise RuntimeError('Unreconciled V3 attempts')
+            for identity,row in prefix.items():
+                if (row['actual'] is None or row['actual']!=saved[identity]['estimated_cost_microeur']
+                    or row['usage'] is None or row['usage']['response_id']!=saved[identity]['response_id']
+                    or row['usage']['cost_usd']!=saved[identity]['cost_usd']
+                    or row['usage']['model']!=prior['model']):
+                    raise RuntimeError('Unreconciled V3 cost')
         key=os.environ.get('OPENAI_API_KEY','')
         if not key: raise ValueError('API key missing')
         now=datetime.now(timezone.utc);fx=YahooFxProvider().fetch('USD',now=now)
         client=OpenAIPilot(api_key=key,ledger=GitHubSpendingLedger(store),eur_per_usd=fx.eur_per_unit,enabled=True)
-        report=run(client,now=now,path=path)
+        report=run(client,now=now,path=path,prior_report=prior)
         report['budget']=client.ledger.summary()
         report['fx']={'eur_per_usd':str(fx.eur_per_unit),'observed_at':fx.observed_at.isoformat(),'source':fx.source}
         path.write_text(json.dumps(report,indent=2)+'\n')

@@ -48,3 +48,25 @@ def test_whitespace_tolerance_does_not_accept_changed_prices():
     raw['citations'][0]['quote']='VWAP is 95.4'
     with pytest.raises(ValueError,match='unsupported_citation'):
         validate_report(Assessment.model_validate(raw),AgentRole.OPPORTUNITY_HUNTER,fixtures()[1][0])
+
+
+def test_source_schema_and_resume_preserve_rejected_evidence(tmp_path):
+    from market_radar_ai.agents.research_eval_v3 import constrained_schema
+    case=fixtures()[1][0]
+    schema=constrained_schema(Assessment,case,'opportunity_hunter')
+    assert schema['$defs']['Issue']['properties']['source_ids']['items']['enum']==[s['id'] for s in case['sources']]
+    assert 'case' not in schema['$defs']['Citation']['properties']['source_id']['enum']
+    prior=json.loads(Path('docs/evaluations/research-eval-v3-partial.json').read_text())
+    class RepairClient(V3Client):
+        def call(self,**kwargs):
+            # The test client recognizes the role stage; retain the actual request ID in its record.
+            original=kwargs['request_id']
+            kwargs['request_id']=original.removesuffix(':source-schema-repair')
+            response=super().call(**kwargs)
+            self.requests[-1]['request_id']=original
+            return response
+    client=RepairClient()
+    result=run(client,now=datetime.now(timezone.utc),path=tmp_path/'report.json',prior_report=prior)
+    assert result['reused_responses']==8 and result['new_model_requests']==8
+    assert len(result['rejected_calls'])==1 and all(result['checks'].values())
+    assert client.requests[0]['request_id'].endswith(':source-schema-repair')

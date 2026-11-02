@@ -1,6 +1,7 @@
 """Blinded synthetic evaluation with typed issues and independent mandatory gates."""
 from datetime import datetime
 from decimal import Decimal
+from types import SimpleNamespace
 import json
 from typing import Literal
 from pydantic import Field
@@ -84,7 +85,7 @@ def validate_report(report,role,case):
     if report.role!=role or report.case_id!=case['case_id']: raise ValueError('identity_mismatch')
     sources={s['id']:s['text'] for s in case['sources']}
     for c in report.citations:
-        if c.source_id not in sources or normalize_quote(c.quote) not in normalize_quote(sources[c.source_id]): raise ValueError('unsupported_citation')
+        if c.source_id not in sources or not normalize_quote(c.quote) or normalize_quote(c.quote) not in normalize_quote(sources[c.source_id]): raise ValueError('unsupported_citation')
     for issue in report.issues:
         if any(s not in sources for s in issue.source_ids): raise ValueError('unknown_issue_source')
     if report.stance=='support' and not report.citations: raise ValueError('support_without_evidence')
@@ -118,14 +119,58 @@ def decide(case,reports,issues,final):
         'caution_ids':[i['id'] for i in issues if i['severity']=='caution']}
 
 
-def run(client,*,now,path):
+def constrained_schema(schema,case,role=None):
+    result=schema.model_json_schema()
+    sources=[source['id'] for source in case['sources']]
+    for name in ('Citation','Issue','DebateReply'):
+        definition=result.get('$defs',{}).get(name)
+        if definition is None: continue
+        properties=definition['properties']
+        if 'source_id' in properties:
+            properties['source_id']={'type':'string','enum':sources}
+        if 'source_ids' in properties:
+            properties['source_ids']['items']={'type':'string','enum':sources}
+    if 'case_id' in result['properties']:
+        result['properties']['case_id']={'type':'string','enum':[case['case_id']]}
+    if role is not None:
+        result['properties']['role']={'type':'string','enum':[role]}
+    return result
+
+
+def run(client,*,now,path,prior_report=None):
+    cached={}
+    rejected=[]
+    repair_identity=f'{VERSION}:case-b:opportunity_hunter'
+    if prior_report is not None:
+        if prior_report.get('version')!=VERSION or prior_report.get('model')!=MODEL:
+            raise ValueError('resume_provenance')
+        expected={c['case_id']:c for c,_ in fixtures()}
+        if any(item['evidence']!=expected.get(item['case_id']) for item in prior_report['cases']):
+            raise ValueError('resume_evidence')
+        for call in prior_report['calls']:
+            if call['request_id']==repair_identity:
+                rejected.append(call)
+            else:
+                if call['request_id'] in cached: raise ValueError('duplicate_cached_identity')
+                cached[call['request_id']]=call
     report={'version':VERSION,'mode':'REAL_MODEL_SYNTHETIC_EVIDENCE','model':MODEL,'state':'running',
-            'started_at':now.isoformat(),'cases':[],'calls':[],'trade_authorized':False}
+            'started_at':now.isoformat(),'cases':[],'calls':[],'trade_authorized':False,
+            'rejected_calls':rejected,'new_model_requests':0,'reused_responses':0}
     write_report(path,report)
     def ask(stage,case,payload,schema,instructions):
         request_id=f'{VERSION}:{case["case_id"]}:{stage}'
-        result=client.call(prompt=json.dumps(payload,separators=(',',':')),schema=schema.model_json_schema(),
-            instructions=instructions,request_id=request_id,now=now,max_output_tokens=2048,reasoning_effort='low')
+        if request_id in cached:
+            old=cached[request_id]
+            result=SimpleNamespace(**{key:old[key] for key in ('data','response_id','input_tokens','output_tokens','estimated_cost_microeur')},
+                                   cost_usd=Decimal(old['cost_usd']))
+            report['reused_responses']+=1
+        else:
+            if rejected and request_id==repair_identity:
+                request_id+=':source-schema-repair'
+            result=client.call(prompt=json.dumps(payload,separators=(',',':')),
+                schema=constrained_schema(schema,case,payload.get('role')),
+                instructions=instructions,request_id=request_id,now=now,max_output_tokens=2048,reasoning_effort='low')
+            report['new_model_requests']+=1
         report['calls'].append({'request_id':request_id,'response_id':result.response_id,'data':result.data,
             'input_tokens':result.input_tokens,'output_tokens':result.output_tokens,
             'cost_usd':str(result.cost_usd),'estimated_cost_microeur':result.estimated_cost_microeur})
@@ -162,7 +207,7 @@ def run(client,*,now,path):
                           'consistent_decisions':all(i['decision_consistent'] for i in report['cases']),
                           'factually_grounded_issue_codes':all(not i['issue_fact_conflicts'] for i in report['cases']),
                           'no_trade_authorized':True}
-        report['estimated_cost_microeur']=sum(c['estimated_cost_microeur'] for c in report['calls'])
+        report['estimated_cost_microeur']=sum(c['estimated_cost_microeur'] for c in report['calls']+report['rejected_calls'])
     except Exception as exc:
         report['state']='failed';report['failure_type']=type(exc).__name__
         write_report(path,report);raise
