@@ -29,3 +29,37 @@ def test_overrun_is_recorded_and_blocks_further_spending(tmp_path):
 def test_all_roles_have_distinct_instructions():
     assert set(ROLE_TASKS)==set(AgentRole)
     assert len({instruction(r) for r in AgentRole})==6
+
+
+@pytest.mark.parametrize('limit', [-1, True, 1.5])
+@pytest.mark.parametrize('name', ['monthly_limit_microeur', 'lifetime_limit_microeur'])
+def test_invalid_extended_limits(tmp_path, name, limit):
+    with pytest.raises(ValueError):
+        SpendingLedger(tmp_path/'budget.db', 100, **{name: limit})
+
+
+def test_monthly_limit_spans_days_and_resets_at_dublin_month(tmp_path):
+    ledger = SpendingLedger(tmp_path/'budget.db', 100, monthly_limit_microeur=150)
+    ledger.reserve('a', 90, NOW)
+    next_day = NOW.replace(day=3)
+    with pytest.raises(RuntimeError, match='monthly_spending_limit'):
+        ledger.reserve('b', 61, next_day)
+    ledger.reserve('b', 60, next_day)
+    ledger.reserve('c', 100, NOW.replace(month=12))
+
+
+def test_lifetime_pilot_limit_survives_restart_and_new_month(tmp_path):
+    path = tmp_path/'budget.db'
+    SpendingLedger(path, 100, lifetime_limit_microeur=120).reserve('a', 80, NOW)
+    ledger = SpendingLedger(path, 100, lifetime_limit_microeur=120)
+    with pytest.raises(RuntimeError, match='lifetime_spending_limit'):
+        ledger.reserve('b', 41, NOW.replace(month=12))
+    ledger.settle('a', 60)
+    ledger.reserve('b', 60, NOW.replace(month=12))
+
+
+def test_budget_uses_dublin_month_during_summer_time(tmp_path):
+    ledger = SpendingLedger(tmp_path/'budget.db', 100, monthly_limit_microeur=100)
+    ledger.reserve('a', 100, datetime(2026, 6, 30, 23, 30, tzinfo=timezone.utc))
+    with pytest.raises(RuntimeError, match='monthly_spending_limit'):
+        ledger.reserve('b', 1, datetime(2026, 7, 2, 12, tzinfo=timezone.utc))

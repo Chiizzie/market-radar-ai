@@ -65,3 +65,19 @@ Use `--output-dir PATH` for a separate test dataset. Fixed dates, prices, broker
 verification and evidence are synthetic fixtures. This is an integration demo,
 not a scanner operating on current markets, an AI-performance test or a deployment.
 It performs no network requests, paid inference, notifications or live orders.
+
+### Paid pilot preparation
+
+Store `OPENAI_API_KEY` as a GitHub Actions repository secret in
+`Chiizzie/market-radar-ai`. Saving it does not enable paid requests: the model
+gateway still accepts only the offline mock transport. Never commit the key.
+
+`SpendingLedger` supports optional `monthly_limit_microeur` and
+`lifetime_limit_microeur` in addition to its daily limit. Reservations count at
+their full maximum until usage is settled; monthly periods use Europe/Dublin.
+The lifetime limit can bound an entire pilot across days and months. These are
+local application limits, not OpenAI account billing controls. All workers must
+use the same persistent database and limits; a new database resets its history.
+Ephemeral CI jobs must not be used for paid runs without durable budget storage.
+Paid transport, token-price accounting, and durable CI budget storage remain
+unimplemented; no paid connectivity test has been performed.

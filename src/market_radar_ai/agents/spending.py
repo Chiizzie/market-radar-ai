@@ -6,9 +6,15 @@ from zoneinfo import ZoneInfo
 
 
 class SpendingLedger:
-    def __init__(self, path, daily_limit_microeur):
+    def __init__(self, path, daily_limit_microeur, *, monthly_limit_microeur=None,
+                 lifetime_limit_microeur=None):
         if type(daily_limit_microeur) is not int or daily_limit_microeur < 0:
             raise ValueError('Limit must be a nonnegative integer')
+        for limit in (monthly_limit_microeur, lifetime_limit_microeur):
+            if limit is not None and (type(limit) is not int or limit < 0):
+                raise ValueError('Limit must be a nonnegative integer')
+        self.monthly_limit = monthly_limit_microeur
+        self.lifetime_limit = lifetime_limit_microeur
         self.path, self.limit = str(path), daily_limit_microeur
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         with sqlite3.connect(self.path) as db:
@@ -25,6 +31,16 @@ class SpendingLedger:
             total = db.execute('SELECT COALESCE(SUM(COALESCE(actual,reserved)),0) FROM spend WHERE day=?',(day,)).fetchone()[0]
             if total + maximum_microeur > self.limit:
                 raise RuntimeError('daily_spending_limit')
+            for label, limit, condition, parameters in (
+                ('monthly', self.monthly_limit, 'WHERE substr(day,1,7)=?', (day[:7],)),
+                ('lifetime', self.lifetime_limit, '', ()),
+            ):
+                if limit is not None:
+                    used = db.execute(
+                        'SELECT COALESCE(SUM(COALESCE(actual,reserved)),0) FROM spend '
+                        + condition, parameters).fetchone()[0]
+                    if used + maximum_microeur > limit:
+                        raise RuntimeError(f'{label}_spending_limit')
             db.execute('INSERT INTO spend VALUES(?,?,?,NULL)',(request_id,day,maximum_microeur))
 
     def settle(self, request_id, actual_microeur):
