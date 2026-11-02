@@ -25,3 +25,12 @@ def test_unsafe_or_wrong_document_rejected(body):
 def test_nonpublisher_and_future_items_rejected():
     assert not parse_feed(feed(ITEM.replace('www.federalreserve.gov','example.com')),now=NOW)['items']
     assert not parse_feed(feed(ITEM.replace('14:00:00','16:00:00')),now=NOW)['items']
+
+
+def test_issuer_registry_changes_source_without_inventing_relevance():
+    body=feed(ITEM.replace('www.federalreserve.gov','news.microsoft.com'))
+    result=parse_feed(body,now=NOW,publisher='Microsoft Source',hosts=('news.microsoft.com',),
+                      provider='microsoft_source_rss',scope='SINGLE_ISSUER_EDITORIAL_NEWS')
+    assert result['items'][0]['source']=='Microsoft Source'
+    assert result['scope']=='SINGLE_ISSUER_EDITORIAL_NEWS'
+    assert not result['items'][0]['symbols']

@@ -9,7 +9,7 @@ from .news import EvidenceItem
 URL='https://www.federalreserve.gov/feeds/press_all.xml'
 
 
-def parse_feed(body, *, now, max_age_seconds=7*86400):
+def parse_feed(body, *, now, max_age_seconds=7*86400, publisher="Federal Reserve Board", hosts=("www.federalreserve.gov","federalreserve.gov"), provider="federal_reserve_rss", scope="MACRO_ANNOUNCEMENTS_ONLY"): 
     if now.tzinfo is None or max_age_seconds<=0:
         raise ValueError('Aware clock and positive age required')
     if len(body)>2_000_000:
@@ -25,10 +25,10 @@ def parse_feed(body, *, now, max_age_seconds=7*86400):
     for index,row in enumerate(rows[:50]):
         try:
             link=row.findtext('link','').strip()
-            if urlsplit(link).hostname not in ('www.federalreserve.gov','federalreserve.gov'):
+            if urlsplit(link).hostname not in hosts:
                 raise ValueError('Unexpected publisher link')
             stamp=parsedate_to_datetime(row.findtext('pubDate',''))
-            item=EvidenceItem(kind='news',title=row.findtext('title','').strip(),source='Federal Reserve Board',
+            item=EvidenceItem(kind='news',title=row.findtext('title','').strip(),source=publisher,
                 url=link,published_at=stamp,retrieved_at=now)
             if (now-stamp).total_seconds()>max_age_seconds:
                 rejected.append({'index':index,'reason':'stale'});continue
@@ -38,24 +38,29 @@ def parse_feed(body, *, now, max_age_seconds=7*86400):
             items.append({'evidence_id':item.evidence_id,**item.model_dump(mode='json')})
         except (ValueError,TypeError,OverflowError):
             rejected.append({'index':index,'reason':'invalid_item'})
-    return {'schema_version':'1.0','provider':'federal_reserve_rss','scope':'MACRO_ANNOUNCEMENTS_ONLY',
+    return {'schema_version':'1.0','provider':provider,'scope':scope,
         'status':'partial' if rejected or len(rows)>50 else 'ok','retrieved_at':now.isoformat(),
         'items':items,'rejected':rejected,'deferred':max(0,len(rows)-50),
         'coverage_complete':False,'trade_authorized':False}
 
 
-def fetch_feed(session=None):
+def fetch_feed(session=None, *, issuer=False):
+    provider = "microsoft_source_rss" if issuer else "federal_reserve_rss"
+    scope = "SINGLE_ISSUER_EDITORIAL_NEWS" if issuer else "MACRO_ANNOUNCEMENTS_ONLY"
+    url = "https://news.microsoft.com/source/feed/" if issuer else URL
     session=session or requests.Session()
     try:
-        with session.get(URL,timeout=(5,15),allow_redirects=False,stream=True) as response:
+        with session.get(url,timeout=(5,15),allow_redirects=False,stream=True) as response:
             if response.status_code!=200:raise ValueError('HTTP failure')
             body=bytearray()
             for chunk in response.iter_content(65536):
                 body.extend(chunk)
                 if len(body)>2_000_000:raise ValueError('Feed too large')
-        return parse_feed(body,now=datetime.now(timezone.utc))
+        return parse_feed(body,now=datetime.now(timezone.utc),provider=provider,scope=scope,
+            publisher="Microsoft Source" if issuer else "Federal Reserve Board",
+            hosts=("news.microsoft.com",) if issuer else ("www.federalreserve.gov","federalreserve.gov"))
     except (requests.RequestException,ValueError,ElementTree.ParseError):
-        return {'schema_version':'1.0','provider':'federal_reserve_rss','scope':'MACRO_ANNOUNCEMENTS_ONLY',
+        return {'schema_version':'1.0','provider':provider,'scope':scope,
             'status':'error','retrieved_at':datetime.now(timezone.utc).isoformat(),
             'items':[],'reason':'public_feed_unavailable','coverage_complete':False,'trade_authorized':False}
 
@@ -65,8 +70,9 @@ def main():
     from pathlib import Path
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument("--issuer",action="store_true",help="Use the allowlisted Microsoft Source feed")
     args=parser.parse_args()
-    result=fetch_feed()
+    result=fetch_feed(issuer=args.issuer)
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps({'status':result['status'],'items':len(result['items']),
