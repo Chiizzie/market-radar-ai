@@ -7,6 +7,8 @@ from .github_budget import GitHubBudgetStore, GitHubSpendingLedger, REPOSITORY
 from .openai_pilot import OpenAIPilot
 from .combined_input import build_combined_input
 from .crypto_input import build_crypto_input, PAIRS
+from .crypto_news_input import build_crypto_news_input, PROVIDER_SYMBOLS
+from ..evidence.news import NewsProvider
 from ..market_data.providers.kraken import KrakenProvider
 from .live_research import preflight, run_research
 from ..market_data.capture import capture_markets
@@ -48,8 +50,21 @@ def execute(directory, *, env, clock=lambda:datetime.now(timezone.utc)):
             capture=capture_markets([],[target],stock_fetch=None,
                 crypto_fetch=lambda pair:KrakenProvider().fetch_ohlc(pair,interval_minutes=5))
             save('capture.json',capture)
-            save('news.json',{'status':'not_connected','items':[], 'scope':'CRYPTO_NEWS_NOT_CONFIGURED'})
             packet=build_crypto_input(capture,symbol=target,now=clock())
+            news_key=env.get('ALPHA_VANTAGE_API_KEY','').strip()
+            news=({'status':'not_connected','items':[], 'scope':'CRYPTO_NEWS_NOT_CONFIGURED'}
+                  if not news_key else NewsProvider(api_key=news_key).fetch(symbol=PROVIDER_SYMBOLS[target]))
+            save('news.json',news)
+            status['news_evidence']='unavailable'
+            if news_key:
+                try:
+                    packet=build_crypto_news_input(capture,news,symbol=target,now=clock())
+                    status['news_evidence']='partial'
+                except (ValueError,TypeError,KeyError,AttributeError):
+                    status['news_evidence']='unusable'
+                    # Keep valid candles and the explicit missing-news gap.
+                    # The source artifact records failure; no title is fabricated.
+            save('status.json',status)
         preflight(packet,now=clock())
         save('input.json',{'snapshot_id':packet.digest(),'input':packet.model_dump(mode='json'),
                            'trade_authorized':False})

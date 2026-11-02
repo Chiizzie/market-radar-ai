@@ -12,6 +12,7 @@ from pydantic import Field, AfterValidator, ValidationError
 from .paper_team import Frozen
 from .combined_input import CombinedResearchInput
 from .crypto_input import CryptoResearchInput
+from .crypto_news_input import CryptoNewsResearchInput
 from .roles import AgentRole
 from .live_prompts import live_instruction, VERSION as INSTRUCTION_VERSION
 from .openai_pilot import OpenAIPilot
@@ -125,7 +126,7 @@ def validate_synthesis(parsed, payload):
 
 
 def preflight(packet, *, now):
-    if type(packet) not in (CombinedResearchInput,CryptoResearchInput):
+    if type(packet) not in (CombinedResearchInput,CryptoResearchInput,CryptoNewsResearchInput):
         raise ValueError('Unsupported research packet')
     packet=type(packet).model_validate(packet.model_dump(mode='json'))
     if now.tzinfo is None or not 0 <= (now-packet.assembled_at).total_seconds() <= 600:
