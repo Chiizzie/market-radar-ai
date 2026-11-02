@@ -22,7 +22,7 @@ have been reported configured by the owner, but API connectivity is unverified.
 
 Set the repository **Actions variable** `RUN_OPENAI_CONNECTIVITY` to `enabled`,
 then rerun **all jobs** of the latest successful development-branch verification
-run. Keep `OPENAI_API_KEY` in **Secrets**, never Variables or source files.
+run. Keep `OPEN_API_KEY` in **Secrets**, never Variables or source files.
 After the check, remove or disable `RUN_OPENAI_CONNECTIVITY`.
 
 This authorizes one tiny connectivity request, not a scheduled scanner. The
@@ -56,3 +56,21 @@ step stopped before FX retrieval, reservation or any OpenAI request because
 unchanged: EUR 0 spent and no paid reservation. The temporary commit trigger has
 been removed. Check the exact repository Actions secret name and scope before
 retrying; do not send its value through chat or commit it.
+
+## Connectivity verified — 2 November 2026, 19:53 Dublin
+
+The owner confirmed the existing repository secret is named `OPEN_API_KEY`. The
+workflow now maps that secret to runtime variable `OPENAI_API_KEY`.
+Run 41513971123 passed tests, persistent storage verification, and the real OpenAI
+connectivity check with validated structured output from
+`gpt-5.4-mini-2026-03-17`. It used 42 input tokens and 13 output tokens.
+
+Recorded cost: USD 0.00009; EUR estimate 0.000081 using 0.8931999593255061271636529311
+EUR/USD from Yahoo's 19:45 UTC observation. The durable record has no pending
+hold and EUR 0.499919 of the pilot allowance remaining. This is a model usage
+estimate excluding tax, not an account-balance readout.
+
+The temporary activation trigger was removed. No further setup action is needed
+from the owner for connectivity. Next is integrating real research responses with
+the six-role protocol and evaluating evidence handling; the scanner remains
+research/paper-only, with no live-order APIs.

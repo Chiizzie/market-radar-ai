@@ -68,7 +68,7 @@ It performs no network requests, paid inference, notifications or live orders.
 
 ### Paid pilot preparation
 
-Store `OPENAI_API_KEY` as a GitHub Actions repository secret in
+Store `OPEN_API_KEY` as a GitHub Actions repository secret in
 `Chiizzie/market-radar-ai`. Saving it does not enable paid requests: the model
 gateway still accepts only the offline mock transport. Never commit the key.
 
@@ -134,7 +134,7 @@ unknown charge by deleting the entry: check provider usage first.
 For the first paid check, set repository **Actions variable**
 `RUN_OPENAI_CONNECTIVITY` to `enabled`, then rerun **all jobs** of the latest
 successful development-branch verification run. The key stays in repository
-**secret** `OPENAI_API_KEY`. The workflow gets fresh indicative USD/EUR FX, reserves
+**secret** `OPEN_API_KEY`. The workflow gets fresh indicative USD/EUR FX, reserves
 the allowance, and sends one tiny structured-output request. Missing/stale FX
 stops before the request. Read the job summary for the result and recorded cost.
 Remove or disable the variable afterwards. The fixed `openai-connectivity-v1`
@@ -145,3 +145,10 @@ The normal GitHub Run workflow button is not relied on while this workflow is
 absent from `main`. No merge into `main` is required for push runs or reruns.
 The six-agent team is still offline-only; this check proves connectivity, not
 market reasoning quality or trade accuracy. There are no order-execution tools.
+
+Verified 2 November 2026: GitHub run 41513971123 completed the real OpenAI check.
+The workflow maps the existing repository secret `OPEN_API_KEY` to the runtime
+environment variable `OPENAI_API_KEY`. Recorded model cost: USD 0.00009,
+estimated EUR 0.000081; 42 input tokens and 13 output tokens. No held reservation
+remains. This verifies connectivity and accounting only; the six-role team is
+still mock-only. The temporary activation trigger was removed after the check.
