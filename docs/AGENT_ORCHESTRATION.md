@@ -131,3 +131,20 @@ may leave a running record requiring inspection. Persistence failures propagate.
 This is durable local audit storage, not a deployed service or tamper-proof archive.
 It does not schedule scans or execute/track paper fills. Successful stored history
 must never be interpreted as newly authorized trading advice.
+
+## Paper outcome replay
+
+`agents.paper_outcomes` adds deterministic EUR long limit-entry quote replay and
+`record_replay` links results to an accepted stored debate plan. Quotes, entry
+expiry, fills and outcome are persisted together; conflicting evidence cannot
+silently replace a recorded replay. Submit a complete observation window: this is
+batch evaluation, not an incrementally updated live position manager.
+
+Entry uses observed ask; exits use bid. Stops gapped through fill at the observed
+worse bid, and round-trip estimated costs are deducted once. Missing exit evidence
+produces unresolved status and no P&L. An exact deadline quote can close a simulated
+position; late data cannot retroactively establish a timely exit. This does not
+provide scheduled liquidation, liquidity/queue simulation, extra slippage, partial
+fills, TP2, agent-accuracy scoring, or an assertion that a broker would fill these
+prices. No real orders or live model calls are made. Historical replay is not
+proof of future profitability or a guaranteed EUR 20 maximum actual loss.
