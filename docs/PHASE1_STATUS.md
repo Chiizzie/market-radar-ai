@@ -60,3 +60,12 @@ not be treated as an actionable current quote. Raw smoke output is in
 - Annotated charts, paper position lifecycle and automatic intraday exits.
 
 No paid AI models, live orders, deployment, or merge into main is enabled.
+
+## Next increment — evidence admission
+
+Added broker evidence and timestamped FX schemas, conservative research admission,
+and a batch screening boundary that rejects invalid inputs before ranking.
+Automated tests cover FX direction/provenance, invalid rates, expired/mismatched
+broker evidence, stale/future FX, forming/stale candles, symbol collisions and
+rejection accounting. Live broker catalogue ingestion, live FX retrieval and
+network scheduling are still pending; no paid AI or live orders are connected.

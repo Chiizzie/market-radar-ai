@@ -45,3 +45,25 @@ No provider listing establishes Trading 212 Invest or Robinhood Europe eligibili
 Broker verification, FX conversion, position lifecycle/forced paper exits, and AI
 cost limits remain implementation gates. The current risk helper is a pre-entry
 check, not an overnight-position manager. No paid AI or live order API is connected.
+
+## Evidence-based admission and batch screening
+
+`market_data.screening.screen_batch` is the new conservative batch entry point.
+It checks evidence before baseline ranking and accounts for every rejected input.
+It is an offline boundary over supplied provider results, not a network scheduler.
+
+- Equities require Trading 212 Invest evidence; crypto requires Robinhood Europe
+  evidence. Records include provider identity, venue, broker instrument ID,
+  source, verification time and expiry. Unknown/expired eligibility fails closed.
+- Non-EUR closes require a positive finite timestamped EUR-per-native-unit FX
+  quote no older than 15 minutes. Native prices and FX provenance are preserved.
+- Partial/error results, short histories, stale or forming bars, currency/identity
+  mismatches and duplicate-symbol collisions are rejected before ranking.
+- Default admission requires 20 completed 5-minute candles, newest no older than
+  10 minutes. Closed sessions fail freshness; session calendars remain pending.
+- The shortlist is research only. It does not authorize orders, invoke AI, or
+  bypass the separate risk/time gate. Trade-level FX costs/spreads remain pending.
+
+Eligibility and FX schemas validate evidence structure, not its authenticity.
+Only trusted, verified catalogue/FX adapters should supply them. Tests use explicit
+fixtures; no live broker catalogue or FX integration is claimed in this increment.
