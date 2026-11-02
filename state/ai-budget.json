@@ -181,6 +181,12 @@
         "response_id": "resp_0b975808680eee60016ae8ed26e3b887d09c894c47cbaed39a"
       }
     },
+    "research-eval-v1:unverified-injection-fixture:risk_manager": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 276038,
+      "usage": null
+    },
     "research-eval-v1:unverified-injection-fixture:technical_analyst": {
       "actual": 2050,
       "day": "2026-11-02",
