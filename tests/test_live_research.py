@@ -11,8 +11,8 @@ from market_radar_ai.agents.openai_pilot import OpenAIPilot, MODEL
 from market_radar_ai.agents.github_budget import GitHubSpendingLedger
 
 
-def setup(monkeypatch, wrong_citation=False, fail=False, mutate=None):
-    packet=build_combined_input(capture(),feed(),symbol='NVDA',now=NOW)
+def setup(monkeypatch, wrong_citation=False, fail=False, mutate=None, packet_override=None):
+    packet=packet_override or build_combined_input(capture(),feed(),symbol='NVDA',now=NOW)
     store=MemoryStore()
     client=OpenAIPilot(api_key='test-only',ledger=GitHubSpendingLedger(store),eur_per_usd=1,enabled=True)
     requests=[]
