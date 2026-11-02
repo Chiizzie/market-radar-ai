@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -e '.[dev,market]'
-      - run: python -m pytest -q tests/test_public_feed.py tests/test_evidence_export.py
+      - run: python -m pytest -q tests/test_public_feed.py tests/test_evidence_export.py tests/test_company_news.py tests/test_combined_news.py tests/test_news_evidence.py
       - name: Retrieve official macro feed
         run: python -m market_radar_ai.evidence.public_feed --output artifacts/news/news.json
       - name: Export news-only dashboard for import
@@ -60,6 +60,10 @@ jobs:
           snapshot=build_snapshot(capture_markets([],[],stock_fetch=None,crypto_fetch=None),now=datetime.now(timezone.utc),evidence=feed)
           (root/'dashboard.json').write_text(json.dumps(snapshot,indent=2)+'\n')
           PYCODE
+      - name: Check news delivery acceptance independently
+        if: always()
+        continue-on-error: true
+        run: python -m market_radar_ai.evidence.readiness --macro artifacts/news/news.json --company artifacts/news/company-news.json --output artifacts/news/news-readiness.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:

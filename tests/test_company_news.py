@@ -22,3 +22,10 @@ def test_missing_fields_and_stale_articles_are_visible():
 def test_naive_timestamp_rejected():
     row={'content':{**ROW['content'],'pubDate':'2026-11-02T14:00:00'}}
     assert not parse_company_news([row],symbol='MSFT',now=NOW)['items']
+
+
+def test_empty_wrapper_response_does_not_verify_news_availability():
+    r=parse_company_news([],symbol='MSFT',now=NOW)
+    assert r['status']=='partial'
+    assert r['response_item_count']==0
+    assert r['availability_note']=='empty_response_unconfirmed'

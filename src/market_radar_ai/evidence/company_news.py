@@ -26,7 +26,9 @@ def parse_company_news(rows, *, symbol, now, limit=10):
         except (KeyError,TypeError,ValueError,AttributeError):
             rejected.append({'index':index,'reason':'invalid_item'})
     return {'schema_version':'1.0','provider':'yahoo_ticker_news','scope':'COMPANY_NEWS_LEADS',
-        'query_symbol':symbol,'status':'partial' if rejected or len(rows)>limit else 'ok',
+        'query_symbol':symbol,'status':'partial' if not rows or rejected or len(rows)>limit else 'ok',
+        'response_item_count':len(rows),
+        'availability_note':'empty_response_unconfirmed' if not rows else 'provider_items_received',
         'retrieved_at':now.isoformat(),'items':items,'rejected':rejected,
         'deferred':max(0,len(rows)-limit),'coverage_complete':False,'trade_authorized':False}
 

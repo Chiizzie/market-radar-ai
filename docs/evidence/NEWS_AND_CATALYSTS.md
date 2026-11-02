@@ -37,3 +37,9 @@ Command: `python -m market_radar_ai.evidence.company_news --symbol MSFT --output
 `python -m market_radar_ai.evidence.combine --feeds macro.json company.json --output combined.json`
 
 Validates each input, preserves failed/stale source status in `sources`, deduplicates canonical evidence IDs, sorts by actual publication time, and caps output at 50 items. It preserves the oldest contributing retrieval timestamp; aggregation never makes old evidence fresh. No usable feeds returns error, not empty success. The news workflow now exports combined evidence to dashboard.json and keeps individual source files plus combined-news.json for diagnostics. The dashboard receives aggregate partial/error status; detailed source status is currently in combined-news.json, not rendered by the UI.
+
+## Verified combined run and company-news limitation
+
+GitHub run 41531863411 completed and exported two macro announcements plus zero company articles for MSFT. Combining and exporting worked; useful company-news delivery did not become verified. Inspection of the installed yfinance wrapper showed missing upstream response structures can become an empty list. An empty result is therefore now partial with availability_note=empty_response_unconfirmed, not an unqualified healthy feed.
+
+The workflow runs all evidence parser/combination test modules and writes news-readiness.json. This acceptance check requires retained items from each source and current retrieval, separately from job completion. It is non-blocking for artifact retention; inspect news_delivery_verified explicitly. Passing it would still not verify entity relevance, catalyst significance or trade readiness. No subscription or credentials have been added.

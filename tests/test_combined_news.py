@@ -24,3 +24,10 @@ def test_all_stale_sources_are_not_new_evidence():
     r=combine_feeds([good()],now=NOW+timedelta(hours=1))
     assert r['status']=='error' and not r['items']
     assert r['sources'][0]['status']=='stale'
+
+
+def test_news_acceptance_rejects_empty_company_feed():
+    from market_radar_ai.evidence.readiness import assess_news
+    empty={**good(),'items':[]}
+    assert not assess_news(good(),empty,now=NOW)['news_delivery_verified']
+    assert assess_news(good(),good(),now=NOW)['news_delivery_verified']
