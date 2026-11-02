@@ -84,7 +84,12 @@ def run(directory, *, stock_directory=None, crypto_catalogue=None, stock_fetch=N
     result={'pipeline_completed':True,'stage':'exported','trading_ready':False,
         'data_rehearsal_passed':readiness['data_rehearsal_passed'],
         'coverage':snapshot['coverage'],
-        'stock_exclusions':sum(len(s['excluded']) for s in stocks['sources'])}
+        'stock_exclusions':sum(len(s['excluded']) for s in stocks['sources']),
+        'sample_results':[{'market':c['market'],'symbol':c['requested_symbol'],
+            'provider_status':c['payload']['provider_status'],
+            'candles_saved':c['payload']['candles_saved'],
+            'quality_issue_codes':sorted({i['code'] for i in c['payload']['quality_issues']})}
+            for c in capture['captures']]}
     save('rehearsal.json',result)
     return result
 

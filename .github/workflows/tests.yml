@@ -127,7 +127,7 @@ jobs:
           retention-days: 30
   discovery-rehearsal:
     needs: tests
-    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/phase-1/market-data-layer' && (github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Run discovery-to-dashboard milestone rehearsal')
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/phase-1/market-data-layer' && (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 8
     permissions:
