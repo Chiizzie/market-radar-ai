@@ -46,6 +46,12 @@
         "response_id": "resp_006584a9aaee6308016ae919c9dfc487d1944e47e790a051c5"
       }
     },
+    "live-research-v1:71b3a12e8390da83632aa2771126a6d4790c05365ac155205207968dec44fe3b:risk_manager": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 272259,
+      "usage": null
+    },
     "live-research-v1:71b3a12e8390da83632aa2771126a6d4790c05365ac155205207968dec44fe3b:technical_analyst": {
       "actual": 5529,
       "day": "2026-11-02",
