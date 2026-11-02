@@ -114,6 +114,9 @@ jobs:
       - name: Export read-only dashboard snapshot
         if: always()
         run: python -m market_radar_ai.dashboard.export --capture artifacts/public-data/capture.json --output artifacts/public-data/dashboard.json
+      - name: Evaluate data rehearsal readiness
+        if: always()
+        run: python -m market_radar_ai.dashboard.readiness --capture artifacts/public-data/capture.json --output artifacts/public-data/readiness.json
       - name: Preserve provider evidence including failures
         if: always()
         uses: actions/upload-artifact@v4
