@@ -1,6 +1,12 @@
 {
   "currency": "EUR",
   "entries": {
+    "live-research-v1:71b3a12e8390da83632aa2771126a6d4790c05365ac155205207968dec44fe3b:devils_advocate": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 272259,
+      "usage": null
+    },
     "live-research-v1:71b3a12e8390da83632aa2771126a6d4790c05365ac155205207968dec44fe3b:news_analyst": {
       "actual": 5497,
       "day": "2026-11-02",
