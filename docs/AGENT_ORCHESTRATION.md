@@ -148,3 +148,15 @@ provide scheduled liquidation, liquidity/queue simulation, extra slippage, parti
 fills, TP2, agent-accuracy scoring, or an assertion that a broker would fill these
 prices. No real orders or live model calls are made. Historical replay is not
 proof of future profitability or a guaranteed EUR 20 maximum actual loss.
+
+## Dashboard-ready audit export
+
+`python -m market_radar_ai.agents.reporting --database PATH --run-id RUN_ID`
+prints a versioned JSON report joining the recorded snapshot identity, Dublin time,
+six reports, objections/rebuttals, final decision, accepted EUR plan and replay
+outcome. Omit `--run-id` for aggregate replay statistics. The database must already
+exist. This is a local export command, not a hosted API or dashboard deployment.
+All reports explicitly say SIMULATED_RESEARCH. Unresolved outcomes do not enter
+P&L or the profitable-closed fraction. Agent accuracy remains null: a profitable
+paper replay is not a measurement of each specialist's factual or predictive
+accuracy. Small synthetic samples must not be presented as strategy performance.
