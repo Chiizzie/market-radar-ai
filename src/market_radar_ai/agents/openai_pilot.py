@@ -71,15 +71,17 @@ class OpenAIPilot:
     def _eur(self, usd):
         return int((usd*self.rate*1_000_000).to_integral_value(rounding=ROUND_CEILING))
 
-    def call(self, *, prompt, schema, request_id, now, max_output_tokens=512, instructions=None):
+    def call(self, *, prompt, schema, request_id, now, max_output_tokens=512, instructions=None, reasoning_effort='none'):
         if not isinstance(prompt, str) or not 0 < len(prompt.encode('utf-8')) <= 32000:
             raise ValueError('Pilot prompt must be 1 to 32000 UTF-8 bytes')
         if type(max_output_tokens) is not int or not 16 <= max_output_tokens <= 2048:
             raise ValueError('Pilot output cap must be 16 to 2048 tokens')
+        if reasoning_effort not in ('none', 'low'):
+            raise ValueError('Unsupported pilot reasoning effort')
         validated_schema = strict_schema(schema)
         Draft202012Validator.check_schema(validated_schema)
         payload = dict(model=MODEL, input=prompt, store=False, service_tier='default',
-            max_output_tokens=max_output_tokens, reasoning={'effort':'none'},
+            max_output_tokens=max_output_tokens, reasoning={'effort':reasoning_effort},
             text={'format':{'type':'json_schema', 'name':'pilot_result',
                            'strict':True, 'schema':validated_schema}})
         if instructions is not None:

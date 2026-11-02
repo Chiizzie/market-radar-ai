@@ -65,17 +65,32 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
       - name: Authorized blinded v2 evaluation
-        if: github.event.head_commit.message == 'Run revised blocker policy evaluation v2'
+        if: vars.RUN_RESEARCH_EVAL_V2 == 'enabled'
         run: python -m market_radar_ai.agents.github_research_eval_v2
         env:
           GH_BUDGET_TOKEN: ${{ github.token }}
           OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
           RUN_RESEARCH_EVAL_V2: enabled
       - name: Preserve v2 evaluation report
-        if: always() && github.event.head_commit.message == 'Run revised blocker policy evaluation v2'
+        if: always() && vars.RUN_RESEARCH_EVAL_V2 == 'enabled'
         uses: actions/upload-artifact@v4
         with:
           name: research-evaluation-v2
           path: artifacts/research-eval-v2/result.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Authorized v3 evaluation with deterministic issue register
+        if: github.event.head_commit.message == 'Evaluate grounded risk claims and deterministic issue register v3'
+        run: python -m market_radar_ai.agents.github_research_eval_v3
+        env:
+          GH_BUDGET_TOKEN: ${{ github.token }}
+          OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
+          RUN_RESEARCH_EVAL_V3: enabled
+      - name: Preserve v3 evaluation report
+        if: always() && github.event.head_commit.message == 'Evaluate grounded risk claims and deterministic issue register v3'
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-evaluation-v3
+          path: artifacts/research-eval-v3/result.json
           if-no-files-found: warn
           retention-days: 30
