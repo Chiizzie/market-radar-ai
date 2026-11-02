@@ -391,6 +391,12 @@
         "response_id": "resp_01c1f6ade4a11fd6016ae8f01763a887d0966981d0e4c6fedb"
       }
     },
+    "research-eval-v3:case-a:news_analyst": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 276192,
+      "usage": null
+    },
     "research-eval-v3:case-a:opportunity_hunter": {
       "actual": 2213,
       "day": "2026-11-02",
