@@ -114,3 +114,20 @@ an objection fails. Actual evidence-based resolution policy, live inference,
 network timeout enforcement and token-price integration remain required. Debate
 results are structured return values; they are not yet integrated with TeamAuditStore.
 The mock tests validate protocol and gates, not reasoning quality or profitability.
+
+## Recorded debate lifecycle
+
+`agents.debate_store.run_recorded_debate` connects the offline debate to SQLite.
+It claims a run ID transactionally before requests, stores the full snapshot,
+proposed plan, analysis clock and per-request reservation bound, then persists the
+completed debate and accepted plan (or null). Repeating that exact request returns
+history without calling the transport. Changed plans/clocks/evidence conflict.
+Running/failed IDs cannot be automatically retried, avoiding duplicate requests
+after an uncertain interruption. Inspect before creating any replacement run.
+
+Failed runs retain the original request and a generic failure marker, not partial
+response transcripts; spending reservations remain in the separate ledger. A crash
+may leave a running record requiring inspection. Persistence failures propagate.
+This is durable local audit storage, not a deployed service or tamper-proof archive.
+It does not schedule scans or execute/track paper fills. Successful stored history
+must never be interpreted as newly authorized trading advice.
