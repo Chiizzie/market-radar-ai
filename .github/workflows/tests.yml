@@ -43,7 +43,7 @@ jobs:
         env:
           GH_BUDGET_TOKEN: ${{ github.token }}
       - name: One-time OpenAI connectivity check (explicit opt-in only)
-        if: vars.RUN_OPENAI_CONNECTIVITY == 'enabled' || github.event.head_commit.message == 'Run authorized one-time OpenAI connectivity check'
+        if: vars.RUN_OPENAI_CONNECTIVITY == 'enabled'
         run: python -m market_radar_ai.agents.github_pilot
         env:
           GH_BUDGET_TOKEN: ${{ github.token }}

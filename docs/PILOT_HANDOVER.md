@@ -47,3 +47,12 @@ a prior attempt succeeded. Do not delete budget entries to force retries.
 
 The project produces research and paper-trade calls for human review. There are
 no live-order APIs. Synthetic replay P&L does not demonstrate trading performance.
+
+## Authorized connectivity attempt — 2 November 2026
+
+Run 41513497691 passed tests and the persistent-storage check. The connectivity
+step stopped before FX retrieval, reservation or any OpenAI request because
+`OPENAI_API_KEY` was empty in the runner environment. The budget record is
+unchanged: EUR 0 spent and no paid reservation. The temporary commit trigger has
+been removed. Check the exact repository Actions secret name and scope before
+retrying; do not send its value through chat or commit it.
