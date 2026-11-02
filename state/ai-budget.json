@@ -586,6 +586,12 @@
         "response_id": "resp_024897f1f6d83874016ae8f243f99c87d28fc0907de00fddbd"
       }
     },
+    "research-eval-v3:case-b:risk_manager": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 276161,
+      "usage": null
+    },
     "research-eval-v3:case-b:technical_analyst": {
       "actual": 2531,
       "day": "2026-11-02",
