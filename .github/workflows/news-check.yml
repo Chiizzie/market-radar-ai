@@ -1,0 +1,50 @@
+name: Public news verification
+on:
+  push:
+    branches: ['phase-1/market-data-layer']
+    paths:
+      - 'src/market_radar_ai/evidence/**'
+      - 'src/market_radar_ai/dashboard/evidence.py'
+      - '.github/workflows/news-check.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-news:
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/phase-1/market-data-layer'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[dev]'
+      - run: python -m pytest -q tests/test_public_feed.py tests/test_evidence_export.py
+      - name: Retrieve official macro feed
+        run: python -m market_radar_ai.evidence.public_feed --output artifacts/news/news.json
+      - name: Export news-only dashboard for import
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+          from market_radar_ai.market_data.capture import capture_markets
+          from market_radar_ai.dashboard.export import build_snapshot
+          root = Path('artifacts/news')
+          feed = json.loads((root/'news.json').read_text())
+          capture = capture_markets([], [], stock_fetch=None, crypto_fetch=None)
+          snapshot = build_snapshot(capture, now=datetime.now(timezone.utc), evidence=feed)
+          (root/'dashboard.json').write_text(json.dumps(snapshot, indent=2)+'\n')
+          print(json.dumps({'feed_status':snapshot['evidence']['status'], 'article_count':len(snapshot['evidence']['items']), 'scope':snapshot['evidence']['scope']}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-news-verification
+          path: artifacts/news/
+          if-no-files-found: error
+          retention-days: 30
