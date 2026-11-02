@@ -124,7 +124,8 @@ class PaperTeam:
     def __init__(self, agents, *, budget=None):
         if len(agents) != 6 or {a.role for a in agents} != set(AgentRole):
             raise ValueError('Exactly one agent per each of the six roles is required')
-        if any(type(a) is not SimulatedAgent for a in agents):
+        from .model_gateway import GatewayAgent
+        if any(type(a) not in (SimulatedAgent, GatewayAgent) for a in agents):
             raise ValueError('Only simulated agents are enabled')
         self.agents = tuple(agents)
         self.budget = budget or UsageBudget()

@@ -83,3 +83,17 @@ ledger and configured cap. This does not bound a provider's billing by itself:
 future adapters must calculate a conservative maximum using verified prices,
 input/token limits and output caps before reserving, and settle actual usage.
 No paid adapter or pricing configuration is connected in this increment.
+
+## Offline model gateway
+
+ModelGateway now combines role instructions, snapshot payload, response schema,
+persistent reservation and validated responses. GatewayAgent connects this path
+to PaperTeam; only the exact mock transport is enabled. Tests exercise all six
+reports through the gateway, then the existing deterministic debate/adjudication.
+Unknown usage after a timeout keeps its reservation. Response identity and source
+membership are checked; malformed output cannot become a valid report. There is
+no automatic retry that could duplicate charges. A run ID must be unique for a new
+analysis. The mock has no real timeout enforcement, network activity or actual cost.
+Final adjudication still uses deterministic rules rather than a seventh model call.
+Model-generated rebuttals, provider SDKs, token accounting, verified pricing, and
+paid activation remain pending. Existing simulated labels remain intentional.
