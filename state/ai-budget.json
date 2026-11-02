@@ -526,6 +526,12 @@
         "response_id": "resp_06041ef20c1a00d4016ae8f44adabc87d1935429562bc7fe05"
       }
     },
+    "research-eval-v3:case-b:final_decision": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 276161,
+      "usage": null
+    },
     "research-eval-v3:case-b:news_analyst": {
       "actual": 2299,
       "day": "2026-11-02",
