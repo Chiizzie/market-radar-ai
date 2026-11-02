@@ -526,6 +526,12 @@
         "response_id": "resp_0a85985c19a2bb48016ae8f31e662087d097f013ea5522cfde"
       }
     },
+    "research-eval-v3:case-b:news_analyst:citation-schema-repair": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 276161,
+      "usage": null
+    },
     "research-eval-v3:case-b:opportunity_hunter": {
       "actual": 1972,
       "day": "2026-11-02",
