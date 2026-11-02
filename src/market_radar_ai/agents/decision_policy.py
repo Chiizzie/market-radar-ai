@@ -3,18 +3,18 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 from zoneinfo import ZoneInfo
-from pydantic import AwareDatetime, Field
+from pydantic import AwareDatetime, Field, StrictBool
 from .paper_team import Frozen, PaperPlan
 
 
 class PolicyFacts(Frozen):
     asset_class: Literal['equity','crypto']
     broker: Literal['trading212_invest','robinhood_europe']
-    broker_verified: bool
+    broker_verified: StrictBool
     broker_verified_until: AwareDatetime
     observed_at: AwareDatetime
     currency: str
-    completed_candles: bool
+    completed_candles: StrictBool
     plan: PaperPlan
 
 

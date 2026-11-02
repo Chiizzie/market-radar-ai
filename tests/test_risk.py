@@ -30,3 +30,33 @@ def test_summer_cutoff_uses_dublin_not_utc():
     from datetime import timezone
     now = datetime(2026, 7, 1, 21, 0, tzinfo=timezone.utc)
     assert not mandatory_risk_check(5, True, True, True, now).passed
+
+
+def test_unknown_or_coerced_flags_cannot_pass():
+    now = datetime(2026, 11, 2, 12, tzinfo=ZoneInfo('Europe/Dublin'))
+    for bad in ('false', 'true', 1, 0, None, [], {}):
+        for index in range(1, 4):
+            args = [5, True, True, True, now]
+            args[index] = bad
+            assert not mandatory_risk_check(*args).passed
+
+
+def test_malformed_loss_and_clock_fail_closed():
+    now = datetime(2026, 11, 2, 12, tzinfo=ZoneInfo('Europe/Dublin'))
+    for bad in (True, False, '5', None, {}, []):
+        assert not mandatory_risk_check(bad, True, True, True, now).passed
+    for bad in (None, '2026-11-02', 0):
+        assert not mandatory_risk_check(5, True, True, True, bad).passed
+
+
+def test_policy_boolean_fields_reject_coercion():
+    from pydantic import TypeAdapter, ValidationError
+    from market_radar_ai.agents.decision_policy import PolicyFacts
+    import pytest
+    for field in ('broker_verified', 'completed_candles'):
+        from typing import Annotated
+        definition = PolicyFacts.model_fields[field]
+        adapter = TypeAdapter(Annotated[definition.annotation, *definition.metadata])
+        for bad in ('true', 'false', 1, 0, None):
+            with pytest.raises(ValidationError):adapter.validate_python(bad)
+        assert adapter.validate_python(True) is True
