@@ -1,4 +1,4 @@
-"""Manual NVDA research runner. Dry-run by default; no orders or plan approval."""
+"""Manual stock or crypto research runner. Dry-run by default; no orders or plan approval."""
 from datetime import datetime, timezone
 import json
 import os
@@ -6,6 +6,8 @@ from pathlib import Path
 from .github_budget import GitHubBudgetStore, GitHubSpendingLedger, REPOSITORY
 from .openai_pilot import OpenAIPilot
 from .combined_input import build_combined_input
+from .crypto_input import build_crypto_input, PAIRS
+from ..market_data.providers.kraken import KrakenProvider
 from .live_research import preflight, run_research
 from ..market_data.capture import capture_markets
 from ..market_data.providers.yahoo import YahooFinanceProvider
@@ -24,20 +26,30 @@ def execute(directory, *, env, clock=lambda:datetime.now(timezone.utc)):
     if mode=='paid' and (env.get('ENABLE_LIVE_RESEARCH')!='enabled'
             or env.get('GITHUB_RUN_ATTEMPT')!='1'):
         raise ValueError('Paid activation absent or workflow rerun blocked')
+    target=env.get('RESEARCH_TARGET','NVDA')
+    if target not in ('NVDA',*PAIRS):
+        raise ValueError('Unsupported research target')
     root=Path(directory)
     root.mkdir(parents=True,exist_ok=True)
     if (root/'status.json').exists() or (root/'analysis.json').exists():
         raise ValueError('Existing run artifacts must be preserved')
-    status={'state':'preparing','mode':mode,'trade_authorized':False}
+    status={'state':'preparing','mode':mode,'target':target,'trade_authorized':False}
     def save(name,value):
         (root/name).write_text(json.dumps(value,indent=2)+'\n')
     save('status.json',status)
     try:
-        capture=capture_markets(['NVDA'],[],stock_fetch=lambda symbol:
-            YahooFinanceProvider().fetch_history(symbol,period='1d',interval='5m'),crypto_fetch=None)
-        save('capture.json',capture)
-        news=fetch_feed(source='nvidia');save('news.json',news)
-        packet=build_combined_input(capture,news,symbol='NVDA',now=clock())
+        if target=='NVDA':
+            capture=capture_markets(['NVDA'],[],stock_fetch=lambda symbol:
+                YahooFinanceProvider().fetch_history(symbol,period='1d',interval='5m'),crypto_fetch=None)
+            save('capture.json',capture)
+            news=fetch_feed(source='nvidia');save('news.json',news)
+            packet=build_combined_input(capture,news,symbol=target,now=clock())
+        else:
+            capture=capture_markets([],[target],stock_fetch=None,
+                crypto_fetch=lambda pair:KrakenProvider().fetch_ohlc(pair,interval_minutes=5))
+            save('capture.json',capture)
+            save('news.json',{'status':'not_connected','items':[], 'scope':'CRYPTO_NEWS_NOT_CONFIGURED'})
+            packet=build_crypto_input(capture,symbol=target,now=clock())
         preflight(packet,now=clock())
         save('input.json',{'snapshot_id':packet.digest(),'input':packet.model_dump(mode='json'),
                            'trade_authorized':False})

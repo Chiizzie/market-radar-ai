@@ -9,6 +9,7 @@ from typing import Literal
 from pydantic import Field
 from .paper_team import Frozen
 from .combined_input import CombinedResearchInput
+from .crypto_input import CryptoResearchInput
 from .roles import AgentRole
 from .prompts import instruction
 from .openai_pilot import OpenAIPilot
@@ -36,10 +37,13 @@ class ResearchConclusion(Frozen):
 
 
 def preflight(packet, *, now):
-    packet=CombinedResearchInput.model_validate(packet.model_dump(mode='json'))
+    if type(packet) not in (CombinedResearchInput,CryptoResearchInput):
+        raise ValueError('Unsupported research packet')
+    packet=type(packet).model_validate(packet.model_dump(mode='json'))
     if now.tzinfo is None or not 0 <= (now-packet.assembled_at).total_seconds() <= 600:
         raise ValueError('stale_research_packet')
-    stamps=[packet.market.retrieved_at, *(item.retrieved_at for item in packet.news.evidence)]
+    news_items=packet.news.evidence if packet.news is not None else ()
+    stamps=[packet.market.retrieved_at, *(item.retrieved_at for item in news_items)]
     if any(not 0 <= (now-stamp).total_seconds() <= 900 for stamp in stamps):
         raise ValueError('stale_research_sources')
     if not 300 <= (now-packet.market.candles[-1].timestamp).total_seconds() <= 900:

@@ -66,12 +66,12 @@ class CombinedResearchInput(Frozen):
         return sha256(self.model_dump_json().encode()).hexdigest()
 
 
-def build_combined_input(document, feed, *, symbol, now):
+def build_market_evidence(document, *, symbol, now, market_name):
     if document.get('format_version') != 2:
         raise ValueError('Capture version 2 required')
-    matches=[c for c in document['captures'] if c.get('requested_symbol')==symbol and c.get('market')=='stocks']
+    matches=[c for c in document['captures'] if c.get('requested_symbol')==symbol and c.get('market')==market_name]
     if len(matches)!=1:
-        raise ValueError('Exactly one matching stock capture required')
+        raise ValueError('Exactly one matching market capture required')
     capture=matches[0]
     payload=capture['payload']
     checksum=sha256(json.dumps(payload,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
@@ -87,6 +87,11 @@ def build_combined_input(document, feed, *, symbol, now):
     market=MarketEvidence(symbol=symbol, provider=payload['provider'],
         retrieved_at=payload['retrieved_at'], validated_at=now, original_capture_sha256=checksum,
         quote_currency=candles[0].quote_currency,candles=candles)
+    return market
+
+
+def build_combined_input(document, feed, *, symbol, now):
+    market=build_market_evidence(document,symbol=symbol,now=now,market_name='stocks')
     news=build_news_input(feed,symbol=symbol,now=now)
     return CombinedResearchInput(symbol=symbol,assembled_at=now,news=news,market=market,
         source_ids=(*news.source_ids,market.source_id()))
