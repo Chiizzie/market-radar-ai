@@ -61,6 +61,12 @@
         "response_id": "resp_01db0154afe86495016ae8ebe99e7887d09c58b04b43b15ddf"
       }
     },
+    "research-eval-v1:supported-fixture:risk_manager": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 276130,
+      "usage": null
+    },
     "research-eval-v1:supported-fixture:technical_analyst": {
       "actual": 1907,
       "day": "2026-11-02",
