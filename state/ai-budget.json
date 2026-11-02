@@ -271,6 +271,12 @@
         "response_id": "resp_002a9cc5a72f35ea016ae8f00be2a887d0b4115a4257ddaed0"
       }
     },
+    "research-eval-v2:case-a:decision": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 276161,
+      "usage": null
+    },
     "research-eval-v2:case-a:devils_advocate": {
       "actual": 2016,
       "day": "2026-11-02",
