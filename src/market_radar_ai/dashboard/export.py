@@ -10,7 +10,8 @@ from ..market_data.models import ProviderResult
 from ..market_data.quality import validate_candles
 
 
-def build_snapshot(document, *, now):
+def build_snapshot(document, *, now, evidence=None):
+    from .evidence import export_evidence
     if now.tzinfo is None or document.get('format_version') != 2:
         raise ValueError('Aware clock and capture format version 2 required')
     markets = {'stocks': [], 'crypto': []}
@@ -68,6 +69,7 @@ def build_snapshot(document, *, now):
         'expires_at_epoch': int(now.timestamp()) + 60,
         'display_currency': 'EUR', 'coverage_scope': 'REQUESTED_SYMBOLS_ONLY',
         'coverage': coverage, 'markets': markets, 'agents': {'status': 'NOT_RUN_ON_THIS_CAPTURE', 'reports': []},
+        'evidence': export_evidence(evidence, now=now),
         'paper_outcomes': None, 'api_budget': None, 'live_orders_enabled': False}
 
 
@@ -75,8 +77,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--capture', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--evidence', type=Path)
     args = parser.parse_args()
-    snapshot = build_snapshot(json.loads(args.capture.read_text()), now=datetime.now(timezone.utc))
+    snapshot = build_snapshot(json.loads(args.capture.read_text()), now=datetime.now(timezone.utc),
+        evidence=json.loads(args.evidence.read_text()) if args.evidence else None)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(snapshot, indent=2)+'\n')
 
