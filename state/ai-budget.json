@@ -526,6 +526,12 @@
         "response_id": "resp_00a0478664f18330016ae8f17293c087d19de403ff5f61b72b"
       }
     },
+    "research-eval-v3:case-b:opportunity_hunter:source-schema-repair": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 276192,
+      "usage": null
+    },
     "storage-check-v1": {
       "actual": 0,
       "day": "2026-11-02",
