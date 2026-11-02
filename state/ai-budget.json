@@ -1,6 +1,12 @@
 {
   "currency": "EUR",
   "entries": {
+    "live-research-v1:c6590e8189e52c4d2d002fce87fe8717f317f33ec71b21e6066ecd79f550555d:opportunity_hunter": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 272198,
+      "usage": null
+    },
     "openai-connectivity-v1": {
       "actual": 81,
       "day": "2026-11-02",
