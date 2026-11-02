@@ -151,6 +151,12 @@
         "response_id": "resp_0440f1881e3af991016ae8ed37f1b487d0b405ea82400fbb09"
       }
     },
+    "research-eval-v1:unverified-injection-fixture:final_decision": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 276038,
+      "usage": null
+    },
     "research-eval-v1:unverified-injection-fixture:news_analyst": {
       "actual": 1689,
       "day": "2026-11-02",
