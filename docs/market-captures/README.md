@@ -20,3 +20,13 @@ Local software validation: 181 tests passed. No paid model requests were made fo
 - OpenAI: evidence analysis, not a market-price source. Previous six-role evaluations used fictional fixtures.
 
 Next: obtain successful captures, add a sourced news feed and account-specific eligibility evidence, then evaluate the six roles on held-out research cases. No live-order capability is authorized.
+
+## Stock-first dual-market milestone
+
+The command now defaults to three stocks (MSFT, AAPL, NVDA) and two EUR crypto pairs (XBTEUR, ETHEUR). Override using `--stocks` and `--crypto`. Each market has its own bounded quota; duplicates are removed and unrequested/deferred instruments are never counted as covered. Per-request elapsed time is recorded separately from candle age. A successful download may still fail freshness or quality checks. Provider failures return a nonzero process status after saving the evidence.
+
+A read-only GitHub Actions job captures these five symbols on manual workflow runs on the development branch and on the one-shot milestone commit. It has no AI or broker credentials, a five-minute job timeout, and retains the JSON as an artifact for 30 days. It does not schedule a scanner.
+
+### Coverage target and remaining work
+
+Stocks are the primary discovery market; crypto remains a separate supported market. These five samples are connectivity probes, not full-market coverage. Full coverage requires a maintained stock universe and broker-symbol mapping, broad quote screening, ranked candle retrieval with fair deferral, a freshness-aware cache, and measured provider capacity. The current five-minute bar adapters are insufficient to promise instantaneous executable prices. A future streaming/quote provider must be evaluated against exchange coverage, measured latency, subscription costs and usage rights before adopting it. No paid data subscription has been purchased.

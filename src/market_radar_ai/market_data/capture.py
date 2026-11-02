@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+from time import monotonic
 from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -46,24 +47,71 @@ def capture_result(result: ProviderResult, *, now: datetime, limit: int = 60) ->
     return {"payload": payload, "payload_sha256": hashlib.sha256(canonical.encode()).hexdigest()}
 
 
+def capture_markets(stock_symbols, crypto_pairs, *, stock_fetch, crypto_fetch,
+                    now=None, clock=monotonic, per_market_limit=10) -> dict:
+    """Stocks first; separate quotas prevent either market starving the other."""
+    if not 1 <= per_market_limit <= 20:
+        raise ValueError("Per-market limit must be 1..20")
+    captures, coverage = [], {}
+    for market, symbols, fetch in (("stocks", stock_symbols, stock_fetch),
+                                   ("crypto", crypto_pairs, crypto_fetch)):
+        unique = list(dict.fromkeys(s.strip().upper() for s in symbols if s.strip()))
+        selected = unique[:per_market_limit]
+        successful = 0
+        fresh = 0
+        for symbol in selected:
+            start = clock()
+            try:
+                result = fetch(symbol)
+                if not isinstance(result, ProviderResult):
+                    raise ValueError("invalid_provider_result")
+            except Exception:
+                from .models import ValidationIssue
+                result = ProviderResult(provider=market, retrieved_at=datetime.now(timezone.utc),
+                    status="error", issues=[ValidationIssue(code="fetch_failed",
+                    message="Provider request failed", symbol=symbol)])
+            if any(row.symbol.upper() != symbol for row in result.candles):
+                from .models import ValidationIssue
+                result = result.model_copy(update={"issues": [*result.issues,
+                    ValidationIssue(code="requested_symbol_mismatch", message="Unexpected symbol in provider response", symbol=symbol)]})
+            elapsed = max(0, clock() - start)
+            captured = capture_result(result, now=now or datetime.now(timezone.utc))
+            captured.update(market=market, requested_symbol=symbol,
+                            request_elapsed_seconds=round(elapsed, 3))
+            captures.append(captured)
+            successful += int(result.status == "ok" and bool(result.candles))
+            fresh += int(captured["payload"]["quality_passed_at_capture"])
+        coverage[market] = dict(requested=len(unique), attempted=len(selected),
+            successful=successful, quality_passed=fresh,
+            deferred=unique[per_market_limit:])
+    return {"format_version": 2, "purpose": "historical_research_replay_not_live_signal",
+            "coverage_scope": "explicit_requested_symbols_not_full_market",
+            "coverage": coverage, "captures": captures}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--stocks", nargs="+", default=["MSFT", "AAPL", "NVDA"])
+    parser.add_argument("--crypto", nargs="+", default=["XBTEUR", "ETHEUR"])
     args = parser.parse_args()
     from .providers.kraken import KrakenProvider
     from .providers.yahoo import YahooFinanceProvider
-    results = [YahooFinanceProvider().fetch_history("MSFT", period="1d", interval="5m"),
-               KrakenProvider().fetch_ohlc("XBTEUR", interval_minutes=5)]
-    now = datetime.now(timezone.utc)
-    document = {"format_version": 1, "purpose": "historical_research_replay_not_live_signal",
-                "captures": [capture_result(result, now=now) for result in results]}
+    document = capture_markets(args.stocks, args.crypto,
+        stock_fetch=lambda symbol: YahooFinanceProvider().fetch_history(symbol, period="1d", interval="5m"),
+        crypto_fetch=lambda pair: KrakenProvider().fetch_ohlc(pair, interval_minutes=5))
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps(document["coverage"], indent=2))
     for capture in document["captures"]:
         p = capture["payload"]
-        print(json.dumps({key: p[key] for key in ("provider", "provider_status", "candles_saved",
-                         "quality_passed_at_capture", "quality_issues", "disposition")}))
+        print(json.dumps({"symbol": capture["requested_symbol"],
+            "elapsed_seconds": capture["request_elapsed_seconds"],
+            "provider_status": p["provider_status"], "candles_saved": p["candles_saved"],
+            "quality_passed": p["quality_passed_at_capture"], "issues": p["quality_issues"]}))
+    # Report provider failures as a failing connectivity check, preserving the evidence first.
+    return int(any(c["attempted"] != c["successful"] for c in document["coverage"].values()))
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

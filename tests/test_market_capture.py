@@ -54,3 +54,29 @@ def test_duplicate_data_remains_visible():
     p = capture_result(data, now=NOW)["payload"]
     assert p["candles_saved"] == 2
     assert not p["quality_passed_at_capture"]
+
+
+def test_both_markets_have_quotas_and_report_deferrals():
+    from market_radar_ai.market_data.capture import capture_markets
+    calls = []
+    def fetch(symbol):
+        calls.append(symbol)
+        return result()
+    output = capture_markets([' msft ', 'MSFT', 'AAPL'], ['XBTEUR', 'ETHEUR'],
+        stock_fetch=fetch, crypto_fetch=fetch, now=NOW, per_market_limit=1)
+    assert calls == ['MSFT', 'XBTEUR']
+    assert output['coverage']['stocks']['requested'] == 2
+    assert output['coverage']['stocks']['deferred'] == ['AAPL']
+    assert output['coverage']['crypto']['deferred'] == ['ETHEUR']
+    assert output['coverage_scope'] == 'explicit_requested_symbols_not_full_market'
+
+
+def test_stock_failure_does_not_prevent_crypto_capture():
+    from market_radar_ai.market_data.capture import capture_markets
+    def fail(symbol):
+        raise RuntimeError('not available')
+    output = capture_markets(['MSFT'], ['XBTEUR'], stock_fetch=fail,
+        crypto_fetch=lambda _: result(), now=NOW)
+    assert output['coverage']['stocks']['successful'] == 0
+    assert output['coverage']['crypto']['successful'] == 1
+    assert all(c['payload']['disposition'] == 'NO_ACTION' for c in output['captures'])

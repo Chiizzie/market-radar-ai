@@ -94,3 +94,28 @@ jobs:
           path: artifacts/research-eval-v3/result.json
           if-no-files-found: warn
           retention-days: 30
+  public-data-capture:
+    needs: tests
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/phase-1/market-data-layer' && (github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Verify stock-first dual-market data capture')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[market]'
+      - name: Capture stock and crypto evidence without AI or broker credentials
+        run: python -m market_radar_ai.market_data.capture --output artifacts/public-data/capture.json
+      - name: Preserve provider evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-market-data
+          path: artifacts/public-data/capture.json
+          if-no-files-found: error
+          retention-days: 30
