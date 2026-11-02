@@ -146,9 +146,16 @@ jobs:
         if: always()
         continue-on-error: true
         run: python -m market_radar_ai.evidence.public_feed --output artifacts/discovery/news.json
+      - name: Capture NVIDIA issuer announcements separately from prices
+        if: always()
+        continue-on-error: true
+        run: python -m market_radar_ai.evidence.public_feed --source nvidia --output artifacts/discovery/nvidia-news.json
+      - name: Combine macro and issuer evidence preserving failures
+        if: always()
+        run: python -m market_radar_ai.evidence.combine --feeds artifacts/discovery/news.json artifacts/discovery/nvidia-news.json --output artifacts/discovery/combined-news.json
       - name: Attach validated news evidence to dashboard
         if: always()
-        run: python -m market_radar_ai.dashboard.export --capture artifacts/discovery/capture.json --evidence artifacts/discovery/news.json --output artifacts/discovery/dashboard.json
+        run: python -m market_radar_ai.dashboard.export --capture artifacts/discovery/capture.json --evidence artifacts/discovery/combined-news.json --output artifacts/discovery/dashboard.json
       - name: Preserve results and queue checkpoint
         if: always()
         uses: actions/upload-artifact@v4
