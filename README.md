@@ -47,3 +47,21 @@ The first independent data adapters are now in `src/market_radar_ai/market_data/
 - A small connectivity command: `market-radar-data-check --crypto-limit 20`.
 
 Install the optional Yahoo adapter with `pip install -e ".[market]"`. The project does not place orders and these feeds are research inputs, not broker execution quotes. Public data availability, rate limits, exchange pair aliases, and account-level broker eligibility must be checked at runtime. The current milestone is an adapter foundation; it is not yet a complete broad-equity universe scanner or production 15-minute pipeline.
+
+## Run the complete offline research demo
+
+After installing `python -m pip install -e '.[dev]'`, run:
+
+```bash
+python -m market_radar_ai.agents.offline_run --scenario objection
+python -m market_radar_ai.agents.offline_run --scenario supported
+```
+
+The default objection scenario produces a rejected decision and no paper fill.
+The supported scenario produces a fictional accepted plan and quote-replay outcome.
+Both persist audit/budget databases and JSON reports under `artifacts/offline-demo`
+(ignored by git). Repeat invocations reuse the recorded run without mock requests.
+Use `--output-dir PATH` for a separate test dataset. Fixed dates, prices, broker
+verification and evidence are synthetic fixtures. This is an integration demo,
+not a scanner operating on current markets, an AI-performance test or a deployment.
+It performs no network requests, paid inference, notifications or live orders.
