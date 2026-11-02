@@ -64,3 +64,18 @@ jobs:
           path: artifacts/research-eval/result.json
           if-no-files-found: warn
           retention-days: 30
+      - name: Authorized blinded v2 evaluation
+        if: github.event.head_commit.message == 'Run revised blocker policy evaluation v2'
+        run: python -m market_radar_ai.agents.github_research_eval_v2
+        env:
+          GH_BUDGET_TOKEN: ${{ github.token }}
+          OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
+          RUN_RESEARCH_EVAL_V2: enabled
+      - name: Preserve v2 evaluation report
+        if: always() && github.event.head_commit.message == 'Run revised blocker policy evaluation v2'
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-evaluation-v2
+          path: artifacts/research-eval-v2/result.json
+          if-no-files-found: warn
+          retention-days: 30
