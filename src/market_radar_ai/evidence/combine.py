@@ -14,6 +14,7 @@ def combine_feeds(feeds, *, now):
             validated={'status':'error','scope':'UNKNOWN','items':[]}
         sources.append({'source_index':index,'status':validated['status'],
             'scope':validated['scope'],'retrieved_at':validated.get('retrieved_at'),
+            'validated_item_count':len(validated['items']),
             'query_symbol':feed.get('query_symbol') if isinstance(feed,dict) else None})
         if validated['status'] not in ('ok','partial'):
             continue

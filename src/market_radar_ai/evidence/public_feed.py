@@ -49,20 +49,29 @@ def fetch_feed(session=None, *, issuer=False):
     scope = "SINGLE_ISSUER_EDITORIAL_NEWS" if issuer else "MACRO_ANNOUNCEMENTS_ONLY"
     url = "https://news.microsoft.com/source/feed/" if issuer else URL
     session=session or requests.Session()
+    reason = "transport_error"
+    http_status = None
     try:
         with session.get(url,timeout=(5,15),allow_redirects=False,stream=True) as response:
-            if response.status_code!=200:raise ValueError('HTTP failure')
+            http_status = response.status_code
+            if http_status != 200:
+                reason = 'redirect_not_followed' if 300 <= http_status < 400 else 'http_error'
+                raise ValueError('HTTP failure')
+            reason = 'body_read_error'
             body=bytearray()
             for chunk in response.iter_content(65536):
                 body.extend(chunk)
-                if len(body)>2_000_000:raise ValueError('Feed too large')
+                if len(body)>2_000_000:
+                    reason = 'response_too_large'
+                    raise ValueError('Feed too large')
+        reason = 'invalid_feed'
         return parse_feed(body,now=datetime.now(timezone.utc),provider=provider,scope=scope,
             publisher="Microsoft Source" if issuer else "Federal Reserve Board",
             hosts=("news.microsoft.com",) if issuer else ("www.federalreserve.gov","federalreserve.gov"))
     except (requests.RequestException,ValueError,ElementTree.ParseError):
         return {'schema_version':'1.0','provider':provider,'scope':scope,
             'status':'error','retrieved_at':datetime.now(timezone.utc).isoformat(),
-            'items':[],'reason':'public_feed_unavailable','coverage_complete':False,'trade_authorized':False}
+            'items':[],'reason':reason,'http_status':http_status,'coverage_complete':False,'trade_authorized':False}
 
 
 def main():
@@ -76,7 +85,8 @@ def main():
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps({'status':result['status'],'items':len(result['items']),
-                      'rejected':len(result.get('rejected',[]))}))
+                      'rejected':len(result.get('rejected',[])),
+                      'reason':result.get('reason'),'http_status':result.get('http_status')}))
     return int(result['status']=='error')
 
 

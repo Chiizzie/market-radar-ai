@@ -34,3 +34,34 @@ def test_issuer_registry_changes_source_without_inventing_relevance():
     assert result['items'][0]['source']=='Microsoft Source'
     assert result['scope']=='SINGLE_ISSUER_EDITORIAL_NEWS'
     assert not result['items'][0]['symbols']
+
+
+class Response:
+    def __init__(self, status=200, body=b'<html/>'):
+        self.status_code, self.body = status, body
+    def __enter__(self): return self
+    def __exit__(self, *args): pass
+    def iter_content(self, size): yield self.body
+
+
+class Session:
+    def __init__(self, response): self.response = response
+    def get(self, url, **kwargs):
+        assert kwargs['allow_redirects'] is False
+        return self.response
+
+
+@pytest.mark.parametrize('status,body,reason', [
+    (301,b'', 'redirect_not_followed'),
+    (403,b'sensitive upstream body', 'http_error'),
+    (200,b'<html/>', 'invalid_feed'),
+    (200,b'x'*2_000_001, 'response_too_large'),
+])
+def test_feed_failure_diagnostics_are_bounded(status, body, reason):
+    from market_radar_ai.evidence.public_feed import fetch_feed
+    result = fetch_feed(Session(Response(status, body)), issuer=True)
+    assert result['status'] == 'error'
+    assert result['reason'] == reason
+    assert result['http_status'] == status
+    assert 'sensitive' not in str(result)
+    assert result['items'] == []

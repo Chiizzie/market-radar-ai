@@ -68,6 +68,34 @@ jobs:
         if: always()
         continue-on-error: true
         run: python -m market_radar_ai.evidence.readiness --macro artifacts/news/news.json --company artifacts/news/company-news.json --output artifacts/news/news-readiness.json
+      - name: Check direct issuer delivery independently
+        if: always()
+        continue-on-error: true
+        run: python -m market_radar_ai.evidence.readiness --macro artifacts/news/news.json --company artifacts/news/issuer-news.json --output artifacts/news/issuer-readiness.json
+      - name: Publish explicit delivery status
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root = Path('artifacts/news')
+          lines = ['## News delivery acceptance', '', '| Source | Status | Validated articles |', '| --- | --- | --- |']
+          try:
+              combined = json.loads((root/'combined-news.json').read_text())
+              for source in combined['sources']:
+                  lines.append(f"| {source['source_index']} | {source['status']} | {source['validated_item_count']} |")
+          except (OSError, ValueError, KeyError):
+              lines.append('| Combined report unavailable | error | unknown |')
+          for label, filename in [('Yahoo company news', 'news-readiness.json'), ('Direct issuer news', 'issuer-readiness.json')]:
+              try:
+                  verified = json.loads((root/filename).read_text())['news_delivery_verified'] is True
+              except (OSError, ValueError, KeyError):
+                  verified = False
+              lines.append(f"\n{label}: {'VERIFIED DELIVERY' if verified else 'NOT VERIFIED'}")
+          lines.append('\nWorkflow completion is not news readiness or trade authorization. No paid AI calls were made.')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('\n'.join(lines)+'\n')
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:

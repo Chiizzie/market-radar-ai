@@ -6,8 +6,8 @@ def assess_news(macro, company, *, now):
     combined=combine_feeds([macro,company],now=now)
     # Zero results cannot prove company-news delivery, nor does a macro success.
     checks={
-        'macro_items_available':combined['sources'][0]['status'] in ('ok','partial') and bool(macro.get('items')),
-        'company_items_available':combined['sources'][1]['status'] in ('ok','partial') and bool(company.get('items')),
+        'macro_items_available':combined['sources'][0]['status'] in ('ok','partial') and combined['sources'][0]['validated_item_count'] > 0,
+        'company_items_available':combined['sources'][1]['status'] in ('ok','partial') and combined['sources'][1]['validated_item_count'] > 0,
         'both_sources_usable':all(s['status'] in ('ok','partial') for s in combined['sources'])}
     return {'schema_version':'1.0','tested_at':now.isoformat(),'checks':checks,
         'news_delivery_verified':all(checks.values()),'trade_authorized':False,

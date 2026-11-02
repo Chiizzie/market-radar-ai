@@ -31,3 +31,14 @@ def test_news_acceptance_rejects_empty_company_feed():
     empty={**good(),'items':[]}
     assert not assess_news(good(),empty,now=NOW)['news_delivery_verified']
     assert assess_news(good(),good(),now=NOW)['news_delivery_verified']
+
+
+def test_invalid_company_article_cannot_pass_delivery_acceptance():
+    from market_radar_ai.evidence.readiness import assess_news
+    invalid = {**good(), 'items': [{'title': 'Incomplete article'}]}
+    result = assess_news(good(), invalid, now=NOW)
+    assert not result['checks']['company_items_available']
+    assert not result['news_delivery_verified']
+    combined = combine_feeds([good(), invalid], now=NOW)
+    assert combined['sources'][0]['validated_item_count'] == 1
+    assert combined['sources'][1]['validated_item_count'] == 0
