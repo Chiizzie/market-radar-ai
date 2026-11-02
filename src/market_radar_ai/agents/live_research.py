@@ -99,8 +99,29 @@ class ResearchDebate(ReviewedResponse):
 class ResearchConclusion(ReviewedResponse):
     snapshot_id: str
     verdict: Literal['MORE_RESEARCH_NEEDED', 'INSUFFICIENT_EVIDENCE']
-    rationale: Prose = Field(min_length=1, max_length=800)
+    rationale: Prose = Field(min_length=1, max_length=600)
+    decisive_concern_ids: tuple[str, ...] = Field(max_length=3)
+    counterargument: Prose = Field(min_length=1, max_length=240)
+    next_evidence: tuple[Concern, ...] = Field(min_length=1, max_length=3)
     source_ids: tuple[str, ...] = Field(min_length=1, max_length=8)
+
+
+def normalized_narrative(text):
+    return ' '.join(re.findall(r"[a-z]+", text.casefold()))
+
+
+def validate_synthesis(parsed, payload):
+    known = {c['id'] for c in payload['unresolved_concerns']}
+    selected = parsed.decisive_concern_ids
+    if (known and not selected) or len(set(selected)) != len(selected) or not set(selected) <= known:
+        raise ValueError('decisive_concern_mismatch')
+    rationale = normalized_narrative(parsed.rationale)
+    if rationale == normalized_narrative(payload['debate']['discussion']):
+        raise ValueError('copied_debate_rationale')
+    if normalized_narrative(parsed.counterargument) == rationale:
+        raise ValueError('repeated_counterargument')
+    if len({normalized_narrative(x) for x in parsed.next_evidence}) != len(parsed.next_evidence):
+        raise ValueError('duplicate_next_evidence')
 
 
 def preflight(packet, *, now):
@@ -129,7 +150,7 @@ def run_research(client, packet, *, path, clock, enabled=False):
     path=Path(path)
     if path.exists():
         raise ValueError('Existing research report must be preserved')
-    report={'version':'live-research-v3','instruction_version':INSTRUCTION_VERSION,'analysis_quality':'requires_human_review','state':'preflight','trade_authorized':False,
+    report={'version':'live-research-v4','instruction_version':INSTRUCTION_VERSION,'analysis_quality':'requires_human_review','state':'preflight','trade_authorized':False,
             'calls':[],'assessments':[],'debate':None,'conclusion':None,
             'unresolved_concerns':[],'mandatory_missing_data':list(packet.missing_data)}
     def save():
@@ -152,7 +173,7 @@ def run_research(client, packet, *, path, clock, enabled=False):
             request_id=f'live-research-v1:{digest}:{stage}'
             call={'request_id':request_id,'state':'attempting'}
             report['calls'].append(call);save()
-            trusted=live_instruction(role)
+            trusted=live_instruction(role,stage=stage)
             payload={**payload,'computed_metrics':report['computed_metrics'],
                      'risk_policy':{'currency':'EUR','maximum_planned_loss_eur':'20',
                          'overnight_positions_allowed':False,'entry_cutoff_dublin':'22:00',
@@ -172,6 +193,8 @@ def run_research(client, packet, *, path, clock, enabled=False):
                 validate_claims(parsed,packet,metrics)
                 if isinstance(parsed,ReviewedResponse):
                     validate_review(parsed,payload)
+                if isinstance(parsed,ResearchConclusion):
+                    validate_synthesis(parsed,payload)
             except ValueError as error:
                 # Only local validation diagnostics: never exception text from
                 # transport/providers, which may contain credentials or URLs.
@@ -184,7 +207,11 @@ def run_research(client, packet, *, path, clock, enabled=False):
                     code=str(error)
                     field={'research_metric_mismatch':'metric_claims',
                            'concern_review_mismatch':'reviewed_concern_ids',
-                           'missing_data_review_mismatch':'acknowledged_missing_data'}[code]
+                           'missing_data_review_mismatch':'acknowledged_missing_data',
+                           'decisive_concern_mismatch':'decisive_concern_ids',
+                           'copied_debate_rationale':'rationale',
+                           'repeated_counterargument':'counterargument',
+                           'duplicate_next_evidence':'next_evidence'}[code]
                     call['validation_details']=[{'field':[field],'type':code}]
                 # Quarantine as untrusted JSON, never an accepted assessment or
                 # peer input. Bound storage independently of provider limits.

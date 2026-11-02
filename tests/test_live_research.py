@@ -22,7 +22,10 @@ def setup(monkeypatch, wrong_citation=False, fail=False, mutate=None, packet_ove
         payload=json.loads(kwargs['json']['input'])
         data={'metric_claims':[], 'execution_quality':'UNKNOWN_NO_SPREAD_OR_DEPTH','snapshot_id':packet.digest(),'source_ids':['invented'] if wrong_citation else [packet.source_ids[0]]}
         if 'role' in payload:data.update(role=payload['role'],summary='Fixture assessment.',concerns=['Broker remains unverified.'])
-        elif 'debate' in payload:data.update(verdict='MORE_RESEARCH_NEEDED',rationale='No plan authorized.')
+        elif 'debate' in payload:data.update(verdict='MORE_RESEARCH_NEEDED',rationale='No plan authorized.',
+            decisive_concern_ids=[c['id'] for c in payload['unresolved_concerns'][:1]],
+            counterargument='A stronger trend would still leave account access unverified.',
+            next_evidence=['Obtain dated broker eligibility evidence.'])
         else:data.update(discussion='Unresolved evidence remains.')
         if 'role' not in payload:
             data.update(reviewed_concern_ids=[c['id'] for c in payload['unresolved_concerns']],
@@ -257,8 +260,8 @@ def test_full_objection_register_and_risk_policy_reach_review(tmp_path,monkeypat
         assert policy['broker_eligibility']=='unverified'
         assert policy['overnight_positions_allowed'] is False
         assert policy['trade_authorized'] is False
-    assert report['version']=='live-research-v3'
-    assert report['instruction_version']=='live-research-instructions-v3'
+    assert report['version']=='live-research-v4'
+    assert report['instruction_version']=='live-research-instructions-v4'
 
 
 def test_live_prompt_uses_current_contract_without_legacy_tasks():
