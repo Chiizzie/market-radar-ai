@@ -11,3 +11,11 @@ Provider-reported relevance and news are not independently confirmed facts. Sent
 The evidence model also supports scheduled_catalyst and investor_disclosure. These are schema support only: neither has a live collector yet. Disclosures keep event_at (transaction time, if known) separate from published_at and retrieved_at. They must never be described as contemporaneous trades, endorsed investors or proof of successful trading. Unknown transaction time remains null.
 
 Next: choose and verify a usable news entitlement or public issuer feed; preserve provider item IDs and entity mappings; add issuer/event calendar and disclosure collectors; connect a versioned evidence export to the six-agent inputs and Lovable. News ingestion alone does not remove broker eligibility, risk, currency or time gates.
+
+## Credential-free macro source
+
+`python -m market_radar_ai.evidence.public_feed --output news.json`
+
+The Federal Reserve Board RSS adapter uses its official all-press-releases feed, listed at https://www.federalreserve.gov/feeds/feeds.htm. This supplies macro announcements only, not company-news or investor-trade coverage. It keeps titles, publisher links, publication/retrieval times and no invented ticker associations or future event dates. The seven-day retention window is historical context, not intraday freshness approval. XML declarations/entities, unexpected domains, malformed/future timestamps and oversized bodies are rejected; duplicate links and stale rows are counted.
+
+Local validation: 219 tests passed. A live local request on 2 November returned public_feed_unavailable and zero items; no successful connection is claimed. The manual discovery workflow now collects news.json as a separate diagnostic artifact. Its step is non-blocking for the price rehearsal: inspect news.status explicitly; a green price pipeline does not establish news availability. No automatic schedule or paid call was enabled. The dashboard and agents do not yet consume this feed.

@@ -142,6 +142,10 @@ jobs:
       - run: python -m pip install -e '.[market]'
       - name: Discover both markets and capture a bounded batch
         run: python -m market_radar_ai.market_data.rehearsal --output-dir artifacts/discovery
+      - name: Capture public macro announcements separately from prices
+        if: always()
+        continue-on-error: true
+        run: python -m market_radar_ai.evidence.public_feed --output artifacts/discovery/news.json
       - name: Preserve results and queue checkpoint
         if: always()
         uses: actions/upload-artifact@v4
