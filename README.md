@@ -79,5 +79,31 @@ The lifetime limit can bound an entire pilot across days and months. These are
 local application limits, not OpenAI account billing controls. All workers must
 use the same persistent database and limits; a new database resets its history.
 Ephemeral CI jobs must not be used for paid runs without durable budget storage.
-Paid transport, token-price accounting, and durable CI budget storage remain
-unimplemented; no paid connectivity test has been performed.
+An opt-in standalone OpenAI pilot client now supports the Responses API, strict
+JSON validation, token-price accounting, and persistent usage records. The six-role
+team remains mock-only. Durable CI budget storage is still unimplemented; no paid
+connectivity test has been performed.
+
+For a local, explicitly paid connectivity check, install the project and run:
+
+```sh
+python -m market_radar_ai.agents.openai_check --enable-paid --eur-per-usd YOUR_CURRENT_EUR_PER_USD --budget-db ~/.market-radar-ai/pilot.sqlite
+```
+
+Replace the FX placeholder with a current numeric EUR-per-USD rate. The key is
+read from `OPENAI_API_KEY` or a hidden terminal prompt. It is never a CLI argument.
+The check permits one request identity per database and reserves the full model
+context cost before sending. Its limits are EUR 0.50 daily/lifetime and EUR 10
+monthly; these are estimated model costs excluding tax, based on the supplied FX
+rate. The database must be retained; deleting/changing it resets the allowance.
+Do not run this command on an ephemeral CI runner. The existing GitHub secret is
+not available to local terminals. A GitHub runner with durable reservations is the
+next integration milestone.
+
+The client pins `gpt-5.4-mini-2026-03-17` with standard-tier pricing checked on
+2026-11-02: USD 0.75 input / 0.075 cached input / 4.50 output per million tokens.
+[Official pricing](https://developers.openai.com/api/docs/models/gpt-5.4-mini).
+Output tokens include reasoning; no tools, redirects, or automatic retries are
+enabled. Unknown usage retains the reservation. Known usage is recorded and
+settled even when the response is incomplete or fails validation. EUR costs are
+estimates, not the provider's final invoice. Review pricing before activation.

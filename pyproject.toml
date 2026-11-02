@@ -7,7 +7,7 @@ name = "market-radar-ai"
 version = "0.1.0"
 description = "Independent multi-agent market research and paper trading foundation"
 requires-python = ">=3.11"
-dependencies = ["pydantic>=2.7", "pydantic-settings>=2.2", "python-dotenv>=1.0", "requests>=2.32", "pandas>=2.2"]
+dependencies = ["pydantic>=2.7", "pydantic-settings>=2.2", "python-dotenv>=1.0", "requests>=2.32", "jsonschema>=4.23,<5", "pandas>=2.2"]
 
 [project.scripts]
 market-radar-data-check = "market_radar_ai.market_data.cli:main"
