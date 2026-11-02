@@ -511,6 +511,12 @@
         "response_id": "resp_076cb0d19b19f13d016ae8f145a62c87d1aca490652f38f515"
       }
     },
+    "research-eval-v3:case-b:opportunity_hunter": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 276192,
+      "usage": null
+    },
     "storage-check-v1": {
       "actual": 0,
       "day": "2026-11-02",
