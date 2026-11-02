@@ -1,0 +1,1294 @@
+{
+  "run_id": 41545416317,
+  "artifact_sha256": "daed2ee6ad896faa0c817be10158e209fd9ca848b72a175f9723964984f73e10",
+  "input": {
+    "snapshot_id": "2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5",
+    "input": {
+      "schema_version": "crypto-research-v1",
+      "asset_class": "crypto",
+      "symbol": "XBTEUR",
+      "assembled_at": "2026-11-02T23:26:41.683423Z",
+      "market": {
+        "symbol": "XBTEUR",
+        "provider": "kraken",
+        "retrieved_at": "2026-11-02T23:26:41.532151Z",
+        "validated_at": "2026-11-02T23:26:41.683423Z",
+        "original_capture_sha256": "4d9eea91fbc84bdc7371f32ad571b574f4c8a7f38663aeb1226c3d28cbc9f9b4",
+        "quote_currency": "EUR",
+        "candles": [
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T18:25:00Z",
+            "open": "68770.0",
+            "high": "68772.0",
+            "low": "68685.0",
+            "close": "68685.0",
+            "volume": "1.09053151",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T18:30:00Z",
+            "open": "68680.3",
+            "high": "68726.8",
+            "low": "68653.5",
+            "close": "68667.6",
+            "volume": "3.06117049",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T18:35:00Z",
+            "open": "68665.6",
+            "high": "68794.6",
+            "low": "68665.6",
+            "close": "68763.1",
+            "volume": "1.65741654",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T18:40:00Z",
+            "open": "68754.0",
+            "high": "68754.0",
+            "low": "68615.1",
+            "close": "68635.8",
+            "volume": "0.33079918",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T18:45:00Z",
+            "open": "68629.9",
+            "high": "68715.9",
+            "low": "68629.9",
+            "close": "68714.8",
+            "volume": "0.34022143",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T18:50:00Z",
+            "open": "68704.3",
+            "high": "68745.3",
+            "low": "68657.0",
+            "close": "68706.6",
+            "volume": "2.55126793",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T18:55:00Z",
+            "open": "68706.5",
+            "high": "68737.0",
+            "low": "68669.1",
+            "close": "68681.0",
+            "volume": "0.54748811",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T19:00:00Z",
+            "open": "68702.6",
+            "high": "68710.3",
+            "low": "68629.4",
+            "close": "68637.4",
+            "volume": "0.75340873",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T19:05:00Z",
+            "open": "68632.8",
+            "high": "68632.8",
+            "low": "68573.2",
+            "close": "68630.6",
+            "volume": "0.77967043",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T19:10:00Z",
+            "open": "68626.0",
+            "high": "68664.7",
+            "low": "68614.9",
+            "close": "68640.0",
+            "volume": "1.00801932",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T19:15:00Z",
+            "open": "68640.0",
+            "high": "68674.0",
+            "low": "68628.7",
+            "close": "68628.7",
+            "volume": "0.39882007",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T19:20:00Z",
+            "open": "68628.7",
+            "high": "68694.4",
+            "low": "68555.7",
+            "close": "68675.1",
+            "volume": "1.61714462",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T19:25:00Z",
+            "open": "68678.1",
+            "high": "68713.2",
+            "low": "68578.0",
+            "close": "68662.1",
+            "volume": "5.20488657",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T19:30:00Z",
+            "open": "68662.1",
+            "high": "68715.0",
+            "low": "68588.0",
+            "close": "68625.4",
+            "volume": "2.62869449",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T19:35:00Z",
+            "open": "68608.1",
+            "high": "68608.1",
+            "low": "68480.0",
+            "close": "68482.6",
+            "volume": "4.47906472",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T19:40:00Z",
+            "open": "68480.0",
+            "high": "68523.7",
+            "low": "68426.1",
+            "close": "68515.7",
+            "volume": "3.96089156",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T19:45:00Z",
+            "open": "68511.1",
+            "high": "68529.2",
+            "low": "68440.0",
+            "close": "68442.4",
+            "volume": "7.78506102",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T19:50:00Z",
+            "open": "68460.8",
+            "high": "68641.8",
+            "low": "68428.4",
+            "close": "68634.7",
+            "volume": "5.78377589",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T19:55:00Z",
+            "open": "68632.6",
+            "high": "68770.4",
+            "low": "68582.0",
+            "close": "68764.4",
+            "volume": "0.51123775",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T20:00:00Z",
+            "open": "68759.9",
+            "high": "68774.4",
+            "low": "68620.0",
+            "close": "68681.1",
+            "volume": "102.80443925",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T20:05:00Z",
+            "open": "68678.9",
+            "high": "68679.6",
+            "low": "68600.0",
+            "close": "68638.0",
+            "volume": "8.09835281",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T20:10:00Z",
+            "open": "68637.7",
+            "high": "68665.0",
+            "low": "68583.1",
+            "close": "68599.2",
+            "volume": "0.63866028",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T20:15:00Z",
+            "open": "68601.4",
+            "high": "68826.5",
+            "low": "68601.4",
+            "close": "68790.1",
+            "volume": "0.77495481",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T20:20:00Z",
+            "open": "68788.9",
+            "high": "68870.4",
+            "low": "68780.1",
+            "close": "68846.8",
+            "volume": "1.14948075",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T20:25:00Z",
+            "open": "68863.1",
+            "high": "68863.1",
+            "low": "68687.0",
+            "close": "68699.1",
+            "volume": "2.52103072",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T20:30:00Z",
+            "open": "68688.7",
+            "high": "68688.7",
+            "low": "68570.0",
+            "close": "68625.1",
+            "volume": "0.78623757",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T20:35:00Z",
+            "open": "68629.0",
+            "high": "68635.1",
+            "low": "68555.1",
+            "close": "68576.7",
+            "volume": "0.90845532",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T20:40:00Z",
+            "open": "68555.0",
+            "high": "68597.2",
+            "low": "68523.1",
+            "close": "68582.9",
+            "volume": "1.60769484",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T20:45:00Z",
+            "open": "68597.2",
+            "high": "68678.3",
+            "low": "68593.8",
+            "close": "68672.4",
+            "volume": "1.42146418",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T20:50:00Z",
+            "open": "68673.8",
+            "high": "68674.4",
+            "low": "68567.7",
+            "close": "68611.1",
+            "volume": "0.78891061",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T20:55:00Z",
+            "open": "68610.0",
+            "high": "68610.0",
+            "low": "68430.0",
+            "close": "68495.5",
+            "volume": "6.37269700",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T21:00:00Z",
+            "open": "68492.9",
+            "high": "68598.0",
+            "low": "68442.1",
+            "close": "68540.5",
+            "volume": "3.17091171",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T21:05:00Z",
+            "open": "68560.0",
+            "high": "68649.1",
+            "low": "68536.7",
+            "close": "68581.3",
+            "volume": "1.09895649",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T21:10:00Z",
+            "open": "68580.8",
+            "high": "68582.3",
+            "low": "68529.8",
+            "close": "68568.3",
+            "volume": "1.07987766",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T21:15:00Z",
+            "open": "68576.0",
+            "high": "68621.5",
+            "low": "68529.8",
+            "close": "68609.0",
+            "volume": "0.76842502",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T21:20:00Z",
+            "open": "68608.9",
+            "high": "68628.2",
+            "low": "68571.4",
+            "close": "68571.4",
+            "volume": "0.69493415",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T21:25:00Z",
+            "open": "68571.4",
+            "high": "68572.7",
+            "low": "68471.5",
+            "close": "68509.8",
+            "volume": "1.16004489",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T21:30:00Z",
+            "open": "68524.6",
+            "high": "68575.8",
+            "low": "68500.4",
+            "close": "68550.8",
+            "volume": "0.97895732",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T21:35:00Z",
+            "open": "68553.6",
+            "high": "68673.4",
+            "low": "68517.2",
+            "close": "68660.1",
+            "volume": "1.24826625",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T21:40:00Z",
+            "open": "68654.6",
+            "high": "68695.3",
+            "low": "68619.4",
+            "close": "68664.2",
+            "volume": "0.58709235",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T21:45:00Z",
+            "open": "68661.1",
+            "high": "68662.7",
+            "low": "68527.2",
+            "close": "68538.2",
+            "volume": "3.27214005",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T21:50:00Z",
+            "open": "68527.0",
+            "high": "68600.0",
+            "low": "68523.7",
+            "close": "68600.0",
+            "volume": "1.26836812",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T21:55:00Z",
+            "open": "68599.9",
+            "high": "68635.4",
+            "low": "68552.9",
+            "close": "68565.4",
+            "volume": "0.72639306",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T22:00:00Z",
+            "open": "68568.0",
+            "high": "68624.8",
+            "low": "68567.1",
+            "close": "68567.1",
+            "volume": "1.46349506",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T22:05:00Z",
+            "open": "68567.0",
+            "high": "68579.5",
+            "low": "68550.3",
+            "close": "68579.5",
+            "volume": "0.69009687",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T22:10:00Z",
+            "open": "68579.5",
+            "high": "68585.9",
+            "low": "68550.0",
+            "close": "68575.1",
+            "volume": "0.54946896",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T22:15:00Z",
+            "open": "68582.1",
+            "high": "68701.0",
+            "low": "68575.7",
+            "close": "68695.9",
+            "volume": "0.49852255",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T22:20:00Z",
+            "open": "68695.9",
+            "high": "68696.7",
+            "low": "68659.4",
+            "close": "68695.0",
+            "volume": "0.17838232",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T22:25:00Z",
+            "open": "68694.9",
+            "high": "68695.0",
+            "low": "68558.9",
+            "close": "68583.1",
+            "volume": "0.30797484",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T22:30:00Z",
+            "open": "68582.3",
+            "high": "68587.7",
+            "low": "68539.8",
+            "close": "68554.2",
+            "volume": "0.88755533",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T22:35:00Z",
+            "open": "68554.2",
+            "high": "68554.2",
+            "low": "68525.0",
+            "close": "68532.2",
+            "volume": "0.31819385",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T22:40:00Z",
+            "open": "68547.3",
+            "high": "68561.5",
+            "low": "68536.9",
+            "close": "68559.6",
+            "volume": "0.29945037",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T22:45:00Z",
+            "open": "68558.3",
+            "high": "68654.1",
+            "low": "68558.2",
+            "close": "68643.8",
+            "volume": "0.20060663",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T22:50:00Z",
+            "open": "68652.1",
+            "high": "68652.1",
+            "low": "68630.1",
+            "close": "68638.2",
+            "volume": "0.07845125",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T22:55:00Z",
+            "open": "68636.1",
+            "high": "68640.2",
+            "low": "68626.1",
+            "close": "68640.2",
+            "volume": "0.18026364",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T23:00:00Z",
+            "open": "68652.0",
+            "high": "68652.0",
+            "low": "68500.1",
+            "close": "68540.1",
+            "volume": "0.36584377",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T23:05:00Z",
+            "open": "68535.7",
+            "high": "68582.4",
+            "low": "68500.0",
+            "close": "68578.9",
+            "volume": "0.68417744",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T23:10:00Z",
+            "open": "68553.2",
+            "high": "68615.1",
+            "low": "68540.3",
+            "close": "68540.3",
+            "volume": "5.60002362",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T23:15:00Z",
+            "open": "68549.9",
+            "high": "68611.3",
+            "low": "68549.9",
+            "close": "68611.3",
+            "volume": "0.44858621",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          },
+          {
+            "symbol": "XBTEUR",
+            "interval": "5m",
+            "timestamp": "2026-11-02T23:20:00Z",
+            "open": "68614.8",
+            "high": "68629.6",
+            "low": "68555.6",
+            "close": "68557.8",
+            "volume": "0.45629056",
+            "quote_currency": "EUR",
+            "source": "kraken"
+          }
+        ]
+      },
+      "news": null,
+      "news_status": "not_connected",
+      "broker_eligibility": "UNKNOWN",
+      "source_ids": [
+        "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+      ],
+      "missing_data": [
+        "crypto_news_not_supplied",
+        "robinhood_account_eligibility_unverified",
+        "eur_risk_and_trade_plan_not_supplied",
+        "catalyst_significance_unverified"
+      ],
+      "trade_authorized": false
+    },
+    "trade_authorized": false
+  },
+  "analysis": {
+    "version": "live-research-v3",
+    "instruction_version": "live-research-instructions-v3",
+    "analysis_quality": "requires_human_review",
+    "state": "completed",
+    "trade_authorized": false,
+    "calls": [
+      {
+        "request_id": "live-research-v1:2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5:opportunity_hunter",
+        "state": "validated",
+        "response_id": "resp_0bd1774df2368bd5016ae91c346b2487d28ae86e5abc50f6b5",
+        "cost_usd": "0.006051",
+        "estimated_cost_microeur": 5408
+      },
+      {
+        "request_id": "live-research-v1:2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5:technical_analyst",
+        "state": "validated",
+        "response_id": "resp_0082347f14c61b32016ae91c39804c87d2a49fb08e2b7b55e6",
+        "cost_usd": "0.00613575",
+        "estimated_cost_microeur": 5484
+      },
+      {
+        "request_id": "live-research-v1:2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5:news_analyst",
+        "state": "validated",
+        "response_id": "resp_0b63d9f834e3f50a016ae91c3f061887d2ad44cafba8e47bbb",
+        "cost_usd": "0.00602775",
+        "estimated_cost_microeur": 5388
+      },
+      {
+        "request_id": "live-research-v1:2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5:devils_advocate",
+        "state": "validated",
+        "response_id": "resp_073ba6faf1d39bcb016ae91c43f10487d2bdd37da6c5711f4d",
+        "cost_usd": "0.00628875",
+        "estimated_cost_microeur": 5621
+      },
+      {
+        "request_id": "live-research-v1:2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5:risk_manager",
+        "state": "validated",
+        "response_id": "resp_029b19e707cb0d21016ae91c49870887d2b3f1bdbe6d67d6c4",
+        "cost_usd": "0.00621",
+        "estimated_cost_microeur": 5550
+      },
+      {
+        "request_id": "live-research-v1:2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5:final_decision",
+        "state": "validated",
+        "response_id": "resp_006451b5a806f3de016ae91c4e66b887d282ccbd4926b3ea73",
+        "cost_usd": "0.00603",
+        "estimated_cost_microeur": 5390
+      },
+      {
+        "request_id": "live-research-v1:2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5:debate",
+        "state": "validated",
+        "response_id": "resp_0de47b9875f4a108016ae91c53aa9087d2a7dcb3c3f26810b7",
+        "cost_usd": "0.00921375",
+        "estimated_cost_microeur": 8235
+      },
+      {
+        "request_id": "live-research-v1:2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5:conclusion",
+        "state": "validated",
+        "response_id": "resp_0feabb2c0583736a016ae91c583c2887d2b5595b446304e171",
+        "cost_usd": "0.0097185",
+        "estimated_cost_microeur": 8686
+      }
+    ],
+    "assessments": [
+      {
+        "metric_claims": [
+          {
+            "metric": "window_high",
+            "value": "68870.4",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "window_low",
+            "value": "68426.1",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "first_close",
+            "value": "68685.0",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "last_close",
+            "value": "68557.8",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          }
+        ],
+        "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+        "role": "opportunity_hunter",
+        "snapshot_id": "2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5",
+        "summary": "Price action is broadly range bound with a slight net decline over the supplied window after an earlier push to a local high and a later fade. Momentum looks mixed rather than decisive, so further research is justified if you need stronger confirmation before forming a view.",
+        "source_ids": [
+          "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+        ],
+        "concerns": [
+          "News is not connected, so catalyst context is unavailable.",
+          "Broker eligibility is unverified.",
+          "The trade plan is not supplied, so risk framing is incomplete."
+        ]
+      },
+      {
+        "metric_claims": [
+          {
+            "metric": "window_high",
+            "value": "68870.4",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "window_low",
+            "value": "68426.1",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "first_close",
+            "value": "68685.0",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "last_close",
+            "value": "68557.8",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          }
+        ],
+        "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+        "role": "technical_analyst",
+        "snapshot_id": "2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5",
+        "summary": "The window shows a modest net decline from the first close to the last close after a choppy range. Price briefly pushed above the prior range high, then faded back toward the middle of the band. The broader impression is sideways to slightly weaker momentum within the supplied candle window.",
+        "source_ids": [
+          "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+        ],
+        "concerns": [
+          "The assessment is limited to the supplied rolling candle window and does not establish a broader trend.",
+          "News context is unavailable, so no catalyst-based interpretation is supported.",
+          "The risk plan is not supplied, so the window cannot be tied to a quantified plan."
+        ]
+      },
+      {
+        "metric_claims": [
+          {
+            "metric": "window_high",
+            "value": "68870.4",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "window_low",
+            "value": "68426.1",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "first_close",
+            "value": "68685.0",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "last_close",
+            "value": "68557.8",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          }
+        ],
+        "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+        "role": "news_analyst",
+        "snapshot_id": "2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5",
+        "summary": "No dated news was supplied, so catalyst attribution is unavailable. The rolling candle window shows a narrow net decline from the first close to the last close after a brief mid-window rise and fade. Risk policy data indicate the entry cutoff has passed and trade authorization is false.",
+        "source_ids": [
+          "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+        ],
+        "concerns": [
+          "No dated news was supplied, so catalyst attribution is unavailable.",
+          "The broker eligibility status is unverified.",
+          "The trade plan was not supplied."
+        ]
+      },
+      {
+        "metric_claims": [
+          {
+            "metric": "window_high",
+            "value": "68870.4",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "window_low",
+            "value": "68426.1",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "first_close",
+            "value": "68685.0",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "last_close",
+            "value": "68557.8",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          }
+        ],
+        "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+        "role": "devils_advocate",
+        "snapshot_id": "2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5",
+        "summary": "The rolling window shows a mostly range-bound market with a modest net decline from the first close to the last close. Price briefly pushed to a higher window peak before giving back much of that move, which weakens any simple bullish reading. The late candles still show intermittent rebounds, so the down move is not one-way. No news evidence is supplied, so any catalyst-based explanation remains unverified.",
+        "source_ids": [
+          "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+        ],
+        "concerns": [
+          "The window includes a sharp intrawindow spike and retracement, which could indicate transient volatility rather than a durable trend.",
+          "No news or catalyst evidence is supplied, so assigning a directional cause would be speculative.",
+          "The available data cover only the rolling candle window, so broader context may change the interpretation."
+        ]
+      },
+      {
+        "metric_claims": [
+          {
+            "metric": "window_high",
+            "value": "68870.4",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "window_low",
+            "value": "68426.1",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "first_close",
+            "value": "68685.0",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "last_close",
+            "value": "68557.8",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          }
+        ],
+        "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+        "role": "risk_manager",
+        "snapshot_id": "2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5",
+        "summary": "The supplied window shows a narrow range around the opening level, with the close ending slightly below the first close. The entry cutoff has passed, overnight holding is not allowed, trade authorization is false, broker eligibility is unverified, and the trade plan is missing. Cost evidence and sizing evidence are not supplied, so the risk policy cannot be fully assessed beyond abstaining from authorization.",
+        "source_ids": [
+          "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+        ],
+        "concerns": [
+          "The entry cutoff has passed, so the time constraint is unmet.",
+          "Overnight positions are not allowed, which limits any hold beyond the session.",
+          "Broker eligibility is unverified, so account access cannot be confirmed from the evidence supplied."
+        ]
+      },
+      {
+        "metric_claims": [
+          {
+            "metric": "window_high",
+            "value": "68870.4",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "window_low",
+            "value": "68426.1",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "first_close",
+            "value": "68685.0",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          },
+          {
+            "metric": "last_close",
+            "value": "68557.8",
+            "quote_currency": "EUR",
+            "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+          }
+        ],
+        "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+        "role": "final_decision",
+        "snapshot_id": "2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5",
+        "summary": "The rolling window shows a narrow net decline from the first close to the last close after a mid-window push higher and later fade. No news was supplied, and the trade plan and broker eligibility remain unverified, so confidence is limited.",
+        "source_ids": [
+          "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+        ],
+        "concerns": [
+          "News evidence is absent, so catalysts cannot be assessed.",
+          "The trade plan is not supplied, which limits decision context.",
+          "Broker eligibility is unverified, so operational readiness is unknown."
+        ]
+      }
+    ],
+    "debate": {
+      "metric_claims": [
+        {
+          "metric": "window_high",
+          "value": "68870.4",
+          "quote_currency": "EUR",
+          "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+        },
+        {
+          "metric": "window_low",
+          "value": "68426.1",
+          "quote_currency": "EUR",
+          "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+        },
+        {
+          "metric": "first_close",
+          "value": "68685.0",
+          "quote_currency": "EUR",
+          "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+        },
+        {
+          "metric": "last_close",
+          "value": "68557.8",
+          "quote_currency": "EUR",
+          "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+        }
+      ],
+      "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+      "reviewed_concern_ids": [
+        "opportunity_hunter:1",
+        "opportunity_hunter:2",
+        "opportunity_hunter:3",
+        "technical_analyst:1",
+        "technical_analyst:2",
+        "technical_analyst:3",
+        "news_analyst:1",
+        "news_analyst:2",
+        "news_analyst:3",
+        "devils_advocate:1",
+        "devils_advocate:2",
+        "devils_advocate:3",
+        "risk_manager:1",
+        "risk_manager:2",
+        "risk_manager:3",
+        "final_decision:1",
+        "final_decision:2",
+        "final_decision:3"
+      ],
+      "acknowledged_missing_data": [
+        "crypto_news_not_supplied",
+        "robinhood_account_eligibility_unverified",
+        "eur_risk_and_trade_plan_not_supplied",
+        "catalyst_significance_unverified"
+      ],
+      "snapshot_id": "2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5",
+      "discussion": "The supplied window is range bound with a small net decline from the first close to the last close after a mid-window rise and fade. The evidence does not establish a broader trend or a catalyst-driven explanation, and the missing news, trade plan, and broker eligibility data remain material limits. The passed time cutoff and false trade authorization further constrain any operational interpretation.",
+      "source_ids": [
+        "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+      ]
+    },
+    "conclusion": {
+      "metric_claims": [
+        {
+          "metric": "window_high",
+          "value": "68870.4",
+          "quote_currency": "EUR",
+          "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+        },
+        {
+          "metric": "window_low",
+          "value": "68426.1",
+          "quote_currency": "EUR",
+          "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+        },
+        {
+          "metric": "first_close",
+          "value": "68685.0",
+          "quote_currency": "EUR",
+          "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+        },
+        {
+          "metric": "last_close",
+          "value": "68557.8",
+          "quote_currency": "EUR",
+          "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+        }
+      ],
+      "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+      "reviewed_concern_ids": [
+        "opportunity_hunter:1",
+        "opportunity_hunter:2",
+        "opportunity_hunter:3",
+        "technical_analyst:1",
+        "technical_analyst:2",
+        "technical_analyst:3",
+        "news_analyst:1",
+        "news_analyst:2",
+        "news_analyst:3",
+        "devils_advocate:1",
+        "devils_advocate:2",
+        "devils_advocate:3",
+        "risk_manager:1",
+        "risk_manager:2",
+        "risk_manager:3",
+        "final_decision:1",
+        "final_decision:2",
+        "final_decision:3"
+      ],
+      "acknowledged_missing_data": [
+        "crypto_news_not_supplied",
+        "robinhood_account_eligibility_unverified",
+        "eur_risk_and_trade_plan_not_supplied",
+        "catalyst_significance_unverified"
+      ],
+      "snapshot_id": "2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5",
+      "verdict": "MORE_RESEARCH_NEEDED",
+      "rationale": "The supplied window is range bound with a small net decline from the first close to the last close after a mid-window rise and fade. The evidence does not establish a broader trend or a catalyst-driven explanation, and the missing news, trade plan, and broker eligibility data remain material limits. The passed time cutoff and false trade authorization further constrain any operational interpretation.",
+      "source_ids": [
+        "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+      ]
+    },
+    "unresolved_concerns": [
+      {
+        "id": "opportunity_hunter:1",
+        "role": "opportunity_hunter",
+        "concern": "News is not connected, so catalyst context is unavailable."
+      },
+      {
+        "id": "opportunity_hunter:2",
+        "role": "opportunity_hunter",
+        "concern": "Broker eligibility is unverified."
+      },
+      {
+        "id": "opportunity_hunter:3",
+        "role": "opportunity_hunter",
+        "concern": "The trade plan is not supplied, so risk framing is incomplete."
+      },
+      {
+        "id": "technical_analyst:1",
+        "role": "technical_analyst",
+        "concern": "The assessment is limited to the supplied rolling candle window and does not establish a broader trend."
+      },
+      {
+        "id": "technical_analyst:2",
+        "role": "technical_analyst",
+        "concern": "News context is unavailable, so no catalyst-based interpretation is supported."
+      },
+      {
+        "id": "technical_analyst:3",
+        "role": "technical_analyst",
+        "concern": "The risk plan is not supplied, so the window cannot be tied to a quantified plan."
+      },
+      {
+        "id": "news_analyst:1",
+        "role": "news_analyst",
+        "concern": "No dated news was supplied, so catalyst attribution is unavailable."
+      },
+      {
+        "id": "news_analyst:2",
+        "role": "news_analyst",
+        "concern": "The broker eligibility status is unverified."
+      },
+      {
+        "id": "news_analyst:3",
+        "role": "news_analyst",
+        "concern": "The trade plan was not supplied."
+      },
+      {
+        "id": "devils_advocate:1",
+        "role": "devils_advocate",
+        "concern": "The window includes a sharp intrawindow spike and retracement, which could indicate transient volatility rather than a durable trend."
+      },
+      {
+        "id": "devils_advocate:2",
+        "role": "devils_advocate",
+        "concern": "No news or catalyst evidence is supplied, so assigning a directional cause would be speculative."
+      },
+      {
+        "id": "devils_advocate:3",
+        "role": "devils_advocate",
+        "concern": "The available data cover only the rolling candle window, so broader context may change the interpretation."
+      },
+      {
+        "id": "risk_manager:1",
+        "role": "risk_manager",
+        "concern": "The entry cutoff has passed, so the time constraint is unmet."
+      },
+      {
+        "id": "risk_manager:2",
+        "role": "risk_manager",
+        "concern": "Overnight positions are not allowed, which limits any hold beyond the session."
+      },
+      {
+        "id": "risk_manager:3",
+        "role": "risk_manager",
+        "concern": "Broker eligibility is unverified, so account access cannot be confirmed from the evidence supplied."
+      },
+      {
+        "id": "final_decision:1",
+        "role": "final_decision",
+        "concern": "News evidence is absent, so catalysts cannot be assessed."
+      },
+      {
+        "id": "final_decision:2",
+        "role": "final_decision",
+        "concern": "The trade plan is not supplied, which limits decision context."
+      },
+      {
+        "id": "final_decision:3",
+        "role": "final_decision",
+        "concern": "Broker eligibility is unverified, so operational readiness is unknown."
+      }
+    ],
+    "mandatory_missing_data": [
+      "crypto_news_not_supplied",
+      "robinhood_account_eligibility_unverified",
+      "eur_risk_and_trade_plan_not_supplied",
+      "catalyst_significance_unverified"
+    ],
+    "computed_metrics": {
+      "values": {
+        "window_high": "68870.4",
+        "window_low": "68426.1",
+        "first_close": "68685.0",
+        "last_close": "68557.8"
+      },
+      "quote_currency": "EUR",
+      "source_id": "market:3466244f991a48804224b2ea59a3db184d0c7b303becf450193e2a9b17dfef8d"
+    },
+    "snapshot_id": "2b45dbb6a185cd155800af86b94cbf7be89726e1d34723001b2f47e641ca17b5"
+  }
+}
