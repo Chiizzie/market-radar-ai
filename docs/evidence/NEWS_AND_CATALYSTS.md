@@ -71,3 +71,13 @@ Command: `python -m market_radar_ai.evidence.public_feed --source nvidia --outpu
 Apple Newsroom was also inspected but not added: its feed exposed updated times, and the inspected article's structured publication date lacked an exact time. Those were not converted to fabricated intraday publication timestamps. No subscription, paid AI call, or access-control bypass was introduced.
 
 The manual discovery-to-dashboard rehearsal now also collects NVIDIA, combines it with the macro feed, and exports the combined evidence alongside prices. Its YAML was checked locally; this updated manual workflow has not itself been executed. Existing live verification covers standalone retrieval, combination and news-only dashboard export. No live-agent analysis or full-market news coverage is claimed.
+
+## Dated news inputs for specialist research
+
+`python -m market_radar_ai.agents.news_input --evidence combined-news.json --symbol NVDA --output nvda-research-input.json`
+
+Creates a news-research-v1 packet with at most ten deduplicated, newest-first articles linked to the requested symbol. Each carries its exact source ID, title, URL, publisher and original publication/retrieval timestamps. Both the feed and individual article retrieval must be within 15 minutes; publication must be within seven days. Articles older than one hour are explicitly context-only. Unmapped articles are omitted. Provider-reported linkage does not independently establish significance.
+
+This separate input carries explicit missing chart, broker and EUR risk evidence. It contains no fabricated broker expiry or trade plan and cannot validate as the paper-trade ResearchInput. Existing offline ModelGateway specialist interfaces can consume it; all six receive the same immutable packet independently. Source text remains untrusted data. This is a data connection and mock interface verification, not a live six-model analysis. No paid adapter is activated.
+
+A failed refresh overwrites the output with status=blocked and input=null. The news verification and manual discovery workflows now preserve this packet as an artifact. Local live NVIDIA retrieval produced a ready_for_research packet with zero model calls and trade_authorized=false. Tests cover stale/future/unmapped evidence, item freshness despite a new envelope, deduplication, bounds, injection-like text remaining data, six independent gateway requests, and rejection at the paper-plan boundary.

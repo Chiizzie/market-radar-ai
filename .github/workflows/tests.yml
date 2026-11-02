@@ -156,6 +156,10 @@ jobs:
       - name: Attach validated news evidence to dashboard
         if: always()
         run: python -m market_radar_ai.dashboard.export --capture artifacts/discovery/capture.json --evidence artifacts/discovery/combined-news.json --output artifacts/discovery/dashboard.json
+      - name: Prepare issuer research input without paid analysis
+        if: always()
+        continue-on-error: true
+        run: python -m market_radar_ai.agents.news_input --evidence artifacts/discovery/combined-news.json --symbol NVDA --output artifacts/discovery/nvda-research-input.json
       - name: Preserve results and queue checkpoint
         if: always()
         uses: actions/upload-artifact@v4
