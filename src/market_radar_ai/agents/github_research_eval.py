@@ -21,7 +21,7 @@ def main():
         state,_=store.load()
         prefix={key:value for key,value in state['entries'].items() if key.startswith(VERSION+':')}
         prior=None
-        checkpoint=Path('docs/evaluations/research-eval-v1-partial.json')
+        checkpoint=Path('docs/evaluations/research-eval-v1-checkpoint.json')
         if prefix:
             prior=json.loads(checkpoint.read_text())
             saved={c['request_id']:c for c in prior['calls']}

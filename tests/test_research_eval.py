@@ -103,3 +103,15 @@ def test_saved_real_prefix_is_reused_and_evidence_checked(tmp_path):
     altered=json.loads(json.dumps(saved));altered['cases'][0]['evidence']['symbol']='CHANGED'
     with pytest.raises(ValueError,match='evidence_mismatch'):
         run_evaluation(FakeClient(),now=NOW,path=tmp_path/'bad.json',prior_report=altered)
+
+
+def test_second_checkpoint_reuses_fourteen_paid_responses(tmp_path):
+    from pathlib import Path
+    saved=json.loads(Path('docs/evaluations/research-eval-v1-checkpoint.json').read_text())
+    client=FakeClient()
+    result=run_evaluation(client,now=NOW,path=tmp_path/'result.json',prior_report=saved)
+    assert result['reused_responses']==14 and result['new_model_requests']==2
+    assert len(client.requests)==2
+    # Preserve the observed model weakness; don't rewrite it as a passing evaluation.
+    assert result['checks']['no_unsafe_model_support'] is False
+    assert result['cases'][0]['research_disposition']=='NO_ACTION'

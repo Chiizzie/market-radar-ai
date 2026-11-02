@@ -199,6 +199,16 @@ def run_evaluation(client, *, now, path, cases=None, prior_report=None):
         report['state']='failed'
         # Exception class only: provider credentials/bodies are never added to reports.
         report['failure_type']=type(exc).__name__
+        safe_errors={
+            'Budget read failed; paid calls disabled':'budget_read_failed',
+            'Budget write unconfirmed; paid calls disabled':'budget_write_unconfirmed',
+            'daily_spending_limit':'daily_limit', 'monthly_spending_limit':'monthly_limit',
+            'lifetime_spending_limit':'pilot_limit',
+            'OpenAI request failed; reservation retained; do not retry automatically':'provider_request_failed',
+            'Unknown usage; reservation retained':'unknown_usage',
+            'Incomplete or unexpected model response; usage settled':'incomplete_response',
+        }
+        report['failure_code']=safe_errors.get(str(exc),'validation_or_unclassified_failure')
         write_report(path,report)
         raise
     report['estimated_cost_microeur']=sum(c['estimated_cost_microeur'] for c in report['calls'])

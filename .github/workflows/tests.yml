@@ -50,14 +50,14 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
           RUN_OPENAI_CONNECTIVITY: enabled
       - name: Authorized one-shot six-role research evaluation
-        if: github.event.head_commit.message == 'Complete evaluation v1 using reconciled saved responses'
+        if: github.event.head_commit.message == 'Finish remaining evaluation stages from reconciled checkpoint'
         run: python -m market_radar_ai.agents.github_research_eval
         env:
           GH_BUDGET_TOKEN: ${{ github.token }}
           OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
           RUN_RESEARCH_EVAL: enabled
       - name: Preserve synthetic evaluation report
-        if: always() && github.event.head_commit.message == 'Complete evaluation v1 using reconciled saved responses'
+        if: always() && github.event.head_commit.message == 'Finish remaining evaluation stages from reconciled checkpoint'
         uses: actions/upload-artifact@v4
         with:
           name: research-evaluation-v1
