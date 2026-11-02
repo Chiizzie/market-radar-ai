@@ -256,6 +256,12 @@
         "response_id": "resp_04db6e0a95656c57016ae8ed2c9c6c87d0832a581e406fdd82"
       }
     },
+    "research-eval-v2:case-a:devils_advocate": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 276161,
+      "usage": null
+    },
     "research-eval-v2:case-a:news_analyst": {
       "actual": 1808,
       "day": "2026-11-02",
