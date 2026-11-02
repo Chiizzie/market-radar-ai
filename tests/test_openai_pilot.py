@@ -68,7 +68,7 @@ def test_timeout_is_redacted_and_budget_retained(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize('changes', [dict(status='incomplete'),dict(output=[]),
-    dict(model='unexpected'),dict(output=[{'type':'message','content':[{'type':'refusal'}]}])])
+    dict(output=[{'type':'message','content':[{'type':'refusal'}]}])])
 def test_unusable_output_still_settles_cost(tmp_path, monkeypatch, changes):
     c=client(tmp_path,enabled=True)
     mock_response(monkeypatch,body(**changes))
@@ -113,3 +113,11 @@ def test_schema_failure_is_charged_and_usage_is_audited(tmp_path,monkeypatch):
     with sqlite3.connect(c.ledger.path) as db:
         assert db.execute('SELECT actual FROM spend').fetchone()==(959,)
         assert db.execute('SELECT cost_usd, eur_per_usd FROM openai_usage').fetchone()==('0.001065','0.9')
+
+
+def test_unexpected_model_keeps_full_reservation(tmp_path,monkeypatch):
+    c=client(tmp_path,enabled=True)
+    mock_response(monkeypatch,body(model='unexpected'))
+    with pytest.raises(RuntimeError,match='pricing unknown'): run(c)
+    with sqlite3.connect(c.ledger.path) as db:
+        assert db.execute('SELECT actual FROM spend').fetchone()==(None,)

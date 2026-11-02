@@ -81,8 +81,9 @@ use the same persistent database and limits; a new database resets its history.
 Ephemeral CI jobs must not be used for paid runs without durable budget storage.
 An opt-in standalone OpenAI pilot client now supports the Responses API, strict
 JSON validation, token-price accounting, and persistent usage records. The six-role
-team remains mock-only. Durable CI budget storage is still unimplemented; no paid
-connectivity test has been performed.
+team remains mock-only. Durable GitHub budget storage is implemented on `state/ai-budget`; the real
+storage check runs after development-branch tests. Paid connectivity remains
+opt-in and is not established by offline tests.
 
 For a local, explicitly paid connectivity check, install the project and run:
 
@@ -97,8 +98,7 @@ context cost before sending. Its limits are EUR 0.50 daily/lifetime and EUR 10
 monthly; these are estimated model costs excluding tax, based on the supplied FX
 rate. The database must be retained; deleting/changing it resets the allowance.
 Do not run this command on an ephemeral CI runner. The existing GitHub secret is
-not available to local terminals. A GitHub runner with durable reservations is the
-next integration milestone.
+not available to local terminals. The GitHub runner uses the separate durable state branch described below.
 
 The client pins `gpt-5.4-mini-2026-03-17` with standard-tier pricing checked on
 2026-11-02: USD 0.75 input / 0.075 cached input / 4.50 output per million tokens.
@@ -107,3 +107,41 @@ Output tokens include reasoning; no tools, redirects, or automatic retries are
 enabled. Unknown usage retains the reservation. Known usage is recorded and
 settled even when the response is incomplete or fails validation. EUR costs are
 estimates, not the provider's final invoice. Review pricing before activation.
+
+### GitHub budget record and one-time connectivity check
+
+The small JSON record at `state/ai-budget.json` on branch `state/ai-budget` is the
+source of truth for GitHub pilot spending. Do not merge this state branch into
+source branches, delete it, or reset its history. It stores only request identities,
+dates, reservations, usage counts, pricing and estimated EUR costs. No prompts,
+API keys, account holdings or model text are stored. This repository is public,
+so these budget metadata are public too.
+
+The pilot has a EUR 0.50 daily/total allowance and EUR 10 monthly ceiling. Limits
+are intentionally checked against the code configuration so different workers
+cannot silently disagree. The temporary pilot ceiling is lower than the intended
+monthly operating budget. Future ongoing scanning requires a reviewed increase.
+
+`Phase 1 verification` now runs a `budget-storage` job after the test job succeeds
+on pushes to the development branch. It reserves and settles a single zero-cost
+storage marker and reopens the record. Its normal operation makes no OpenAI call.
+GitHub's file SHA prevents concurrent writes from overwriting one another. If a
+read, write, or version check fails, no provider request starts. A lost reply after
+a successful reservation remains held. Settlement and usage metadata are written
+together; failed settlements also retain the maximum reservation. Never resolve an
+unknown charge by deleting the entry: check provider usage first.
+
+For the first paid check, set repository **Actions variable**
+`RUN_OPENAI_CONNECTIVITY` to `enabled`, then rerun **all jobs** of the latest
+successful development-branch verification run. The key stays in repository
+**secret** `OPENAI_API_KEY`. The workflow gets fresh indicative USD/EUR FX, reserves
+the allowance, and sends one tiny structured-output request. Missing/stale FX
+stops before the request. Read the job summary for the result and recorded cost.
+Remove or disable the variable afterwards. The fixed `openai-connectivity-v1`
+identity prevents another paid request even if the workflow is rerun. A prior
+attempt is reported as `already_attempted_no_retry`, not claimed successful.
+
+The normal GitHub Run workflow button is not relied on while this workflow is
+absent from `main`. No merge into `main` is required for push runs or reruns.
+The six-agent team is still offline-only; this check proves connectivity, not
+market reasoning quality or trade accuracy. There are no order-execution tools.

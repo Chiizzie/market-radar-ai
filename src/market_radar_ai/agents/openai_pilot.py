@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from decimal import Decimal, ROUND_CEILING
 import json
 import requests
-import sqlite3
 from jsonschema import Draft202012Validator
 
 MODEL = 'gpt-5.4-mini-2026-03-17'
@@ -99,18 +98,21 @@ class OpenAIPilot:
         except Exception:
             # Never expose provider bodies, request headers, or exception strings.
             raise RuntimeError('OpenAI request failed; reservation retained; do not retry automatically') from None
+        if not isinstance(body, dict) or body.get('model') != MODEL:
+            raise RuntimeError('Unexpected model; pricing unknown; reservation retained')
         try:
             usd = usage_cost(body['usage'])
         except (KeyError, TypeError, ValueError, AttributeError):
             raise RuntimeError('Unknown usage; reservation retained') from None
         estimated = self._eur(usd)
-        with sqlite3.connect(self.ledger.path) as db:
-            db.execute('CREATE TABLE IF NOT EXISTS openai_usage (request_id TEXT PRIMARY KEY, response_id TEXT, model TEXT, usage_json TEXT, cost_usd TEXT, eur_per_usd TEXT, estimated_microeur INTEGER)')
-            db.execute('INSERT INTO openai_usage VALUES (?,?,?,?,?,?,?)',
-                (request_id, body.get('id'), body.get('model'), json.dumps(body['usage']),
-                 str(usd), str(self.rate), estimated))
-        self.ledger.settle(request_id, estimated)
-        if body.get('status') != 'completed' or body.get('model') != MODEL:
+        self.ledger.settle(request_id, estimated, usage={
+            'response_id':body.get('id'), 'model':body.get('model'),
+            'input_tokens':body['usage']['input_tokens'],
+            'output_tokens':body['usage']['output_tokens'],
+            'cached_input_tokens':body['usage'].get('input_tokens_details', {}).get('cached_tokens', 0),
+            'cost_usd':str(usd), 'eur_per_usd':str(self.rate),
+            'pricing_checked':'2026-11-02'})
+        if body.get('status') != 'completed':
             raise RuntimeError('Incomplete or unexpected model response; usage settled')
         texts = [part['text'] for item in body.get('output', []) if item.get('type') == 'message'
                  for part in item.get('content', []) if part.get('type') == 'output_text']

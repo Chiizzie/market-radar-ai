@@ -1,5 +1,6 @@
 """Persistent atomic reservations, in integer micro-EUR. No paid API integration."""
 import sqlite3
+import json
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -43,7 +44,7 @@ class SpendingLedger:
                         raise RuntimeError(f'{label}_spending_limit')
             db.execute('INSERT INTO spend VALUES(?,?,?,NULL)',(request_id,day,maximum_microeur))
 
-    def settle(self, request_id, actual_microeur):
+    def settle(self, request_id, actual_microeur, *, usage=None):
         if type(actual_microeur) is not int or actual_microeur < 0:
             raise ValueError('Invalid actual cost')
         with sqlite3.connect(self.path) as db:
@@ -53,6 +54,11 @@ class SpendingLedger:
             if row[1] is not None:
                 if row[1] != actual_microeur: raise ValueError('Conflicting settlement')
                 return
+            if usage is not None:
+                db.execute('CREATE TABLE IF NOT EXISTS openai_usage (request_id TEXT PRIMARY KEY, response_id TEXT, model TEXT, usage_json TEXT, cost_usd TEXT, eur_per_usd TEXT, estimated_microeur INTEGER)')
+                db.execute('INSERT INTO openai_usage VALUES (?,?,?,?,?,?,?)',
+                    (request_id, usage['response_id'], usage['model'], json.dumps(usage),
+                     usage['cost_usd'], usage['eur_per_usd'], actual_microeur))
             # Preserve the real charge even if an adapter underestimated its bound.
             db.execute('UPDATE spend SET actual=? WHERE id=?',(actual_microeur,request_id))
         if actual_microeur > row[0]:
