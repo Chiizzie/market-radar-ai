@@ -1,5 +1,7 @@
 """Real-model, synthetic-evidence evaluation. Never emits executable trade plans."""
 from datetime import datetime
+from types import SimpleNamespace
+from decimal import Decimal
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -108,11 +110,25 @@ def write_report(path, report):
     temporary.replace(path)
 
 
-def run_evaluation(client, *, now, path, cases=None):
+def run_evaluation(client, *, now, path, cases=None, prior_report=None):
     cases=fixtures() if cases is None else cases
+    cached={}
+    if prior_report is not None:
+        if (prior_report.get('version') != VERSION or prior_report.get('model') != MODEL
+                or prior_report.get('mode') != 'REAL_MODEL_SYNTHETIC_EVIDENCE'):
+            raise ValueError('resume_provenance_mismatch')
+        expected={c['case_id']:c for c in cases}
+        for old in prior_report['cases']:
+            if old['evidence'] != expected.get(old['case_id']):
+                raise ValueError('resume_evidence_mismatch')
+        for call in prior_report['calls']:
+            if call['request_id'] in cached:
+                raise ValueError('duplicate_cached_identity')
+            cached[call['request_id']]=call
     report={'version':VERSION, 'mode':'REAL_MODEL_SYNTHETIC_EVIDENCE',
             'model':MODEL, 'started_at':now.isoformat(), 'state':'running',
             'cases':[], 'calls':[], 'trade_authorized':False,
+            'new_model_requests':0,'reused_responses':0,
             'limitations':['Synthetic cases do not measure trading profitability.',
                 'All six roles use the same model; errors may be correlated.',
                 'Exact quotations validate provenance, not the truth of an interpretation.',
@@ -120,8 +136,15 @@ def run_evaluation(client, *, now, path, cases=None):
     write_report(path,report)
     def ask(stage,case_id,payload,schema,instructions):
         request_id=f'{VERSION}:{case_id}:{stage}'
-        reply=client.call(prompt=json.dumps(payload,sort_keys=True,separators=(',', ':')),schema=schema.model_json_schema(),
-            instructions=instructions,request_id=request_id,now=now,max_output_tokens=2048)
+        if request_id in cached:
+            old=cached[request_id]
+            reply=SimpleNamespace(**{k:old[k] for k in ('data','response_id','input_tokens','output_tokens','estimated_cost_microeur')},
+                                  cost_usd=Decimal(old['cost_usd']))
+            report['reused_responses']+=1
+        else:
+            reply=client.call(prompt=json.dumps(payload,sort_keys=True,separators=(',', ':')),schema=schema.model_json_schema(),
+                instructions=instructions,request_id=request_id,now=now,max_output_tokens=2048)
+            report['new_model_requests']+=1
         # Save every paid response before semantic validation or another request.
         report['calls'].append({'request_id':request_id,'response_id':reply.response_id,
             'input_tokens':reply.input_tokens,'output_tokens':reply.output_tokens,

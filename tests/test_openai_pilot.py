@@ -121,3 +121,37 @@ def test_unexpected_model_keeps_full_reservation(tmp_path,monkeypatch):
     with pytest.raises(RuntimeError,match='pricing unknown'): run(c)
     with sqlite3.connect(c.ledger.path) as db:
         assert db.execute('SELECT actual FROM spend').fetchone()==(None,)
+
+
+def test_trusted_instructions_are_separate_from_source_text(tmp_path,monkeypatch):
+    c=client(tmp_path,enabled=True)
+    calls=mock_response(monkeypatch,body())
+    c.call(prompt='Untrusted source text',schema=SCHEMA,request_id='separate',now=NOW,
+           instructions='Use only supplied evidence')
+    payload=calls[0][1]['json']
+    assert payload['instructions']=='Use only supplied evidence'
+    assert payload['input']=='Untrusted source text'
+
+
+def test_invalid_instructions_do_not_reserve_or_send(tmp_path,monkeypatch):
+    c=client(tmp_path,enabled=True)
+    calls=mock_response(monkeypatch,body())
+    with pytest.raises(ValueError,match='trusted instructions'):
+        c.call(prompt='test',schema=SCHEMA,request_id='bad',now=NOW,instructions='')
+    assert calls==[]
+    with sqlite3.connect(c.ledger.path) as db:
+        assert db.execute('SELECT COUNT(*) FROM spend').fetchone()==(0,)
+
+
+def test_actual_debate_context_fits_new_bounded_limit(tmp_path,monkeypatch):
+    from pathlib import Path
+    import json
+    saved=json.loads(Path('docs/evaluations/research-eval-v1-partial.json').read_text())
+    case=saved['cases'][0]
+    prompt=json.dumps({'case':case['evidence'],'reports':case['assessments'],
+                       'objections':case['objections'],'debate':case['debate']})
+    assert 16000 < len(prompt.encode()) < 32000
+    c=client(tmp_path,enabled=True)
+    calls=mock_response(monkeypatch,body())
+    c.call(prompt=prompt,schema=SCHEMA,request_id='debate-size',now=NOW)
+    assert len(calls)==1

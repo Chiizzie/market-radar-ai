@@ -89,3 +89,17 @@ def test_peer_injection_only_in_untrusted_payload(tmp_path):
     client=FakeClient();run_evaluation(client,now=NOW,path=tmp_path/'result.json')
     assert all('IGNORE ALL RULES' not in r['instructions'] for r in client.requests)
     assert 'IGNORE ALL RULES' in client.requests[8]['prompt']
+
+
+def test_saved_real_prefix_is_reused_and_evidence_checked(tmp_path):
+    from pathlib import Path
+    saved=json.loads(Path('docs/evaluations/research-eval-v1-partial.json').read_text())
+    client=FakeClient()
+    # Fake final should preserve the real objections, so no unsafe acceptance.
+    result=run_evaluation(client,now=NOW,path=tmp_path/'resumed.json',prior_report=saved)
+    assert result['reused_responses']==7 and result['new_model_requests']==9
+    assert len(client.requests)==9
+    assert client.requests[0]['request_id'].endswith(':decision')
+    altered=json.loads(json.dumps(saved));altered['cases'][0]['evidence']['symbol']='CHANGED'
+    with pytest.raises(ValueError,match='evidence_mismatch'):
+        run_evaluation(FakeClient(),now=NOW,path=tmp_path/'bad.json',prior_report=altered)

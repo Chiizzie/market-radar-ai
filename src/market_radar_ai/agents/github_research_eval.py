@@ -19,14 +19,27 @@ def main():
     try:
         store=GitHubBudgetStore(os.environ.get('GH_BUDGET_TOKEN',''))
         state,_=store.load()
-        if any(key.startswith(VERSION+':') for key in state['entries']):
-            raise RuntimeError('Evaluation already attempted; do not repeat paid calls')
+        prefix={key:value for key,value in state['entries'].items() if key.startswith(VERSION+':')}
+        prior=None
+        checkpoint=Path('docs/evaluations/research-eval-v1-partial.json')
+        if prefix:
+            prior=json.loads(checkpoint.read_text())
+            saved={c['request_id']:c for c in prior['calls']}
+            if set(prefix)!=set(saved):
+                raise RuntimeError('Unreconciled evaluation attempts; do not repeat paid calls')
+            for key,row in prefix.items():
+                record=saved[key]
+                if (row['actual'] is None or row['actual']!=record['estimated_cost_microeur']
+                    or row['usage'] is None or row['usage']['response_id']!=record['response_id']
+                    or row['usage']['model']!=prior['model']
+                    or row['usage']['cost_usd']!=record['cost_usd']):
+                    raise RuntimeError('Unreconciled evaluation cost; no retry')
         key=os.environ.get('OPENAI_API_KEY','')
         if not key: raise ValueError('API key missing')
         now=datetime.now(timezone.utc)
         fx=YahooFxProvider().fetch('USD',now=now)
         client=OpenAIPilot(api_key=key,ledger=GitHubSpendingLedger(store),eur_per_usd=fx.eur_per_unit,enabled=True)
-        report=run_evaluation(client,now=now,path=path)
+        report=run_evaluation(client,now=now,path=path,prior_report=prior)
         report['budget']=client.ledger.summary()
         report['fx']={'eur_per_usd':str(fx.eur_per_unit),'observed_at':fx.observed_at.isoformat(),'source':fx.source}
         path.write_text(json.dumps(report,indent=2)+'\n')

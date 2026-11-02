@@ -72,8 +72,8 @@ class OpenAIPilot:
         return int((usd*self.rate*1_000_000).to_integral_value(rounding=ROUND_CEILING))
 
     def call(self, *, prompt, schema, request_id, now, max_output_tokens=512, instructions=None):
-        if not isinstance(prompt, str) or not 0 < len(prompt.encode('utf-8')) <= 16000:
-            raise ValueError('Pilot prompt must be 1 to 16000 UTF-8 bytes')
+        if not isinstance(prompt, str) or not 0 < len(prompt.encode('utf-8')) <= 32000:
+            raise ValueError('Pilot prompt must be 1 to 32000 UTF-8 bytes')
         if type(max_output_tokens) is not int or not 16 <= max_output_tokens <= 2048:
             raise ValueError('Pilot output cap must be 16 to 2048 tokens')
         validated_schema = strict_schema(schema)
