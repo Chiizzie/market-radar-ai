@@ -541,6 +541,12 @@
         "response_id": "resp_024897f1f6d83874016ae8f243f99c87d28fc0907de00fddbd"
       }
     },
+    "research-eval-v3:case-b:technical_analyst": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 276192,
+      "usage": null
+    },
     "storage-check-v1": {
       "actual": 0,
       "day": "2026-11-02",
