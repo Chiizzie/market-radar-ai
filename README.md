@@ -169,3 +169,13 @@ Saved paid responses were reconciled with the persistent budget and reused after
 interruptions; they were not regenerated. The normal workflow does not run paid
 evaluations. `RUN_RESEARCH_EVAL` is an explicit opt-in variable; completed request
 identities cannot be reused, so a new evaluated revision is required for new tests.
+
+### Revised research decision policy
+
+[The V3 development evaluation](docs/evaluations/RESEARCH_EVAL_V3.md) passed both
+synthetic cases after distinguishing cautions from blockers, enforcing independent
+risk/time/broker checks, retaining issue IDs in code, and constraining source
+quotations. Its full audit includes the failed earlier attempts and their costs.
+175 software tests pass. Total recorded pilot model cost: EUR 0.109940, with no
+pending reservations. Two development cases are not a trading-performance test.
+Normal CI does not enable paid V3 runs; completed identities cannot be reused.

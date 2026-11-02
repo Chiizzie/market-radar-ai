@@ -84,3 +84,15 @@ NO_ACTION. The unsafe broker case was rejected. Unit/integration tests: 157
 passed. Total recorded pilot usage, including connectivity: EUR 0.042577.
 Temporary evaluation activation was removed. Further work should refine blocker
 classification and evaluate held-out cases before considering actionable output.
+
+## V3 development evaluation passed
+
+See `evaluations/RESEARCH_EVAL_V3.md` and its full JSON record. Both cases passed
+expected-disposition, final-consistency and typed-risk-fact checks. The supported
+fictional case retained four cautions; the unverified-broker case remained
+NO_ACTION. GitHub run 41520504043 passed tests and the live evaluation.
+
+175 software tests passed. Total pilot model usage: EUR 0.109940; no pending
+reservations; EUR 0.390060 of the initial allowance remains. Temporary activation
+was removed. This is a development smoke test, not evidence of profit or accuracy
+on unseen market conditions. Next: held-out scenarios and captured market inputs.

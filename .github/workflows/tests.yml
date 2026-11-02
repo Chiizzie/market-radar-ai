@@ -80,14 +80,14 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
       - name: Authorized v3 evaluation with deterministic issue register
-        if: github.event.head_commit.message == 'Finish v3 with source-bound quotation choices'
+        if: vars.RUN_RESEARCH_EVAL_V3 == 'enabled'
         run: python -m market_radar_ai.agents.github_research_eval_v3
         env:
           GH_BUDGET_TOKEN: ${{ github.token }}
           OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
           RUN_RESEARCH_EVAL_V3: enabled
       - name: Preserve v3 evaluation report
-        if: always() && github.event.head_commit.message == 'Finish v3 with source-bound quotation choices'
+        if: always() && vars.RUN_RESEARCH_EVAL_V3 == 'enabled'
         uses: actions/upload-artifact@v4
         with:
           name: research-evaluation-v3
