@@ -160,6 +160,10 @@ jobs:
         if: always()
         continue-on-error: true
         run: python -m market_radar_ai.agents.news_input --evidence artifacts/discovery/combined-news.json --symbol NVDA --output artifacts/discovery/nvda-research-input.json
+      - name: Prepare combined issuer evidence when candidate was captured
+        if: always()
+        continue-on-error: true
+        run: python -m market_radar_ai.agents.combined_input --capture artifacts/discovery/capture.json --evidence artifacts/discovery/combined-news.json --symbol NVDA --output artifacts/discovery/nvda-combined-input.json
       - name: Preserve results and queue checkpoint
         if: always()
         uses: actions/upload-artifact@v4

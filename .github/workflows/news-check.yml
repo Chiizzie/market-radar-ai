@@ -5,6 +5,8 @@ on:
     paths:
       - 'src/market_radar_ai/evidence/**'
       - 'src/market_radar_ai/agents/news_input.py'
+      - 'src/market_radar_ai/agents/combined_input.py'
+      - 'tests/test_combined_input.py'
       - 'tests/test_news_input.py'
       - 'src/market_radar_ai/dashboard/evidence.py'
       - '.github/workflows/news-check.yml'
@@ -24,7 +26,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -e '.[dev,market]'
-      - run: python -m pytest -q tests/test_public_feed.py tests/test_evidence_export.py tests/test_company_news.py tests/test_combined_news.py tests/test_news_evidence.py tests/test_news_input.py
+      - run: python -m pytest -q tests/test_public_feed.py tests/test_evidence_export.py tests/test_company_news.py tests/test_combined_news.py tests/test_news_evidence.py tests/test_news_input.py tests/test_combined_input.py
       - name: Retrieve official macro feed
         run: python -m market_radar_ai.evidence.public_feed --output artifacts/news/news.json
       - name: Export news-only dashboard for import
@@ -74,6 +76,23 @@ jobs:
         if: always()
         continue-on-error: true
         run: python -m market_radar_ai.agents.news_input --evidence artifacts/news/combined-news.json --symbol NVDA --output artifacts/news/nvda-research-input.json
+      - name: Capture bounded NVDA candle evidence
+        if: always()
+        continue-on-error: true
+        run: |
+          python - <<'PYCODE'
+          import json
+          from pathlib import Path
+          from market_radar_ai.market_data.capture import capture_markets
+          from market_radar_ai.market_data.providers.yahoo import YahooFinanceProvider
+          capture=capture_markets(['NVDA'],[],stock_fetch=lambda symbol: YahooFinanceProvider().fetch_history(symbol,period='1d',interval='5m'),crypto_fetch=None)
+          Path('artifacts/news/nvda-capture.json').write_text(json.dumps(capture,indent=2)+'\n')
+          print(json.dumps(capture['coverage']))
+          PYCODE
+      - name: Assemble combined research evidence without paid analysis
+        if: always()
+        continue-on-error: true
+        run: python -m market_radar_ai.agents.combined_input --capture artifacts/news/nvda-capture.json --evidence artifacts/news/combined-news.json --symbol NVDA --output artifacts/news/nvda-combined-input.json
       - name: Check news delivery acceptance independently
         if: always()
         continue-on-error: true

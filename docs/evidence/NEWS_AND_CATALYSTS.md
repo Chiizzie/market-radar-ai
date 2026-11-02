@@ -81,3 +81,13 @@ Creates a news-research-v1 packet with at most ten deduplicated, newest-first ar
 This separate input carries explicit missing chart, broker and EUR risk evidence. It contains no fabricated broker expiry or trade plan and cannot validate as the paper-trade ResearchInput. Existing offline ModelGateway specialist interfaces can consume it; all six receive the same immutable packet independently. Source text remains untrusted data. This is a data connection and mock interface verification, not a live six-model analysis. No paid adapter is activated.
 
 A failed refresh overwrites the output with status=blocked and input=null. The news verification and manual discovery workflows now preserve this packet as an artifact. Local live NVIDIA retrieval produced a ready_for_research packet with zero model calls and trade_authorized=false. Tests cover stale/future/unmapped evidence, item freshness despite a new envelope, deduplication, bounds, injection-like text remaining data, six independent gateway requests, and rejection at the paper-plan boundary.
+
+## Combined price and news research input
+
+`python -m market_radar_ai.agents.combined_input --capture capture.json --evidence combined-news.json --symbol NVDA --output combined-input.json`
+
+The combined-research-v1 packet joins one matching stock capture to the dated news packet. It verifies the capture checksum and original quality status, then independently validates retrieval age, OHLC values, source/symbol identity, a single native quote currency, chronological completed five-minute candles, duplicates and gaps. Requires 2–60 candles, retrieval within 15 minutes and a latest candle within 15 minutes. No timestamps are refreshed to hide old data. USD remains USD; no EUR conversion or indicator/entry/stop/target values are invented.
+
+A separate market citation hashes the validated market block. Saved packets revalidate evidence and citation consistency. The packet remains research-only with missing broker eligibility, EUR risk/plan and catalyst significance. It cannot pass the paper-plan input boundary. Failed CLI refreshes write blocked with input=null and zero model calls.
+
+Local validation: 266 tests passed, including six independent mock assessments, six rebuttals and final adjudication retaining all unresolved objections. This is protocol verification, not paid AI reasoning. The public-news workflow now performs a bounded one-symbol NVDA capture and preserves combined-input.json, including blocked results. The manual market rehearsal also attempts composition when NVDA appears in its selected batch; absence correctly blocks that packet. Live combined readiness is pending verification; a successful workflow is not evidence freshness approval.
