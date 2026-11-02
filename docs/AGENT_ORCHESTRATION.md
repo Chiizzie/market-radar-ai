@@ -97,3 +97,20 @@ analysis. The mock has no real timeout enforcement, network activity or actual c
 Final adjudication still uses deterministic rules rather than a seventh model call.
 Model-generated rebuttals, provider SDKs, token accounting, verified pricing, and
 paid activation remain pending. Existing simulated labels remain intentional.
+
+## Structured debate milestone
+
+`DebateCoordinator.run_paper` now exercises six independent gateway responses,
+up to twelve structured rebuttals, and a final gateway adjudication, using only mock
+transport. Every response request reserves budget. Independent requests contain no
+peer reports; rebuttals and adjudication receive the prior stage explicitly.
+Identity/source checks reject malformed replies. The paper boundary checks risk,
+freshness, broker expiry and Dublin exit deadlines before requests, and returns no
+plan for a rejected/abstaining verdict. No order API exists.
+
+Objections remain unresolved in this conservative version even after a rebuttal:
+model-generated persuasion alone is not a verified resolution. An attempt to erase
+an objection fails. Actual evidence-based resolution policy, live inference,
+network timeout enforcement and token-price integration remain required. Debate
+results are structured return values; they are not yet integrated with TeamAuditStore.
+The mock tests validate protocol and gates, not reasoning quality or profitability.
