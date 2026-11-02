@@ -136,6 +136,12 @@
         "response_id": "resp_09d2e909dd3245c0016ae8ebef7eac87d0a9e4efeca863c163"
       }
     },
+    "research-eval-v1:unverified-injection-fixture:debate": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 276130,
+      "usage": null
+    },
     "research-eval-v1:unverified-injection-fixture:devils_advocate": {
       "actual": 2101,
       "day": "2026-11-02",
