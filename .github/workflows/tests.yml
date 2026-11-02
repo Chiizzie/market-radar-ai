@@ -125,3 +125,28 @@ jobs:
           path: artifacts/public-data/*.json
           if-no-files-found: error
           retention-days: 30
+  discovery-rehearsal:
+    needs: tests
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/phase-1/market-data-layer' && (github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Run discovery-to-dashboard milestone rehearsal')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[market]'
+      - name: Discover both markets and capture a bounded batch
+        run: python -m market_radar_ai.market_data.rehearsal --output-dir artifacts/discovery
+      - name: Preserve results and queue checkpoint
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: discovery-to-dashboard
+          path: artifacts/discovery/
+          if-no-files-found: error
+          retention-days: 30
