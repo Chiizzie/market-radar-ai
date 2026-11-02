@@ -115,3 +115,48 @@ def test_remote_pilot_settles_usage_in_same_state_write(monkeypatch):
     row=store.state['entries']['paid-test']
     assert row['actual']==959 and row['usage']['cost_usd']=='0.001065'
     assert store.version==2
+
+
+def test_lost_write_acknowledgement_blocks_call_and_later_retry(monkeypatch):
+    from market_radar_ai.agents.openai_pilot import OpenAIPilot
+    class LostAckStore(MemoryStore):
+        def save(self,state,expected_sha):
+            super().save(state,expected_sha)
+            raise RuntimeError('reply lost after successful write')
+    store=LostAckStore()
+    pilot=OpenAIPilot(api_key='test',ledger=GitHubSpendingLedger(store),eur_per_usd=1,enabled=True)
+    def forbidden(*args, **kwargs): pytest.fail('No paid request after ambiguous storage write')
+    monkeypatch.setattr('market_radar_ai.agents.openai_pilot.requests.post',forbidden)
+    with pytest.raises(RuntimeError):
+        pilot.call(prompt='test',schema={'type':'object','properties':{}},request_id='x',now=NOW)
+    with pytest.raises(ValueError,match='already reserved'):
+        pilot.call(prompt='test',schema={'type':'object','properties':{}},request_id='x',now=NOW)
+    assert store.state['entries']['x']['actual'] is None
+
+
+def test_failed_remote_settlement_retains_full_hold(monkeypatch):
+    from market_radar_ai.agents.openai_pilot import OpenAIPilot
+    from test_openai_pilot import mock_response,body,SCHEMA
+    class SettlementFailure(MemoryStore):
+        def save(self,state,expected_sha):
+            if self.version==1: raise RuntimeError('settlement failed')
+            super().save(state,expected_sha)
+    store=SettlementFailure()
+    pilot=OpenAIPilot(api_key='test',ledger=GitHubSpendingLedger(store),eur_per_usd=1,enabled=True)
+    mock_response(monkeypatch,body())
+    with pytest.raises(RuntimeError,match='settlement failed'):
+        pilot.call(prompt='test',schema=SCHEMA,request_id='x',now=NOW)
+    row=store.state['entries']['x']
+    assert row['actual'] is None and row['reserved'] > 300000
+
+
+def test_remote_record_round_trip(monkeypatch):
+    import base64,json
+    class Response:
+        status_code=200
+        def json(self):
+            return {'sha':'a'*40,'size':200,'encoding':'base64',
+                    'content':base64.b64encode(json.dumps(initial_state()).encode()).decode()}
+    monkeypatch.setattr('market_radar_ai.agents.github_budget.requests.get',lambda *a,**k:Response())
+    state,sha=GitHubBudgetStore('test').load()
+    assert state==initial_state() and sha=='a'*40
