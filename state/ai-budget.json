@@ -2,7 +2,7 @@
   "currency": "EUR",
   "entries": {
     "storage-check-v1": {
-      "actual": null,
+      "actual": 0,
       "day": "2026-11-02",
       "reserved": 1,
       "usage": null
