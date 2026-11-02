@@ -24,7 +24,7 @@ jobs:
     needs: tests
     if: github.event_name == 'push' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/phase-1/market-data-layer'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     permissions:
       contents: write
     concurrency:
@@ -49,3 +49,18 @@ jobs:
           GH_BUDGET_TOKEN: ${{ github.token }}
           OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
           RUN_OPENAI_CONNECTIVITY: enabled
+      - name: Authorized one-shot six-role research evaluation
+        if: github.event.head_commit.message == 'Run authorized six-role synthetic evaluation v1'
+        run: python -m market_radar_ai.agents.github_research_eval
+        env:
+          GH_BUDGET_TOKEN: ${{ github.token }}
+          OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
+          RUN_RESEARCH_EVAL: enabled
+      - name: Preserve synthetic evaluation report
+        if: always() && github.event.head_commit.message == 'Run authorized six-role synthetic evaluation v1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-evaluation-v1
+          path: artifacts/research-eval/result.json
+          if-no-files-found: warn
+          retention-days: 30

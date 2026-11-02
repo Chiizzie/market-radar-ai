@@ -71,7 +71,7 @@ class OpenAIPilot:
     def _eur(self, usd):
         return int((usd*self.rate*1_000_000).to_integral_value(rounding=ROUND_CEILING))
 
-    def call(self, *, prompt, schema, request_id, now, max_output_tokens=512):
+    def call(self, *, prompt, schema, request_id, now, max_output_tokens=512, instructions=None):
         if not isinstance(prompt, str) or not 0 < len(prompt.encode('utf-8')) <= 16000:
             raise ValueError('Pilot prompt must be 1 to 16000 UTF-8 bytes')
         if type(max_output_tokens) is not int or not 16 <= max_output_tokens <= 2048:
@@ -82,6 +82,10 @@ class OpenAIPilot:
             max_output_tokens=max_output_tokens, reasoning={'effort':'none'},
             text={'format':{'type':'json_schema', 'name':'pilot_result',
                            'strict':True, 'schema':validated_schema}})
+        if instructions is not None:
+            if not isinstance(instructions, str) or not 0 < len(instructions) <= 8000:
+                raise ValueError('Invalid trusted instructions')
+            payload['instructions'] = instructions
         if len(json.dumps(payload).encode('utf-8')) > 64000:
             raise ValueError('Pilot request too large')
         # Reserve the full context window at uncached price, plus output cap.
