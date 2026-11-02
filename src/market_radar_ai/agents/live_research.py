@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Annotated, Literal
 import re
-from pydantic import Field, AfterValidator
+from pydantic import Field, AfterValidator, ValidationError
 from .paper_team import Frozen
 from .combined_input import CombinedResearchInput
 from .crypto_input import CryptoResearchInput
@@ -157,7 +157,24 @@ def run_research(client, packet, *, path, clock, enabled=False):
             try:
                 parsed=schema.model_validate(reply.data)
                 validate_claims(parsed,packet,metrics)
-            except ValueError:
+            except ValueError as error:
+                # Only local validation diagnostics: never exception text from
+                # transport/providers, which may contain credentials or URLs.
+                if isinstance(error, ValidationError):
+                    call['validation_details']=[
+                        {'field':list(item['loc']), 'type':item['type']}
+                        for item in error.errors(include_input=False,include_context=False,
+                                                 include_url=False)[:20]]
+                else:
+                    call['validation_details']=[{'field':['metric_claims'],
+                                                 'type':'research_metric_mismatch'}]
+                # Quarantine as untrusted JSON, never an accepted assessment or
+                # peer input. Bound storage independently of provider limits.
+                encoded=json.dumps(reply.data,ensure_ascii=True)
+                call['rejected_response']={
+                    'status':'untrusted_rejected_draft','trade_authorized':False,
+                    'data':reply.data if len(encoded.encode('utf-8'))<=32768 else None,
+                    'omitted_for_size':len(encoded.encode('utf-8'))>32768}
                 call['state']='rejected'
                 call['validation_error']='response_quality_or_metric_validation_failed'
                 save()

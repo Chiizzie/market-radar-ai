@@ -181,3 +181,32 @@ def test_peer_stages_use_same_quality_gate(tmp_path,monkeypatch,stage,expected_c
     assert len(requests)==expected_calls and report['conclusion'] is None
     assert report['calls'][-1]['state']=='rejected'
     assert all(e['actual'] is not None for e in store.state['entries'].values())
+
+
+def test_rejection_diagnostics_quarantine_draft_without_forwarding(tmp_path,monkeypatch):
+    bad='Incomplete summary'
+    packet,client,store,requests=setup(monkeypatch,mutate=lambda d,p:d.update(summary=bad))
+    path=tmp_path/'diagnostic.json'
+    with pytest.raises(RuntimeError):run_research(client,packet,path=path,clock=lambda:NOW,enabled=True)
+    report=json.loads(path.read_text());call=report['calls'][0]
+    assert call['validation_details']==[{'field':['summary'],'type':'value_error'}]
+    assert call['rejected_response']['data']['summary']==bad
+    assert call['rejected_response']['status']=='untrusted_rejected_draft'
+    assert call['rejected_response']['trade_authorized'] is False
+    assert report['assessments']==[] and report['debate'] is None and len(requests)==1
+
+
+def test_oversized_rejected_draft_is_not_retained(tmp_path,monkeypatch):
+    from dataclasses import replace
+    packet,client,store,requests=setup(monkeypatch)
+    original=client.call
+    def oversized(**kwargs):
+        reply=original(**kwargs)
+        return replace(reply,data={**reply.data,'summary':'x'*33000})
+    monkeypatch.setattr(client,'call',oversized)
+    path=tmp_path/'oversized.json'
+    with pytest.raises(RuntimeError):run_research(client,packet,path=path,clock=lambda:NOW,enabled=True)
+    call=json.loads(path.read_text())['calls'][0]
+    assert call['rejected_response']['data'] is None
+    assert call['rejected_response']['omitted_for_size'] is True
+    assert call['validation_details'][0]['field']==['summary']
