@@ -45,6 +45,21 @@ jobs:
         if: always()
         continue-on-error: true
         run: python -m market_radar_ai.evidence.company_news --symbol MSFT --output artifacts/news/company-news.json
+      - name: Combine feeds without hiding provider failures
+        if: always()
+        run: |
+          python -m market_radar_ai.evidence.combine --feeds artifacts/news/news.json artifacts/news/company-news.json --output artifacts/news/combined-news.json
+          python - <<'PYCODE'
+          import json
+          from pathlib import Path
+          from datetime import datetime, timezone
+          from market_radar_ai.dashboard.export import build_snapshot
+          from market_radar_ai.market_data.capture import capture_markets
+          root=Path('artifacts/news')
+          feed=json.loads((root/'combined-news.json').read_text())
+          snapshot=build_snapshot(capture_markets([],[],stock_fetch=None,crypto_fetch=None),now=datetime.now(timezone.utc),evidence=feed)
+          (root/'dashboard.json').write_text(json.dumps(snapshot,indent=2)+'\n')
+          PYCODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:

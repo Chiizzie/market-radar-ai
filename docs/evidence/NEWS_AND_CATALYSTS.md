@@ -31,3 +31,9 @@ Investor disclosure and scheduled catalyst support remains schema-only. This cha
 The bounded Yahoo adapter uses the installed yfinance `Ticker.get_news(count=10, tab='news')` interface, inspected directly in this environment. It retains canonical article links, publisher names and aware publication times; rejects malformed/future/older-than-24-hour items; and removes duplicate URLs. The query ticker is metadata only: article symbols remain empty until entity relevance is verified. A query result is not an issuer announcement or a proven catalyst.
 
 Command: `python -m market_radar_ai.evidence.company_news --symbol MSFT --output company-news.json`. This feed uses the existing optional market dependency, no new key or purchased subscription. Availability and completeness are not guaranteed. Live connectivity is not yet verified. The public-news verification workflow now probes it separately and preserves its status even when the macro feed succeeds. The imported evidence exporter can accept this file using --evidence; combining feeds and verified ticker matching remain future work.
+
+## Combined feed
+
+`python -m market_radar_ai.evidence.combine --feeds macro.json company.json --output combined.json`
+
+Validates each input, preserves failed/stale source status in `sources`, deduplicates canonical evidence IDs, sorts by actual publication time, and caps output at 50 items. It preserves the oldest contributing retrieval timestamp; aggregation never makes old evidence fresh. No usable feeds returns error, not empty success. The news workflow now exports combined evidence to dashboard.json and keeps individual source files plus combined-news.json for diagnostics. The dashboard receives aggregate partial/error status; detailed source status is currently in combined-news.json, not rendered by the UI.
