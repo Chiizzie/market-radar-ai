@@ -70,3 +70,16 @@ not tamper-proof storage and needs durable hosting/backups before deployment.
 Preflight now validates plan risk and exit deadline before role calls, preventing
 obviously invalid plans from consuming even the simulated budget. Outcomes and
 agent accuracy still need a separate paper-fill and evaluation implementation.
+
+## Prompt and spending preparation
+
+`agents.prompts` defines six distinct, versioned evidence-grounding instructions.
+They are not yet sent to models. `agents.spending.SpendingLedger` atomically reserves
+integer micro-EUR against a Dublin-calendar-day cap in SQLite. Pending or unknown
+usage retains the full reservation. Duplicate request IDs cannot trigger another
+reservation; settlements are idempotent and conflicting changes are rejected.
+Overruns are recorded before raising an error. All workers must share the same
+ledger and configured cap. This does not bound a provider's billing by itself:
+future adapters must calculate a conservative maximum using verified prices,
+input/token limits and output caps before reserving, and settle actual usage.
+No paid adapter or pricing configuration is connected in this increment.
