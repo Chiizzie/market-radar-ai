@@ -1,0 +1,70 @@
+{
+  "format_version": 1,
+  "purpose": "historical_research_replay_not_live_signal",
+  "captures": [
+    {
+      "payload": {
+        "provider": "yahoo_finance",
+        "provider_status": "error",
+        "retrieved_at": "2026-11-02T20:44:02.599307+00:00",
+        "captured_at_dublin": "2026-11-02T20:44:10.454419+00:00",
+        "candles_returned": 0,
+        "candles_saved": 0,
+        "candles": [],
+        "quality_issues": [
+          {
+            "code": "provider_error",
+            "message": "Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+            "symbol": "MSFT",
+            "timestamp": null
+          },
+          {
+            "code": "empty_candles",
+            "message": "No completed candles available",
+            "symbol": null,
+            "timestamp": null
+          }
+        ],
+        "quality_passed_at_capture": false,
+        "account_broker_eligibility": "unknown",
+        "news_evidence": "not_collected",
+        "currency_conversion": "not_applied_native_quotes_preserved",
+        "disposition": "NO_ACTION",
+        "research_only": true
+      },
+      "payload_sha256": "b5a23a136e82f11f8ca5227264db358207b571916964e89f0cdc008fe43246c9"
+    },
+    {
+      "payload": {
+        "provider": "kraken",
+        "provider_status": "error",
+        "retrieved_at": "2026-11-02T20:44:07.444379+00:00",
+        "captured_at_dublin": "2026-11-02T20:44:10.454419+00:00",
+        "candles_returned": 0,
+        "candles_saved": 0,
+        "candles": [],
+        "quality_issues": [
+          {
+            "code": "provider_error",
+            "message": "provider_retries_exhausted",
+            "symbol": "XBTEUR",
+            "timestamp": null
+          },
+          {
+            "code": "empty_candles",
+            "message": "No completed candles available",
+            "symbol": null,
+            "timestamp": null
+          }
+        ],
+        "quality_passed_at_capture": false,
+        "account_broker_eligibility": "unknown",
+        "news_evidence": "not_collected",
+        "currency_conversion": "not_applied_native_quotes_preserved",
+        "disposition": "NO_ACTION",
+        "research_only": true
+      },
+      "payload_sha256": "1aa8c34ae12403093f5c8563b838907d2e140cd2f84155d5813bbd353fb7f062"
+    }
+  ]
+}
