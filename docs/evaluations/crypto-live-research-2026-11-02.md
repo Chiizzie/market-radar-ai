@@ -56,3 +56,14 @@ The final report preserved these gaps and 18 specialist concerns. The run occurr
 Add deterministic computed market metrics and numerical grounding checks. Require concise, complete summaries and bounded, separately structured concerns. Add regression coverage based on these observed defects before considering another paid trial. Broker eligibility, crypto news, EUR risk plans and dashboard integration remain separate acceptance requirements.
 
 This audit is documentation only; it does not change runtime behavior or claim the defects are fixed.
+
+
+## Offline remediation
+
+The next revision introduces live-research-v2 reports with Python-computed window high/low and first/last closes, each tied to the original market citation and native currency. Model numbers must use structured metric claims; every claim is checked with Decimal equality, including currency and citation. Digits are rejected in narrative text. All eight stages use the same validation.
+
+Narrative fields now require terminal punctuation, no ellipsis, no unexpected non-English characters, and no execution-quality terminology. Summaries are bounded at 500 characters and individual concerns at 240. Execution quality is explicitly UNKNOWN_NO_SPREAD_OR_DEPTH. A rejection stops subsequent calls without an automatic paid retry, retaining settled cost and a safe rejection reason.
+
+These conservative checks can reject otherwise useful prose. They are not a grammatical or semantic proof: spelled-out numbers, paraphrased unsupported assertions, and misleading interpretations still require human review. Reports explicitly retain analysis_quality=requires_human_review; completed means protocol completion only. No new paid trial was performed for this remediation.
+
+Regression data in tests/fixtures/live_crypto_trial.json preserves the original market packet and specialist responses for offline reproduction. Tests exercise the actual high mismatch, observed truncated responses, all response stages, wrong currency/citation/value, bounded concerns, stopping, and cost retention.

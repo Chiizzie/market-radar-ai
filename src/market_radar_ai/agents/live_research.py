@@ -5,8 +5,9 @@ No orders or paper plans. Activation is deliberately absent from CI schedules.
 from datetime import datetime
 import json
 from pathlib import Path
-from typing import Literal
-from pydantic import Field
+from typing import Annotated, Literal
+import re
+from pydantic import Field, AfterValidator
 from .paper_team import Frozen
 from .combined_input import CombinedResearchInput
 from .crypto_input import CryptoResearchInput
@@ -15,24 +16,73 @@ from .prompts import instruction
 from .openai_pilot import OpenAIPilot
 
 
-class ResearchAssessment(Frozen):
+def checked_prose(value):
+    # Deliberately conservative: numbers belong in checked claims, execution
+    # quality belongs in a fixed unknown field, not unconstrained prose.
+    if (value != value.strip() or value[-1:] not in ('.', '!', '?')
+            or value.endswith(('...', '…')) or any(c.isdigit() for c in value)
+            or any(ord(c) > 127 and c not in '’“”–—' for c in value)
+            or re.search(r"\b(liquid\w*|illiquid\w*|spread\w*|depth|slippage|execution)\b", value, re.I)
+            or "','" in value or '\n' in value):
+        raise ValueError('research_prose_quality_failed')
+    return value
+
+
+Prose = Annotated[str, AfterValidator(checked_prose)]
+Concern = Annotated[Prose, Field(min_length=1, max_length=240)]
+
+
+class MetricClaim(Frozen):
+    metric: Literal['window_high', 'window_low', 'first_close', 'last_close']
+    value: str = Field(max_length=40, pattern=r'^\d+(?:\.\d+)?$')
+    quote_currency: str
+    source_id: str
+
+
+class GroundedResponse(Frozen):
+    metric_claims: tuple[MetricClaim, ...] = Field(max_length=4)
+    execution_quality: Literal['UNKNOWN_NO_SPREAD_OR_DEPTH']
+
+
+def market_metrics(packet):
+    rows = packet.market.candles
+    return {key: str(value) for key, value in {
+        'window_high': max(row.high for row in rows),
+        'window_low': min(row.low for row in rows),
+        'first_close': rows[0].close, 'last_close': rows[-1].close,
+    }.items()}
+
+
+def validate_claims(parsed, packet, metrics):
+    from decimal import Decimal
+    seen = set()
+    for claim in parsed.metric_claims:
+        if (claim.metric in seen or claim.source_id != packet.market.source_id()
+                or claim.source_id not in parsed.source_ids
+                or claim.quote_currency != packet.market.quote_currency
+                or Decimal(claim.value) != Decimal(metrics[claim.metric])):
+            raise ValueError('research_metric_mismatch')
+        seen.add(claim.metric)
+
+
+class ResearchAssessment(GroundedResponse):
     role: AgentRole
     snapshot_id: str
-    summary: str = Field(min_length=1, max_length=600)
+    summary: Prose = Field(min_length=1, max_length=500)
     source_ids: tuple[str, ...] = Field(min_length=1, max_length=4)
-    concerns: tuple[str, ...] = Field(max_length=3)
+    concerns: tuple[Concern, ...] = Field(max_length=3)
 
 
-class ResearchDebate(Frozen):
+class ResearchDebate(GroundedResponse):
     snapshot_id: str
-    discussion: str = Field(min_length=1, max_length=1200)
+    discussion: Prose = Field(min_length=1, max_length=1200)
     source_ids: tuple[str, ...] = Field(min_length=1, max_length=8)
 
 
-class ResearchConclusion(Frozen):
+class ResearchConclusion(GroundedResponse):
     snapshot_id: str
     verdict: Literal['MORE_RESEARCH_NEEDED', 'INSUFFICIENT_EVIDENCE']
-    rationale: str = Field(min_length=1, max_length=800)
+    rationale: Prose = Field(min_length=1, max_length=800)
     source_ids: tuple[str, ...] = Field(min_length=1, max_length=8)
 
 
@@ -62,7 +112,7 @@ def run_research(client, packet, *, path, clock, enabled=False):
     path=Path(path)
     if path.exists():
         raise ValueError('Existing research report must be preserved')
-    report={'version':'live-research-v1','state':'preflight','trade_authorized':False,
+    report={'version':'live-research-v2','analysis_quality':'requires_human_review','state':'preflight','trade_authorized':False,
             'calls':[],'assessments':[],'debate':None,'conclusion':None,
             'unresolved_concerns':[],'mandatory_missing_data':list(packet.missing_data)}
     def save():
@@ -74,6 +124,9 @@ def run_research(client, packet, *, path, clock, enabled=False):
     try:
         packet=preflight(packet,now=clock())
         digest=packet.digest()
+        metrics=market_metrics(packet)
+        report['computed_metrics']={'values':metrics,'quote_currency':packet.market.quote_currency,
+                                    'source_id':packet.market.source_id()}
         report['snapshot_id']=digest
         report['state']='running';save()
         def ask(stage,payload,schema,role=None):
@@ -87,6 +140,13 @@ def run_research(client, packet, *, path, clock, enabled=False):
                      'Cite only supplied source IDs. Preserve native currency; older news is context only. '
                      'Discuss uncertainty and missing data without inventing facts. Return the exact snapshot_id. ')
             if role is not None:trusted+=instruction(role)
+            trusted+=(' Write concise English complete sentences with terminal punctuation, comfortably below length limits. '
+                      'Do not put digits or numeric prices in prose; use metric_claims only, copying computed_metrics exactly. '
+                      'Use an empty metric_claims list if no numerical claim is needed. '
+                      'Do not discuss liquidity, spread, depth, slippage or execution in prose; '
+                      'execution_quality must be UNKNOWN_NO_SPREAD_OR_DEPTH. '
+                      'Each concern must be one concise standalone sentence. ')
+            payload={**payload,'computed_metrics':report['computed_metrics']}
             reply=client.call(prompt=json.dumps(payload,separators=(',',':')),
                 schema=schema.model_json_schema(),request_id=request_id,now=now,
                 instructions=trusted,max_output_tokens=1024,reasoning_effort='none')
@@ -94,7 +154,14 @@ def run_research(client, packet, *, path, clock, enabled=False):
             call.update(state='received',response_id=reply.response_id,
                 cost_usd=str(reply.cost_usd),estimated_cost_microeur=reply.estimated_cost_microeur)
             save()
-            parsed=schema.model_validate(reply.data)
+            try:
+                parsed=schema.model_validate(reply.data)
+                validate_claims(parsed,packet,metrics)
+            except ValueError:
+                call['state']='rejected'
+                call['validation_error']='response_quality_or_metric_validation_failed'
+                save()
+                raise
             if parsed.snapshot_id!=digest or any(s not in packet.source_ids for s in parsed.source_ids):
                 raise ValueError('Invalid response citation or identity')
             if role is not None and parsed.role!=role:
