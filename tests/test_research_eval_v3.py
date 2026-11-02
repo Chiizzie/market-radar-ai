@@ -11,7 +11,10 @@ from market_radar_ai.agents.roles import AgentRole
 
 class V3Client(Client):
     def call(self,**kwargs):
+        original=kwargs['request_id']
+        kwargs['request_id']=original.removesuffix(':citation-schema-repair')
         result=super().call(**kwargs)
+        self.requests[-1]['request_id']=original
         if kwargs['request_id'].endswith(':decision'):
             result.data.pop('unresolved_blocker_ids')
             result.data.pop('caution_ids')
@@ -55,13 +58,13 @@ def test_source_schema_and_resume_preserve_rejected_evidence(tmp_path):
     case=fixtures()[1][0]
     schema=constrained_schema(Assessment,case,'opportunity_hunter')
     assert schema['$defs']['Issue']['properties']['source_ids']['items']['enum']==[s['id'] for s in case['sources']]
-    assert 'case' not in schema['$defs']['Citation']['properties']['source_id']['enum']
+    assert 'case' not in [v['properties']['source_id']['enum'][0] for v in schema['$defs']['Citation']['anyOf']]
     prior=json.loads(Path('docs/evaluations/research-eval-v3-partial.json').read_text())
     class RepairClient(V3Client):
         def call(self,**kwargs):
             # The test client recognizes the role stage; retain the actual request ID in its record.
             original=kwargs['request_id']
-            kwargs['request_id']=original.removesuffix(':source-schema-repair')
+            kwargs['request_id']=original.removesuffix(':source-schema-repair').removesuffix(':citation-schema-repair')
             response=super().call(**kwargs)
             self.requests[-1]['request_id']=original
             return response
@@ -80,6 +83,19 @@ def test_wrapping_quotes_are_formatting_but_numbers_are_not(tmp_path):
     client=V3Client()
     result=run(client,now=datetime.now(timezone.utc),path=tmp_path/'result.json',prior_report=saved)
     assert result['reused_responses']==10 and result['new_model_requests']==6
-    assert len(result['rejected_calls'])==1
+    assert len(result['rejected_calls'])==2
     assert all(result['checks'].values())
     assert any(c['request_id'].endswith(':source-schema-repair') for c in result['calls'])
+
+
+def test_citation_schema_rejects_ellipsis_and_wrong_source():
+    from jsonschema import Draft202012Validator,ValidationError
+    from market_radar_ai.agents.research_eval_v3 import constrained_schema
+    schema=constrained_schema(Assessment,fixtures()[1][0],'news_analyst')['$defs']['Citation']
+    validator=Draft202012Validator(schema)
+    raw={'source_id':'chart','quote':'uptrend across 20 bars... retest bars at 100.0',
+         'interpretation':'Summary'}
+    with pytest.raises(ValidationError): validator.validate(raw)
+    quote=schema['anyOf'][0]['properties']['quote']['enum'][0]
+    validator.validate(dict(raw,quote=quote))
+    with pytest.raises(ValidationError): validator.validate(dict(raw,quote=quote,source_id='broker'))

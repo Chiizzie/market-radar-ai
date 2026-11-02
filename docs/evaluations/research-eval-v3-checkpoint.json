@@ -3,7 +3,7 @@
   "mode": "REAL_MODEL_SYNTHETIC_EVIDENCE",
   "model": "gpt-5.4-mini-2026-03-17",
   "state": "failed",
-  "started_at": "2026-11-02T20:27:44.647392+00:00",
+  "started_at": "2026-11-02T20:31:22.865747+00:00",
   "cases": [
     {
       "case_id": "case-a",
@@ -381,6 +381,33 @@
               ]
             }
           ]
+        },
+        {
+          "role": "technical_analyst",
+          "case_id": "case-b",
+          "stance": "oppose",
+          "rationale": "The chart and catalyst are constructive: a 20-bar uptrend, breakout retest holding above 99.8, VWAP above support, and a fresh +8% guidance raise. However, the plan cannot be supported because account tradability is explicitly unverified at the snapshot time, which is a blocker for entry eligibility. The loss budget is otherwise within limits, and the exit is intraday, but broker verification is still missing.",
+          "citations": [
+            {
+              "source_id": "chart",
+              "quote": "“established uptrend across 20 bars”",
+              "interpretation": "Trend is favorable for a long setup."
+            },
+            {
+              "source_id": "chart",
+              "quote": "“Breakout level 99.8 held on three”",
+              "interpretation": "Support/retest is intact near the planned entry zone."
+            }
+          ],
+          "issues": [
+            {
+              "code": "broker_unverified",
+              "explanation": "The broker/account tradability is explicitly unverified, so entry eligibility is not confirmed at the snapshot time.",
+              "source_ids": [
+                "broker"
+              ]
+            }
+          ]
         }
       ],
       "issues": [],
@@ -711,6 +738,41 @@
       "output_tokens": 428,
       "cost_usd": "0.0028335",
       "estimated_cost_microeur": 2531
+    },
+    {
+      "request_id": "research-eval-v3:case-b:news_analyst",
+      "response_id": "resp_0a85985c19a2bb48016ae8f31e662087d097f013ea5522cfde",
+      "data": {
+        "role": "news_analyst",
+        "case_id": "case-b",
+        "stance": "oppose",
+        "rationale": "The setup has a supportive short-term catalyst and confirming intraday tape, but the broker/account tradability is explicitly unverified, which is a blocker for paper research approval. The news is positive, yet the source itself warns it may already be partly priced in, so it is not enough to override the verification gap.",
+        "citations": [
+          {
+            "source_id": "chart",
+            "quote": "uptrend across 20 bars... retest bars at 100.0, 100.1, 100.0",
+            "interpretation": "Price action supports the breakout thesis and entry area."
+          },
+          {
+            "source_id": "catalyst",
+            "quote": "revenue guidance raised 8%",
+            "interpretation": "Fundamental news is positive and relevant to the long idea."
+          }
+        ],
+        "issues": [
+          {
+            "code": "broker_unverified",
+            "explanation": "The case explicitly says broker/account tradability is not verified, so eligibility cannot be confirmed at the snapshot time.",
+            "source_ids": [
+              "broker"
+            ]
+          }
+        ]
+      },
+      "input_tokens": 1211,
+      "output_tokens": 370,
+      "cost_usd": "0.00257325",
+      "estimated_cost_microeur": 2299
     }
   ],
   "trade_authorized": false,
@@ -752,7 +814,7 @@
       "estimated_cost_microeur": 1972
     }
   ],
-  "new_model_requests": 2,
-  "reused_responses": 8,
+  "new_model_requests": 1,
+  "reused_responses": 10,
   "failure_type": "ValueError"
 }
