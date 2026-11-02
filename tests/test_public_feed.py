@@ -65,3 +65,23 @@ def test_feed_failure_diagnostics_are_bounded(status, body, reason):
     assert result['http_status'] == status
     assert 'sensitive' not in str(result)
     assert result['items'] == []
+
+
+def test_nvidia_registry_assigns_publisher_symbol_only_to_allowlisted_items():
+    from market_radar_ai.evidence.public_feed import fetch_feed
+    from datetime import datetime
+    now = datetime.now(timezone.utc)
+    article = ITEM.replace('www.federalreserve.gov', 'blogs.nvidia.com').replace('Mon, 02 Nov 2026 14:00:00 GMT', now.strftime('%a, %d %b %Y %H:%M:%S GMT'))
+    evil = article.replace('blogs.nvidia.com', 'blogs.nvidia.com.attacker.example')
+    result = fetch_feed(Session(Response(200, feed(article+evil))), source='nvidia')
+    assert len(result['items']) == 1
+    assert result['items'][0]['symbols'] == ['NVDA']
+    assert result['items'][0]['verification'] == 'provider_reported'
+    assert result['rejected'][0]['reason'] == 'invalid_item'
+    assert not result['trade_authorized']
+
+
+def test_source_selector_rejects_arbitrary_endpoints():
+    from market_radar_ai.evidence.public_feed import fetch_feed
+    with pytest.raises(ValueError): fetch_feed(source='https://example.com')
+    with pytest.raises(ValueError): fetch_feed(issuer=True, source='nvidia')

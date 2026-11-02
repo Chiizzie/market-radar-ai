@@ -61,3 +61,11 @@ Next acceptance milestone: retain real company articles from a verified feed, es
 ### Follow-up live result
 
 Run 41534279083 on commit 9daf1dd2722c73742d4bdec104072fa977832fba confirmed HTTP 403 for the Microsoft feed from GitHub's runner. This is an access response, not evidence of an RSS parser defect. Yahoo again retained zero articles; Federal Reserve retained two. Both Yahoo and issuer news_delivery_verified results were false. The focused evidence suite passed 29 tests in that run. No access-control workaround or subscription was introduced.
+
+## NVIDIA official publisher feed
+
+The fixed registry now includes https://nvidianews.nvidia.com/releases.xml. One bounded request uses the existing strict RSS parser and allows only nvidianews.nvidia.com and blogs.nvidia.com article hosts. The registry attaches NVDA as a publisher-to-issuer association; this is not independent corroboration, broker eligibility, catalyst significance, or article-by-article investment relevance. Feed publication times are retained; modification times never substitute for them. Articles remain provider_reported. Seven-day history remains context, not intraday freshness.
+
+Command: `python -m market_radar_ai.evidence.public_feed --source nvidia --output nvidia-news.json`. The legacy --issuer selects Microsoft; arbitrary URLs are not accepted. Local live retrieval retained seven articles and rejected thirteen; the combined/dashboard export preserved all seven NVDA associations. Local suite: 238 passed. The GitHub workflow now probes NVIDIA separately, combines it with the other feeds, and produces nvidia-readiness.json. Runner verification is pending at this commit.
+
+Apple Newsroom was also inspected but not added: its feed exposed updated times, and the inspected article's structured publication date lacked an exact time. Those were not converted to fabricated intraday publication timestamps. No subscription, paid AI call, or access-control bypass was introduced.
