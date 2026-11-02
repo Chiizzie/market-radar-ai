@@ -1,10 +1,17 @@
 {
-  "version": 1,
   "currency": "EUR",
+  "entries": {
+    "storage-check-v1": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 1,
+      "usage": null
+    }
+  },
   "limits_microeur": {
     "daily": 500000,
-    "monthly": 10000000,
-    "lifetime": 500000
+    "lifetime": 500000,
+    "monthly": 10000000
   },
-  "entries": {}
+  "version": 1
 }
