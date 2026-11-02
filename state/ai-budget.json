@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "currency": "EUR",
+  "limits_microeur": {
+    "daily": 500000,
+    "monthly": 10000000,
+    "lifetime": 500000
+  },
+  "entries": {}
+}
