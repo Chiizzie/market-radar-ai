@@ -102,12 +102,32 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--stocks", nargs="+", default=["MSFT", "AAPL", "NVDA"])
     parser.add_argument("--crypto", nargs="+", default=["XBTEUR", "ETHEUR"])
+    parser.add_argument('--universe', type=Path, help='JSON object with stocks and crypto symbol lists')
+    parser.add_argument('--queue-db', type=Path, help='Persistent fair scan queue; required with --universe')
     args = parser.parse_args()
+    if bool(args.universe) != bool(args.queue_db):
+        parser.error('--universe and --queue-db must be supplied together')
+    selection = None
+    if args.universe:
+        from .queue import ScanQueue
+        universe = json.loads(args.universe.read_text())
+        if not isinstance(universe, dict) or set(universe) != {'stocks', 'crypto'} or any(
+            not isinstance(v, list) or any(not isinstance(s, str) for s in v) for v in universe.values()):
+            parser.error('Universe must contain stocks and crypto string lists')
+        args.queue_db.parent.mkdir(parents=True, exist_ok=True)
+        queue = ScanQueue(args.queue_db)
+        for market, symbols in universe.items():
+            queue.replace_universe(market, symbols)
+        selection = queue.select(now=datetime.now(timezone.utc), stocks=10, crypto=5)
+        args.stocks = selection['stocks']['selected']
+        args.crypto = selection['crypto']['selected']
     from .providers.kraken import KrakenProvider
     from .providers.yahoo import YahooFinanceProvider
     document = capture_markets(args.stocks, args.crypto,
         stock_fetch=lambda symbol: YahooFinanceProvider().fetch_history(symbol, period="1d", interval="5m"),
         crypto_fetch=lambda pair: KrakenProvider().fetch_ohlc(pair, interval_minutes=5))
+    if selection is not None:
+        document['queue_selection'] = selection
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(document["coverage"], indent=2))
