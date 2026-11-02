@@ -1,0 +1,46 @@
+name: Manual live research rehearsal
+on:
+  workflow_dispatch:
+    inputs:
+      paid_analysis:
+        description: 'Run paid research (requires ENABLE_LIVE_RESEARCH=enabled; false only checks data)'
+        required: true
+        default: false
+        type: boolean
+permissions:
+  contents: read
+jobs:
+  research:
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/phase-1/market-data-layer'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    concurrency:
+      group: market-radar-ai-budget
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[dev,market]'
+      - name: Verify runner boundaries before execution
+        run: python -m pytest -q tests/test_live_research.py tests/test_github_live_research.py tests/test_combined_input.py
+      - name: Prepare evidence and optionally run metered analysis
+        run: python -m market_radar_ai.agents.github_live_research
+        env:
+          LIVE_RESEARCH_MODE: ${{ inputs.paid_analysis && 'paid' || 'dry_run' }}
+          ENABLE_LIVE_RESEARCH: ${{ vars.ENABLE_LIVE_RESEARCH }}
+          GH_BUDGET_TOKEN: ${{ inputs.paid_analysis && github.token || '' }}
+          OPENAI_API_KEY: ${{ inputs.paid_analysis && secrets.OPEN_API_KEY || '' }}
+      - name: Preserve research evidence and outcomes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-research-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/live-research/
+          if-no-files-found: warn
+          retention-days: 30
