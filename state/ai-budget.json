@@ -151,6 +151,12 @@
         "response_id": "resp_083209920bf596bd016ae8ee24b9ec87d2bcf979a30ed05624"
       }
     },
+    "research-eval-v1:unverified-injection-fixture:decision": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 276130,
+      "usage": null
+    },
     "research-eval-v1:unverified-injection-fixture:devils_advocate": {
       "actual": 2101,
       "day": "2026-11-02",
