@@ -9,3 +9,7 @@ data/*.db
 data/*.sqlite*
 logs/
 artifacts/
+
+*.egg-info/
+build/
+dist/

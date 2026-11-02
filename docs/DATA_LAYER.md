@@ -29,3 +29,19 @@ The initial ranker is deliberately transparent: recent price momentum plus relat
 5. Run repeatable coverage and data-quality tests before any LLM agent consumes the feed.
 
 Kraken's final OHLC row is the currently forming interval and is excluded by the adapter. This is intentional: first-pass technical analysis must use completed candles only.
+
+## Verification and conservative adapter behavior
+
+Run `python -m pytest -q` for offline tests and
+`python -m market_radar_ai.market_data.cli --provider all` for explicit live smoke checks.
+The live command exits nonzero on provider errors or empty results; successful transport
+does not prove freshness, broker eligibility, or full universe coverage.
+Yahoo supports intraday intervals only, excludes forming bars, and rejects unknown
+quote currencies and timezone-naive timestamps. Freshness is checked on the latest
+bar per symbol/interval/source; older lookback bars remain valid history. Gap checks
+are not exchange-calendar-aware yet.
+
+No provider listing establishes Trading 212 Invest or Robinhood Europe eligibility.
+Broker verification, FX conversion, position lifecycle/forced paper exits, and AI
+cost limits remain implementation gates. The current risk helper is a pre-entry
+check, not an overnight-position manager. No paid AI or live order API is connected.

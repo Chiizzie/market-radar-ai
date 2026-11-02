@@ -21,3 +21,13 @@ def test_clean_series_has_no_issues():
     now = datetime(2026, 11, 2, 12, 0, tzinfo=timezone.utc)
     rows = [make_candle(now-timedelta(minutes=10)), make_candle(now-timedelta(minutes=5))]
     assert validate_candles(rows, now=now, max_age_seconds=900, expected_interval_seconds=300) == []
+
+
+def test_historical_rows_do_not_make_fresh_series_stale():
+    now = datetime(2026, 11, 2, 12, 0, tzinfo=timezone.utc)
+    rows = [make_candle(now-timedelta(minutes=i)) for i in range(60, 0, -5)]
+    assert validate_candles(rows, now=now, max_age_seconds=600, expected_interval_seconds=300) == []
+
+
+def test_empty_series_fails_quality():
+    assert validate_candles([])[0].code == 'empty_candles'

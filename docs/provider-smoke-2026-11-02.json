@@ -1,0 +1,29 @@
+[
+  {
+    "provider": "coingecko",
+    "status": "ok",
+    "retrieved_at": "2026-11-02T13:48:45.927641+00:00",
+    "instrument_count": 20,
+    "candle_count": 0,
+    "latest_candle": null,
+    "issues": []
+  },
+  {
+    "provider": "kraken",
+    "status": "ok",
+    "retrieved_at": "2026-11-02T13:48:49.742361+00:00",
+    "instrument_count": 0,
+    "candle_count": 720,
+    "latest_candle": "2026-11-02T13:40:00+00:00",
+    "issues": []
+  },
+  {
+    "provider": "yahoo_finance",
+    "status": "ok",
+    "retrieved_at": "2026-11-02T13:48:55.839995+00:00",
+    "instrument_count": 0,
+    "candle_count": 390,
+    "latest_candle": "2026-10-30T19:55:00+00:00",
+    "issues": []
+  }
+]
