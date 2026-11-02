@@ -16,6 +16,12 @@
         "response_id": "resp_0d141a907a998a96016ae8ea37d7f087d0a307d206bd1edae9"
       }
     },
+    "research-eval-v1:supported-fixture:news_analyst": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 276130,
+      "usage": null
+    },
     "research-eval-v1:supported-fixture:opportunity_hunter": {
       "actual": 2000,
       "day": "2026-11-02",
