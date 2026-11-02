@@ -144,6 +144,14 @@ class PaperTeam:
         local = now.astimezone(ZoneInfo('Europe/Dublin'))
         if local.hour >= 22: failures.append('entry_cutoff')
         if snapshot.missing_data: failures.append('snapshot_missing_data')
+        if plan is None:
+            failures.append('missing_plan')
+        else:
+            exit_local = plan.exit_by.astimezone(ZoneInfo('Europe/Dublin'))
+            if plan.planned_loss > Decimal('20'): failures.append('risk_ceiling')
+            if not (now < plan.exit_by and exit_local.date() == local.date()
+                    and (exit_local.hour, exit_local.minute, exit_local.second, exit_local.microsecond) <= (22, 0, 0, 0)):
+                failures.append('invalid_intraday_exit')
         if not failures:
             for agent in self.agents:
                 try:
@@ -178,14 +186,6 @@ class PaperTeam:
             if debate: failures.append('unresolved_debate')
         elif not failures:
             failures.append('incomplete_team')
-        if plan is None:
-            failures.append('missing_plan')
-        else:
-            exit_local = plan.exit_by.astimezone(ZoneInfo('Europe/Dublin'))
-            if plan.planned_loss > Decimal('20'): failures.append('risk_ceiling')
-            if not (now < plan.exit_by and exit_local.date() == local.date()
-                    and (exit_local.hour, exit_local.minute, exit_local.second, exit_local.microsecond) <= (22, 0, 0, 0)):
-                failures.append('invalid_intraday_exit')
         return TeamResult(candidate_id=snapshot.candidate_id, snapshot_id=digest, decided_at=now,
             reports=tuple(reports), debate=tuple(debate), verdict='NO_ACTION' if failures else 'PAPER_PLAN',
             failures=tuple(dict.fromkeys(failures)), plan=None if failures else plan,

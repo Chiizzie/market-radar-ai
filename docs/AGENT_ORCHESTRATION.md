@@ -53,3 +53,20 @@ The usage ledger is process-local and single-threaded; its zero cost is accurate
 only because this implementation performs no paid calls. A future paid integration
 must reserve token and monetary limits before requests, record actual usage and
 handle timeouts. No simulation report demonstrates profitable trading performance.
+
+## Persistent simulation audit
+
+Use `storage.run_and_record(team, snapshot, run_id=..., store=TeamAuditStore(path),
+now=..., plan=...)` to atomically persist the full input and result (all reports,
+objections, rejected/accepted verdict and logical usage). A repeated run ID with
+the same snapshot returns the original historical result without spending more
+calls; use a NEW ID to request re-analysis, change the plan or use a new clock.
+Retries are retrieval of history, never renewed trade authorization. Conflicting
+writes cannot overwrite prior evidence. Disk errors propagate; no decision is
+returned as successfully recorded. This is a single-process orchestration API;
+concurrent execution exactly-once semantics are not implemented. Local SQLite is
+not tamper-proof storage and needs durable hosting/backups before deployment.
+
+Preflight now validates plan risk and exit deadline before role calls, preventing
+obviously invalid plans from consuming even the simulated budget. Outcomes and
+agent accuracy still need a separate paper-fill and evaluation implementation.

@@ -128,3 +128,8 @@ def test_handoff_revalidates_admission():
     item = ScreeningInput(Instrument(symbol='ABC', asset_class='equity', quote_currency='EUR', venue='test'), ProviderResult(provider='test', retrieved_at=NOW))
     with pytest.raises(ValueError, match='broker_unverified'):
         prepare_research(item, candidate_id='bad', now=NOW)
+
+
+def test_invalid_plan_is_blocked_before_spending_calls():
+    result = PaperTeam(agents()).run(snapshot(), now=NOW, plan=plan(quantity=25))
+    assert result.calls_used == 0 and 'risk_ceiling' in result.failures
