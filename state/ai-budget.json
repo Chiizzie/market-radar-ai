@@ -1,6 +1,12 @@
 {
   "currency": "EUR",
   "entries": {
+    "openai-connectivity-v1": {
+      "actual": null,
+      "day": "2026-11-02",
+      "reserved": 268218,
+      "usage": null
+    },
     "storage-check-v1": {
       "actual": 0,
       "day": "2026-11-02",
