@@ -27,3 +27,12 @@ This branch is the isolated development branch for the independent Market Radar 
 3. Add FX conversion, retry/backoff, caching and provider health metrics.
 4. Run live connectivity checks and record coverage limitations.
 5. Expand automated tests before merging into main.
+
+
+## Local verification (2 November 2026)
+
+- `python -m compileall -q src tests`: passed.
+- `pytest -q`: **8 passed**.
+- Tests cover immutable candidate snapshots, risk limits and Dublin-time intraday cutoff, candle freshness/gaps, and baseline screener ranking.
+- Live provider connectivity has not yet been verified.
+- The implementation archive is available separately; its source files have not yet been committed to this branch.
