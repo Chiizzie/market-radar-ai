@@ -92,3 +92,12 @@ Remaining: authenticated Trading 212 catalogue check; verified cross-provider as
 mapping; broker eligibility evidence creation; session calendars; broad equity
 provider mapping; persistent/distributed scheduling and cache; full-universe live
 coverage validation; AI and paper-trade lifecycle work from the earlier gates.
+
+## Six-role orchestration increment
+
+Implemented immutable/hash-bound simulated reports for all six roles, structured
+objection collection, final adjudication and enforced paper risk/time gates.
+Replaced the unrestricted pipeline stub and added a validated data-admission handoff.
+Shared call budgets reserve before invocation and fail closed on exhaustion.
+The default fictional demo returns NO_ACTION due to the devil's advocate objection.
+Paid adapters are explicitly disabled. See `AGENT_ORCHESTRATION.md` for limitations.

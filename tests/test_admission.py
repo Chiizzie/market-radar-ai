@@ -80,3 +80,15 @@ def test_symbol_collisions_never_overwrite_identity():
     item = ScreeningInput(i, d, args['evidence'], args['fx'])
     result = screen_batch([item, item], now=NOW)
     assert not result.ranked and result.report.rejected == {'ambiguous_symbol': 2}
+
+
+def test_valid_data_handoff_reaches_six_role_team():
+    from market_radar_ai.pipeline import prepare_research, AnalysisPipeline
+    from market_radar_ai.market_data.screening import ScreeningInput
+    from market_radar_ai.agents.paper_team import SimulatedAgent, PaperPlan
+    from market_radar_ai.agents.roles import AgentRole
+    i, d, args = inputs()
+    candidate = prepare_research(ScreeningInput(i, d, args['evidence'], args['fx']), candidate_id='integration', now=NOW)
+    team = AnalysisPipeline([SimulatedAgent(role, stance='support', source='fixture') for role in AgentRole])
+    result = team.run(candidate, now=NOW, plan=PaperPlan(entry=90, stop=89, target=92, quantity=10, costs_eur=1, invalidation='fixture', exit_by=NOW.replace(hour=22)))
+    assert result.verdict == 'PAPER_PLAN' and len(result.reports) == 6
