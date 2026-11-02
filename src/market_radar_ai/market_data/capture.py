@@ -48,7 +48,7 @@ def capture_result(result: ProviderResult, *, now: datetime, limit: int = 60) ->
 
 
 def capture_markets(stock_symbols, crypto_pairs, *, stock_fetch, crypto_fetch,
-                    now=None, clock=monotonic, per_market_limit=10) -> dict:
+                    now=None, clock=monotonic, per_market_limit=10, cache=None) -> dict:
     """Stocks first; separate quotas prevent either market starving the other."""
     if not 1 <= per_market_limit <= 20:
         raise ValueError("Per-market limit must be 1..20")
@@ -62,10 +62,16 @@ def capture_markets(stock_symbols, crypto_pairs, *, stock_fetch, crypto_fetch,
         for symbol in selected:
             start = clock()
             try:
-                result = fetch(symbol)
+                provider_name = 'yahoo_finance' if market == 'stocks' else 'kraken'
+                check_time = now or datetime.now(timezone.utc)
+                result = cache.get(provider_name, symbol, now=check_time) if cache else None
+                cache_hit = result is not None
+                if result is None:
+                    result = fetch(symbol)
                 if not isinstance(result, ProviderResult):
                     raise ValueError("invalid_provider_result")
             except Exception:
+                cache_hit = False
                 from .models import ValidationIssue
                 result = ProviderResult(provider=market, retrieved_at=datetime.now(timezone.utc),
                     status="error", issues=[ValidationIssue(code="fetch_failed",
@@ -74,9 +80,11 @@ def capture_markets(stock_symbols, crypto_pairs, *, stock_fetch, crypto_fetch,
                 from .models import ValidationIssue
                 result = result.model_copy(update={"issues": [*result.issues,
                     ValidationIssue(code="requested_symbol_mismatch", message="Unexpected symbol in provider response", symbol=symbol)]})
+            if cache is not None and not cache_hit:
+                cache.put(provider_name, symbol, result, now=now or datetime.now(timezone.utc))
             elapsed = max(0, clock() - start)
             captured = capture_result(result, now=now or datetime.now(timezone.utc))
-            captured.update(market=market, requested_symbol=symbol,
+            captured.update(market=market, requested_symbol=symbol, cache_hit=cache_hit,
                             request_elapsed_seconds=round(elapsed, 3))
             captures.append(captured)
             successful += int(result.status == "ok" and bool(result.candles))

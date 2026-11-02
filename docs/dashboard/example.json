@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "mode": "RESEARCH_ONLY",
+  "generated_at_dublin": "2026-11-02T00:00:00+00:00",
+  "expires_at_epoch": 1793577660,
+  "display_currency": "EUR",
+  "coverage_scope": "REQUESTED_SYMBOLS_ONLY",
+  "markets": {
+    "stocks": [],
+    "crypto": []
+  },
+  "agents": {
+    "status": "NOT_RUN_ON_THIS_CAPTURE",
+    "reports": []
+  },
+  "paper_outcomes": null,
+  "api_budget": null,
+  "live_orders_enabled": false
+}
