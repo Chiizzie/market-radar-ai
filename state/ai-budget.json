@@ -2,10 +2,19 @@
   "currency": "EUR",
   "entries": {
     "openai-connectivity-v1": {
-      "actual": null,
+      "actual": 81,
       "day": "2026-11-02",
       "reserved": 268218,
-      "usage": null
+      "usage": {
+        "cached_input_tokens": 0,
+        "cost_usd": "0.00009",
+        "eur_per_usd": "0.8931999593255061271636529311",
+        "input_tokens": 42,
+        "model": "gpt-5.4-mini-2026-03-17",
+        "output_tokens": 13,
+        "pricing_checked": "2026-11-02",
+        "response_id": "resp_0d141a907a998a96016ae8ea37d7f087d0a307d206bd1edae9"
+      }
     },
     "storage-check-v1": {
       "actual": 0,
