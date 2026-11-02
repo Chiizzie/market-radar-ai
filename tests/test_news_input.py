@@ -83,3 +83,20 @@ def test_failed_cli_refresh_overwrites_ready_output(tmp_path,monkeypatch):
     result=json.loads(output.read_text())
     assert result['status']=='blocked' and result['input'] is None
     assert result['model_calls']==0
+
+
+def test_packet_round_trip_preserves_digest_and_rejects_forged_citation():
+    from market_radar_ai.agents.news_input import NewsResearchInput
+    packet=build_news_input(feed(),symbol='NVDA',now=NOW)
+    serialized=packet.model_dump(mode='json')
+    assert NewsResearchInput.model_validate(serialized).digest()==packet.digest()
+    serialized['evidence'][0]['source_id']='forged'
+    with pytest.raises(ValueError): NewsResearchInput.model_validate(serialized)
+
+
+@pytest.mark.parametrize('field,value',[('source_ids',['forged']), ('context_only_source_ids',[]), ('symbol','MSFT')])
+def test_restored_packet_cannot_relabel_evidence(field,value):
+    from market_radar_ai.agents.news_input import NewsResearchInput
+    serialized=build_news_input(feed(),symbol='NVDA',now=NOW).model_dump(mode='json')
+    serialized[field]=value
+    with pytest.raises(ValueError): NewsResearchInput.model_validate(serialized)
