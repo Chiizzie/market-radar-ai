@@ -40,11 +40,34 @@ def build_snapshot(document, *, now):
             'candles_saved': len(rows),
             'quote_currencies': sorted(set(c.quote_currency for c in rows)),
             'broker_eligibility': 'UNKNOWN', 'decision': 'NO_ACTION'})
+    coverage = {}
+    for market, rows in markets.items():
+        source = document['coverage'][market]
+        requested, attempted = source['requested'], source['attempted']
+        deferred = source['deferred']
+        if (type(requested) is not int or type(attempted) is not int
+                or not isinstance(deferred, list) or any(not isinstance(s, str) for s in deferred)
+                or attempted != len(rows) or requested != attempted + len(deferred)
+                or len({r['symbol'] for r in rows}) != len(rows)):
+            raise ValueError('Inconsistent capture coverage')
+        queue = document.get('queue_selection', {}).get(market)
+        universe_count = requested
+        if queue is not None:
+            universe_count = queue['universe_count']
+            if (type(universe_count) is not int or universe_count < requested
+                    or set(queue['selected']) != {r['symbol'] for r in rows} | set(deferred)
+                    or queue['deferred_count'] != universe_count-requested):
+                raise ValueError('Inconsistent queue coverage')
+        coverage[market] = {'universe_count': universe_count,
+            'attempted': attempted, 'deferred': universe_count-attempted,
+            'current': sum(r['status']=='CURRENT_RESEARCH_DATA' for r in rows),
+            'unusable_or_stale': sum(r['status']!='CURRENT_RESEARCH_DATA' for r in rows),
+            'agent_reviewed': 0}
     return {'schema_version': '1.0', 'mode': 'RESEARCH_ONLY',
         'generated_at_dublin': now.astimezone(ZoneInfo('Europe/Dublin')).isoformat(),
         'expires_at_epoch': int(now.timestamp()) + 60,
         'display_currency': 'EUR', 'coverage_scope': 'REQUESTED_SYMBOLS_ONLY',
-        'markets': markets, 'agents': {'status': 'NOT_RUN_ON_THIS_CAPTURE', 'reports': []},
+        'coverage': coverage, 'markets': markets, 'agents': {'status': 'NOT_RUN_ON_THIS_CAPTURE', 'reports': []},
         'paper_outcomes': None, 'api_budget': None, 'live_orders_enabled': False}
 
 

@@ -60,3 +60,21 @@ def test_repeated_capture_uses_cache_but_expiry_refetches():
             now=NOW+timedelta(seconds=seconds), cache=cache)
         assert doc['captures'][0]['cache_hit'] == (seconds == 10)
     assert calls == ['XBTEUR', 'XBTEUR']
+
+
+def test_dashboard_counts_do_not_imply_agent_reviews():
+    doc = capture()
+    doc['queue_selection'] = {'crypto': {'selected':['XBTEUR'], 'universe_count':50,'deferred_count':49}}
+    p = build_snapshot(doc,now=NOW)
+    assert p['coverage']['crypto'] == dict(universe_count=50, attempted=1,deferred=49,
+        current=1,unusable_or_stale=0,agent_reviewed=0)
+    doc['queue_selection']['crypto']['deferred_count'] = 0
+    with pytest.raises(ValueError,match='coverage'):
+        build_snapshot(doc,now=NOW)
+
+
+def test_dashboard_rejects_inconsistent_capture_counts():
+    doc = capture()
+    doc['coverage']['crypto']['attempted'] = 10
+    with pytest.raises(ValueError,match='coverage'):
+        build_snapshot(doc,now=NOW)

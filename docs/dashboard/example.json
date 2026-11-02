@@ -5,6 +5,24 @@
   "expires_at_epoch": 1793577660,
   "display_currency": "EUR",
   "coverage_scope": "REQUESTED_SYMBOLS_ONLY",
+  "coverage": {
+    "stocks": {
+      "universe_count": 0,
+      "attempted": 0,
+      "deferred": 0,
+      "current": 0,
+      "unusable_or_stale": 0,
+      "agent_reviewed": 0
+    },
+    "crypto": {
+      "universe_count": 0,
+      "attempted": 0,
+      "deferred": 0,
+      "current": 0,
+      "unusable_or_stale": 0,
+      "agent_reviewed": 0
+    }
+  },
   "markets": {
     "stocks": [],
     "crypto": []

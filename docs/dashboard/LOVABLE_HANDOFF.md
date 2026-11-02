@@ -42,3 +42,7 @@ The initial interface can use the fixture while the backend endpoint is prepared
 ## Remaining backend milestones
 
 Broad equity-universe discovery and symbol mapping; quote screening and ranked refresh queues; live sourced news; verified broker eligibility; EUR-normalised plans; annotated charts; real-data paper evaluation. The in-memory cache now supports repeated captures in a long-running process; it is not shared between GitHub jobs and is not a streaming feed.
+
+## Additive coverage fields
+
+Snapshot v1.0 now includes `coverage.stocks` and `coverage.crypto`: `universe_count`, `attempted`, `deferred`, `current`, `unusable_or_stale`, and `agent_reviewed`. Counts are checked against capture rows and optional persistent-queue metadata. Universe means the supplied or queued subset, not every listed instrument. `agent_reviewed` is zero for this capture-only exporter; a downloaded candle is not an agent review. Existing clients can ignore this additive field until their coverage cards are wired.
