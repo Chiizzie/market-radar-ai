@@ -316,6 +316,12 @@
         "response_id": "resp_0c07dce8fab34192016ae9151ffaa087d0b40a71a8cc8000f5"
       }
     },
+    "live-research-v1:ffdf1243e64948c7115dccf36aba423c282bd0934ae123239812ec6b76ba954c:opportunity_hunter": {
+      "actual": null,
+      "day": "2026-11-03",
+      "reserved": 272107,
+      "usage": null
+    },
     "openai-connectivity-v1": {
       "actual": 81,
       "day": "2026-11-02",
