@@ -52,3 +52,25 @@ def test_blockers_cannot_be_cleared_by_model():
     def bad(stage,p,s):
         r=answer(stage,p,s);r['acknowledged_blockers']=[];return r
     with pytest.raises(ValueError):run(prepare(*data()),bad,clock=lambda:NOW)
+
+
+def test_paid_audit_preserves_returned_usage_on_rejection(tmp_path,monkeypatch):
+    from types import SimpleNamespace
+    import market_radar_ai.agents.openai_pilot as pilot
+    import market_radar_ai.agents.github_budget as budget
+    from market_radar_ai.agents.plan_review import run_paid
+    class Ledger: pass
+    class Client:
+        ledger=Ledger()
+        def call(self,**kwargs):
+            p=json.loads(kwargs['prompt']);reply=answer(p['stage'],p,kwargs['schema'])
+            reply['source_ids']=['fabricated']
+            return SimpleNamespace(data=reply,response_id='test',cost_usd='0.01',estimated_cost_microeur=9000)
+    monkeypatch.setattr(pilot,'OpenAIPilot',Client)
+    monkeypatch.setattr(budget,'GitHubSpendingLedger',Ledger)
+    path=tmp_path/'audit.json'
+    with pytest.raises(RuntimeError):run_paid(Client(),prepare(*data()),path=path,clock=lambda:NOW,enabled=True)
+    audit=json.loads(path.read_text())
+    assert audit['state']=='blocked_or_failed' and len(audit['calls'])==1
+    assert audit['calls'][0]['estimated_cost_microeur']==9000
+    assert audit['result'] is None
