@@ -18,8 +18,8 @@ ranked 8 stocks and 4 crypto, shortlisted 3 stocks/2 crypto, deferred 5/2 by quo
 This is a historical integration check, not fresh calls. The entire local suite
 passed 586 tests; stale/tampered input and quota cases have regression coverage.
 
-Next connection: construct candidate-specific evidence packets from this shortlist
-before model dispatch. The existing paid review runner remains NVDA-specific and
+Candidate-specific evidence packages are now assembled from this shortlist;
+see [CANDIDATE_PACKAGES.md](CANDIDATE_PACKAGES.md). The existing paid review runner remains NVDA-specific and
 is not automatically invoked by shortlist membership. Broker account permission,
 executable quotes/costs and independent catalyst evidence must remain unresolved
 where no valid adapter evidence exists. No spending caps or schedules were changed.
