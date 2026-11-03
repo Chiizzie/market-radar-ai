@@ -7,6 +7,11 @@ on:
         type: boolean
         required: true
         default: false
+      send_fresh_review:
+        description: 'Deliver the completed fresh research review to Telegram (requires paid_analysis)'
+        type: boolean
+        required: true
+        default: false
   push:
     branches: ['phase-1/market-data-layer']
     paths:
@@ -32,10 +37,13 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -e '.[dev,market]'
-      - run: python -m pytest -q tests/test_plan_review.py tests/test_github_plan_review.py
+      - run: python -m pytest -q tests/test_plan_review.py tests/test_github_plan_review.py tests/test_fresh_notification.py tests/test_delivery_ledger.py
       - name: Capture fresh evidence and optionally review the plan
         run: python -m market_radar_ai.agents.github_plan_review
         env:
+          SEND_FRESH_REVIEW: ${{ github.event_name == 'workflow_dispatch' && inputs.paid_analysis && inputs.send_fresh_review && 'true' || 'false' }}
+          TELEGRAM_BOT_TOKEN: ${{ github.event_name == 'workflow_dispatch' && inputs.paid_analysis && inputs.send_fresh_review && secrets.TELEGRAM_BOT_TOKEN || '' }}
+          TELEGRAM_CHAT_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.paid_analysis && inputs.send_fresh_review && secrets.TELEGRAM_CHAT_ID || '' }}
           PLAN_REVIEW_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.paid_analysis && 'paid' || 'dry_run' }}
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
