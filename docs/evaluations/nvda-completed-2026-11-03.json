@@ -1,0 +1,844 @@
+{
+  "run_url": "https://github.com/Chiizzie/market-radar-ai/actions/runs/41664309078",
+  "tested_commit": "e51dbd249abaf9b644de494632975939b9194671",
+  "artifact_sha256": "041d6613c3f9233f3141c8d5742c2e1629ce67ead3b0ddcd2fec429941f7c6e1",
+  "input": {
+    "snapshot_id": "4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68",
+    "input": {
+      "schema_version": "combined-research-v1",
+      "symbol": "NVDA",
+      "assembled_at": "2026-11-03T15:29:17.239994Z",
+      "news": {
+        "schema_version": "news-research-v1",
+        "symbol": "NVDA",
+        "assembled_at": "2026-11-03T15:29:17.239994Z",
+        "source_ids": [
+          "853e96282fcb2cad76d4e5797568ac503e89b370d755e1c7c3f874447d391392",
+          "d5d3db1f3a9a150388c476b02fda17004aaaf7532de28059efee07ceef81431b",
+          "84f5c4345b63da3c308d144b55027c251424773baafc90021b7ca7842fe70a24",
+          "1e8c5ee62dbefb2b14cb07a05e68cbfd4ce1dd2ed5e1d8c6cd5627edf7a2d791",
+          "9fa8e4999dc547768cea2d0e8770644fb87b13bf896ca5138744b6991c417066",
+          "8281e7df230d9ab9463d6908f69338333435bf6dc3f13b6a287e426dff757ecd"
+        ],
+        "evidence": [
+          {
+            "kind": "news",
+            "title": "Cities Worldwide Build and Scale AI Services With NVIDIA Physical and Agentic AI",
+            "source": "NVIDIA Newsroom",
+            "url": "https://blogs.nvidia.com/blog/cities-physical-agentic-ai-applications/",
+            "published_at": "2026-11-03T07:00:12Z",
+            "retrieved_at": "2026-11-03T15:29:17.237483Z",
+            "event_at": null,
+            "symbols": [
+              "NVDA"
+            ],
+            "verification": "provider_reported",
+            "source_id": "853e96282fcb2cad76d4e5797568ac503e89b370d755e1c7c3f874447d391392"
+          },
+          {
+            "kind": "news",
+            "title": "Things That Go Beep in the Night: Agentic AI Joins the Search for Extraterrestrial Signals",
+            "source": "NVIDIA Newsroom",
+            "url": "https://blogs.nvidia.com/blog/ai-joins-the-search-for-extraterrestrial-signals/",
+            "published_at": "2026-10-30T15:00:10Z",
+            "retrieved_at": "2026-11-03T15:29:17.237483Z",
+            "event_at": null,
+            "symbols": [
+              "NVDA"
+            ],
+            "verification": "provider_reported",
+            "source_id": "d5d3db1f3a9a150388c476b02fda17004aaaf7532de28059efee07ceef81431b"
+          },
+          {
+            "kind": "news",
+            "title": "Slice Into GFN Thursday: \u2018Phantom Blade Zero\u2019 Launches on GeForce NOW",
+            "source": "NVIDIA Newsroom",
+            "url": "https://blogs.nvidia.com/blog/geforce-now-thursday-phantom-blade-zero/",
+            "published_at": "2026-10-29T13:00:16Z",
+            "retrieved_at": "2026-11-03T15:29:17.237483Z",
+            "event_at": null,
+            "symbols": [
+              "NVDA"
+            ],
+            "verification": "provider_reported",
+            "source_id": "84f5c4345b63da3c308d144b55027c251424773baafc90021b7ca7842fe70a24"
+          },
+          {
+            "kind": "news",
+            "title": "NVIDIA Sets Conference Call for Third-Quarter Financial Results",
+            "source": "NVIDIA Newsroom",
+            "url": "https://nvidianews.nvidia.com/news/nvidia-sets-conference-call-for-third-quarter-financial-results-6928873",
+            "published_at": "2026-10-28T21:00:00Z",
+            "retrieved_at": "2026-11-03T15:29:17.237483Z",
+            "event_at": null,
+            "symbols": [
+              "NVDA"
+            ],
+            "verification": "provider_reported",
+            "source_id": "1e8c5ee62dbefb2b14cb07a05e68cbfd4ce1dd2ed5e1d8c6cd5627edf7a2d791"
+          },
+          {
+            "kind": "news",
+            "title": "NVIDIA RTX Spark Windows Laptops Gain New Models, Agent Tools and Games",
+            "source": "NVIDIA Newsroom",
+            "url": "https://blogs.nvidia.com/blog/local-ai-rtx-spark-laptops-updates-models-agents-games/",
+            "published_at": "2026-10-28T15:00:46Z",
+            "retrieved_at": "2026-11-03T15:29:17.237483Z",
+            "event_at": null,
+            "symbols": [
+              "NVDA"
+            ],
+            "verification": "provider_reported",
+            "source_id": "9fa8e4999dc547768cea2d0e8770644fb87b13bf896ca5138744b6991c417066"
+          },
+          {
+            "kind": "news",
+            "title": "NVIDIA and Oracle Expand NVIDIA Vera Rubin to Multi-Gigawatt Scale and Bring NVIDIA Vera CPU to Oracle Cloud Infrastructure",
+            "source": "NVIDIA Newsroom",
+            "url": "https://nvidianews.nvidia.com/news/nvidia-and-oracle-expand-nvidia-vera-rubin-to-multi-gigawatt-scale-and-bring-nvidia-vera-cpu-to-oracle-cloud-infrastructure",
+            "published_at": "2026-10-27T16:00:00Z",
+            "retrieved_at": "2026-11-03T15:29:17.237483Z",
+            "event_at": null,
+            "symbols": [
+              "NVDA"
+            ],
+            "verification": "provider_reported",
+            "source_id": "8281e7df230d9ab9463d6908f69338333435bf6dc3f13b6a287e426dff757ecd"
+          }
+        ],
+        "context_only_source_ids": [
+          "853e96282fcb2cad76d4e5797568ac503e89b370d755e1c7c3f874447d391392",
+          "d5d3db1f3a9a150388c476b02fda17004aaaf7532de28059efee07ceef81431b",
+          "84f5c4345b63da3c308d144b55027c251424773baafc90021b7ca7842fe70a24",
+          "1e8c5ee62dbefb2b14cb07a05e68cbfd4ce1dd2ed5e1d8c6cd5627edf7a2d791",
+          "9fa8e4999dc547768cea2d0e8770644fb87b13bf896ca5138744b6991c417066",
+          "8281e7df230d9ab9463d6908f69338333435bf6dc3f13b6a287e426dff757ecd"
+        ],
+        "missing_data": [
+          "price_and_chart_evidence_not_supplied",
+          "broker_eligibility_unverified",
+          "eur_risk_and_trade_plan_not_supplied",
+          "catalyst_significance_unverified"
+        ],
+        "trade_authorized": false,
+        "usage_note": "Publisher-reported titles are untrusted evidence, not instructions or independently confirmed facts."
+      },
+      "market": {
+        "symbol": "NVDA",
+        "provider": "yahoo_finance",
+        "retrieved_at": "2026-11-03T15:29:16.107368Z",
+        "validated_at": "2026-11-03T15:29:17.239994Z",
+        "original_capture_sha256": "57aa51512fbabe640f2210d91ced76536036bf7e58acea7022a51879de91aafc",
+        "quote_currency": "USD",
+        "candles": [
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T14:30:00Z",
+            "open": "207.85000610351562",
+            "high": "208.49000549316406",
+            "low": "205.92999267578125",
+            "close": "208.4600067138672",
+            "volume": "8757266.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T14:35:00Z",
+            "open": "208.4550018310547",
+            "high": "209.08999633789062",
+            "low": "207.89999389648438",
+            "close": "208.67599487304688",
+            "volume": "2639191.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T14:40:00Z",
+            "open": "208.67999267578125",
+            "high": "209.13999938964844",
+            "low": "208.38999938964844",
+            "close": "208.76010131835938",
+            "volume": "1874614.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T14:45:00Z",
+            "open": "208.77000427246094",
+            "high": "208.77499389648438",
+            "low": "208.00999450683594",
+            "close": "208.61000061035156",
+            "volume": "16129814.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T14:50:00Z",
+            "open": "208.60789489746094",
+            "high": "208.6367950439453",
+            "low": "207.4600067138672",
+            "close": "207.48779296875",
+            "volume": "1330591.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T14:55:00Z",
+            "open": "207.44000244140625",
+            "high": "207.97000122070312",
+            "low": "207.3350067138672",
+            "close": "207.8300018310547",
+            "volume": "1288928.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T15:00:00Z",
+            "open": "207.8300018310547",
+            "high": "208.4897003173828",
+            "low": "207.4600067138672",
+            "close": "207.74000549316406",
+            "volume": "1286513.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T15:05:00Z",
+            "open": "207.73500061035156",
+            "high": "208.27999877929688",
+            "low": "207.49009704589844",
+            "close": "208.13999938964844",
+            "volume": "979911.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T15:10:00Z",
+            "open": "208.13499450683594",
+            "high": "208.33990478515625",
+            "low": "207.8300018310547",
+            "close": "207.98500061035156",
+            "volume": "882233.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T15:15:00Z",
+            "open": "207.98500061035156",
+            "high": "208.39999389648438",
+            "low": "207.72000122070312",
+            "close": "208.00999450683594",
+            "volume": "42476808.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T15:20:00Z",
+            "open": "208.0",
+            "high": "208.125",
+            "low": "207.46009826660156",
+            "close": "207.6699981689453",
+            "volume": "22790744.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          }
+        ]
+      },
+      "source_ids": [
+        "853e96282fcb2cad76d4e5797568ac503e89b370d755e1c7c3f874447d391392",
+        "d5d3db1f3a9a150388c476b02fda17004aaaf7532de28059efee07ceef81431b",
+        "84f5c4345b63da3c308d144b55027c251424773baafc90021b7ca7842fe70a24",
+        "1e8c5ee62dbefb2b14cb07a05e68cbfd4ce1dd2ed5e1d8c6cd5627edf7a2d791",
+        "9fa8e4999dc547768cea2d0e8770644fb87b13bf896ca5138744b6991c417066",
+        "8281e7df230d9ab9463d6908f69338333435bf6dc3f13b6a287e426dff757ecd",
+        "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+      ],
+      "missing_data": [
+        "broker_eligibility_unverified",
+        "eur_risk_and_trade_plan_not_supplied",
+        "catalyst_significance_unverified",
+        "native_quotes_not_converted_to_eur"
+      ],
+      "trade_authorized": false
+    },
+    "trade_authorized": false
+  },
+  "analysis": {
+    "version": "live-research-v4",
+    "instruction_version": "live-research-instructions-v6",
+    "analysis_quality": "requires_human_review",
+    "state": "completed",
+    "trade_authorized": false,
+    "calls": [
+      {
+        "request_id": "live-research-v1:4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68:opportunity_hunter",
+        "state": "validated",
+        "response_id": "resp_08df7754fb9a39b8016ae9fdcfa29c87d1ab8753fe1e60e7a4",
+        "cost_usd": "0.0054345",
+        "estimated_cost_microeur": 4861
+      },
+      {
+        "request_id": "live-research-v1:4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68:technical_analyst",
+        "state": "validated",
+        "response_id": "resp_0e123c0f2fc3c3b8016ae9fdd66eec87d1903dfeb5070b54e3",
+        "cost_usd": "0.00501075",
+        "estimated_cost_microeur": 4482
+      },
+      {
+        "request_id": "live-research-v1:4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68:news_analyst",
+        "state": "validated",
+        "response_id": "resp_08e95d91515850cf016ae9fddcb35487d1b79b4f0bda7abd7a",
+        "cost_usd": "0.00551475",
+        "estimated_cost_microeur": 4933
+      },
+      {
+        "request_id": "live-research-v1:4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68:devils_advocate",
+        "state": "validated",
+        "response_id": "resp_038dfda8605f5ac2016ae9fde2f68087d199562d27e6fbe94a",
+        "cost_usd": "0.00606825",
+        "estimated_cost_microeur": 5428
+      },
+      {
+        "request_id": "live-research-v1:4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68:risk_manager",
+        "state": "validated",
+        "response_id": "resp_0fdb4051c89cd385016ae9fde95ca487d18de4239628cf0f4e",
+        "cost_usd": "0.0051795",
+        "estimated_cost_microeur": 4633
+      },
+      {
+        "request_id": "live-research-v1:4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68:final_decision",
+        "state": "validated",
+        "response_id": "resp_0ae2ba44db3ab10c016ae9fdeed59087d1b0fa0e677e1a64c0",
+        "cost_usd": "0.005301",
+        "estimated_cost_microeur": 4742
+      },
+      {
+        "request_id": "live-research-v1:4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68:debate",
+        "state": "validated",
+        "response_id": "resp_0b3abc7fbef194bd016ae9fdf4de7487d185088f90d19c07a2",
+        "cost_usd": "0.008604",
+        "estimated_cost_microeur": 7696
+      },
+      {
+        "request_id": "live-research-v1:4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68:conclusion",
+        "state": "validated",
+        "response_id": "resp_00ce5ba4ac2df83b016ae9fdfc9a3c87d1add9743d8fd66426",
+        "cost_usd": "0.0098025",
+        "estimated_cost_microeur": 8768
+      }
+    ],
+    "assessments": [
+      {
+        "metric_claims": [
+          {
+            "metric": "window_high",
+            "value": "209.13999938964844",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "window_low",
+            "value": "205.92999267578125",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "first_close",
+            "value": "208.4600067138672",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "last_close",
+            "value": "207.6699981689453",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          }
+        ],
+        "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+        "role": "opportunity_hunter",
+        "snapshot_id": "4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68",
+        "summary": "Price action is slightly weaker over the supplied window, while the news flow is mostly company-posted product and event items. Further research is justified, but catalyst significance is unverified.",
+        "source_ids": [
+          "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d",
+          "853e96282fcb2cad76d4e5797568ac503e89b370d755e1c7c3f874447d391392",
+          "1e8c5ee62dbefb2b14cb07a05e68cbfd4ce1dd2ed5e1d8c6cd5627edf7a2d791"
+        ],
+        "concerns": [
+          "News items are publisher-reported and not independently verified here.",
+          "The supplied window is short and shows only a mild fade after an early high.",
+          "Trade authorization is false and the risk plan is incomplete."
+        ]
+      },
+      {
+        "metric_claims": [
+          {
+            "metric": "window_high",
+            "value": "209.13999938964844",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "window_low",
+            "value": "205.92999267578125",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "first_close",
+            "value": "208.4600067138672",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "last_close",
+            "value": "207.6699981689453",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          }
+        ],
+        "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+        "role": "technical_analyst",
+        "snapshot_id": "4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68",
+        "summary": "The candle window is range bound with a small net decline from the first close to the last close. Price briefly probed higher, then faded and finished near the lower half of the window.",
+        "source_ids": [
+          "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+        ],
+        "concerns": [
+          "News titles are publisher reported and unverified.",
+          "The supplied window is short, so trend strength is limited."
+        ]
+      },
+      {
+        "metric_claims": [
+          {
+            "metric": "window_high",
+            "value": "209.13999938964844",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "window_low",
+            "value": "205.92999267578125",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "first_close",
+            "value": "208.4600067138672",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "last_close",
+            "value": "207.6699981689453",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          }
+        ],
+        "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+        "role": "news_analyst",
+        "snapshot_id": "4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68",
+        "summary": "Recent NVIDIA headlines are mostly product and platform updates, plus a forthcoming financial-results call. Price action in the supplied window was slightly lower by the last close.",
+        "source_ids": [
+          "853e96282fcb2cad76d4e5797568ac503e89b370d755e1c7c3f874447d391392",
+          "1e8c5ee62dbefb2b14cb07a05e68cbfd4ce1dd2ed5e1d8c6cd5627edf7a2d791",
+          "8281e7df230d9ab9463d6908f69338333435bf6dc3f13b6a287e426dff757ecd",
+          "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+        ],
+        "concerns": [
+          "Catalyst significance is unverified from publisher-reported headlines alone.",
+          "No dated external confirmation was supplied beyond company-reported news."
+        ]
+      },
+      {
+        "metric_claims": [
+          {
+            "metric": "window_high",
+            "value": "209.13999938964844",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "window_low",
+            "value": "205.92999267578125",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "first_close",
+            "value": "208.4600067138672",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "last_close",
+            "value": "207.6699981689453",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          }
+        ],
+        "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+        "role": "devils_advocate",
+        "snapshot_id": "4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68",
+        "summary": "News is mostly company-reported and mixed. The price window finished slightly below the first close, so the near-term tape is not clearly confirming the headlines.",
+        "source_ids": [
+          "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d",
+          "853e96282fcb2cad76d4e5797568ac503e89b370d755e1c7c3f874447d391392",
+          "d5d3db1f3a9a150388c476b02fda17004aaaf7532de28059efee07ceef81431b",
+          "84f5c4345b63da3c308d144b55027c251424773baafc90021b7ca7842fe70a24",
+          "1e8c5ee62dbefb2b14cb07a05e68cbfd4ce1dd2ed5e1d8c6cd5627edf7a2d791",
+          "9fa8e4999dc547768cea2d0e8770644fb87b13bf896ca5138744b6991c417066",
+          "8281e7df230d9ab9463d6908f69338333435bf6dc3f13b6a287e426dff757ecd"
+        ],
+        "concerns": [
+          "Publisher-reported headlines are unverified and may be promotional.",
+          "The late-window price drift is modest and does not establish a strong directional read.",
+          "The catalyst impact is unclear without independent confirmation or broader market context."
+        ]
+      },
+      {
+        "metric_claims": [
+          {
+            "metric": "window_high",
+            "value": "209.13999938964844",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "window_low",
+            "value": "205.92999267578125",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "first_close",
+            "value": "208.4600067138672",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "last_close",
+            "value": "207.6699981689453",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          }
+        ],
+        "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+        "role": "risk_manager",
+        "snapshot_id": "4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68",
+        "summary": "Risk checks block authorization. The plan, broker eligibility, and cost evidence are incomplete, and the time constraint is still open.",
+        "source_ids": [
+          "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d",
+          "1e8c5ee62dbefb2b14cb07a05e68cbfd4ce1dd2ed5e1d8c6cd5627edf7a2d791"
+        ],
+        "concerns": [
+          "Broker eligibility is unverified.",
+          "The trade plan and sizing are missing.",
+          "Cost evidence is missing, so risk cannot be judged fully against the limit."
+        ]
+      },
+      {
+        "metric_claims": [
+          {
+            "metric": "window_high",
+            "value": "209.13999938964844",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "window_low",
+            "value": "205.92999267578125",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "first_close",
+            "value": "208.4600067138672",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          },
+          {
+            "metric": "last_close",
+            "value": "207.6699981689453",
+            "quote_currency": "USD",
+            "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+          }
+        ],
+        "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+        "role": "final_decision",
+        "snapshot_id": "4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68",
+        "summary": "Mixed short-window price action with a modest decline from the first to last close. News is mostly provider-reported and unverified for significance.",
+        "source_ids": [
+          "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d",
+          "1e8c5ee62dbefb2b14cb07a05e68cbfd4ce1dd2ed5e1d8c6cd5627edf7a2d791",
+          "8281e7df230d9ab9463d6908f69338333435bf6dc3f13b6a287e426dff757ecd"
+        ],
+        "concerns": [
+          "Trade authorization is false.",
+          "Broker eligibility is unverified.",
+          "The plan details are not supplied."
+        ]
+      }
+    ],
+    "debate": {
+      "metric_claims": [
+        {
+          "metric": "window_high",
+          "value": "209.13999938964844",
+          "quote_currency": "USD",
+          "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+        },
+        {
+          "metric": "window_low",
+          "value": "205.92999267578125",
+          "quote_currency": "USD",
+          "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+        },
+        {
+          "metric": "first_close",
+          "value": "208.4600067138672",
+          "quote_currency": "USD",
+          "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+        },
+        {
+          "metric": "last_close",
+          "value": "207.6699981689453",
+          "quote_currency": "USD",
+          "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+        }
+      ],
+      "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+      "reviewed_concern_ids": [
+        "opportunity_hunter:1",
+        "opportunity_hunter:2",
+        "opportunity_hunter:3",
+        "technical_analyst:1",
+        "technical_analyst:2",
+        "news_analyst:1",
+        "news_analyst:2",
+        "devils_advocate:1",
+        "devils_advocate:2",
+        "devils_advocate:3",
+        "risk_manager:1",
+        "risk_manager:2",
+        "risk_manager:3",
+        "final_decision:1",
+        "final_decision:2",
+        "final_decision:3"
+      ],
+      "acknowledged_missing_data": [
+        "broker_eligibility_unverified",
+        "eur_risk_and_trade_plan_not_supplied",
+        "catalyst_significance_unverified",
+        "native_quotes_not_converted_to_eur"
+      ],
+      "snapshot_id": "4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68",
+      "discussion": "The supplied window is slightly weaker by the last close after an early high. The headlines are mostly company-reported, so catalyst significance remains unverified.",
+      "source_ids": [
+        "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d",
+        "1e8c5ee62dbefb2b14cb07a05e68cbfd4ce1dd2ed5e1d8c6cd5627edf7a2d791",
+        "8281e7df230d9ab9463d6908f69338333435bf6dc3f13b6a287e426dff757ecd"
+      ]
+    },
+    "conclusion": {
+      "metric_claims": [
+        {
+          "metric": "window_high",
+          "value": "209.13999938964844",
+          "quote_currency": "USD",
+          "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+        },
+        {
+          "metric": "window_low",
+          "value": "205.92999267578125",
+          "quote_currency": "USD",
+          "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+        },
+        {
+          "metric": "first_close",
+          "value": "208.4600067138672",
+          "quote_currency": "USD",
+          "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+        },
+        {
+          "metric": "last_close",
+          "value": "207.6699981689453",
+          "quote_currency": "USD",
+          "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+        }
+      ],
+      "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+      "reviewed_concern_ids": [
+        "opportunity_hunter:1",
+        "opportunity_hunter:2",
+        "opportunity_hunter:3",
+        "technical_analyst:1",
+        "technical_analyst:2",
+        "news_analyst:1",
+        "news_analyst:2",
+        "devils_advocate:1",
+        "devils_advocate:2",
+        "devils_advocate:3",
+        "risk_manager:1",
+        "risk_manager:2",
+        "risk_manager:3",
+        "final_decision:1",
+        "final_decision:2",
+        "final_decision:3"
+      ],
+      "acknowledged_missing_data": [
+        "broker_eligibility_unverified",
+        "eur_risk_and_trade_plan_not_supplied",
+        "catalyst_significance_unverified",
+        "native_quotes_not_converted_to_eur"
+      ],
+      "snapshot_id": "4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "rationale": "The supplied window is only mildly weaker by the last close, and the headline set is mostly company-reported, so the catalyst remains unverified. Risk authorization also remains blocked because broker eligibility and the plan are missing.",
+      "decisive_concern_ids": [
+        "news_analyst:1",
+        "risk_manager:1",
+        "risk_manager:2"
+      ],
+      "counterargument": "The strongest alternative is that the headlines signal constructive business momentum and the price held near its starting level. That does not remove the verification gap or the missing trade inputs.",
+      "next_evidence": [
+        "Independent confirmation of the headline claims and their market relevance.",
+        "A supplied EUR-denominated risk plan with eligibility details.",
+        "Longer price context showing whether the move is part of a larger trend."
+      ],
+      "source_ids": [
+        "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d",
+        "1e8c5ee62dbefb2b14cb07a05e68cbfd4ce1dd2ed5e1d8c6cd5627edf7a2d791",
+        "8281e7df230d9ab9463d6908f69338333435bf6dc3f13b6a287e426dff757ecd"
+      ]
+    },
+    "unresolved_concerns": [
+      {
+        "id": "opportunity_hunter:1",
+        "role": "opportunity_hunter",
+        "concern": "News items are publisher-reported and not independently verified here."
+      },
+      {
+        "id": "opportunity_hunter:2",
+        "role": "opportunity_hunter",
+        "concern": "The supplied window is short and shows only a mild fade after an early high."
+      },
+      {
+        "id": "opportunity_hunter:3",
+        "role": "opportunity_hunter",
+        "concern": "Trade authorization is false and the risk plan is incomplete."
+      },
+      {
+        "id": "technical_analyst:1",
+        "role": "technical_analyst",
+        "concern": "News titles are publisher reported and unverified."
+      },
+      {
+        "id": "technical_analyst:2",
+        "role": "technical_analyst",
+        "concern": "The supplied window is short, so trend strength is limited."
+      },
+      {
+        "id": "news_analyst:1",
+        "role": "news_analyst",
+        "concern": "Catalyst significance is unverified from publisher-reported headlines alone."
+      },
+      {
+        "id": "news_analyst:2",
+        "role": "news_analyst",
+        "concern": "No dated external confirmation was supplied beyond company-reported news."
+      },
+      {
+        "id": "devils_advocate:1",
+        "role": "devils_advocate",
+        "concern": "Publisher-reported headlines are unverified and may be promotional."
+      },
+      {
+        "id": "devils_advocate:2",
+        "role": "devils_advocate",
+        "concern": "The late-window price drift is modest and does not establish a strong directional read."
+      },
+      {
+        "id": "devils_advocate:3",
+        "role": "devils_advocate",
+        "concern": "The catalyst impact is unclear without independent confirmation or broader market context."
+      },
+      {
+        "id": "risk_manager:1",
+        "role": "risk_manager",
+        "concern": "Broker eligibility is unverified."
+      },
+      {
+        "id": "risk_manager:2",
+        "role": "risk_manager",
+        "concern": "The trade plan and sizing are missing."
+      },
+      {
+        "id": "risk_manager:3",
+        "role": "risk_manager",
+        "concern": "Cost evidence is missing, so risk cannot be judged fully against the limit."
+      },
+      {
+        "id": "final_decision:1",
+        "role": "final_decision",
+        "concern": "Trade authorization is false."
+      },
+      {
+        "id": "final_decision:2",
+        "role": "final_decision",
+        "concern": "Broker eligibility is unverified."
+      },
+      {
+        "id": "final_decision:3",
+        "role": "final_decision",
+        "concern": "The plan details are not supplied."
+      }
+    ],
+    "mandatory_missing_data": [
+      "broker_eligibility_unverified",
+      "eur_risk_and_trade_plan_not_supplied",
+      "catalyst_significance_unverified",
+      "native_quotes_not_converted_to_eur"
+    ],
+    "computed_metrics": {
+      "values": {
+        "window_high": "209.13999938964844",
+        "window_low": "205.92999267578125",
+        "first_close": "208.4600067138672",
+        "last_close": "207.6699981689453"
+      },
+      "quote_currency": "USD",
+      "source_id": "market:e07095da68cbf84db12a175e50843bcc06f3d3b2bfff6b892a3dd12544f15d5d"
+    },
+    "snapshot_id": "4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68"
+  },
+  "verified_metric_claims": 32,
+  "verified_concerns": 16,
+  "verified_missing_data": 4,
+  "cost_microeur": 45543,
+  "lifetime_spent_microeur": 316001,
+  "lifetime_remaining_microeur": 683999,
+  "outstanding_holds": 0
+}

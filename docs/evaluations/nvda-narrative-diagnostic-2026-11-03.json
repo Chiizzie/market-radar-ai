@@ -1,0 +1,107 @@
+{
+  "run_url": "https://github.com/Chiizzie/market-radar-ai/actions/runs/41663089083",
+  "artifact_sha256": "7e852b12bf0356646f3b5a2aa5b03ef39f8b909418556663af77e4214b51662c",
+  "cost_microeur": 20486,
+  "state": "blocked_or_failed",
+  "snapshot_id": "b6d998e76801ff3e326250fd0f3c5087700a8a162f01ab9f3f934881c2687154",
+  "computed_metrics": {
+    "values": {
+      "window_high": "209.13999938964844",
+      "window_low": "205.92999267578125",
+      "first_close": "208.4600067138672",
+      "last_close": "208.00999450683594"
+    },
+    "quote_currency": "USD",
+    "source_id": "market:5002fce88beeb6851aa73a4a008d28f3ea6def016bfc9e7ecb3197f283149f4b"
+  },
+  "calls": [
+    {
+      "request_id": "live-research-v1:b6d998e76801ff3e326250fd0f3c5087700a8a162f01ab9f3f934881c2687154:opportunity_hunter",
+      "state": "validated",
+      "response_id": "resp_0fbca91d26dca236016ae9fc26fc9c87d1a4c74294bff1561e",
+      "cost_usd": "0.0056895",
+      "estimated_cost_microeur": 5089
+    },
+    {
+      "request_id": "live-research-v1:b6d998e76801ff3e326250fd0f3c5087700a8a162f01ab9f3f934881c2687154:technical_analyst",
+      "state": "validated",
+      "response_id": "resp_0ce3af1fd7148330016ae9fc2e2e9887d1ab60b2c40e96eb01",
+      "cost_usd": "0.00532875",
+      "estimated_cost_microeur": 4766
+    },
+    {
+      "request_id": "live-research-v1:b6d998e76801ff3e326250fd0f3c5087700a8a162f01ab9f3f934881c2687154:news_analyst",
+      "state": "validated",
+      "response_id": "resp_0da030086353bd62016ae9fc34983c87d18d751a696481b678",
+      "cost_usd": "0.00563025",
+      "estimated_cost_microeur": 5036
+    },
+    {
+      "request_id": "live-research-v1:b6d998e76801ff3e326250fd0f3c5087700a8a162f01ab9f3f934881c2687154:devils_advocate",
+      "state": "rejected",
+      "response_id": "resp_02f678b731a2754a016ae9fc3b88d087d18d44f012d769f589",
+      "cost_usd": "0.00625575",
+      "estimated_cost_microeur": 5595,
+      "validation_details": [
+        {
+          "field": [
+            "summary"
+          ],
+          "type": "value_error"
+        }
+      ],
+      "rejected_response": {
+        "status": "untrusted_rejected_draft",
+        "trade_authorized": false,
+        "data": {
+          "metric_claims": [
+            {
+              "metric": "window_high",
+              "value": "209.13999938964844",
+              "quote_currency": "USD",
+              "source_id": "market:5002fce88beeb6851aa73a4a008d28f3ea6def016bfc9e7ecb3197f283149f4b"
+            },
+            {
+              "metric": "window_low",
+              "value": "205.92999267578125",
+              "quote_currency": "USD",
+              "source_id": "market:5002fce88beeb6851aa73a4a008d28f3ea6def016bfc9e7ecb3197f283149f4b"
+            },
+            {
+              "metric": "first_close",
+              "value": "208.4600067138672",
+              "quote_currency": "USD",
+              "source_id": "market:5002fce88beeb6851aa73a4a008d28f3ea6def016bfc9e7ecb3197f283149f4b"
+            },
+            {
+              "metric": "last_close",
+              "value": "208.00999450683594",
+              "quote_currency": "USD",
+              "source_id": "market:5002fce88beeb6851aa73a4a008d28f3ea6def016bfc9e7ecb3197f283149f4b"
+            }
+          ],
+          "execution_quality": "UNKNOWN_NO_SPREAD_OR_DEPTH",
+          "role": "devils_advocate",
+          "snapshot_id": "b6d998e76801ff3e326250fd0f3c5087700a8a162f01ab9f3f934881c2687154",
+          "summary": "Observed price action was slightly weaker by the end of the sampled window, and the news feed is mainly provider-reported company items that do not independently prove a near-term catalyst. A possible bearish read is that the last close finished below the first close while the window also showed a pullback from the higher intrawindow high. A counterpoint is that the decline was modest and the sampled range remained relatively contained. The risk context also limits interpretive confidence, since",
+          "source_ids": [
+            "market:5002fce88beeb6851aa73a4a008d28f3ea6def016bfc9e7ecb3197f283149f4b",
+            "853e96282fcb2cad76d4e5797568ac503e89b370d755e1c7c3f874447d391392",
+            "d5d3db1f3a9a150388c476b02fda17004aaaf7532de28059efee07ceef81431b",
+            "84f5c4345b63da3c308d144b55027c251424773baafc90021b7ca7842fe70a24",
+            "1e8c5ee62dbefb2b14cb07a05e68cbfd4ce1dd2ed5e1d8c6cd5627edf7a2d791",
+            "9fa8e4999dc547768cea2d0e8770644fb87b13bf896ca5138744b6991c417066",
+            "8281e7df230d9ab9463d6908f69338333435bf6dc3f13b6a287e426dff757ecd"
+          ],
+          "concerns": [
+            "The news items are publisher-reported headlines and not independently verified catalysts.",
+            "The sampled candles show only a mild net decline, so the bearish interpretation is weak.",
+            "The required trade-planning context is incomplete, so confidence in any market view is limited."
+          ]
+        },
+        "omitted_for_size": false
+      },
+      "validation_error": "response_quality_or_metric_validation_failed"
+    }
+  ]
+}
