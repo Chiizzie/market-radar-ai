@@ -43,7 +43,9 @@ def draft_nvda(candles, catalogue, fx, *, now, paper_capital_eur, round_trip_cos
             raise ValueError()
         if any((b.timestamp-a.timestamp).total_seconds()!=300 for a,b in zip(rows,rows[1:])):
             fail.append('market_candle_spacing_invalid')
-        if rows!=sorted(rows,key=lambda c:c.timestamp) or validate_candles(rows,now=now,max_age_seconds=600,expected_interval_seconds=300):
+        issues=validate_candles(rows,now=now,max_age_seconds=600,expected_interval_seconds=300)
+        result['market_evidence']['quality_issues']=[i.code for i in issues]
+        if rows!=sorted(rows,key=lambda c:c.timestamp) or issues:
             raise ValueError()
         if any(c.timestamp.astimezone(ZoneInfo('America/New_York')).date()!=now.astimezone(ZoneInfo('America/New_York')).date() for c in rows):
             raise ValueError()

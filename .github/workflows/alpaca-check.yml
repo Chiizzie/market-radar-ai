@@ -26,6 +26,11 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -e '.[dev,market]'
       - run: python -m pytest -q tests/test_alpaca_check.py tests/test_paper_planner.py tests/test_alpaca_paper_rehearsal.py
+      - name: Refresh Trading 212 instrument identity
+        run: python -m market_radar_ai.market_data.broker_check
+        env:
+          TRADING212_API_KEY: ${{ secrets.TRADING212_API_KEY }}
+          TRADING212_API_SECRET: ${{ secrets.TRADING212_API_SECRET }}
       - name: Fetch IEX quotes, bars and news without AI or orders
         run: python -m market_radar_ai.market_data.alpaca_check
         env:
@@ -37,11 +42,6 @@ jobs:
           name: alpaca-data-${{ github.run_id }}
           path: artifacts/alpaca-check/result.json
           retention-days: 7
-      - name: Refresh Trading 212 instrument identity
-        run: python -m market_radar_ai.market_data.broker_check
-        env:
-          TRADING212_API_KEY: ${{ secrets.TRADING212_API_KEY }}
-          TRADING212_API_SECRET: ${{ secrets.TRADING212_API_SECRET }}
       - name: Build unapproved EUR draft from Alpaca candles and fresh FX
         run: python -m market_radar_ai.agents.alpaca_paper_rehearsal
       - uses: actions/upload-artifact@v4
