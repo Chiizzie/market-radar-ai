@@ -1051,6 +1051,12 @@
         "response_id": "resp_0f89e90fb8d32308016aea3b1824e487d0bedcc4000e614228"
       }
     },
+    "paper-plan-review-v1:874571f09e452882fbd78c8c262bc42d1b792650c27d359a6fb827637963b50b:technical_analyst": {
+      "actual": null,
+      "day": "2026-11-03",
+      "reserved": 10835,
+      "usage": null
+    },
     "research-eval-v1:supported-fixture:debate": {
       "actual": 6557,
       "day": "2026-11-02",
