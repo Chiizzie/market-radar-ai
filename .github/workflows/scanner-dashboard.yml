@@ -12,6 +12,11 @@ on:
         type: choice
         options: [auto, stocks, crypto]
         default: auto
+      review_scope:
+        description: 'Candidate momentum review or all-session stock context (context requires auto/stocks; no dashboard archive yet)'
+        type: choice
+        options: [candidate, context]
+        default: candidate
       send_candidate_review:
         description: Archive completed candidate research to the authenticated dashboard
         type: boolean
@@ -42,11 +47,11 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -e '.[dev,market]'
-      - run: python -m pytest -q tests/test_snapshot_delivery.py tests/test_dashboard_cache.py tests/test_market_capture.py tests/test_scanner_news.py tests/test_capture_shortlist.py tests/test_candidate_packages.py tests/test_candidate_review.py tests/test_candidate_delivery.py tests/test_evidence_enrichment.py tests/test_alpaca_provider.py tests/test_research_readiness.py
+      - run: python -m pytest -q tests/test_snapshot_delivery.py tests/test_dashboard_cache.py tests/test_market_capture.py tests/test_scanner_news.py tests/test_capture_shortlist.py tests/test_candidate_packages.py tests/test_candidate_review.py tests/test_candidate_delivery.py tests/test_evidence_enrichment.py tests/test_alpaca_provider.py tests/test_research_readiness.py tests/test_stock_context.py
       - name: Collect bounded stock, macro and tagged crypto news without AI
         id: news
         continue-on-error: true
-        run: python -m market_radar_ai.evidence.scanner_feed --output artifacts/scanner/news.json
+        run: python -m market_radar_ai.evidence.scanner_feed --output artifacts/scanner/news.json --symbols NVDA MSFT AAPL AMD META AMZN GOOGL TSLA
       - name: Capture bounded stock and crypto sample without AI
         id: collect
         continue-on-error: true
@@ -54,8 +59,17 @@ jobs:
         env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+      - name: Gather prior-session and extended-hours context without a twenty-bar gate
+        id: context
+        continue-on-error: true
+        run: python -m market_radar_ai.market_data.stock_context --capture artifacts/scanner/capture.json --output artifacts/scanner/context-capture.json
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
       - name: Add public EUR reference bid and ask without broker admission
-        run: python -m market_radar_ai.market_data.reference_quotes --capture artifacts/scanner/capture.json --output artifacts/scanner/enriched-capture.json
+        run: python -m market_radar_ai.market_data.reference_quotes --capture artifacts/scanner/context-capture.json --output artifacts/scanner/enriched-capture.json
+      - name: Assemble all-session context for six specialist roles
+        run: python -m market_radar_ai.agents.context_packages --capture artifacts/scanner/enriched-capture.json --evidence artifacts/scanner/news.json --output artifacts/scanner/context-packages.json
       - name: Rank research candidates without AI or trade admission
         run: python -m market_radar_ai.market_data.capture_shortlist --capture artifacts/scanner/enriched-capture.json --output artifacts/scanner/shortlist.json
       - name: Assemble cited candidate evidence without paid model calls
@@ -74,6 +88,7 @@ jobs:
         run: python -m market_radar_ai.agents.github_candidate_review --capture artifacts/scanner/enriched-capture.json --evidence artifacts/scanner/news.json --output artifacts/scanner/candidate-review
         env:
           CANDIDATE_MARKET: ${{ inputs.candidate_market || 'auto' }}
+          REVIEW_SCOPE: ${{ inputs.review_scope || 'candidate' }}
           CANDIDATE_REVIEW_MODE: ${{ inputs.paid_analysis && 'paid' || 'dry_run' }}
           OPENAI_API_KEY: ${{ inputs.paid_analysis && secrets.OPEN_API_KEY || '' }}
           GH_BUDGET_TOKEN: ${{ inputs.paid_analysis && github.token || '' }}
@@ -86,5 +101,5 @@ jobs:
           path: artifacts/scanner/
           retention-days: 7
       - name: Preserve connectivity failure as a failed check
-        if: steps.collect.outcome == 'failure' || steps.news.outcome == 'failure'
+        if: steps.collect.outcome == 'failure' || steps.news.outcome == 'failure' || steps.context.outcome == 'failure'
         run: exit 1

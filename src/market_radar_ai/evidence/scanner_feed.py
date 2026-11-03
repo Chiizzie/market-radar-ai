@@ -9,10 +9,13 @@ PUBLIC_SOURCES = ('fed', 'microsoft', 'nvidia')
 
 
 def collect(*, company_fetch=fetch_company_news, public_fetch=fetch_feed,
-            crypto_fetch=None,
+            crypto_fetch=None, company_symbols=COMPANY_SYMBOLS,
             clock=lambda: datetime.now(timezone.utc)):
+    import re
+    if not 1 <= len(company_symbols) <= 20 or any(not isinstance(s,str) or not re.fullmatch(r'[A-Z][A-Z0-9.\-]{0,14}',s) for s in company_symbols):
+        raise ValueError('invalid_company_symbols')
     feeds = []
-    for kind, names in (('company', COMPANY_SYMBOLS), ('publisher', PUBLIC_SOURCES)):
+    for kind, names in (('company', tuple(dict.fromkeys(company_symbols))), ('publisher', PUBLIC_SOURCES)):
         for name in names:
             try:
                 feed = company_fetch(name) if kind == 'company' else public_fetch(source=name)
@@ -47,9 +50,10 @@ def main():
     from pathlib import Path
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--symbols', nargs='+', default=list(COMPANY_SYMBOLS))
     args = parser.parse_args()
     from .crypto_feed import fetch_crypto_feed
-    result = collect(crypto_fetch=fetch_crypto_feed)
+    result = collect(crypto_fetch=fetch_crypto_feed,company_symbols=args.symbols)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2)+'\n')
     print(json.dumps({'status': result['status'], 'items': len(result['items']),

@@ -19,8 +19,13 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
         raise ValueError('first_manual_attempt_required')
     mode = env.get('CANDIDATE_REVIEW_MODE', 'dry_run')
     market = env.get('CANDIDATE_MARKET', 'auto')
+    scope = env.get('REVIEW_SCOPE', 'candidate')
     if mode not in ('dry_run', 'paid') or market not in ('auto', 'stocks', 'crypto'):
         raise ValueError('invalid_candidate_review_mode')
+    if scope not in ('candidate', 'context') or (scope=='context' and market=='crypto'):
+        raise ValueError('invalid_research_scope')
+    if scope=='context' and env.get('SEND_CANDIDATE_REVIEW')=='true':
+        raise ValueError('context_archive_contract_not_connected')
     root = Path(root)
     if root.exists():
         raise ValueError('preserve_existing_artifacts')
@@ -32,7 +37,12 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
         (root/name).write_text(json.dumps(value, indent=2)+'\n')
 
     try:
-        batch = build_packages(capture, feed, now=clock())
+        if scope=='context':
+            from .context_packages import build_context_packages
+            batch = build_context_packages(capture, feed, now=clock())
+            status['research_scope'] = 'context'
+        else:
+            batch = build_packages(capture, feed, now=clock())
         choices = [r for r in batch['packages'] if market == 'auto' or r['package']['market'] == market]
         if not choices:
             status['state'] = 'no_reviewable_candidate'
@@ -59,8 +69,11 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
                 status.update(state=audit['state'], model_calls=len(audit['calls']))
                 save('result.json', audit['result'])
                 from ..dashboard.candidate_delivery import export_archive, deliver
-                save('dashboard-archive.json', export_archive(record, capture, feed, audit))
-                if env.get('SEND_CANDIDATE_REVIEW') == 'true':
+                if scope=='candidate':
+                    save('dashboard-archive.json', export_archive(record, capture, feed, audit))
+                else:
+                    status['dashboard_delivery_state'] = 'context_archive_not_connected'
+                if scope=='candidate' and env.get('SEND_CANDIDATE_REVIEW') == 'true':
                     try:
                         delivery = deliver(record, capture, feed, audit, env=env, clock=clock)
                     except Exception:

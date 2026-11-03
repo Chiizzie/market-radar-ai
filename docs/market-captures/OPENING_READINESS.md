@@ -23,6 +23,13 @@ Native USD is preserved in evidence and the fresh EUR FX gap remains.
 The older default CLI still uses Yahoo unless --stock-provider alpaca_iex is set.
 Cache namespaces distinguish the two providers.
 
+## All-session research update
+
+The 16:10 timing below applies only to the baseline momentum ranker. The new
+context path can research prior history, available extended-hours observations
+and dated news before the opening, without twenty current-session candles. See
+../evidence/ALL_SESSION_CONTEXT.md for scope and remaining automation work.
+
 ## Tomorrow: Wednesday 4 November 2026 (Dublin time)
 
 The published regular US cash-session hours convert to 14:30–21:00 Dublin.

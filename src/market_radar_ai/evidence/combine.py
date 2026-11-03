@@ -3,8 +3,8 @@ from ..dashboard.evidence import export_evidence
 
 
 def combine_feeds(feeds, *, now):
-    if not 1 <= len(feeds) <= 10:
-        raise ValueError('Supply one to ten feeds')
+    if not 1 <= len(feeds) <= 24:
+        raise ValueError('Supply one to twenty-four feeds')
     sources, items, seen = [], [], set()
     rejected = []
     for index, feed in enumerate(feeds):
