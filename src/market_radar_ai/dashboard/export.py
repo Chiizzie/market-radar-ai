@@ -64,13 +64,17 @@ def build_snapshot(document, *, now, evidence=None):
             'current': sum(r['status']=='CURRENT_RESEARCH_DATA' for r in rows),
             'unusable_or_stale': sum(r['status']!='CURRENT_RESEARCH_DATA' for r in rows),
             'agent_reviewed': 0}
-    return {'schema_version': '1.0', 'mode': 'RESEARCH_ONLY',
+    snapshot = {'schema_version': '1.0', 'mode': 'RESEARCH_ONLY',
         'generated_at_dublin': now.astimezone(ZoneInfo('Europe/Dublin')).isoformat(),
         'expires_at_epoch': int(now.timestamp()) + 60,
         'display_currency': 'EUR', 'coverage_scope': 'REQUESTED_SYMBOLS_ONLY',
         'coverage': coverage, 'markets': markets, 'agents': {'status': 'NOT_RUN_ON_THIS_CAPTURE', 'reports': []},
         'evidence': export_evidence(evidence, now=now),
         'paper_outcomes': None, 'api_budget': None, 'live_orders_enabled': False}
+    if 'stock_context' in document:
+        from .briefing import build_briefing
+        snapshot['research_briefing']=build_briefing(document,evidence,now=now)
+    return snapshot
 
 
 def main():

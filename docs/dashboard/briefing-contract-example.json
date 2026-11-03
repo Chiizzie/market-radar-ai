@@ -1,0 +1,1549 @@
+{
+  "schema_version": "1.0",
+  "mode": "RESEARCH_ONLY",
+  "generated_at_dublin": "2026-11-03T23:20:35.331250+00:00",
+  "expires_at_epoch": 1793748095,
+  "display_currency": "EUR",
+  "coverage_scope": "REQUESTED_SYMBOLS_ONLY",
+  "coverage": {
+    "stocks": {
+      "universe_count": 8,
+      "attempted": 8,
+      "deferred": 0,
+      "current": 0,
+      "unusable_or_stale": 8,
+      "agent_reviewed": 0
+    },
+    "crypto": {
+      "universe_count": 4,
+      "attempted": 4,
+      "deferred": 0,
+      "current": 4,
+      "unusable_or_stale": 0,
+      "agent_reviewed": 0
+    }
+  },
+  "markets": {
+    "stocks": [
+      {
+        "symbol": "NVDA",
+        "provider": "alpaca_iex",
+        "status": "UNUSABLE_OR_STALE",
+        "retrieved_at": "2026-11-03T23:20:26.442227+00:00",
+        "latest_candle_at": "2026-11-03T20:55:00+00:00",
+        "latest_candle_age_seconds": 8735.33125,
+        "candles_saved": 60,
+        "quote_currencies": [
+          "USD"
+        ],
+        "broker_eligibility": "UNKNOWN",
+        "decision": "NO_ACTION"
+      },
+      {
+        "symbol": "MSFT",
+        "provider": "alpaca_iex",
+        "status": "UNUSABLE_OR_STALE",
+        "retrieved_at": "2026-11-03T23:20:26.544930+00:00",
+        "latest_candle_at": "2026-11-03T20:55:00+00:00",
+        "latest_candle_age_seconds": 8735.33125,
+        "candles_saved": 60,
+        "quote_currencies": [
+          "USD"
+        ],
+        "broker_eligibility": "UNKNOWN",
+        "decision": "NO_ACTION"
+      },
+      {
+        "symbol": "AAPL",
+        "provider": "alpaca_iex",
+        "status": "UNUSABLE_OR_STALE",
+        "retrieved_at": "2026-11-03T23:20:26.633178+00:00",
+        "latest_candle_at": "2026-11-03T20:55:00+00:00",
+        "latest_candle_age_seconds": 8735.33125,
+        "candles_saved": 60,
+        "quote_currencies": [
+          "USD"
+        ],
+        "broker_eligibility": "UNKNOWN",
+        "decision": "NO_ACTION"
+      },
+      {
+        "symbol": "AMD",
+        "provider": "alpaca_iex",
+        "status": "UNUSABLE_OR_STALE",
+        "retrieved_at": "2026-11-03T23:20:26.744700+00:00",
+        "latest_candle_at": "2026-11-03T20:55:00+00:00",
+        "latest_candle_age_seconds": 8735.33125,
+        "candles_saved": 60,
+        "quote_currencies": [
+          "USD"
+        ],
+        "broker_eligibility": "UNKNOWN",
+        "decision": "NO_ACTION"
+      },
+      {
+        "symbol": "META",
+        "provider": "alpaca_iex",
+        "status": "UNUSABLE_OR_STALE",
+        "retrieved_at": "2026-11-03T23:20:26.820684+00:00",
+        "latest_candle_at": "2026-11-03T20:55:00+00:00",
+        "latest_candle_age_seconds": 8735.33125,
+        "candles_saved": 60,
+        "quote_currencies": [
+          "USD"
+        ],
+        "broker_eligibility": "UNKNOWN",
+        "decision": "NO_ACTION"
+      },
+      {
+        "symbol": "AMZN",
+        "provider": "alpaca_iex",
+        "status": "UNUSABLE_OR_STALE",
+        "retrieved_at": "2026-11-03T23:20:26.911524+00:00",
+        "latest_candle_at": "2026-11-03T20:55:00+00:00",
+        "latest_candle_age_seconds": 8735.33125,
+        "candles_saved": 60,
+        "quote_currencies": [
+          "USD"
+        ],
+        "broker_eligibility": "UNKNOWN",
+        "decision": "NO_ACTION"
+      },
+      {
+        "symbol": "GOOGL",
+        "provider": "alpaca_iex",
+        "status": "UNUSABLE_OR_STALE",
+        "retrieved_at": "2026-11-03T23:20:26.992034+00:00",
+        "latest_candle_at": "2026-11-03T20:55:00+00:00",
+        "latest_candle_age_seconds": 8735.33125,
+        "candles_saved": 60,
+        "quote_currencies": [
+          "USD"
+        ],
+        "broker_eligibility": "UNKNOWN",
+        "decision": "NO_ACTION"
+      },
+      {
+        "symbol": "TSLA",
+        "provider": "alpaca_iex",
+        "status": "UNUSABLE_OR_STALE",
+        "retrieved_at": "2026-11-03T23:20:27.094962+00:00",
+        "latest_candle_at": "2026-11-03T20:55:00+00:00",
+        "latest_candle_age_seconds": 8735.33125,
+        "candles_saved": 60,
+        "quote_currencies": [
+          "USD"
+        ],
+        "broker_eligibility": "UNKNOWN",
+        "decision": "NO_ACTION"
+      }
+    ],
+    "crypto": [
+      {
+        "symbol": "XBTEUR",
+        "provider": "kraken",
+        "status": "CURRENT_RESEARCH_DATA",
+        "retrieved_at": "2026-11-03T23:20:27.096855+00:00",
+        "latest_candle_at": "2026-11-03T23:15:00+00:00",
+        "latest_candle_age_seconds": 335.33125,
+        "candles_saved": 60,
+        "quote_currencies": [
+          "EUR"
+        ],
+        "broker_eligibility": "UNKNOWN",
+        "decision": "NO_ACTION"
+      },
+      {
+        "symbol": "ETHEUR",
+        "provider": "kraken",
+        "status": "CURRENT_RESEARCH_DATA",
+        "retrieved_at": "2026-11-03T23:20:27.344019+00:00",
+        "latest_candle_at": "2026-11-03T23:15:00+00:00",
+        "latest_candle_age_seconds": 335.33125,
+        "candles_saved": 60,
+        "quote_currencies": [
+          "EUR"
+        ],
+        "broker_eligibility": "UNKNOWN",
+        "decision": "NO_ACTION"
+      },
+      {
+        "symbol": "SOLEUR",
+        "provider": "kraken",
+        "status": "CURRENT_RESEARCH_DATA",
+        "retrieved_at": "2026-11-03T23:20:27.595235+00:00",
+        "latest_candle_at": "2026-11-03T23:15:00+00:00",
+        "latest_candle_age_seconds": 335.33125,
+        "candles_saved": 60,
+        "quote_currencies": [
+          "EUR"
+        ],
+        "broker_eligibility": "UNKNOWN",
+        "decision": "NO_ACTION"
+      },
+      {
+        "symbol": "XRPEUR",
+        "provider": "kraken",
+        "status": "CURRENT_RESEARCH_DATA",
+        "retrieved_at": "2026-11-03T23:20:27.794804+00:00",
+        "latest_candle_at": "2026-11-03T23:15:00+00:00",
+        "latest_candle_age_seconds": 335.33125,
+        "candles_saved": 60,
+        "quote_currencies": [
+          "EUR"
+        ],
+        "broker_eligibility": "UNKNOWN",
+        "decision": "NO_ACTION"
+      }
+    ]
+  },
+  "agents": {
+    "status": "NOT_RUN_ON_THIS_CAPTURE",
+    "reports": []
+  },
+  "evidence": {
+    "schema_version": "1.0",
+    "status": "partial",
+    "scope": "BOUNDED_STOCK_MACRO_AND_PUBLISHER_TAGGED_CRYPTO_NEWS",
+    "retrieved_at": "2026-11-03T23:20:23.501105+00:00",
+    "coverage_complete": false,
+    "items": [
+      {
+        "evidence_id": "eb1f0e979a6293dd9819c1e674b0ca31cbcba6a42a64804c1c48c94c4f2a5484",
+        "kind": "news",
+        "title": "Advanced Micro Devices Q3 2026 Earnings Call Transcript",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62849372/advanced-micro-devices-q3-2026-earnings-call-transcript",
+        "published_at": "2026-11-03T23:09:09Z",
+        "retrieved_at": "2026-11-03T23:20:24.213638Z",
+        "event_at": null,
+        "symbols": [
+          "AMD"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 686.33125,
+        "intraday_recent": true
+      },
+      {
+        "evidence_id": "bdeb86cc48fbe219e9a82d3cae4c161ed424e53d22c45c7c61d30a028af962d6",
+        "kind": "news",
+        "title": "What happens if North Korea steals Wall Street's tokenized assets next",
+        "source": "CoinDesk",
+        "url": "https://www.coindesk.com/business/2026/11/03/what-happens-if-north-korea-steals-wall-street-s-tokenized-assets-next",
+        "published_at": "2026-11-03T23:00:07Z",
+        "retrieved_at": "2026-11-03T23:20:25.899908Z",
+        "event_at": null,
+        "symbols": [],
+        "verification": "provider_reported",
+        "publication_age_seconds": 1228.33125,
+        "intraday_recent": true
+      },
+      {
+        "evidence_id": "9e3ca3515efa94b0a0550105ee7b86e0cf5a689c7909aade6aa8b41d0ef5b4c6",
+        "kind": "news",
+        "title": "AMD Provides Fourth Quarter 2026 Revenue Guidance",
+        "source": "fiscal.ai",
+        "url": "https://www.marketscreener.com/news/amd-advanced-micro-devices-inc-expects-q4-revenue-range-16-49b-17-51b-ce785fdedc8bf527",
+        "published_at": "2026-11-03T22:32:03Z",
+        "retrieved_at": "2026-11-03T23:20:24.213638Z",
+        "event_at": null,
+        "symbols": [
+          "AMD"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 2912.33125,
+        "intraday_recent": true
+      },
+      {
+        "evidence_id": "a111c3137a58b177ea88e0ce01146964a55de19afe00924a4feb4f8e97368193",
+        "kind": "news",
+        "title": "Microsoft, Google, and OpenAI Support New Standard for AI Training Opt-Outs",
+        "source": "fiscal.ai",
+        "url": "https://newswire.co.nz/2026/11/robots-txt-ai-training-opt-out-google-openai-microsoft-new-zealand/",
+        "published_at": "2026-11-03T22:31:37Z",
+        "retrieved_at": "2026-11-03T23:20:23.726244Z",
+        "event_at": null,
+        "symbols": [
+          "MSFT"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 2938.33125,
+        "intraday_recent": true
+      },
+      {
+        "evidence_id": "e835797f6a3dbe8fd19e496df7e5a9c6fcc5286f4c4050b5daca658c2546b26d",
+        "kind": "news",
+        "title": "AMD CFO Says Expect Q4 Non-GAAP Operating Expenses To Be ~$3.75B",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62848287/amd-cfo-says-expect-q4-non-gaap-operating-expenses-be-3-75b",
+        "published_at": "2026-11-03T22:29:24Z",
+        "retrieved_at": "2026-11-03T23:20:24.213638Z",
+        "event_at": null,
+        "symbols": [
+          "AMD"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 3071.33125,
+        "intraday_recent": true
+      },
+      {
+        "evidence_id": "cf5fe0a1b3532cebbea4dd540b23a2139606f6f966ac41b0c2b1a5a69cbacc40",
+        "kind": "news",
+        "title": "AMD CEO Says Expect Our Embedded Business To Deliver A Strong Double-Digit Annual Revenue Growth; Now Expect Revenue To Grow More Than 80% In 2027",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62848042/amd-ceo-says-expect-our-embedded-business-deliver-strong-double-digit-annual-revenue-growth-now-expe",
+        "published_at": "2026-11-03T22:20:25Z",
+        "retrieved_at": "2026-11-03T23:20:24.213638Z",
+        "event_at": null,
+        "symbols": [
+          "AMD"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 3610.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "e7421201aa47f142fd3456c137a950d4f25662e52eccebdb7a367b8184c4c12d",
+        "kind": "news",
+        "title": "AMD CEO Says In 2027, We Are Planning For Pc Market Unit Shipments To Decline By A Double-Digit Percentage",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62847925/amd-ceo-says-2027-we-are-planning-pc-market-unit-shipments-decline-double-digit-percentage",
+        "published_at": "2026-11-03T22:17:36Z",
+        "retrieved_at": "2026-11-03T23:20:24.213638Z",
+        "event_at": null,
+        "symbols": [
+          "AMD"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 3779.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "f917e61857ad147b5f83484414d6573f2f3a50563686e03f2e394a6abf824fb1",
+        "kind": "news",
+        "title": "AMD CEO Says  Expect Data Center To Be More Than 80% Of Our Total Revenue In 2027 And To Drive The Majority Of Our Revenue And Earnings Growth",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62847892/amd-ceo-says-expect-data-center-be-more-80-our-total-revenue-2027-and-drive-majority-our-revenue-and",
+        "published_at": "2026-11-03T22:16:46Z",
+        "retrieved_at": "2026-11-03T23:20:24.213638Z",
+        "event_at": null,
+        "symbols": [
+          "AMD"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 3829.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "2b8f07a06d340e848bc6014b16dfa66be9f6001e60622b83c784d1054ccc8110",
+        "kind": "news",
+        "title": "AMD CEO Says Now Expect Data Center Segment Revenue Growth To Accelerate In The Fourth Quarter And Full Year Segment Revenue To More Than Double From 2025; Now Expect Server Revenue To Double Year Over Year In 2027",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62847867/amd-ceo-says-now-expect-data-center-segment-revenue-growth-accelerate-fourth-quarter-and-full-year-s",
+        "published_at": "2026-11-03T22:16:22Z",
+        "retrieved_at": "2026-11-03T23:20:24.213638Z",
+        "event_at": null,
+        "symbols": [
+          "AMD"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 3853.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "ff2510dd16b05b2ef081215bf95ffbe225d4ae69c1d4639df8add4e23a9ec243",
+        "kind": "news",
+        "title": "CFTC gets into legal clash over stock perps after having cleared path for crypto version",
+        "source": "CoinDesk",
+        "url": "https://www.coindesk.com/policy/2026/11/03/cftc-gets-into-legal-clash-over-stock-perps-after-having-cleared-path-for-crypto-version",
+        "published_at": "2026-11-03T22:14:44Z",
+        "retrieved_at": "2026-11-03T23:20:25.899908Z",
+        "event_at": null,
+        "symbols": [],
+        "verification": "provider_reported",
+        "publication_age_seconds": 3951.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "f76cd6f6e6fe03763a350fb6d8ea9bca479db1daae7e6ecfc62ebc569af65612",
+        "kind": "news",
+        "title": "AMD CEO Says Began Revenue Shipments Of EPYC Venice Processors In Q3, And The First OEM Systems Are On Track For Availability In Q4",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62847690/amd-ceo-says-began-revenue-shipments-epyc-venice-processors-q3-and-first-oem-systems-are-track-avail",
+        "published_at": "2026-11-03T22:12:10Z",
+        "retrieved_at": "2026-11-03T23:20:24.213638Z",
+        "event_at": null,
+        "symbols": [
+          "AMD"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 4105.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "9ef386be2e73e41d333a62ed54b8847d8d8b3362bb9472661615ef53dcd691d4",
+        "kind": "news",
+        "title": "AMD Posts Q3 Double Beat as Data Center Segment Shines, Growth Expected to 'Accelerate' in Q4",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/markets/earnings/26/11/62845344/amd-posts-q3-double-beat-as-data-center-segment-shines-growth-expected-to-accelerate-in-q4",
+        "published_at": "2026-11-03T21:34:43Z",
+        "retrieved_at": "2026-11-03T23:20:24.213638Z",
+        "event_at": null,
+        "symbols": [
+          "AMD"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 6352.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "0ca17ea3d5c52d29e37ebb1ed2ba7ac46b0ff4a7f7d36d61e4d56aefe07d6791",
+        "kind": "news",
+        "title": "AMD Reports Third Quarter 2026 Financial Results",
+        "source": "fiscal.ai",
+        "url": "https://www.globenewswire.com/news-release/2026/11/03/3394824/0/en/amd-reports-third-quarter-2026-financial-results.html",
+        "published_at": "2026-11-03T21:31:47Z",
+        "retrieved_at": "2026-11-03T23:20:24.213638Z",
+        "event_at": null,
+        "symbols": [
+          "AMD"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 6528.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "02eaf602875ea9aab2256613bc465262c553acf4fedd738a5b5fc6f7772fb129",
+        "kind": "news",
+        "title": "Tesla Expands Robotaxi Service to Fort Worth",
+        "source": "fiscal.ai",
+        "url": "https://www.tradingview.com/news/gurufocus:0623b5e63094b:0-tesla-stocks-move-lower-with-fort-worth-robotaxi-expansion-in-focus/",
+        "published_at": "2026-11-03T21:31:42Z",
+        "retrieved_at": "2026-11-03T23:20:25.167794Z",
+        "event_at": null,
+        "symbols": [
+          "TSLA"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 6533.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "a1c844b8758c2b1b0e4d2afcdfa04c2dc5741aa5e09757886f5d4ab2e3396975",
+        "kind": "news",
+        "title": "Nate Silver Says Democrats Are Clear Senate Favorites: 'A Really Bad Night for Pollsters' if They Lose",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/markets/prediction-markets/26/11/62840524/nate-silver-senate",
+        "published_at": "2026-11-03T21:00:05Z",
+        "retrieved_at": "2026-11-03T23:20:23.501105Z",
+        "event_at": null,
+        "symbols": [
+          "NVDA"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 8430.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "8bb98254c90429d32d0cd832694e1cc7645a52b1046edd2e46bbe72bef1e0e1e",
+        "kind": "news",
+        "title": "'Xbox\u2019s Arkane Studios Attracts Multiple Bidders, Including Ubisoft' - Bloomberg Exclusive",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62840421/xboxs-arkane-studios-attracts-multiple-bidders-including-ubisoft-bloomberg-exclusive",
+        "published_at": "2026-11-03T20:56:18Z",
+        "retrieved_at": "2026-11-03T23:20:23.726244Z",
+        "event_at": null,
+        "symbols": [
+          "MSFT",
+          "UBSFY"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 8657.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "3add0599764a0cefd2f5012da146e22baaa0d175d4e977ab07f319252f0e55bf",
+        "kind": "news",
+        "title": "Cisco Partners With OpenAI To Integrate Frontier AI Reasoning Into Networking And Security Infrastructure, Strengthening Enterprise Cybersecurity And Threat Detection",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62839068/cisco-partners-openai-integrate-frontier-ai-reasoning-networking-and-security-infrastructure-strengt",
+        "published_at": "2026-11-03T20:11:09Z",
+        "retrieved_at": "2026-11-03T23:20:23.726244Z",
+        "event_at": null,
+        "symbols": [
+          "CSCO",
+          "MSFT"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 11366.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "f31307d10340c293b7a7e1a4fb2252a8f24ce9ee6cffc07d0a47495574a7a9e2",
+        "kind": "news",
+        "title": "Growth And Cyclical Lead Sectors Tuesday",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/etfs/sector-etfs/26/11/62838995/growth-and-cyclical-lead-sectors-tuesday",
+        "published_at": "2026-11-03T20:08:43Z",
+        "retrieved_at": "2026-11-03T23:20:23.501105Z",
+        "event_at": null,
+        "symbols": [
+          "AVGO",
+          "CAT",
+          "COST",
+          "DIA",
+          "ECL",
+          "GE",
+          "GOOG",
+          "HD",
+          "IWM",
+          "MCD",
+          "META",
+          "NEM",
+          "NFLX",
+          "NKE",
+          "NVDA",
+          "ORCL",
+          "PEP",
+          "QQQ",
+          "RTX",
+          "SHW",
+          "SPY",
+          "WMT",
+          "XLB",
+          "XLC",
+          "XLE",
+          "XLF",
+          "XLI",
+          "XLK",
+          "XLP",
+          "XLRE",
+          "XLU",
+          "XLV",
+          "XLY"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 11512.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "b35a4b6692d1c78589dfa9a93abd124a5613394b9076b09d565909aea6eaa185",
+        "kind": "news",
+        "title": "Nvidia Stock Climbs Amid Oil Price Drop",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/trading-ideas/movers/26/11/62838137/nvidia-stock-climbs-amid-oil-price-drop",
+        "published_at": "2026-11-03T19:43:30Z",
+        "retrieved_at": "2026-11-03T23:20:23.501105Z",
+        "event_at": null,
+        "symbols": [
+          "NVDA"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 13025.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "d9bb8eb24ea226f54e376e9f192d5f987284dc2e89a8eeaf6e6f0934a7ea6f0a",
+        "kind": "news",
+        "title": "'Jill Hazelbaker Jumps To OpenAI As Chief Corporate Affairs Officer' - Axios",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62837416/jill-hazelbaker-jumps-to-openai-as-chief-corporate-affairs-officer-axios",
+        "published_at": "2026-11-03T19:22:31Z",
+        "retrieved_at": "2026-11-03T23:20:23.726244Z",
+        "event_at": null,
+        "symbols": [
+          "MSFT",
+          "UBER"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 14284.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "ae3d0ce5c385ac373dfe7577d3331520585b44d2d61a9e9fdaca52e3f50ace17",
+        "kind": "news",
+        "title": "'Meta Draws $58 Billion Demand for US Leg of Cross-Border Bond' - Bloomberg News",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62837242/meta-draws-58-billion-demand-us-leg-cross-border-bond-bloomberg-news",
+        "published_at": "2026-11-03T19:16:42Z",
+        "retrieved_at": "2026-11-03T23:20:24.445495Z",
+        "event_at": null,
+        "symbols": [
+          "META"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 14633.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "bd0771878ea95757ef7006a06f1160b7f4cdae6ba40734bf5e2b8f1170d791d5",
+        "kind": "news",
+        "title": "SUNGBOON EDITOR Receives 2026 Amazon Innovator Award",
+        "source": "fiscal.ai",
+        "url": "https://www.moomoo.com/news/post/1003346633/from-tiktok-virality-to-amazon-recognition-sungboon-editor-is-emerging",
+        "published_at": "2026-11-03T19:01:33Z",
+        "retrieved_at": "2026-11-03T23:20:24.729041Z",
+        "event_at": null,
+        "symbols": [
+          "AMZN"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 15542.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "e6b083df9e325fdc750a06e8d980ccaf8f578851f481d698e03407fb83bf4f50",
+        "kind": "news",
+        "title": "Apple Releases First Betas of iOS 27.3 and macOS Golden Gate 27.3",
+        "source": "fiscal.ai",
+        "url": "https://appleosophy.com/wire/kkp59lh/",
+        "published_at": "2026-11-03T19:01:21Z",
+        "retrieved_at": "2026-11-03T23:20:23.947842Z",
+        "event_at": null,
+        "symbols": [
+          "AAPL"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 15554.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "736c72e023749badabbc81f05cfca0f7fb5bb59869dce6dae03e4e9473b8272a",
+        "kind": "news",
+        "title": "Apple Stock at \u2018Extreme Overvaluation\u2019: Analysts See Slowing Revenue Growth",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/analyst-stock-ratings/analyst-color/26/11/62836578/apple-stock-at-extreme-overvaluation-analysts-see-slowing-revenue-growth",
+        "published_at": "2026-11-03T18:58:07Z",
+        "retrieved_at": "2026-11-03T23:20:23.947842Z",
+        "event_at": null,
+        "symbols": [
+          "AAPL"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 15748.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "8971ab15e01d83a9dfbe54921f04f7f8746afa40560df61ac35820234984b550",
+        "kind": "news",
+        "title": "Apple Announces Redesigned Health App Expands Language Support",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62835644/apple-announces-redesigned-health-app-expands-language-support",
+        "published_at": "2026-11-03T18:31:42Z",
+        "retrieved_at": "2026-11-03T23:20:23.947842Z",
+        "event_at": null,
+        "symbols": [
+          "AAPL"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 17333.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "8e95e81c39b7c031a1eebd8ed9e2bb44b3ecc0ff9dfd4320d5efd576704ef2fb",
+        "kind": "news",
+        "title": "'Amazon, Tesla and SpaceX join OKX\u2013ICE tokenized stock objections as deadline looms' - CoinDesk",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62835094/amazon-tesla-and-spacex-join-okx-ice-tokenized-stock-objections-deadline-looms-coindesk",
+        "published_at": "2026-11-03T18:18:11Z",
+        "retrieved_at": "2026-11-03T23:20:24.729041Z",
+        "event_at": null,
+        "symbols": [
+          "AMZN",
+          "NFLX",
+          "SPCX",
+          "TSLA"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 18144.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "1228cc792f7182a2a3382dd3075e06f5a4218cdde2e54ec79adf0c4fbde79bc5",
+        "kind": "news",
+        "title": "JP Morgan Maintains Overweight on Apple, Lowers Price Target to $355",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62835059/jp-morgan-maintains-overweight-apple-lowers-price-target-355",
+        "published_at": "2026-11-03T18:17:29Z",
+        "retrieved_at": "2026-11-03T23:20:23.947842Z",
+        "event_at": null,
+        "symbols": [
+          "AAPL"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 18186.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "389014958e77d3bad731a6dfd6cec2f3b0eeeb55665ed0fc92884aacb079e037",
+        "kind": "news",
+        "title": "CNBC Halftime Report Final Trades: BlackRock, Eaton, Pfizer, Amazon",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/quote/BLK",
+        "published_at": "2026-11-03T18:00:41Z",
+        "retrieved_at": "2026-11-03T23:20:24.729041Z",
+        "event_at": null,
+        "symbols": [
+          "AMZN",
+          "BLK",
+          "ETN",
+          "PFE"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 19194.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "47c25fcae298693da542da18f9a7ee34de9e3e8e171a2af2afb4efb30bd4d4d6",
+        "kind": "news",
+        "title": "SpaceX Could Be Biggest Loser From Successful Anthropic IPO, Finance Professor Warns",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/markets/prediction-markets/26/11/62834282/anthropic-ipo-spacex",
+        "published_at": "2026-11-03T18:00:13Z",
+        "retrieved_at": "2026-11-03T23:20:23.501105Z",
+        "event_at": null,
+        "symbols": [
+          "AMZN",
+          "GOOGL",
+          "MSFT",
+          "NVDA",
+          "SPCX"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 19222.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "6ddb7fb0d02b4fb141824a4b1e1d0c7a9c278cc247df6e09f3bda4bf08c4150f",
+        "kind": "news",
+        "title": "'Hollywood backs NYT in AI copyright battle versus OpenAI, Microsoft' - Axios",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62834212/hollywood-backs-nyt-ai-copyright-battle-versus-openai-microsoft-axios",
+        "published_at": "2026-11-03T17:58:36Z",
+        "retrieved_at": "2026-11-03T23:20:23.726244Z",
+        "event_at": null,
+        "symbols": [
+          "MSFT",
+          "NYT",
+          "ORCL"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 19319.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "8acb109db908c50cfa4c1db6111a70504006375249899d3ecdf6a082f8baa6da",
+        "kind": "news",
+        "title": "What Is Going on With Meta Platforms Stock on Tuesday?",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/markets/tech/26/11/62834129/what-is-going-on-with-meta-platforms-stock-on-tuesday",
+        "published_at": "2026-11-03T17:56:40Z",
+        "retrieved_at": "2026-11-03T23:20:23.726244Z",
+        "event_at": null,
+        "symbols": [
+          "FDCF",
+          "IGPT",
+          "LSGR",
+          "META",
+          "MSFT"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 19435.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "f4036b93995a89cd10ea8f62297d6edad14a9cbb9bd75219ddd879e9588be1bc",
+        "kind": "news",
+        "title": "AMD Earnings To Test Whether PC Weakness Is Intel-Specific, Apple\u2019s AI Agent Problem",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/opinion/26/11/62833774/amd-earnings-to-test-whether-pc-weakness-is-intel-specific-apples-ai-agent-problem",
+        "published_at": "2026-11-03T17:49:16Z",
+        "retrieved_at": "2026-11-03T23:20:23.501105Z",
+        "event_at": null,
+        "symbols": [
+          "AAPL",
+          "AMD",
+          "AMZN",
+          "BTCUSD",
+          "GOOG",
+          "META",
+          "MSFT",
+          "NVDA",
+          "QQQ",
+          "SPY",
+          "TSLA"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 19879.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "9dace1d6a0b7fd399c71c04df76b4feba2a334273b28a9330ab9e1825cc6769e",
+        "kind": "news",
+        "title": "What's Going on with Microsoft Stock on Tuesday?",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/markets/tech/26/11/62833444/whats-going-on-with-microsoft-stock-on-tuesday",
+        "published_at": "2026-11-03T17:42:46Z",
+        "retrieved_at": "2026-11-03T23:20:23.501105Z",
+        "event_at": null,
+        "symbols": [
+          "AAPL",
+          "IXN",
+          "META",
+          "MSFT",
+          "NVDA",
+          "PLTR",
+          "SNPE",
+          "VUG"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 20269.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "064fb8e8344fc25f2b4dad34d398c208c1631a74f6515a81bc2c8ab5e1149f04",
+        "kind": "news",
+        "title": "10 Information Technology Stocks With Whale Alerts In Today\u2019s Session",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/markets/options/26/11/62832963/10-information-technology-stocks-whale-alerts-today-s-session",
+        "published_at": "2026-11-03T17:35:10Z",
+        "retrieved_at": "2026-11-03T23:20:23.726244Z",
+        "event_at": null,
+        "symbols": [
+          "AMKR",
+          "CRWV",
+          "FIG",
+          "IREN",
+          "MSFT",
+          "ORCL",
+          "S",
+          "SMCI",
+          "SNOW",
+          "TSM"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 20725.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "13d5da295fde65ccfdcbf6766cc5b0d0ef01533d6e0dc231274cde261f904833",
+        "kind": "news",
+        "title": "3 Communication Services Stocks With Whale Alerts In Today\u2019s Session",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/markets/options/26/11/62832967/3-communication-services-stocks-whale-alerts-today-s-session",
+        "published_at": "2026-11-03T17:35:10Z",
+        "retrieved_at": "2026-11-03T23:20:24.445495Z",
+        "event_at": null,
+        "symbols": [
+          "ASTS",
+          "GOOG",
+          "META"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 20725.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "a4a073f714dc3f4d68e23d7dd6cdf00a60f722cf9e57258e78dc110b0c9ba89c",
+        "kind": "news",
+        "title": "Chinese Tape Maker Soars 787% in Market Debut as Beijing Moves to Halt New IPO Filings",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/markets/prediction-markets/26/11/62832844/china-ipo-surge",
+        "published_at": "2026-11-03T17:32:51Z",
+        "retrieved_at": "2026-11-03T23:20:23.947842Z",
+        "event_at": null,
+        "symbols": [
+          "AAPL",
+          "ASHR",
+          "TSLA"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 20864.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "656f635c1eb96a1db820df4da7ee62002a59d1c58e84826ba9bfa94b899f02a9",
+        "kind": "news",
+        "title": "What's Going on with Intel Stock on Tuesday?",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/markets/tech/26/11/62832829/whats-going-on-with-intel-stock-on-tuesday-2",
+        "published_at": "2026-11-03T17:32:31Z",
+        "retrieved_at": "2026-11-03T23:20:23.501105Z",
+        "event_at": null,
+        "symbols": [
+          "AMD",
+          "BULZ",
+          "INTC",
+          "MU",
+          "NVDA",
+          "PSI",
+          "SOXX"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 20884.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "40c247a869524b5a509ff521ec7779c9ef6dd383879922d8c456a25f5feaa5c0",
+        "kind": "news",
+        "title": "Nasdaq 100 Gets a Lift As Nvidia Overtakes Apple: Stock Market Today",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/markets/equities/26/11/62832505/stock-market-today-nvidia-overtakes-apple-chip-rally-nasdaq-jolts-yields",
+        "published_at": "2026-11-03T17:24:36Z",
+        "retrieved_at": "2026-11-03T23:20:23.501105Z",
+        "event_at": null,
+        "symbols": [
+          "AAPL",
+          "AMD",
+          "ANET",
+          "BTCUSD",
+          "DIA",
+          "DT",
+          "FISV",
+          "FN",
+          "GPK",
+          "HD",
+          "IT",
+          "IWM",
+          "LSCC",
+          "MPT",
+          "NBIX",
+          "NVDA",
+          "QQQ",
+          "SMCI",
+          "SMH",
+          "SYY",
+          "VOO",
+          "XHB",
+          "XLB",
+          "XLK",
+          "XLP",
+          "ZBRA"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 21359.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "a3fd2dd4151c9448e4265c7a66799675b5bdc6efef8ffc5af9fdd9e6b6d22f87",
+        "kind": "news",
+        "title": "Wall Street's Growth Stocks Have a New Problem: Value Stocks Are Getting More Expensive",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/etfs/broad-u-s-equity-etfs/26/11/62832356/value-stocks-growth-premium",
+        "published_at": "2026-11-03T17:20:52Z",
+        "retrieved_at": "2026-11-03T23:20:24.445495Z",
+        "event_at": null,
+        "symbols": [
+          "AMZN",
+          "ANT",
+          "GOOG",
+          "GOOGL",
+          "IWD",
+          "IWF",
+          "META",
+          "MSFT"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 21583.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "60e04dba8443d701564c842a3cda8046e36e42c2b0857bb09f55dfb0633648f7",
+        "kind": "news",
+        "title": "Reported Earlier: 'Google Will Turn Off Search For Schools That Reject A.I.; Google Is Making It Easier To Restrict Its A.I. Tools For Students. But Schools That Block A.I. Entirely Will Lose Student Access To Google\u2019s Search Engine' - NY Times",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62831471/reported-earlier-google-will-turn-search-schools-reject-i-google-making-it-easier-restrict-its-i-too",
+        "published_at": "2026-11-03T17:03:17Z",
+        "retrieved_at": "2026-11-03T23:20:24.948469Z",
+        "event_at": null,
+        "symbols": [
+          "GOOG",
+          "GOOGL"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 22638.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "5aad3c6ce96fe9651bf2a79b5a8f1843ca5ba0520e9e4876047d785c7336f9da",
+        "kind": "news",
+        "title": "EXCLUSIVE: Top 12 Most-Searched Tickers in October on Benzinga Pro \u2013 SpaceX Soars, Micron Rises, Nvidia Falls, CoreWeave and Microsoft Join List",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/trading-ideas/long-ideas/26/11/62831384/exclusive-top-12-most-searched-tickers-in-october-on-benzinga-pro-spacex-soars-micron-rises-nvidia-falls-coreweave-and-microsoft-join-list",
+        "published_at": "2026-11-03T17:01:40Z",
+        "retrieved_at": "2026-11-03T23:20:23.501105Z",
+        "event_at": null,
+        "symbols": [
+          "AAPL",
+          "AMZN",
+          "CRWV",
+          "HOOD",
+          "META",
+          "MSFT",
+          "MU",
+          "NVDA",
+          "QQQ",
+          "SPCX",
+          "SPY",
+          "TSLA"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 22735.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "206e618a5b105c5eabe0f5e15b3704851dd6105d7d3fb67993a9c9f0316254b5",
+        "kind": "news",
+        "title": "Justin Sun seeks sanctions against Trump-linked World Liberty Financial over UAE ties",
+        "source": "CoinDesk",
+        "url": "https://www.coindesk.com/policy/2026/11/03/justin-sun-seeks-sanctions-against-trump-linked-world-liberty-financial-over-uae-ties",
+        "published_at": "2026-11-03T16:55:10Z",
+        "retrieved_at": "2026-11-03T23:20:25.899908Z",
+        "event_at": null,
+        "symbols": [],
+        "verification": "provider_reported",
+        "publication_age_seconds": 23125.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "a2e2c061320101b8568c8ad615f37a7cf66056848a22872b334c89b9d699a994",
+        "kind": "news",
+        "title": "South Korea's president says country needs a \u2018cybersecurity czar\u2019 following $6.3 billion Binance hack",
+        "source": "CoinDesk",
+        "url": "https://www.coindesk.com/tech/2026/11/03/south-korea-s-president-says-country-needs-a-cybersecurity-czar-following-usd6-3-billion-binance-hack",
+        "published_at": "2026-11-03T16:49:56Z",
+        "retrieved_at": "2026-11-03T23:20:25.899908Z",
+        "event_at": null,
+        "symbols": [],
+        "verification": "provider_reported",
+        "publication_age_seconds": 23439.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "2bd641a1a45de9e737f70fd897de23742768a4b3e35725b0abbaf8310361b46a",
+        "kind": "news",
+        "title": "Amazon, Tesla and SpaceX join OKX\u2013ICE tokenized stock objections as deadline looms",
+        "source": "CoinDesk",
+        "url": "https://www.coindesk.com/business/2026/11/03/amazon-tesla-and-spacex-join-okx-ice-tokenized-stock-objections-as-deadline-looms",
+        "published_at": "2026-11-03T16:17:51Z",
+        "retrieved_at": "2026-11-03T23:20:25.899908Z",
+        "event_at": null,
+        "symbols": [],
+        "verification": "provider_reported",
+        "publication_age_seconds": 25364.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "ecbc2b2ea738b3b3fddeb1e3c0d3516610905e9930c063ed17920844930cad01",
+        "kind": "news",
+        "title": "'Google Parent Plans $1.5 Billion Prepaid Energy Deal Via Goldman' - Bloomberg News",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/26/11/62829185/google-parent-plans-1-5-billion-prepaid-energy-deal-goldman-bloomberg-news",
+        "published_at": "2026-11-03T16:16:15Z",
+        "retrieved_at": "2026-11-03T23:20:24.948469Z",
+        "event_at": null,
+        "symbols": [
+          "GOOG",
+          "GOOGL"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 25460.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "7ab74bff20cd1047f40f86f8a81d67b03303b40619d6eccabdfffb1e8ed98ef0",
+        "kind": "news",
+        "title": "Stablecoin governance group behind OUSD sets out management fee, offers equity earning pool",
+        "source": "CoinDesk",
+        "url": "https://www.coindesk.com/business/2026/11/03/stablecoin-governance-group-behind-ousd-sets-out-management-fee-offers-equity-earning-pool",
+        "published_at": "2026-11-03T16:12:35Z",
+        "retrieved_at": "2026-11-03T23:20:25.899908Z",
+        "event_at": null,
+        "symbols": [],
+        "verification": "provider_reported",
+        "publication_age_seconds": 25680.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "55e43bcf2392574765dff7406b7f6da0287e451a9ee242c5d1f28b451b9ec90e",
+        "kind": "news",
+        "title": "AI Is Changing How Semiconductor Fabs Work \u2014 and Engineers Are Moving Faster Because of It",
+        "source": "NVIDIA Newsroom",
+        "url": "https://blogs.nvidia.com/blog/ai-semiconductor-fabs/",
+        "published_at": "2026-11-03T16:00:45Z",
+        "retrieved_at": "2026-11-03T23:20:25.785222Z",
+        "event_at": null,
+        "symbols": [
+          "NVDA"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 26390.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "a19fa263342421ab26a353ae9954ce11082f0aa1d739cfb58c1640537eaab960",
+        "kind": "news",
+        "title": "QUICK SPARK: Elon Musk Says 'Vote Red' \u2014 SpaceX And Tesla Have Much To Gain",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/news/politics/26/11/62827756/spacex-tesla-ceo-elon-musk-says-vote-red",
+        "published_at": "2026-11-03T15:53:51Z",
+        "retrieved_at": "2026-11-03T23:20:25.167794Z",
+        "event_at": null,
+        "symbols": [
+          "DJT",
+          "SPCX",
+          "TSLA"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 26804.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "fd83b52b36709f28ed32201527731b2db34ebb791d5758d59df0df6451ac9ff9",
+        "kind": "news",
+        "title": "Micron Tech Gains as Tech Giants Scramble to Lock in Multiyear Supply",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/markets/tech/26/11/62826676/micron-tech-gains-as-tech-giants-scramble-to-lock-in-multiyear-supply",
+        "published_at": "2026-11-03T15:34:40Z",
+        "retrieved_at": "2026-11-03T23:20:23.501105Z",
+        "event_at": null,
+        "symbols": [
+          "AMD",
+          "MU",
+          "NVDA",
+          "SKHY",
+          "SNDK",
+          "SPMO",
+          "SSNLF",
+          "TRFK",
+          "WDC",
+          "XNTK"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 27955.33125,
+        "intraday_recent": false
+      },
+      {
+        "evidence_id": "3a571060806464d279ecc3cc922b4cb49b6b538381ca634623d96f6f1b18a897",
+        "kind": "news",
+        "title": "Amazon, Google and Microsoft Are 'Absolute Jokes' Compared With SpaceX, Says Sequoia's Shaun Maguire",
+        "source": "benzinga",
+        "url": "https://www.benzinga.com/markets/prediction-markets/26/11/62826642/spacex-ai-infrastructure",
+        "published_at": "2026-11-03T15:34:04Z",
+        "retrieved_at": "2026-11-03T23:20:24.729041Z",
+        "event_at": null,
+        "symbols": [
+          "AMZN",
+          "GOOGL",
+          "MSFT",
+          "SPCX"
+        ],
+        "verification": "provider_reported",
+        "publication_age_seconds": 27991.33125,
+        "intraday_recent": false
+      }
+    ]
+  },
+  "paper_outcomes": null,
+  "api_budget": null,
+  "live_orders_enabled": false,
+  "research_briefing": {
+    "schema_version": "research-briefing-v1",
+    "assembled_at": "2026-11-03T23:20:35.331250+00:00",
+    "scope": "REQUESTED_STOCKS_ONLY",
+    "stocks_attempted": 8,
+    "stocks_with_context": 8,
+    "stocks_without_context": 0,
+    "rows": [
+      {
+        "symbol": "NVDA",
+        "phase": "AFTER_HOURS_CONTEXT",
+        "context_retrieved_at": "2026-11-03T23:20:28.615256+00:00",
+        "expires_at": "2026-11-03T23:25:35.331250+00:00",
+        "daily_bars": 10,
+        "intraday_bars": 24,
+        "latest_daily_at": "2026-11-02T05:00:00Z",
+        "latest_intraday_at": "2026-11-03T20:55:00Z",
+        "news_evidence_ids": [
+          "a1c844b8758c2b1b0e4d2afcdfa04c2dc5741aa5e09757886f5d4ab2e3396975",
+          "f31307d10340c293b7a7e1a4fb2252a8f24ce9ee6cffc07d0a47495574a7a9e2",
+          "b35a4b6692d1c78589dfa9a93abd124a5613394b9076b09d565909aea6eaa185",
+          "47c25fcae298693da542da18f9a7ee34de9e3e8e171a2af2afb4efb30bd4d4d6",
+          "f4036b93995a89cd10ea8f62297d6edad14a9cbb9bd75219ddd879e9588be1bc"
+        ],
+        "calendar": {
+          "provider": "finnhub",
+          "status": "received",
+          "retrieved_at": "2026-11-03T23:20:31.899597Z",
+          "request_from": "2026-11-02",
+          "request_to": "2026-11-17",
+          "events": [
+            {
+              "symbol": "NVDA",
+              "date": "2026-11-17",
+              "session_hint": "amc",
+              "exact_time": null,
+              "date_timezone": "provider_unspecified",
+              "verification": "provider_reported_not_issuer_confirmed"
+            }
+          ],
+          "reason": null,
+          "coverage_complete": false
+        },
+        "missing_evidence": [
+          "broker_account_eligibility_unverified",
+          "executable_quotes_and_costs_missing",
+          "eur_trade_plan_missing",
+          "fresh_fx_conversion_missing",
+          "independent_catalyst_confirmation_missing",
+          "exchange_session_not_verified",
+          "iex_limited_market_coverage",
+          "six_agent_review_not_run",
+          "context_is_not_trade_admission",
+          "corporate_actions_not_verified",
+          "complete_event_calendar_missing",
+          "latest_context_bar_stale_for_trading",
+          "entry_cutoff_reached",
+          "reported_earnings_require_issuer_confirmation"
+        ],
+        "review_status": "NOT_RUN",
+        "trade_authorized": false
+      },
+      {
+        "symbol": "MSFT",
+        "phase": "AFTER_HOURS_CONTEXT",
+        "context_retrieved_at": "2026-11-03T23:20:28.938312+00:00",
+        "expires_at": "2026-11-03T23:25:35.331250+00:00",
+        "daily_bars": 10,
+        "intraday_bars": 24,
+        "latest_daily_at": "2026-11-02T05:00:00Z",
+        "latest_intraday_at": "2026-11-03T20:55:00Z",
+        "news_evidence_ids": [
+          "a111c3137a58b177ea88e0ce01146964a55de19afe00924a4feb4f8e97368193",
+          "8bb98254c90429d32d0cd832694e1cc7645a52b1046edd2e46bbe72bef1e0e1e",
+          "3add0599764a0cefd2f5012da146e22baaa0d175d4e977ab07f319252f0e55bf",
+          "d9bb8eb24ea226f54e376e9f192d5f987284dc2e89a8eeaf6e6f0934a7ea6f0a",
+          "47c25fcae298693da542da18f9a7ee34de9e3e8e171a2af2afb4efb30bd4d4d6"
+        ],
+        "calendar": {
+          "provider": "finnhub",
+          "status": "empty",
+          "retrieved_at": "2026-11-03T23:20:32.152656Z",
+          "request_from": "2026-11-02",
+          "request_to": "2026-11-17",
+          "events": [],
+          "reason": null,
+          "coverage_complete": false
+        },
+        "missing_evidence": [
+          "broker_account_eligibility_unverified",
+          "executable_quotes_and_costs_missing",
+          "eur_trade_plan_missing",
+          "fresh_fx_conversion_missing",
+          "independent_catalyst_confirmation_missing",
+          "exchange_session_not_verified",
+          "iex_limited_market_coverage",
+          "six_agent_review_not_run",
+          "context_is_not_trade_admission",
+          "corporate_actions_not_verified",
+          "complete_event_calendar_missing",
+          "latest_context_bar_stale_for_trading",
+          "entry_cutoff_reached",
+          "earnings_calendar_no_confirmed_event"
+        ],
+        "review_status": "NOT_RUN",
+        "trade_authorized": false
+      },
+      {
+        "symbol": "AAPL",
+        "phase": "AFTER_HOURS_CONTEXT",
+        "context_retrieved_at": "2026-11-03T23:20:29.284299+00:00",
+        "expires_at": "2026-11-03T23:25:35.331250+00:00",
+        "daily_bars": 10,
+        "intraday_bars": 24,
+        "latest_daily_at": "2026-11-02T05:00:00Z",
+        "latest_intraday_at": "2026-11-03T21:50:00Z",
+        "news_evidence_ids": [
+          "e6b083df9e325fdc750a06e8d980ccaf8f578851f481d698e03407fb83bf4f50",
+          "736c72e023749badabbc81f05cfca0f7fb5bb59869dce6dae03e4e9473b8272a",
+          "8971ab15e01d83a9dfbe54921f04f7f8746afa40560df61ac35820234984b550",
+          "1228cc792f7182a2a3382dd3075e06f5a4218cdde2e54ec79adf0c4fbde79bc5",
+          "f4036b93995a89cd10ea8f62297d6edad14a9cbb9bd75219ddd879e9588be1bc"
+        ],
+        "calendar": {
+          "provider": "finnhub",
+          "status": "received",
+          "retrieved_at": "2026-11-03T23:20:32.384198Z",
+          "request_from": "2026-11-02",
+          "request_to": "2026-11-17",
+          "events": [
+            {
+              "symbol": "AAPL",
+              "date": "2026-11-02",
+              "session_hint": "amc",
+              "exact_time": null,
+              "date_timezone": "provider_unspecified",
+              "verification": "provider_reported_not_issuer_confirmed"
+            }
+          ],
+          "reason": null,
+          "coverage_complete": false
+        },
+        "missing_evidence": [
+          "broker_account_eligibility_unverified",
+          "executable_quotes_and_costs_missing",
+          "eur_trade_plan_missing",
+          "fresh_fx_conversion_missing",
+          "independent_catalyst_confirmation_missing",
+          "exchange_session_not_verified",
+          "iex_limited_market_coverage",
+          "six_agent_review_not_run",
+          "context_is_not_trade_admission",
+          "corporate_actions_not_verified",
+          "complete_event_calendar_missing",
+          "latest_context_bar_stale_for_trading",
+          "entry_cutoff_reached",
+          "reported_earnings_require_issuer_confirmation"
+        ],
+        "review_status": "NOT_RUN",
+        "trade_authorized": false
+      },
+      {
+        "symbol": "AMD",
+        "phase": "AFTER_HOURS_CONTEXT",
+        "context_retrieved_at": "2026-11-03T23:20:29.616215+00:00",
+        "expires_at": "2026-11-03T23:25:35.331250+00:00",
+        "daily_bars": 10,
+        "intraday_bars": 24,
+        "latest_daily_at": "2026-11-02T05:00:00Z",
+        "latest_intraday_at": "2026-11-03T21:50:00Z",
+        "news_evidence_ids": [
+          "eb1f0e979a6293dd9819c1e674b0ca31cbcba6a42a64804c1c48c94c4f2a5484",
+          "9e3ca3515efa94b0a0550105ee7b86e0cf5a689c7909aade6aa8b41d0ef5b4c6",
+          "e835797f6a3dbe8fd19e496df7e5a9c6fcc5286f4c4050b5daca658c2546b26d",
+          "cf5fe0a1b3532cebbea4dd540b23a2139606f6f966ac41b0c2b1a5a69cbacc40",
+          "e7421201aa47f142fd3456c137a950d4f25662e52eccebdb7a367b8184c4c12d"
+        ],
+        "calendar": {
+          "provider": "finnhub",
+          "status": "received",
+          "retrieved_at": "2026-11-03T23:20:32.765214Z",
+          "request_from": "2026-11-02",
+          "request_to": "2026-11-17",
+          "events": [
+            {
+              "symbol": "AMD",
+              "date": "2026-11-03",
+              "session_hint": "amc",
+              "exact_time": null,
+              "date_timezone": "provider_unspecified",
+              "verification": "provider_reported_not_issuer_confirmed"
+            }
+          ],
+          "reason": null,
+          "coverage_complete": false
+        },
+        "missing_evidence": [
+          "broker_account_eligibility_unverified",
+          "executable_quotes_and_costs_missing",
+          "eur_trade_plan_missing",
+          "fresh_fx_conversion_missing",
+          "independent_catalyst_confirmation_missing",
+          "exchange_session_not_verified",
+          "iex_limited_market_coverage",
+          "six_agent_review_not_run",
+          "context_is_not_trade_admission",
+          "corporate_actions_not_verified",
+          "complete_event_calendar_missing",
+          "latest_context_bar_stale_for_trading",
+          "entry_cutoff_reached",
+          "reported_earnings_require_issuer_confirmation"
+        ],
+        "review_status": "NOT_RUN",
+        "trade_authorized": false
+      },
+      {
+        "symbol": "META",
+        "phase": "AFTER_HOURS_CONTEXT",
+        "context_retrieved_at": "2026-11-03T23:20:29.936903+00:00",
+        "expires_at": "2026-11-03T23:25:35.331250+00:00",
+        "daily_bars": 10,
+        "intraday_bars": 24,
+        "latest_daily_at": "2026-11-02T05:00:00Z",
+        "latest_intraday_at": "2026-11-03T20:55:00Z",
+        "news_evidence_ids": [
+          "f31307d10340c293b7a7e1a4fb2252a8f24ce9ee6cffc07d0a47495574a7a9e2",
+          "ae3d0ce5c385ac373dfe7577d3331520585b44d2d61a9e9fdaca52e3f50ace17",
+          "8acb109db908c50cfa4c1db6111a70504006375249899d3ecdf6a082f8baa6da",
+          "f4036b93995a89cd10ea8f62297d6edad14a9cbb9bd75219ddd879e9588be1bc",
+          "9dace1d6a0b7fd399c71c04df76b4feba2a334273b28a9330ab9e1825cc6769e"
+        ],
+        "calendar": {
+          "provider": "finnhub",
+          "status": "empty",
+          "retrieved_at": "2026-11-03T23:20:33.026475Z",
+          "request_from": "2026-11-02",
+          "request_to": "2026-11-17",
+          "events": [],
+          "reason": null,
+          "coverage_complete": false
+        },
+        "missing_evidence": [
+          "broker_account_eligibility_unverified",
+          "executable_quotes_and_costs_missing",
+          "eur_trade_plan_missing",
+          "fresh_fx_conversion_missing",
+          "independent_catalyst_confirmation_missing",
+          "exchange_session_not_verified",
+          "iex_limited_market_coverage",
+          "six_agent_review_not_run",
+          "context_is_not_trade_admission",
+          "corporate_actions_not_verified",
+          "complete_event_calendar_missing",
+          "latest_context_bar_stale_for_trading",
+          "entry_cutoff_reached",
+          "earnings_calendar_no_confirmed_event"
+        ],
+        "review_status": "NOT_RUN",
+        "trade_authorized": false
+      },
+      {
+        "symbol": "AMZN",
+        "phase": "AFTER_HOURS_CONTEXT",
+        "context_retrieved_at": "2026-11-03T23:20:30.271155+00:00",
+        "expires_at": "2026-11-03T23:25:35.331250+00:00",
+        "daily_bars": 10,
+        "intraday_bars": 24,
+        "latest_daily_at": "2026-11-02T05:00:00Z",
+        "latest_intraday_at": "2026-11-03T21:30:00Z",
+        "news_evidence_ids": [
+          "bd0771878ea95757ef7006a06f1160b7f4cdae6ba40734bf5e2b8f1170d791d5",
+          "8e95e81c39b7c031a1eebd8ed9e2bb44b3ecc0ff9dfd4320d5efd576704ef2fb",
+          "389014958e77d3bad731a6dfd6cec2f3b0eeeb55665ed0fc92884aacb079e037",
+          "47c25fcae298693da542da18f9a7ee34de9e3e8e171a2af2afb4efb30bd4d4d6",
+          "f4036b93995a89cd10ea8f62297d6edad14a9cbb9bd75219ddd879e9588be1bc"
+        ],
+        "calendar": {
+          "provider": "finnhub",
+          "status": "empty",
+          "retrieved_at": "2026-11-03T23:20:33.255472Z",
+          "request_from": "2026-11-02",
+          "request_to": "2026-11-17",
+          "events": [],
+          "reason": null,
+          "coverage_complete": false
+        },
+        "missing_evidence": [
+          "broker_account_eligibility_unverified",
+          "executable_quotes_and_costs_missing",
+          "eur_trade_plan_missing",
+          "fresh_fx_conversion_missing",
+          "independent_catalyst_confirmation_missing",
+          "exchange_session_not_verified",
+          "iex_limited_market_coverage",
+          "six_agent_review_not_run",
+          "context_is_not_trade_admission",
+          "corporate_actions_not_verified",
+          "complete_event_calendar_missing",
+          "latest_context_bar_stale_for_trading",
+          "entry_cutoff_reached",
+          "earnings_calendar_no_confirmed_event"
+        ],
+        "review_status": "NOT_RUN",
+        "trade_authorized": false
+      },
+      {
+        "symbol": "GOOGL",
+        "phase": "AFTER_HOURS_CONTEXT",
+        "context_retrieved_at": "2026-11-03T23:20:30.584807+00:00",
+        "expires_at": "2026-11-03T23:25:35.331250+00:00",
+        "daily_bars": 10,
+        "intraday_bars": 24,
+        "latest_daily_at": "2026-11-02T05:00:00Z",
+        "latest_intraday_at": "2026-11-03T20:55:00Z",
+        "news_evidence_ids": [
+          "47c25fcae298693da542da18f9a7ee34de9e3e8e171a2af2afb4efb30bd4d4d6",
+          "a3fd2dd4151c9448e4265c7a66799675b5bdc6efef8ffc5af9fdd9e6b6d22f87",
+          "60e04dba8443d701564c842a3cda8046e36e42c2b0857bb09f55dfb0633648f7",
+          "ecbc2b2ea738b3b3fddeb1e3c0d3516610905e9930c063ed17920844930cad01",
+          "3a571060806464d279ecc3cc922b4cb49b6b538381ca634623d96f6f1b18a897"
+        ],
+        "calendar": {
+          "provider": "finnhub",
+          "status": "empty",
+          "retrieved_at": "2026-11-03T23:20:33.486423Z",
+          "request_from": "2026-11-02",
+          "request_to": "2026-11-17",
+          "events": [],
+          "reason": null,
+          "coverage_complete": false
+        },
+        "missing_evidence": [
+          "broker_account_eligibility_unverified",
+          "executable_quotes_and_costs_missing",
+          "eur_trade_plan_missing",
+          "fresh_fx_conversion_missing",
+          "independent_catalyst_confirmation_missing",
+          "exchange_session_not_verified",
+          "iex_limited_market_coverage",
+          "six_agent_review_not_run",
+          "context_is_not_trade_admission",
+          "corporate_actions_not_verified",
+          "complete_event_calendar_missing",
+          "latest_context_bar_stale_for_trading",
+          "entry_cutoff_reached",
+          "earnings_calendar_no_confirmed_event"
+        ],
+        "review_status": "NOT_RUN",
+        "trade_authorized": false
+      },
+      {
+        "symbol": "TSLA",
+        "phase": "AFTER_HOURS_CONTEXT",
+        "context_retrieved_at": "2026-11-03T23:20:30.952634+00:00",
+        "expires_at": "2026-11-03T23:25:35.331250+00:00",
+        "daily_bars": 10,
+        "intraday_bars": 24,
+        "latest_daily_at": "2026-11-02T05:00:00Z",
+        "latest_intraday_at": "2026-11-03T20:55:00Z",
+        "news_evidence_ids": [
+          "02eaf602875ea9aab2256613bc465262c553acf4fedd738a5b5fc6f7772fb129",
+          "8e95e81c39b7c031a1eebd8ed9e2bb44b3ecc0ff9dfd4320d5efd576704ef2fb",
+          "f4036b93995a89cd10ea8f62297d6edad14a9cbb9bd75219ddd879e9588be1bc",
+          "a4a073f714dc3f4d68e23d7dd6cdf00a60f722cf9e57258e78dc110b0c9ba89c",
+          "5aad3c6ce96fe9651bf2a79b5a8f1843ca5ba0520e9e4876047d785c7336f9da"
+        ],
+        "calendar": {
+          "provider": "finnhub",
+          "status": "empty",
+          "retrieved_at": "2026-11-03T23:20:33.720192Z",
+          "request_from": "2026-11-02",
+          "request_to": "2026-11-17",
+          "events": [],
+          "reason": null,
+          "coverage_complete": false
+        },
+        "missing_evidence": [
+          "broker_account_eligibility_unverified",
+          "executable_quotes_and_costs_missing",
+          "eur_trade_plan_missing",
+          "fresh_fx_conversion_missing",
+          "independent_catalyst_confirmation_missing",
+          "exchange_session_not_verified",
+          "iex_limited_market_coverage",
+          "six_agent_review_not_run",
+          "context_is_not_trade_admission",
+          "corporate_actions_not_verified",
+          "complete_event_calendar_missing",
+          "latest_context_bar_stale_for_trading",
+          "entry_cutoff_reached",
+          "earnings_calendar_no_confirmed_event"
+        ],
+        "review_status": "NOT_RUN",
+        "trade_authorized": false
+      }
+    ],
+    "model_calls": 0,
+    "trade_authorized": false
+  }
+}
