@@ -48,7 +48,8 @@ def capture_result(result: ProviderResult, *, now: datetime, limit: int = 60) ->
 
 
 def capture_markets(stock_symbols, crypto_pairs, *, stock_fetch, crypto_fetch,
-                    now=None, clock=monotonic, per_market_limit=10, cache=None) -> dict:
+                    now=None, clock=monotonic, per_market_limit=10, cache=None,
+                    stock_provider='yahoo_finance') -> dict:
     """Stocks first; separate quotas prevent either market starving the other."""
     if not 1 <= per_market_limit <= 20:
         raise ValueError("Per-market limit must be 1..20")
@@ -62,7 +63,7 @@ def capture_markets(stock_symbols, crypto_pairs, *, stock_fetch, crypto_fetch,
         for symbol in selected:
             start = clock()
             try:
-                provider_name = 'yahoo_finance' if market == 'stocks' else 'kraken'
+                provider_name = stock_provider if market == 'stocks' else 'kraken'
                 check_time = now or datetime.now(timezone.utc)
                 result = cache.get(provider_name, symbol, now=check_time) if cache else None
                 cache_hit = result is not None
@@ -102,6 +103,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--stocks", nargs="+", default=["MSFT", "AAPL", "NVDA"])
     parser.add_argument("--crypto", nargs="+", default=["XBTEUR", "ETHEUR"])
+    parser.add_argument('--stock-provider', choices=['yahoo_finance', 'alpaca_iex'], default='yahoo_finance')
     parser.add_argument('--universe', type=Path, help='JSON object with stocks and crypto symbol lists')
     parser.add_argument('--queue-db', type=Path, help='Persistent fair scan queue; required with --universe')
     args = parser.parse_args()
@@ -123,8 +125,13 @@ def main() -> None:
         args.crypto = selection['crypto']['selected']
     from .providers.kraken import KrakenProvider
     from .providers.yahoo import YahooFinanceProvider
+    if args.stock_provider == 'alpaca_iex':
+        from .providers.alpaca import AlpacaIexProvider
+        stock_fetch = AlpacaIexProvider().fetch_history
+    else:
+        stock_fetch = lambda symbol: YahooFinanceProvider().fetch_history(symbol, period="1d", interval="5m")
     document = capture_markets(args.stocks, args.crypto,
-        stock_fetch=lambda symbol: YahooFinanceProvider().fetch_history(symbol, period="1d", interval="5m"),
+        stock_fetch=stock_fetch, stock_provider=args.stock_provider,
         crypto_fetch=lambda pair: KrakenProvider().fetch_ohlc(pair, interval_minutes=5))
     if selection is not None:
         document['queue_selection'] = selection

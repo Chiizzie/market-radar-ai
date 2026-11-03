@@ -70,6 +70,7 @@ def build_packages(document, feed, *, now, stock_limit=3, crypto_limit=2):
             if market=='stocks': missing.append('exchange_session_not_verified')
             elif not news_ids: missing.append('crypto_news_identity_adapter_missing')
             else: missing.append('crypto_news_coverage_incomplete')
+            if bars.provider=='alpaca_iex': missing.append('iex_limited_market_coverage')
             if reference is not None:
                 missing.append('reference_venue_is_not_execution_broker')
             elif market=='crypto' and 'reference_quote_capture' in document:
