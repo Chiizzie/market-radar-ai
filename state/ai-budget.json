@@ -1051,6 +1051,12 @@
         "response_id": "resp_035913a744414623016aea3b2cbea887d0bc540830dfc091aa"
       }
     },
+    "paper-plan-review-v1:874571f09e452882fbd78c8c262bc42d1b792650c27d359a6fb827637963b50b:final_decision": {
+      "actual": null,
+      "day": "2026-11-03",
+      "reserved": 10833,
+      "usage": null
+    },
     "paper-plan-review-v1:874571f09e452882fbd78c8c262bc42d1b792650c27d359a6fb827637963b50b:news_analyst": {
       "actual": 7467,
       "day": "2026-11-03",
