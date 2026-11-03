@@ -15,3 +15,5 @@ The existing Lovable project already supports historical snapshot import. An upd
 Validation: 409 local tests passed. The additional paid-adapter test uses mocked client/ledger types to prove returned usage is retained after a fabricated citation is rejected; this is not a live billing trial.
 
 Historical real NVDA import document: docs/dashboard/nvda-paper-draft-2026-11-03.json. Original expiry is preserved.
+
+Dashboard completion: Lovable commit bdc031d7b0dd3951fee06e3c9c47a9e4e2db6234 supports historical paper-draft imports. Lovable reports 122 tests, type-check success and a browser import of the real NVDA document with all six blockers and original stale expiry. The Python-workspace agent independently inspected its 40-digit decimal parser fix and always-false actionability gate; frontend tests/browser were not independently rerun here. The site remains unpublished with no live endpoint. Backend GitHub verification run 41673703129 succeeded.
