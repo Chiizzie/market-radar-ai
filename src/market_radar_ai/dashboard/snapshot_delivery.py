@@ -47,7 +47,8 @@ def deliver(capture, *, env, clock, evidence=None, session=None):
     except Exception:
         raise RuntimeError('Scanner delivery unconfirmed; inspect storage before retry.') from None
     return {'state': 'scanner_snapshot_delivery_confirmed', 'snapshot_id': snapshot_id,
-            'coverage': snapshot['coverage'], 'expires_at_epoch': snapshot['expires_at_epoch'],
+            'coverage': snapshot['coverage'], 'generated_at_dublin': snapshot['generated_at_dublin'],
+            'expires_at_epoch': snapshot['expires_at_epoch'],
             'trade_authorized': False}
 
 
