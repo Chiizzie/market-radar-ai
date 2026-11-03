@@ -63,6 +63,19 @@ def execute(root, *, env, clock=lambda:datetime.now(timezone.utc)):
                 from ..dashboard.notification import render_review
                 save('notification-preview.json',render_review(exported,now=clock()))
                 status.update(state=result['state'],model_calls=len(result['calls']))
+                if env.get('SEND_FRESH_REVIEW') == 'true':
+                    from ..dashboard.fresh_notification import deliver
+                    from ..dashboard.delivery_ledger import DeliveryLedger, GitHubDeliveryStore
+                    try:
+                        delivery = deliver(market, cat, draft, result, env=env,
+                            ledger=DeliveryLedger(GitHubDeliveryStore(token)), clock=clock)
+                    except Exception:
+                        # Review completion and spending remain true even when
+                        # the optional notification fails. Never rerun the AI.
+                        delivery = {'state':'blocked_or_unconfirmed',
+                                    'retry_allowed':False, 'trade_authorized':False}
+                    save('notification-delivery.json', delivery)
+                    status['notification_state'] = delivery['state']
     except Exception:
         status.update(state='blocked_or_failed',reason='Inspect saved artifacts and budget; no automatic retry')
         # A failed request may have reserved/spent money. Never label it zero-cost.

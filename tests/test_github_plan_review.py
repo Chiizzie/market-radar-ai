@@ -30,7 +30,8 @@ def test_dry_run_builds_packet_without_paid_client(tmp_path,monkeypatch):
     with pytest.raises(ValueError):execute(tmp_path/'run',env=BASE)
 
 @pytest.mark.parametrize('invalid',[False,True])
-def test_paid_runner_exports_only_validated_reviews(tmp_path,monkeypatch,invalid):
+@pytest.mark.parametrize('notify',['off','success','failure'])
+def test_paid_runner_exports_only_validated_reviews(tmp_path,monkeypatch,invalid,notify):
     import json
     from types import SimpleNamespace
     import market_radar_ai.agents.github_plan_review as module
@@ -49,6 +50,15 @@ def test_paid_runner_exports_only_validated_reviews(tmp_path,monkeypatch,invalid
     monkeypatch.setattr(module,'OpenAIPilot',lambda **kwargs:object())
     monkeypatch.setattr(module,'run_paid',lambda *args,**kwargs:audit)
     env=dict(BASE,GITHUB_EVENT_NAME='workflow_dispatch',PLAN_REVIEW_MODE='paid',OPENAI_API_KEY='fixture',GH_BUDGET_TOKEN='fixture')
+    if notify != 'off':
+        import market_radar_ai.dashboard.fresh_notification as notification
+        import market_radar_ai.dashboard.delivery_ledger as delivery
+        env['SEND_FRESH_REVIEW']='true'
+        monkeypatch.setattr(delivery,'GitHubDeliveryStore',lambda token:object())
+        def deliver(*args,**kwargs):
+            if notify=='failure':raise RuntimeError('secret')
+            return {'state':'fresh_research_delivery_confirmed'}
+        monkeypatch.setattr(notification,'deliver',deliver)
     root=tmp_path/'run'
     if invalid:
         with pytest.raises(RuntimeError):execute(root,env=env,clock=lambda:NOW)
@@ -57,4 +67,8 @@ def test_paid_runner_exports_only_validated_reviews(tmp_path,monkeypatch,invalid
         assert execute(root,env=env,clock=lambda:NOW)['state']=='completed'
         exported=json.loads((root/'dashboard-review.json').read_text())
         assert len(exported['reviews'])==8 and not exported['trade_authorized']
+        if notify != 'off':
+            delivery=json.loads((root/'notification-delivery.json').read_text())
+            assert delivery['state']==('blocked_or_unconfirmed' if notify=='failure' else 'fresh_research_delivery_confirmed')
+            assert 'secret' not in json.dumps(delivery)
     assert (root/'budget-after.json').exists()

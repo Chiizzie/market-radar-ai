@@ -67,3 +67,19 @@ local tests; a second live delivery was deliberately not attempted.
 Next milestone: trusted fresh-review delivery with an explicit freshness policy,
 followed by scheduled notifications and hosted dashboard integration. The current
 manual sender accepts only the pinned historical example, not arbitrary reports.
+
+## Fresh-review delivery
+
+The paid manual plan-review workflow now offers `send_fresh_review` (default
+false, effective only with `paid_analysis`). After successful export the sender
+reconstructs the review from its capture, catalogue, plan and eight audited model
+responses, rather than trusting an uploaded JSON file. Before reserving and again
+immediately before sending, it requires completion no more than two minutes ago
+and more than 30 seconds before evidence expiry. Expiry after reservation leaves
+the permanent reservation in place. Telegram acknowledgement cannot guarantee
+when a human will read the message; the original expiry is always printed.
+
+Notification failure is recorded separately from successful review completion
+and budget settlement. It must never cause a paid review to be rerun. No schedule
+is enabled yet: the current small pilot spending cap and fresh-delivery trial
+must be verified before recurring paid analysis is introduced.
