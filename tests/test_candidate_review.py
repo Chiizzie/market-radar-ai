@@ -120,6 +120,7 @@ def test_paid_adapter_preserves_cost_even_when_citation_rejected(tmp_path,monkey
     audit=json.loads(path.read_text())
     assert audit['state']=='blocked_or_failed' and audit['result'] is None
     assert len(audit['calls'])==1 and audit['calls'][0]['estimated_cost_microeur']==9000
+    assert audit['validation_details']==[{'type':'review_identity_or_evidence_mismatch'}]
 
 
 def test_manual_runner_dry_run_selects_one_and_never_builds_client(tmp_path,monkeypatch):

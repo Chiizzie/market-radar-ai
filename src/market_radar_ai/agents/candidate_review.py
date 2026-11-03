@@ -143,7 +143,17 @@ def run_paid(client, record, capture, feed, *, path, clock, enabled=False):
         audit['result'] = run(record, capture, feed, ask, clock=clock)
         audit['state'] = 'completed'
         save()
-    except Exception:
+    except Exception as error:
+        from pydantic import ValidationError
+        if isinstance(error, ValidationError):
+            audit['validation_details'] = [{'field':list(x['loc']), 'type':x['type']}
+                for x in error.errors(include_input=False, include_context=False, include_url=False)[:20]]
+        elif str(error) in ('candidate_package_does_not_reproduce', 'candidate_review_deadline',
+                            'review_identity_or_evidence_mismatch', 'review_prompt_too_large',
+                            'package_expired_or_future', 'package_digest_mismatch'):
+            audit['validation_details'] = [{'type':str(error)}]
+        else:
+            audit['validation_details'] = [{'type':'transport_budget_or_other_failure'}]
         audit['state'] = 'blocked_or_failed'
         save()
         raise RuntimeError('Candidate review stopped; inspect audit and shared budget before retrying') from None

@@ -52,3 +52,12 @@ package reproduction, invalid citations, incomplete roles, stale admission,
 expiry during review, review deadline, durable-client requirement, paid audit
 preservation, repository/manual-attempt guards, archive signatures and no retries.
 These tests use deterministic responses and do not establish live model success.
+
+GitHub verification run 41725680651 also passed. A separate live, zero-model-call
+scanner rehearsal (41725919997, commit 77ee88eb76e0c4254bda25b7e06def9c9e1153e0)
+completed successfully on 2026-11-03. Its downloaded artifact checksum was
+`b12e0811f28748a9e5a41df723358789bd2fe01073c8132422f03c60f16715e8`.
+All four requested crypto pairs were rankable, XRPEUR and ETHEUR were shortlisted,
+and the runner selected crypto:XRPEUR with state ready_dry_run and model_calls 0.
+The eight stock captures were not rankable at this time. No paid review, dashboard
+archive delivery or trade is claimed by that dry run.
