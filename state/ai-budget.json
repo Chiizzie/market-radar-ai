@@ -1,6 +1,12 @@
 {
   "currency": "EUR",
   "entries": {
+    "candidate-review-v1:30a3060f020a144aa0f8edd095a5b8a7d1bf83d26c93c15bc090ca9a020a23de:opportunity_hunter": {
+      "actual": null,
+      "day": "2026-11-03",
+      "reserved": 7822,
+      "usage": null
+    },
     "live-research-v1:1ccafa5d7ea6bb9a10ca79be70a430e956c6f49dfa06f01683d5562f0316d083:opportunity_hunter": {
       "actual": 4779,
       "day": "2026-11-03",
