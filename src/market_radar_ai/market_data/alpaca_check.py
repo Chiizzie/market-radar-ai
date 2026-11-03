@@ -57,6 +57,7 @@ def number(value, positive=True):
 
 
 def capture(reader=None, now=None):
+    fixed_clock = now is not None
     now = now or datetime.now(timezone.utc)
     if now.tzinfo is None:
         raise ValueError("timezone_required")
@@ -80,12 +81,15 @@ def capture(reader=None, now=None):
             data = reader.get(kind, params)
             if kind == "quote":
                 quote = data["quote"]
-                age = (now-timestamp(quote["t"])).total_seconds()
+                checked_at = now if fixed_clock else datetime.now(timezone.utc)
+                age = (checked_at-timestamp(quote["t"])).total_seconds()
                 bid, ask = number(quote["bp"]), number(quote["ap"])
-                if ask < bid or age < 0:
-                    raise ValueError("invalid_quote")
+                if ask < bid:
+                    raise DataError("crossed_quote")
+                if age < 0:
+                    raise DataError("future_quote_timestamp")
                 result[kind] = {"status": "fresh" if age <= 120 else "stale", "age_seconds": age,
-                    "timestamp": quote["t"], "bid_usd": str(bid), "ask_usd": str(ask),
+                    "evaluated_at": checked_at.isoformat(), "timestamp": quote["t"], "bid_usd": str(bid), "ask_usd": str(ask),
                     "spread_usd": str(ask-bid)}
             elif kind == "bars":
                 if data.get("next_page_token"):

@@ -77,3 +77,28 @@ def test_missing_credentials_never_request(monkeypatch):
     result = capture(AlpacaReader(object()), NOW)
     assert all(result[k]['reason'] == 'credentials_missing' for k in ('quote','bars','news'))
     assert not result['trade_authorized']
+
+@pytest.mark.parametrize('kind', ['bars', 'news'])
+def test_missing_payload_is_not_success(kind):
+    def mutate(which, data):
+        if which == kind: data.clear()
+    assert capture(Reader(mutate), NOW)[kind]['status'] == 'error'
+
+def test_future_quote_is_rejected():
+    def mutate(kind, data):
+        if kind == 'quote': data['quote']['t'] = (NOW+timedelta(seconds=2)).isoformat()
+    result = capture(Reader(mutate), NOW)
+    assert result['quote']['reason'] == 'future_quote_timestamp'
+
+def test_live_quote_uses_response_time(monkeypatch):
+    import market_radar_ai.market_data.alpaca_check as module
+    class Clock(datetime):
+        calls = 0
+        @classmethod
+        def now(cls, tz=None):
+            cls.calls += 1
+            return NOW if cls.calls == 1 else NOW+timedelta(seconds=2)
+    def mutate(kind, data):
+        if kind == 'quote': data['quote']['t'] = (NOW+timedelta(seconds=1)).isoformat()
+    monkeypatch.setattr(module, 'datetime', Clock)
+    assert capture(Reader(mutate))['quote']['age_seconds'] == 1
