@@ -7,7 +7,9 @@ from market_radar_ai.dashboard.plan_review import export_review
 
 
 def bundle():
+    from market_radar_ai.market_data.admission import FxQuote
     c,cat,d=data();calls=[]
+    d['fx_evidence']=FxQuote.model_validate(d['fx_evidence']).model_dump(mode='json')
     def ask(stage,p,s):
         response=answer(stage,p,s)
         calls.append(dict(stage=stage,state='received',started_at=NOW.isoformat(),received_at=NOW.isoformat(),estimated_cost_microeur=1000,untrusted_response=response))
