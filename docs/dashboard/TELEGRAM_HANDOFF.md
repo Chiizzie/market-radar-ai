@@ -51,3 +51,19 @@ attempt. Only that job receives contents-write permission for the ledger. The
 connection-test switch remains separate. Historical reports may be expired and
 are explicitly labelled as such; this is not a fresh-call delivery policy.
 No schedule or automatic report sending has been enabled.
+
+### Verified delivery — 3 November 2026, 19:38 Dublin
+
+State branch initialized once with an empty ledger. Manual run **41704988721**
+at commit `a0fa02eaaa4263fc6b1d7f25024626c79009467e` succeeded:
+29 focused tests passed, the sender returned
+`historical_report_delivery_confirmed`, and a separate read of the state branch
+confirmed snapshot `6b394a20dea07b460d9a4afe1e8fd69e17fc9de52f7e195d608b4bc80d1d650b`
+as `confirmed`. The connection-test job was skipped. No paid AI call occurred.
+Full local suite: 520 passed. GitHub full verification run 41704807561 succeeded.
+Duplicate suppression, timeout retention and failed confirmation are covered by
+local tests; a second live delivery was deliberately not attempted.
+
+Next milestone: trusted fresh-review delivery with an explicit freshness policy,
+followed by scheduled notifications and hosted dashboard integration. The current
+manual sender accepts only the pinned historical example, not arbitrary reports.
