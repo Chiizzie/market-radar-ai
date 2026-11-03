@@ -51,9 +51,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--symbols', nargs='+', default=list(COMPANY_SYMBOLS))
+    parser.add_argument('--company-provider', choices=('yahoo', 'alpaca'), default='yahoo')
     args = parser.parse_args()
     from .crypto_feed import fetch_crypto_feed
-    result = collect(crypto_fetch=fetch_crypto_feed,company_symbols=args.symbols)
+    from .alpaca_news import fetch_alpaca_news
+    result = collect(crypto_fetch=fetch_crypto_feed,company_symbols=args.symbols,
+                     company_fetch=fetch_alpaca_news if args.company_provider=='alpaca' else fetch_company_news)
+    result['company_provider'] = args.company_provider
+    if args.company_provider == 'alpaca':
+        result['limitations'][0] = 'Stock relevance uses explicit provider tags; one publisher is not independent confirmation'
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2)+'\n')
     print(json.dumps({'status': result['status'], 'items': len(result['items']),

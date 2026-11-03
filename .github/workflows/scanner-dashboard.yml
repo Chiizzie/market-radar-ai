@@ -47,11 +47,14 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -e '.[dev,market]'
-      - run: python -m pytest -q tests/test_snapshot_delivery.py tests/test_dashboard_cache.py tests/test_market_capture.py tests/test_scanner_news.py tests/test_capture_shortlist.py tests/test_candidate_packages.py tests/test_candidate_review.py tests/test_candidate_delivery.py tests/test_evidence_enrichment.py tests/test_alpaca_provider.py tests/test_research_readiness.py tests/test_stock_context.py
+      - run: python -m pytest -q tests/test_snapshot_delivery.py tests/test_dashboard_cache.py tests/test_market_capture.py tests/test_scanner_news.py tests/test_capture_shortlist.py tests/test_candidate_packages.py tests/test_candidate_review.py tests/test_candidate_delivery.py tests/test_evidence_enrichment.py tests/test_alpaca_provider.py tests/test_research_readiness.py tests/test_stock_context.py tests/test_alpaca_news.py
       - name: Collect bounded stock, macro and tagged crypto news without AI
         id: news
         continue-on-error: true
-        run: python -m market_radar_ai.evidence.scanner_feed --output artifacts/scanner/news.json --symbols NVDA MSFT AAPL AMD META AMZN GOOGL TSLA
+        run: python -m market_radar_ai.evidence.scanner_feed --output artifacts/scanner/news.json --company-provider alpaca --symbols NVDA MSFT AAPL AMD META AMZN GOOGL TSLA
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
       - name: Capture bounded stock and crypto sample without AI
         id: collect
         continue-on-error: true
