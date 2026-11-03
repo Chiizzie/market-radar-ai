@@ -65,7 +65,7 @@ def _fetch_feed_once(session=None, *, issuer=False, source=None):
     reason = "transport_error"
     http_status = None
     try:
-        with session.get(url,timeout=(5,15),allow_redirects=False,stream=True) as response:
+        with session.get(url,timeout=(15,20),allow_redirects=False,stream=True) as response:
             http_status = response.status_code
             if http_status != 200:
                 reason = 'redirect_not_followed' if 300 <= http_status < 400 else 'http_error'

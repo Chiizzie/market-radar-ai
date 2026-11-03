@@ -115,3 +115,14 @@ def test_transport_failure_stops_after_two_attempts(monkeypatch):
     monkeypatch.setattr(module,'_fetch_feed_once',fetch)
     assert module.fetch_feed()['status']=='error'
     assert len(calls)==2
+
+
+def test_feed_connection_budget_allows_slow_handshake():
+    from market_radar_ai.evidence.public_feed import fetch_feed
+    class SlowSession:
+        def get(self,url,**kwargs):
+            assert kwargs['timeout']==(15,20)
+            assert kwargs['allow_redirects'] is False
+            assert kwargs['stream'] is True
+            return Response(200,feed(''))
+    assert fetch_feed(SlowSession(),source='nvidia')['status']=='ok'
