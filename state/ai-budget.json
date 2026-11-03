@@ -16,6 +16,12 @@
         "response_id": "resp_071c257b1397e1df016aea5a16fc3887d19b1faa0f0ec6c752"
       }
     },
+    "candidate-review-v1:30a3060f020a144aa0f8edd095a5b8a7d1bf83d26c93c15bc090ca9a020a23de:technical_analyst": {
+      "actual": null,
+      "day": "2026-11-03",
+      "reserved": 7822,
+      "usage": null
+    },
     "live-research-v1:1ccafa5d7ea6bb9a10ca79be70a430e956c6f49dfa06f01683d5562f0316d083:opportunity_hunter": {
       "actual": 4779,
       "day": "2026-11-03",
