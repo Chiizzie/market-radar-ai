@@ -85,13 +85,25 @@ the full downloaded result and exact delivered archive hash reproduce without
 calling a model. A regression test covers this persistence boundary. Safe audit
 diagnostics preserve field/error categories without exposing provider bodies.
 
-Lovable's published candidate research implementation uses commit
-`9bda12ea7cc5ba9e8064e3d4ec89446b86f13702`; it reports 235 passing tests,
+Lovable's initial published candidate research implementation used commit
+`9bda12ea7cc5ba9e8064e3d4ec89446b86f13702`; it reported 235 passing tests,
 clean typecheck/build and validates the exact Python-generated test fixture.
 The fixture is parse-only synthetic test data, never inserted as production
 research. The public page was observed requiring viewer sign-in after deployment.
+
+Lovable read-only verification confirmed exactly one genuine XRPEUR row, the
+exact 26,718-byte signed body and both hashes, and the approved viewer displaying
+all eight reports, citations, gaps, cost and original timestamps on the published
+app. The record was shown as stale research only; no plan/order/actionability was
+present. Sign-out cleared it and reload remained protected; no browser errors
+were reported. No synthetic fixture was inserted for this verification.
 
 The original package's NOT_RUN and six_agent_review_not_run are historical input
 fields. Eight completed reports are separately present in the result. Prompt
 instructions now explicitly forbid describing supplied peer reviews as absent;
 the already stored review is retained unchanged as the original model output.
+The display-only follow-up `11b08693910c36b9e571548c0dcac64389e8bdcb` labels
+these as evidence gaps recorded at package assembly and explains the historical
+review-not-run key. Lovable reports 236 passing tests and a clean typecheck;
+stored JSON, hashes, verdicts and validation are unchanged. Backend verification
+run 41728044689 passed after the persistence-boundary fix (633 tests).

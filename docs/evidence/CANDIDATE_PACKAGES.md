@@ -38,12 +38,18 @@ explicitly linked news in that feed. This is a historical verification, not fres
 market evidence or five trade calls. No provider connection or paid model call
 was made during this replay.
 
-## Remaining connections
+## Connected review path
 
-The packages are workflow artifacts, not yet part of the signed dashboard schema.
-The existing paid review runner still uses its NVDA-specific test path. It is not
-automatically invoked by package creation. Next, generalize review input and
-source-citation validation, preserve staged budget controls and abstention, then
-version the dashboard contract to show package coverage and agent evidence.
-Broader symbol discovery and independent stock/crypto catalyst coverage remain
-separate outstanding work. No schedule, spending cap or live-order path changed.
+The generic runner now consumes these packages through six independent roles,
+debate and conclusion, with metered opt-in paid use and source-citation checks.
+Completed research is delivered through a separate signed candidate archive to
+the authenticated Candidate research page. The live XRP/EUR integration completed
+all eight stages and its final verdict was REJECT; see
+[GENERIC_CANDIDATE_REVIEW.md](GENERIC_CANDIDATE_REVIEW.md) for exact evidence.
+The original package's NOT_RUN state describes its assembly, not the separate
+completed review. No model is called merely by creating or viewing a package.
+
+The legacy NVDA plan-review workflow remains a separate test path. Broader symbol
+discovery, independent stock/crypto catalysts, account eligibility, executable
+quotes/costs and admitted EUR trade plans remain outstanding. No schedule,
+spending cap or live-order path changed.

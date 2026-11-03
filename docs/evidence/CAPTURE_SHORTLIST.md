@@ -19,7 +19,8 @@ This is a historical integration check, not fresh calls. The entire local suite
 passed 586 tests; stale/tampered input and quota cases have regression coverage.
 
 Candidate-specific evidence packages are now assembled from this shortlist;
-see [CANDIDATE_PACKAGES.md](CANDIDATE_PACKAGES.md). The existing paid review runner remains NVDA-specific and
-is not automatically invoked by shortlist membership. Broker account permission,
+see [CANDIDATE_PACKAGES.md](CANDIDATE_PACKAGES.md). The generic eight-stage review
+is explicitly opt-in and never automatically invoked by shortlist membership.
+The NVDA plan-review workflow remains a separate legacy test. Broker account permission,
 executable quotes/costs and independent catalyst evidence must remain unresolved
 where no valid adapter evidence exists. No spending caps or schedules were changed.
