@@ -25,16 +25,20 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -e '.[dev,market]'
-      - run: python -m pytest -q tests/test_snapshot_delivery.py tests/test_dashboard_cache.py tests/test_market_capture.py
+      - run: python -m pytest -q tests/test_snapshot_delivery.py tests/test_dashboard_cache.py tests/test_market_capture.py tests/test_scanner_news.py
+      - name: Collect bounded stock and macro news leads without AI
+        id: news
+        continue-on-error: true
+        run: python -m market_radar_ai.evidence.scanner_feed --output artifacts/scanner/news.json
       - name: Capture bounded stock and crypto sample without AI
         id: collect
         continue-on-error: true
         run: python -m market_radar_ai.market_data.capture --output artifacts/scanner/capture.json --stocks NVDA MSFT AAPL AMD META AMZN GOOGL TSLA --crypto XBTEUR ETHEUR SOLEUR XRPEUR
       - name: Export honest coverage including provider failures
-        run: python -m market_radar_ai.dashboard.export --capture artifacts/scanner/capture.json --output artifacts/scanner/dashboard.json
+        run: python -m market_radar_ai.dashboard.export --capture artifacts/scanner/capture.json --output artifacts/scanner/dashboard.json --evidence artifacts/scanner/news.json
       - name: Send one signed research snapshot
         if: inputs.send_snapshot
-        run: python -m market_radar_ai.dashboard.snapshot_delivery --capture artifacts/scanner/capture.json
+        run: python -m market_radar_ai.dashboard.snapshot_delivery --capture artifacts/scanner/capture.json --evidence artifacts/scanner/news.json
         env:
           SEND_SCANNER_SNAPSHOT: 'true'
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
@@ -45,5 +49,5 @@ jobs:
           path: artifacts/scanner/
           retention-days: 7
       - name: Preserve connectivity failure as a failed check
-        if: steps.collect.outcome == 'failure'
+        if: steps.collect.outcome == 'failure' || steps.news.outcome == 'failure'
         run: exit 1
