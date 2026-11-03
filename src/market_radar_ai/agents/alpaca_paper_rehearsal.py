@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from .paper_planner import draft_nvda
+from .execution_evidence import assess_quote
 from ..market_data.providers.fx import YahooFxProvider
 
 
@@ -31,6 +32,7 @@ def build(capture, catalogue, fx, *, now):
     result['assumptions_note']='EUR 500 fictional paper allocation; 40 bps assumed round-trip costs. Neither is an account balance or verified broker fee.'
     result['capture_observed_at']=capture['observed_at']
     result['quote_context']=capture.get('quote',{})
+    result['execution_evidence']=assess_quote(capture.get('quote',{}),now=now)
     result['news_context']={k:capture.get('news',{}).get(k) for k in ('status','count','more_available','catalysts_verified')}
     # Quote/news are context only: neither clears execution, cost or catalyst gates.
     return result
