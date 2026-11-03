@@ -31,3 +31,11 @@ cd9471f5be08b4475bd46429bff920fe87b18e66e4771984aa51d7c7910060c2
 Original plan expiry: 2026-11-03T17:28:40.489307+00:00.
 Public historical export: docs/dashboard/nvda-reviewed-plan-2026-11-03.json.
 This validates this run, not universal token-count accuracy or trade profitability.
+
+Lovable display verification: commit d9afd951ca619b21a619b1fc76f03ff8f4fa61c8
+adds the optional historical NVDA review button through the strict import path.
+The vendored JSON was independently compared to the committed backend export and
+matched exactly. Lovable reports 142 passing tests, clean type checking and a
+browser render of all eight reports, the exact cost and unapproved/not-live
+labels. Browser checks were reported by Lovable, not independently repeated here.
+No publication or live backend connection was performed.
