@@ -53,6 +53,7 @@ class PilotReply:
     cost_usd: Decimal
     estimated_cost_microeur: int
     eur_per_usd: Decimal
+    counted_input_tokens: int | None = None
 
 
 class OpenAIPilot:
@@ -70,6 +71,7 @@ class OpenAIPilot:
         if type(count_input_tokens) is not bool:
             raise ValueError('Token counting flag must be boolean')
         self.count_input_tokens = count_input_tokens
+        self.last_counted_input_tokens = None
 
     def _input_reservation(self, payload):
         if not self.count_input_tokens:
@@ -92,6 +94,7 @@ class OpenAIPilot:
         except Exception:
             raise RuntimeError('Input token count unavailable; generation not started') from None
         # Extra headroom; never treat a local character count as a token count.
+        self.last_counted_input_tokens = n
         return min(400000, n + max(1024, (n+9)//10))
 
     def _eur(self, usd):
@@ -145,6 +148,8 @@ class OpenAIPilot:
             'pricing_checked':'2026-11-02'})
         if body.get('status') != 'completed':
             raise RuntimeError('Incomplete or unexpected model response; usage settled')
+        if self.count_input_tokens and body['usage']['input_tokens'] != self.last_counted_input_tokens:
+            raise RuntimeError('Counted and billed input differ; usage settled; review stopped')
         texts = [part['text'] for item in body.get('output', []) if item.get('type') == 'message'
                  for part in item.get('content', []) if part.get('type') == 'output_text']
         if len(texts) != 1 or len(texts[0]) > 100000:
@@ -154,4 +159,4 @@ class OpenAIPilot:
             raise ValueError('Expected an object response')
         Draft202012Validator(validated_schema).validate(data)
         return PilotReply(data, body['id'], body['usage']['input_tokens'],
-            body['usage']['output_tokens'], usd, estimated, self.rate)
+            body['usage']['output_tokens'], usd, estimated, self.rate, self.last_counted_input_tokens)

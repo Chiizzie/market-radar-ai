@@ -51,7 +51,7 @@ def execute(root, *, env, clock=lambda:datetime.now(timezone.utc)):
                 if not key or not token: raise ValueError('missing_credentials')
                 ledger=GitHubSpendingLedger(GitHubBudgetStore(token))
                 save('budget-before.json',ledger.summary())
-                client=OpenAIPilot(api_key=key,ledger=ledger,eur_per_usd=fx.eur_per_unit,enabled=True)
+                client=OpenAIPilot(api_key=key,ledger=ledger,eur_per_usd=fx.eur_per_unit,enabled=True,count_input_tokens=True)
                 result=run_paid(client,packet,path=root/'review.json',clock=clock,enabled=True)
                 from ..dashboard.plan_review import export_review
                 save('dashboard-review.json',export_review(market,cat,draft,result,now=clock()))

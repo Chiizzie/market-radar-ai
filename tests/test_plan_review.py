@@ -71,7 +71,7 @@ def test_paid_audit_preserves_returned_usage_on_rejection(tmp_path,monkeypatch):
             assert props['acknowledged_blockers']['minItems']==len(p['snapshot']['blockers'])
             reply=answer(p['stage'],p,kwargs['schema'])
             reply['source_ids']=['fabricated']
-            return SimpleNamespace(data=reply,response_id='test',cost_usd='0.01',estimated_cost_microeur=9000)
+            return SimpleNamespace(data=reply,response_id='test',cost_usd='0.01',estimated_cost_microeur=9000,input_tokens=1000,counted_input_tokens=1000)
     monkeypatch.setattr(pilot,'OpenAIPilot',Client)
     monkeypatch.setattr(budget,'GitHubSpendingLedger',Ledger)
     path=tmp_path/'audit.json'

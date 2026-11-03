@@ -206,3 +206,16 @@ def test_count_does_not_bypass_budget(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError, match='daily_spending_limit'):
         run(c)
     assert len(calls) == 1 and calls[0][0][0].endswith('/input_tokens')
+
+
+def test_count_mismatch_settles_then_stops(tmp_path, monkeypatch):
+    c = client(tmp_path, enabled=True, count_input_tokens=True)
+    def post(url, **kwargs):
+        data = ({'object':'response.input_tokens','input_tokens':999}
+                if url.endswith('/input_tokens') else body())
+        return type('Reply', (), {'status_code':200,'json':lambda self:data})()
+    monkeypatch.setattr('market_radar_ai.agents.openai_pilot.requests.post', post)
+    with pytest.raises(RuntimeError, match='Counted and billed input differ'):
+        run(c)
+    with sqlite3.connect(c.ledger.path) as db:
+        assert db.execute('SELECT actual FROM spend').fetchone() == (959,)

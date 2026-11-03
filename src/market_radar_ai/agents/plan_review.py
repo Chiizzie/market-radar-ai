@@ -124,7 +124,8 @@ def run_paid(client, packet_json, *, path, clock, enabled=False):
               'Use at most three complete concise concerns, each preferably under 120 characters. No control characters. '
               'The six_agent_plan_review_not_run blocker describes the input before this run; acknowledge it exactly but do not claim no reports were supplied when peers are present.'),max_output_tokens=1024,reasoning_effort='none')
         call.update(state='received',received_at=clock().isoformat(),response_id=reply.response_id,cost_usd=str(reply.cost_usd),
-                    estimated_cost_microeur=reply.estimated_cost_microeur)
+                    estimated_cost_microeur=reply.estimated_cost_microeur,
+                    input_tokens=reply.input_tokens,counted_input_tokens=reply.counted_input_tokens)
         encoded=canonical(reply.data)
         call['untrusted_response']=reply.data if len(encoded.encode())<=32768 else None
         save()
