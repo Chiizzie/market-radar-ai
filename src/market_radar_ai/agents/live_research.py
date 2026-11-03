@@ -71,7 +71,7 @@ class ResearchAssessment(GroundedResponse):
     role: AgentRole
     snapshot_id: str
     summary: Prose = Field(min_length=1, max_length=500)
-    source_ids: tuple[str, ...] = Field(min_length=1, max_length=4)
+    source_ids: tuple[str, ...] = Field(min_length=1, max_length=8)
     concerns: tuple[Concern, ...] = Field(max_length=3)
 
 
@@ -182,8 +182,10 @@ def run_research(client, packet, *, path, clock, enabled=False):
                          'entry_cutoff_passed':now.astimezone(ZoneInfo('Europe/Dublin')).hour>=22,
                          'broker_eligibility':'unverified','trade_plan':'not_supplied',
                          'trade_authorized':False}}
+            response_schema=schema.model_json_schema()
+            response_schema['properties']['source_ids']['items']['enum']=list(packet.source_ids)
             reply=client.call(prompt=json.dumps(payload,separators=(',',':')),
-                schema=schema.model_json_schema(),request_id=request_id,now=now,
+                schema=response_schema,request_id=request_id,now=now,
                 instructions=trusted,max_output_tokens=1024,reasoning_effort='none')
             # Preserve usage before semantic validation; a rejected reply still costs money.
             call.update(state='received',response_id=reply.response_id,

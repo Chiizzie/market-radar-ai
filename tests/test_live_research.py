@@ -68,7 +68,13 @@ def test_midrun_expiry_stops_before_next_reservation(tmp_path,monkeypatch):
 
 
 def test_bad_citation_keeps_usage_and_stops(tmp_path,monkeypatch):
-    packet,client,store,requests=setup(monkeypatch,wrong_citation=True)
+    packet,client,store,requests=setup(monkeypatch)
+    from dataclasses import replace
+    original=client.call
+    def invalid_citation(**kwargs):
+        reply=original(**kwargs)
+        return replace(reply,data={**reply.data,'source_ids':['invented']})
+    monkeypatch.setattr(client,'call',invalid_citation)
     path=tmp_path/'invalid.json'
     with pytest.raises(RuntimeError):run_research(client,packet,path=path,clock=lambda:NOW,enabled=True)
     report=json.loads(path.read_text())
@@ -263,7 +269,7 @@ def test_full_objection_register_and_risk_policy_reach_review(tmp_path,monkeypat
         assert policy['overnight_positions_allowed'] is False
         assert policy['trade_authorized'] is False
     assert report['version']=='live-research-v4'
-    assert report['instruction_version']=='live-research-instructions-v4'
+    assert report['instruction_version']=='live-research-instructions-v5'
 
 
 def test_live_prompt_uses_current_contract_without_legacy_tasks():
@@ -295,4 +301,35 @@ def test_identity_rejections_preserve_diagnostic_and_usage(tmp_path,monkeypatch,
     assert call['validation_details']==[{'field':[field],'type':code}]
     assert call['rejected_response']['data'][field]==value
     assert call['rejected_response']['trade_authorized'] is False
+    assert next(iter(store.state['entries'].values()))['actual'] is not None
+
+
+def test_live_source_schema_allows_seven_exact_ids_and_rejects_packed_ids(tmp_path,monkeypatch):
+    from jsonschema import Draft202012Validator
+    from market_radar_ai.agents.combined_input import CombinedResearchInput
+    from pathlib import Path
+    historical=json.loads(Path('docs/evaluations/nvda-trial-2026-11-03.json').read_text())
+    packet=CombinedResearchInput.model_validate(historical['input']['input'])
+    def cite_all(data,payload):
+        data['source_ids']=list(packet.source_ids)
+    packet,client,store,requests=setup(monkeypatch,mutate=cite_all,packet_override=packet)
+    report=run_research(client,packet,path=tmp_path/'seven.json',clock=lambda:packet.assembled_at,enabled=True)
+    assert report['state']=='completed' and len(requests)==8
+    assert len(packet.source_ids)==7
+    schema=requests[0]['text']['format']['schema']
+    validator=Draft202012Validator(schema)
+    good=report['assessments'][0]
+    assert validator.is_valid(good)
+    assert not validator.is_valid({**good,'source_ids':[','.join(packet.source_ids)]})
+    assert not validator.is_valid({**good,'source_ids':['invented']})
+    assert schema['properties']['source_ids']['items']['enum']==list(packet.source_ids)
+
+
+def test_invalid_citation_fails_client_schema_without_followup(tmp_path,monkeypatch):
+    packet,client,store,requests=setup(monkeypatch,wrong_citation=True)
+    path=tmp_path/'schema-rejection.json'
+    with pytest.raises(RuntimeError):
+        run_research(client,packet,path=path,clock=lambda:NOW,enabled=True)
+    report=json.loads(path.read_text())
+    assert len(requests)==1 and not report['assessments']
     assert next(iter(store.state['entries'].values()))['actual'] is not None
