@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 from .providers.catalogues import Trading212Catalogue
+from .broker_eligibility import assess_nvda
 
 
 def check(catalogue=None):
@@ -27,6 +28,7 @@ def check(catalogue=None):
     except Exception:
         # Never persist provider response bodies, auth headers, or exception strings.
         result.update(state='blocked', candidates=[], reason='Catalogue check failed; check credentials, metadata permissions and provider availability.')
+    result['eligibility'] = assess_nvda(result, now=datetime.now(timezone.utc))
     return result
 
 

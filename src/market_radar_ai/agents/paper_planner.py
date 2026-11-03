@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 from ..market_data.admission import FxQuote
 from ..market_data.models import Candle
 from ..market_data.quality import validate_candles
+from ..market_data.broker_eligibility import assess_nvda
 
 D = Decimal
 
@@ -29,15 +30,9 @@ def draft_nvda(candles, catalogue, fx, *, now, paper_capital_eur, round_trip_cos
                 raise ValueError('outside_session')
         except (KeyError,TypeError,ValueError):
             fail.append('calendar_invalid_closed_or_outside_session')
-    try:
-        observed=datetime.fromisoformat(catalogue['observed_at'])
-        if catalogue['state']!='catalogue_received' or not 0 <= (now-observed).total_seconds() <= 600:
-            raise ValueError()
-        matches=[r for r in catalogue['candidates'] if r['ticker']=='NVDA_US_EQ'
-            and r['isin']=='US67066G1040' and r['type']=='STOCK' and r['currencyCode']=='USD'
-            and any(e['name']=='NASDAQ' for e in r['exchanges'])]
-        if len(matches)!=1: raise ValueError()
-    except (KeyError,TypeError,ValueError): fail.append('catalogue_identity_unverified_or_stale')
+    result['broker_eligibility']=assess_nvda(catalogue,now=now)
+    if not result['broker_eligibility']['catalogue_identity_verified']:
+        fail.append('catalogue_identity_unverified_or_stale')
     try:
         rows=[Candle.model_validate(c.model_dump() if isinstance(c,Candle) else c) for c in candles]
         result['market_evidence'] = dict(candle_count=len(rows), minimum_candles=20,
