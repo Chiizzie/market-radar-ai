@@ -75,3 +75,33 @@ No claim that agents are running unattended is warranted.
 
 Source: https://docs.alpaca.markets/us/reference/stockbarsingle-1
 
+## Verified 2026-11-03
+
+Implementation commit: 02f8f48106c8c0485e5f71649e937a424821928e.
+Local full suite: 703 passed. GitHub Phase 1 verification run 41735374673:
+703 passed, compile checks and budget-storage verification successful.
+
+Live manual run 41735765098 completed successfully in 35 seconds, with
+review_scope=context, candidate_market=stocks, paid_analysis=false,
+send_candidate_review=false and send_snapshot=false. All eight stocks returned
+ten prior-date daily aggregates and 24 completed intraday observations.
+The last prior-date daily bar was November 2. Available extended-hours bars
+appeared for AAPL, AMD and AMZN; other stocks ended at the regular-session bar.
+These observations were correctly retained as historical context, not fresh
+execution evidence. Eight AFTER_HOURS_CONTEXT packages were assembled; their
+canonical JSON was reproduced exactly from the downloaded capture and news.
+The runner validated the first package (NVDA) with ready_dry_run and zero model
+calls. No live six-agent context review, dashboard delivery or order occurred.
+
+All eight company news queries returned leads, but none of this capture's
+stock stories passed exact symbol relevance into the context packages. No
+current Federal Reserve item qualified either. One editorial source failed,
+and the combined feed reached its 50-item cap. News coverage remains partial;
+these packages demonstrate history/context plumbing, not verified catalysts.
+
+Artifact 13279181354 SHA-256 was independently checked:
+27bddf5afca346fc61ffeb3ca8acf0003324222c77d0a243340e2fd43e11ebc5.
+The test suite covers premarket research with zero current-session bars and
+the six-role/debate/conclusion sequence using test clients. Premarket live
+capture and a paid context review remain unverified.
+
