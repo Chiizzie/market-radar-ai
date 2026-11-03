@@ -102,8 +102,18 @@ def build_context_packages(document, feed, *, now):
             gaps.append('latest_context_bar_stale_for_trading')
         if not news_ids:gaps.append('symbol_linked_news_missing')
         if now.astimezone(ZoneInfo('Europe/Dublin')).hour>=22:gaps.append('entry_cutoff_reached')
+        calendar_ids=[]
+        if 'earnings_calendars' in document:
+            from ..evidence.earnings_calendar import calendar_source
+            calendar=calendar_source(document,symbol,now=now)
+            if calendar:
+                sid='calendar:'+digest(calendar)
+                sources[sid]=calendar;calendar_ids.append(sid)
+                if calendar['events']:gaps.append('reported_earnings_require_issuer_confirmation')
+                else:gaps.append('earnings_calendar_no_confirmed_event')
+            else:gaps.append('earnings_calendar_missing_or_stale')
         expiry=min(now+timedelta(minutes=5),retrieved+timedelta(minutes=15))
-        for sid in news_ids+macro_ids:
+        for sid in news_ids+macro_ids+calendar_ids:
             expiry=min(expiry,datetime.fromisoformat(sources[sid]['retrieved_at'])+timedelta(minutes=15))
         if expiry<=now:continue
         body={'schema_version':'context-evidence-package-v1','candidate_id':'stocks:'+symbol,
@@ -121,6 +131,8 @@ def build_context_packages(document, feed, *, now):
                 'timezone':'Europe/Dublin','overnight_allowed':False},
             'usage_note':'Historical and extended-hours context only. Do not predict the opening as fact, infer missing news, compare incomplete daily volume, or treat this as executable evidence.',
             'review_status':'NOT_RUN','model_calls':0,'trade_authorized':False,'plan':None}
+        if 'earnings_calendars' in document:
+            body['calendar_source_ids']=calendar_ids
         packages.append({'package_id':digest(body),'package':body})
     return {'schema_version':'context-package-batch-v1','assembled_at':now.isoformat(),
             'packages':packages,'model_calls':0,'trade_authorized':False}

@@ -47,7 +47,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -e '.[dev,market]'
-      - run: python -m pytest -q tests/test_snapshot_delivery.py tests/test_dashboard_cache.py tests/test_market_capture.py tests/test_scanner_news.py tests/test_capture_shortlist.py tests/test_candidate_packages.py tests/test_candidate_review.py tests/test_candidate_delivery.py tests/test_evidence_enrichment.py tests/test_alpaca_provider.py tests/test_research_readiness.py tests/test_stock_context.py tests/test_alpaca_news.py
+      - run: python -m pytest -q tests/test_snapshot_delivery.py tests/test_dashboard_cache.py tests/test_market_capture.py tests/test_scanner_news.py tests/test_capture_shortlist.py tests/test_candidate_packages.py tests/test_candidate_review.py tests/test_candidate_delivery.py tests/test_evidence_enrichment.py tests/test_alpaca_provider.py tests/test_research_readiness.py tests/test_stock_context.py tests/test_alpaca_news.py tests/test_earnings_calendar.py
       - name: Collect bounded stock, macro and tagged crypto news without AI
         id: news
         continue-on-error: true
@@ -70,7 +70,13 @@ jobs:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
       - name: Add public EUR reference bid and ask without broker admission
-        run: python -m market_radar_ai.market_data.reference_quotes --capture artifacts/scanner/context-capture.json --output artifacts/scanner/enriched-capture.json
+        run: python -m market_radar_ai.market_data.reference_quotes --capture artifacts/scanner/context-capture.json --output artifacts/scanner/quote-capture.json
+      - name: Add bounded Finnhub earnings calendar without paid AI
+        id: calendar
+        continue-on-error: true
+        run: python -m market_radar_ai.evidence.earnings_calendar --capture artifacts/scanner/quote-capture.json --output artifacts/scanner/enriched-capture.json
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
       - name: Assemble all-session context for six specialist roles
         run: python -m market_radar_ai.agents.context_packages --capture artifacts/scanner/enriched-capture.json --evidence artifacts/scanner/news.json --output artifacts/scanner/context-packages.json
       - name: Rank research candidates without AI or trade admission
@@ -104,5 +110,5 @@ jobs:
           path: artifacts/scanner/
           retention-days: 7
       - name: Preserve connectivity failure as a failed check
-        if: steps.collect.outcome == 'failure' || steps.news.outcome == 'failure' || steps.context.outcome == 'failure'
+        if: steps.collect.outcome == 'failure' || steps.news.outcome == 'failure' || steps.context.outcome == 'failure' || steps.calendar.outcome == 'failure'
         run: exit 1
