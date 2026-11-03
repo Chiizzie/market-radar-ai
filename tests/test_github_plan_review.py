@@ -72,3 +72,16 @@ def test_paid_runner_exports_only_validated_reviews(tmp_path,monkeypatch,invalid
             assert delivery['state']==('blocked_or_unconfirmed' if notify=='failure' else 'fresh_research_delivery_confirmed')
             assert 'secret' not in json.dumps(delivery)
     assert (root/'budget-after.json').exists()
+
+
+def test_early_provider_failure_still_records_no_trade(tmp_path, monkeypatch):
+    import json
+    import market_radar_ai.agents.github_plan_review as module
+    def broken(): raise RuntimeError('sensitive_provider_detail')
+    monkeypatch.setattr(module,'check',broken)
+    root=tmp_path/'failed'
+    with pytest.raises(RuntimeError):execute(root,env=BASE,clock=lambda:NOW)
+    report=json.loads((root/'session-report.json').read_text())
+    assert report['runner_state']=='blocked_or_failed'
+    assert report['outcome']['net_pnl_eur'] is None
+    assert 'sensitive_provider_detail' not in json.dumps(report)

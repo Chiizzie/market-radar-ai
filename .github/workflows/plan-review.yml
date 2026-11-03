@@ -42,7 +42,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -e '.[dev,market]'
-      - run: python -m pytest -q tests/test_plan_review.py tests/test_github_plan_review.py tests/test_fresh_notification.py tests/test_delivery_ledger.py
+      - run: python -m pytest -q tests/test_plan_review.py tests/test_session_report.py tests/test_github_plan_review.py tests/test_fresh_notification.py tests/test_delivery_ledger.py
       - name: Capture fresh evidence and optionally review the plan
         run: python -m market_radar_ai.agents.github_plan_review
         env:

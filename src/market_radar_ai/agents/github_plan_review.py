@@ -33,6 +33,8 @@ def execute(root, *, env, clock=lambda:datetime.now(timezone.utc)):
         (root/name).write_text(json.dumps(value,indent=2)+'\n')
     status=dict(mode=mode,state='preparing',trade_authorized=False,model_calls=0)
     ledger=None
+    draft=None
+    exported=None
     try:
         save('status.json',status)
         # Slow catalogue first; no market evidence ages while it loads.
@@ -91,6 +93,8 @@ def execute(root, *, env, clock=lambda:datetime.now(timezone.utc)):
         if mode=='paid':status['model_calls']=None
         raise RuntimeError('Plan review stopped; inspect saved evidence') from None
     finally:
+        from .session_report import build_session_report
+        save('session-report.json', build_session_report(status, draft, exported, now=clock()))
         save('status.json',status)
         if ledger is not None:
             try:save('budget-after.json',ledger.summary())
