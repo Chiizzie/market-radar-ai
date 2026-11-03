@@ -26,3 +26,26 @@ for GitHub delivery; preview access is not a production backend connection.
 Recurring paid scans are not enabled by this plan. Their cadence must fit the
 shared budget and verified session/expiry gates; a completed research review is
 not a trade recommendation.
+
+## Sender implemented — 3 November 2026
+
+User reports REVIEW_INGEST_SECRET saved in both services. Lovable commit
+c07ca6f1555b20ad213666ab9ddd3b678ddf0c9a implements HMAC ingestion and stored reviews;
+its agent reports 150 tests/typecheck passing and invalid-signature HTTP 401.
+Those checks do not prove a real GitHub delivery or authenticated viewer access.
+
+`dashboard/lovable_delivery.py` revalidates the complete audit against source
+evidence and signs exact UTF-8 bytes with timestamp + dot + body. The destination
+is fixed to this project's ingestion endpoint. Redirects, duplicate HTTP 409,
+timeouts and mismatched snapshot acknowledgements never count as confirmed.
+No automatic retry occurs. Unlike fresh Telegram alerts, archived historical
+reviews may already be expired; original expiry and nonauthorization are retained.
+
+The manual paid review workflow has an optional `send_lovable_review` input,
+default false. The secret is supplied only on that explicit path. Archive failure
+is recorded separately and does not invalidate or rerun the paid review.
+Full local suite at this stage: 548 passed. No real delivery has been attempted;
+the app is not yet published and no viewer account has been verified.
+
+Before publication: Lovable is tightening streaming body limits and testing
+unauthorized access, duplicate insertion and the approved invite-only setup.

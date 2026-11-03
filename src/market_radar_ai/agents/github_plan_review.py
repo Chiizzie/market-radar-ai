@@ -76,6 +76,15 @@ def execute(root, *, env, clock=lambda:datetime.now(timezone.utc)):
                                     'retry_allowed':False, 'trade_authorized':False}
                     save('notification-delivery.json', delivery)
                     status['notification_state'] = delivery['state']
+                if env.get('SEND_LOVABLE_REVIEW') == 'true':
+                    from ..dashboard.lovable_delivery import deliver as archive
+                    try:
+                        archived = archive(market, cat, draft, result, env=env, clock=clock)
+                    except Exception:
+                        archived = {'state':'blocked_or_unconfirmed', 'retry_allowed':False,
+                                    'trade_authorized':False}
+                    save('dashboard-delivery.json', archived)
+                    status['dashboard_delivery_state'] = archived['state']
     except Exception:
         status.update(state='blocked_or_failed',reason='Inspect saved artifacts and budget; no automatic retry')
         # A failed request may have reserved/spent money. Never label it zero-cost.
