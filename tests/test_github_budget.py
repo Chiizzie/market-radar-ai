@@ -42,8 +42,9 @@ def test_lifetime_survives_month_boundary():
     store=MemoryStore()
     ledger=GitHubSpendingLedger(store)
     ledger.reserve('one',400000,NOW)
+    ledger.reserve('two',400000,NOW.replace(month=12))
     with pytest.raises(RuntimeError,match='lifetime'):
-        ledger.reserve('two',100001,NOW.replace(month=12))
+        ledger.reserve('three',200001,NOW.replace(year=2027,month=1))
 
 
 def test_unknown_write_blocks_pilot_before_network(tmp_path,monkeypatch):
