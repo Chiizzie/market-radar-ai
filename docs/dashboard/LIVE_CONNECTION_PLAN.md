@@ -58,7 +58,9 @@ The older bundled example has a different snapshot ID and is not this delivery.
 
 ## Remaining scope
 
-This milestone connects stored research reports. The general scanner snapshot
-endpoint remains disconnected. Recurring scans and paid scheduling are not enabled.
+Stored research reports and a bounded capture-only scanner feed are now connected.
+See SCANNER_FEED.md for the separately verified stock/crypto delivery. The feed
+uses authenticated stored reads; the legacy configurable endpoint remains unset.
+Recurring scans and paid scheduling are not enabled.
 Trade-call evidence gates remain closed until broker account eligibility, costs,
 freshness and adequate independent evidence pass. Live orders remain disabled.
