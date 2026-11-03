@@ -52,3 +52,10 @@ def test_invalid_audit_never_sends():
     b=bundle();b[3]['trade_authorized']=True;session=Session()
     with pytest.raises(ValueError):deliver(*b,env=ENV,clock=lambda:NOW,session=session)
     assert session.calls==0
+
+
+def test_historical_artifact_tampering_rejected(tmp_path):
+    from market_radar_ai.dashboard.lovable_delivery import load_pinned_bundle
+    (tmp_path / 'capture.json').write_text('{}')
+    with pytest.raises(ValueError, match='digest_mismatch'):
+        load_pinned_bundle(tmp_path)
