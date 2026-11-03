@@ -3,8 +3,9 @@ from copy import deepcopy
 from datetime import datetime
 from hashlib import sha256
 import json
+import re
 from typing import Literal, Annotated
-from pydantic import Field
+from pydantic import Field, AfterValidator
 from .paper_team import Frozen
 from .roles import AgentRole
 from .alpaca_paper_rehearsal import build
@@ -28,14 +29,23 @@ def prepare(capture, catalogue, draft):
     return canonical(packet)
 
 
+def complete_prose(value):
+    if value != value.strip() or re.search(r'(?:market|catalogue|fx|plan):[a-f0-9]', value):
+        raise ValueError('invalid_review_prose')
+    return value
+
+
+ReviewProse = Annotated[str, Field(pattern=r'^[^\x00-\x1f\x7f]*[.!?]$'), AfterValidator(complete_prose)]
+
+
 class Review(Frozen):
     snapshot_id: str
     stage: str
     verdict: Literal['REJECT','MORE_EVIDENCE_REQUIRED','CONDITIONALLY_COHERENT']
-    rationale: str = Field(min_length=1,max_length=600)
+    rationale: ReviewProse = Field(min_length=1,max_length=600)
     source_ids: tuple[str,...] = Field(min_length=1,max_length=4)
     acknowledged_blockers: tuple[str,...]
-    concerns: tuple[Annotated[str,Field(min_length=1,max_length=180)],...] = Field(max_length=3)
+    concerns: tuple[Annotated[ReviewProse,Field(min_length=1,max_length=180)],...] = Field(max_length=3)
     reviewed_stages: tuple[str,...]
     trade_authorized: Literal[False]
 
@@ -92,7 +102,7 @@ def run_paid(client, packet_json, *, path, clock, enabled=False):
         temporary=path.with_suffix('.tmp');temporary.write_text(json.dumps(audit,indent=2)+'\n');temporary.replace(path)
     save()
     def ask(stage,payload,schema):
-        call=dict(stage=stage,state='attempting');audit['calls'].append(call);save()
+        call=dict(stage=stage,state='attempting',prompt_bytes=len(canonical(payload).encode()));audit['calls'].append(call);save()
         schema['properties']['source_ids']['items']['enum']=list(payload['snapshot']['source_ids'].values())
         schema['properties']['snapshot_id']['enum']=[payload['snapshot_id']]
         schema['properties']['stage']['enum']=[stage]
@@ -109,7 +119,10 @@ def run_paid(client, packet_json, *, path, clock, enabled=False):
               'for conclusion reconcile objections and give an independent verdict. CONDITIONALLY_COHERENT only means hypothetical coherence, never tradable. '
               'Cite provided source IDs. Acknowledge every blocker exactly and list all supplied peer stages in order. '
               'State concerns rather than inventing missing information. Targets are projections, costs are assumed, IEX is limited coverage. '
-              'Use a concise rationale and at most three concise concerns.'),max_output_tokens=1024,reasoning_effort='none')
+              'Write a complete rationale of roughly two short sentences, aim under 350 characters, never cut a sentence to meet the maximum. '
+              'Put source IDs ONLY in source_ids, never in rationale or concerns. Put reviewed stage names ONLY in reviewed_stages. '
+              'Use at most three complete concise concerns, each preferably under 120 characters. No control characters. '
+              'The six_agent_plan_review_not_run blocker describes the input before this run; acknowledge it exactly but do not claim no reports were supplied when peers are present.'),max_output_tokens=1024,reasoning_effort='none')
         call.update(state='received',response_id=reply.response_id,cost_usd=str(reply.cost_usd),
                     estimated_cost_microeur=reply.estimated_cost_microeur)
         encoded=canonical(reply.data)

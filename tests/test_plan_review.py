@@ -82,3 +82,26 @@ def test_paid_audit_preserves_returned_usage_on_rejection(tmp_path,monkeypatch):
     assert audit['result'] is None
     assert audit['calls'][0]['untrusted_response']['source_ids']==['fabricated']
     assert audit['validation_details']==[{'type':'review_identity_or_evidence_mismatch'}]
+
+
+def test_oversized_evidence_stops_before_first_model_call():
+    c,cat,d=data();c['extra_context']='x'*33000
+    def never(*args):pytest.fail('oversized prompt reached model adapter')
+    with pytest.raises(ValueError,match='review_prompt_too_large'):
+        run(prepare(c,cat,d),never,clock=lambda:NOW)
+
+
+def test_peer_compaction_preserves_reasoning_and_shared_blockers():
+    def inspect(stage,p,schema):
+        if p['peer_reviews']:
+            assert all(set(r)=={'stage','verdict','rationale','source_ids','concerns'} for r in p['peer_reviews'])
+            assert all(r['rationale']=='Test response only.' and r['concerns']==['Unresolved evidence.'] for r in p['peer_reviews'])
+            assert len(p['snapshot']['blockers'])==6
+        return answer(stage,p,schema)
+    run(prepare(*data()),inspect,clock=lambda:NOW)
+
+@pytest.mark.parametrize('bad',['Ends mid sentence so','Trailing space. ','Bad\ftext.','Source market:abcd reviewed.'])
+def test_incomplete_or_corrupted_prose_rejected(bad):
+    def malformed(stage,p,s):
+        r=answer(stage,p,s);r['rationale']=bad;return r
+    with pytest.raises(ValueError):run(prepare(*data()),malformed,clock=lambda:NOW)
