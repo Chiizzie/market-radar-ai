@@ -1,0 +1,276 @@
+{
+  "schema_version": "paper-review-dashboard-v1",
+  "mode": "HISTORICAL_PAPER_REVIEW",
+  "trade_authorized": false,
+  "live_orders_enabled": false,
+  "snapshot_id": "874571f09e452882fbd78c8c262bc42d1b792650c27d359a6fb827637963b50b",
+  "evaluated_at": "2026-11-03T19:50:45.425756+00:00",
+  "review_completed_at": "2026-11-03T19:51:38.828829+00:00",
+  "expires_at": "2026-11-03T19:55:00+00:00",
+  "expired": false,
+  "plan": {
+    "symbol": "NVDA",
+    "broker_instrument_id": "NVDA_US_EQ",
+    "currency": "EUR",
+    "native_currency": "USD",
+    "strategy": "conditional_prior_five_bar_breakout",
+    "entry_eur": "185.4312185558660273636164939",
+    "stop_eur": "184.6093825356743097358367118",
+    "target1_eur": "189.3000652189198549475394561",
+    "target2_eur": "190.8636261133350366847737041",
+    "native_entry_usd": "207.58",
+    "native_stop_usd": "206.66",
+    "quantity": "2.685674",
+    "planned_loss_eur": "4.199214841547598796964851967",
+    "assumed_round_trip_cost_eur": "1.992031209855227748695013455",
+    "assumed_round_trip_cost_bps": "40",
+    "paper_capital_eur": "500",
+    "target_basis": "Projected net two/three R under fixed cost and FX assumptions; not observed resistance.",
+    "fx_rate": "0.8933000219475191606301979665",
+    "fx_source": "yahoo_finance:EURUSD=X:5m",
+    "fx_observed_at": "2026-11-03T19:45:00+00:00",
+    "expires_at": "2026-11-03T19:55:00+00:00",
+    "exit_by": "2026-11-03T20:55:00+00:00",
+    "invalidation": "Cancel if stop is breached before entry, evidence expires, or any blocker remains unresolved.",
+    "loss_note": "Planned loss assumes stop-price fill; gaps, slippage and FX movement can increase actual loss.",
+    "market_source": "alpaca_iex",
+    "market_observed_at": "2026-11-03T19:45:00+00:00"
+  },
+  "assumptions_note": "EUR 500 fictional paper allocation; 40 bps assumed round-trip costs. Neither is an account balance or verified broker fee.",
+  "input_blockers": [
+    "account_specific_eligibility_not_verified",
+    "live_bid_ask_and_costs_not_verified",
+    "independent_catalyst_review_pending",
+    "six_agent_plan_review_not_run",
+    "iex_limited_market_coverage"
+  ],
+  "review_status": "COMPLETED_UNAPPROVED",
+  "reviews": [
+    {
+      "snapshot_id": "874571f09e452882fbd78c8c262bc42d1b792650c27d359a6fb827637963b50b",
+      "stage": "opportunity_hunter",
+      "verdict": "MORE_EVIDENCE_REQUIRED",
+      "rationale": "Plan is directionally coherent, but account permission and executable pricing are unverified. IEX-only coverage plus pending catalyst review keeps the setup hypothetical, not tradable.",
+      "source_ids": [
+        "catalogue:3e4ceeaf53e03cbbb6055a7f6a4363e2378f2250c2e405d4a19bbaf98d24e240",
+        "fx:78b6ff56c0e7183afc647eb6e9a7c9cfab7024509cefc00ad63fe1e97bbee460",
+        "market:13705002e72e03ee1380ade20dd533d553ed8c535c1400914ea8296a01220fd2",
+        "plan:73169cd34242edb4013c6c6d518415538784acfad3c5f98f20af80a313f3be82"
+      ],
+      "acknowledged_blockers": [
+        "account_specific_eligibility_not_verified",
+        "live_bid_ask_and_costs_not_verified",
+        "independent_catalyst_review_pending",
+        "six_agent_plan_review_not_run",
+        "iex_limited_market_coverage"
+      ],
+      "concerns": [
+        "Buy permission for this Invest account is not confirmed.",
+        "IEX-only quotes may not match executable prices.",
+        "Catalyst validation is pending."
+      ],
+      "reviewed_stages": [],
+      "trade_authorized": false
+    },
+    {
+      "snapshot_id": "874571f09e452882fbd78c8c262bc42d1b792650c27d359a6fb827637963b50b",
+      "stage": "technical_analyst",
+      "verdict": "MORE_EVIDENCE_REQUIRED",
+      "rationale": "Price action is coherent with a conditional breakout setup, but execution cannot be judged without verified account permission and live executable costs. The IEX-only tape and unresolved catalyst review leave the edge and fill quality unconfirmed.",
+      "source_ids": [
+        "market:13705002e72e03ee1380ade20dd533d553ed8c535c1400914ea8296a01220fd2",
+        "fx:78b6ff56c0e7183afc647eb6e9a7c9cfab7024509cefc00ad63fe1e97bbee460",
+        "catalogue:3e4ceeaf53e03cbbb6055a7f6a4363e2378f2250c2e405d4a19bbaf98d24e240",
+        "plan:73169cd34242edb4013c6c6d518415538784acfad3c5f98f20af80a313f3be82"
+      ],
+      "acknowledged_blockers": [
+        "account_specific_eligibility_not_verified",
+        "live_bid_ask_and_costs_not_verified",
+        "independent_catalyst_review_pending",
+        "six_agent_plan_review_not_run",
+        "iex_limited_market_coverage"
+      ],
+      "concerns": [
+        "Account-specific Invest buy permission is still unverified.",
+        "Costs are assumed; spread/fill quality is not executable-confirmed.",
+        "IEX-only coverage may miss the true NBBO and broker price."
+      ],
+      "reviewed_stages": [],
+      "trade_authorized": false
+    },
+    {
+      "snapshot_id": "874571f09e452882fbd78c8c262bc42d1b792650c27d359a6fb827637963b50b",
+      "stage": "news_analyst",
+      "verdict": "MORE_EVIDENCE_REQUIRED",
+      "rationale": "News flow is mixed: AI/product headlines are supportive, but China-access restrictions and broader tech weakness add downside risk. With catalysts unverified and execution data limited, the paper is not yet robust enough to trade.",
+      "source_ids": [
+        "catalogue:3e4ceeaf53e03cbbb6055a7f6a4363e2378f2250c2e405d4a19bbaf98d24e240",
+        "fx:78b6ff56c0e7183afc647eb6e9a7c9cfab7024509cefc00ad63fe1e97bbee460",
+        "market:13705002e72e03ee1380ade20dd533d553ed8c535c1400914ea8296a01220fd2",
+        "plan:73169cd34242edb4013c6c6d518415538784acfad3c5f98f20af80a313f3be82"
+      ],
+      "acknowledged_blockers": [
+        "account_specific_eligibility_not_verified",
+        "live_bid_ask_and_costs_not_verified",
+        "independent_catalyst_review_pending",
+        "six_agent_plan_review_not_run",
+        "iex_limited_market_coverage"
+      ],
+      "concerns": [
+        "Catalysts are not independently verified.",
+        "IEX-only bars may miss executable pricing.",
+        "Account-specific buy permission is unconfirmed."
+      ],
+      "reviewed_stages": [],
+      "trade_authorized": false
+    },
+    {
+      "snapshot_id": "874571f09e452882fbd78c8c262bc42d1b792650c27d359a6fb827637963b50b",
+      "stage": "devils_advocate",
+      "verdict": "REJECT",
+      "rationale": "Entry is a projection on IEX-only data, while executable permission and live costs remain unverified. The plan also sits on unresolved blockers, so coherence is not enough to support a trade.",
+      "source_ids": [
+        "catalogue:3e4ceeaf53e03cbbb6055a7f6a4363e2378f2250c2e405d4a19bbaf98d24e240",
+        "fx:78b6ff56c0e7183afc647eb6e9a7c9cfab7024509cefc00ad63fe1e97bbee460",
+        "market:13705002e72e03ee1380ade20dd533d553ed8c535c1400914ea8296a01220fd2",
+        "plan:73169cd34242edb4013c6c6d518415538784acfad3c5f98f20af80a313f3be82"
+      ],
+      "acknowledged_blockers": [
+        "account_specific_eligibility_not_verified",
+        "live_bid_ask_and_costs_not_verified",
+        "independent_catalyst_review_pending",
+        "six_agent_plan_review_not_run",
+        "iex_limited_market_coverage"
+      ],
+      "concerns": [
+        "Account-specific NVDA buy permission is still unknown.",
+        "Costs and executable bid/ask are not verified.",
+        "IEX-only coverage may miss the true fill and spread."
+      ],
+      "reviewed_stages": [],
+      "trade_authorized": false
+    },
+    {
+      "snapshot_id": "874571f09e452882fbd78c8c262bc42d1b792650c27d359a6fb827637963b50b",
+      "stage": "risk_manager",
+      "verdict": "REJECT",
+      "rationale": "Trade is not authorized because account-specific buy permission is unverified and live executable costs are still unknown. The paper setup also relies on IEX-only coverage and unresolved catalyst review, so it is not operationally reliable.",
+      "source_ids": [
+        "catalogue:3e4ceeaf53e03cbbb6055a7f6a4363e2378f2250c2e405d4a19bbaf98d24e240",
+        "fx:78b6ff56c0e7183afc647eb6e9a7c9cfab7024509cefc00ad63fe1e97bbee460",
+        "market:13705002e72e03ee1380ade20dd533d553ed8c535c1400914ea8296a01220fd2",
+        "plan:73169cd34242edb4013c6c6d518415538784acfad3c5f98f20af80a313f3be82"
+      ],
+      "acknowledged_blockers": [
+        "account_specific_eligibility_not_verified",
+        "live_bid_ask_and_costs_not_verified",
+        "independent_catalyst_review_pending",
+        "six_agent_plan_review_not_run",
+        "iex_limited_market_coverage"
+      ],
+      "concerns": [
+        "No verified Invest-account buy permission for NVDA.",
+        "IEX-only quotes may miss executable spread and costs.",
+        "Catalyst inputs are unverified and plan targets are projected."
+      ],
+      "reviewed_stages": [],
+      "trade_authorized": false
+    },
+    {
+      "snapshot_id": "874571f09e452882fbd78c8c262bc42d1b792650c27d359a6fb827637963b50b",
+      "stage": "final_decision",
+      "verdict": "MORE_EVIDENCE_REQUIRED",
+      "rationale": "Plan is internally coherent, but trade eligibility and executable pricing are unverified. I can\u2019t confirm live costs or independent catalyst validation, so it remains hypothetical.",
+      "source_ids": [
+        "plan:73169cd34242edb4013c6c6d518415538784acfad3c5f98f20af80a313f3be82",
+        "market:13705002e72e03ee1380ade20dd533d553ed8c535c1400914ea8296a01220fd2",
+        "fx:78b6ff56c0e7183afc647eb6e9a7c9cfab7024509cefc00ad63fe1e97bbee460",
+        "catalogue:3e4ceeaf53e03cbbb6055a7f6a4363e2378f2250c2e405d4a19bbaf98d24e240"
+      ],
+      "acknowledged_blockers": [
+        "account_specific_eligibility_not_verified",
+        "live_bid_ask_and_costs_not_verified",
+        "independent_catalyst_review_pending",
+        "six_agent_plan_review_not_run",
+        "iex_limited_market_coverage"
+      ],
+      "concerns": [
+        "No account-specific buy permission is verified for NVDA.",
+        "IEX-only pricing may differ from executable venue prices.",
+        "Catalyst review is incomplete; news is unvalidated as trade driver."
+      ],
+      "reviewed_stages": [],
+      "trade_authorized": false
+    },
+    {
+      "snapshot_id": "874571f09e452882fbd78c8c262bc42d1b792650c27d359a6fb827637963b50b",
+      "stage": "debate",
+      "verdict": "MORE_EVIDENCE_REQUIRED",
+      "rationale": "All six peer reviews converge on unverified account permission, live costs, and IEX-only coverage. News is mixed and catalyst review remains pending, so the paper is coherent only as a hypothetical setup.",
+      "source_ids": [
+        "catalogue:3e4ceeaf53e03cbbb6055a7f6a4363e2378f2250c2e405d4a19bbaf98d24e240",
+        "fx:78b6ff56c0e7183afc647eb6e9a7c9cfab7024509cefc00ad63fe1e97bbee460",
+        "market:13705002e72e03ee1380ade20dd533d553ed8c535c1400914ea8296a01220fd2",
+        "plan:73169cd34242edb4013c6c6d518415538784acfad3c5f98f20af80a313f3be82"
+      ],
+      "acknowledged_blockers": [
+        "account_specific_eligibility_not_verified",
+        "live_bid_ask_and_costs_not_verified",
+        "independent_catalyst_review_pending",
+        "six_agent_plan_review_not_run",
+        "iex_limited_market_coverage"
+      ],
+      "concerns": [
+        "Account-specific NVDA buy permission is unverified.",
+        "Live executable costs and NBBO are not confirmed.",
+        "Catalyst evidence remains mixed and unvalidated."
+      ],
+      "reviewed_stages": [
+        "opportunity_hunter",
+        "technical_analyst",
+        "news_analyst",
+        "devils_advocate",
+        "risk_manager",
+        "final_decision"
+      ],
+      "trade_authorized": false
+    },
+    {
+      "snapshot_id": "874571f09e452882fbd78c8c262bc42d1b792650c27d359a6fb827637963b50b",
+      "stage": "conclusion",
+      "verdict": "MORE_EVIDENCE_REQUIRED",
+      "rationale": "Peers are aligned that the setup is only hypothetical: account permission, live executable costs, and independent catalyst validation remain unverified. IEX-only coverage and mixed news leave the paper coherent, but not tradable.",
+      "source_ids": [
+        "catalogue:3e4ceeaf53e03cbbb6055a7f6a4363e2378f2250c2e405d4a19bbaf98d24e240",
+        "fx:78b6ff56c0e7183afc647eb6e9a7c9cfab7024509cefc00ad63fe1e97bbee460",
+        "market:13705002e72e03ee1380ade20dd533d553ed8c535c1400914ea8296a01220fd2",
+        "plan:73169cd34242edb4013c6c6d518415538784acfad3c5f98f20af80a313f3be82"
+      ],
+      "acknowledged_blockers": [
+        "account_specific_eligibility_not_verified",
+        "live_bid_ask_and_costs_not_verified",
+        "independent_catalyst_review_pending",
+        "six_agent_plan_review_not_run",
+        "iex_limited_market_coverage"
+      ],
+      "concerns": [
+        "No Invest-account buy permission is verified for NVDA.",
+        "Live executable costs/NBBO are not confirmed; IEX-only coverage is limited.",
+        "Catalyst evidence is mixed and not independently validated."
+      ],
+      "reviewed_stages": [
+        "opportunity_hunter",
+        "technical_analyst",
+        "news_analyst",
+        "devils_advocate",
+        "risk_manager",
+        "final_decision",
+        "debate"
+      ],
+      "trade_authorized": false
+    }
+  ],
+  "final_verdict": "MORE_EVIDENCE_REQUIRED",
+  "estimated_review_cost_eur": "0.062313",
+  "notice": "Historical review only. Completion is not trade approval; evidence and model reasoning require review."
+}

@@ -94,3 +94,17 @@ reduces this exact debate payload from 33,758 to 27,919 bytes while retaining ev
 bar value, source ID, original snapshot hash, news item and peer review. Tests
 verify reversibility and original packet immutability. This is prompt formatting,
 not evidence deletion or a larger token/spending cap.
+
+### Fresh delivery verified: run 41706847328
+
+At commit b427873ba60dd95bc23d9eaf183b89c4b07fdf8e, all eight stages completed
+and Telegram returned fresh_research_delivery_confirmed. A separate state-branch
+read confirmed snapshot 874571f09e452882fbd78c8c262bc42d1b792650c27d359a6fb827637963b50b.
+The downloaded audit independently replayed successfully against the repository.
+Verdict MORE_EVIDENCE_REQUIRED; never a trade authorization. Completed 19:51:38
+Dublin, original expiry 19:55:00 on 3 November 2026. Export saved alongside this
+document as nvda-reviewed-plan-2026-11-03-1951.json (historical once expired).
+Review cost EUR 0.062313; this turn's two trials EUR 0.112202 total. Lifetime
+settled EUR 0.604885, held zero, pilot remainder EUR 0.395115. Largest prompt
+28,505 bytes. Local full suite 537 passed. Scheduled scans remain disabled;
+Lovable database/authentication implementation awaits the pending plan approval.
