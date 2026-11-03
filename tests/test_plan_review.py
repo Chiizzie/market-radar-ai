@@ -63,7 +63,13 @@ def test_paid_audit_preserves_returned_usage_on_rejection(tmp_path,monkeypatch):
     class Client:
         ledger=Ledger()
         def call(self,**kwargs):
-            p=json.loads(kwargs['prompt']);reply=answer(p['stage'],p,kwargs['schema'])
+            p=json.loads(kwargs['prompt'])
+            props=kwargs['schema']['properties']
+            assert props['snapshot_id']['enum']==[p['snapshot_id']]
+            assert props['stage']['enum']==[p['stage']]
+            assert props['reviewed_stages']['maxItems']==0
+            assert props['acknowledged_blockers']['minItems']==len(p['snapshot']['blockers'])
+            reply=answer(p['stage'],p,kwargs['schema'])
             reply['source_ids']=['fabricated']
             return SimpleNamespace(data=reply,response_id='test',cost_usd='0.01',estimated_cost_microeur=9000)
     monkeypatch.setattr(pilot,'OpenAIPilot',Client)
@@ -74,3 +80,5 @@ def test_paid_audit_preserves_returned_usage_on_rejection(tmp_path,monkeypatch):
     assert audit['state']=='blocked_or_failed' and len(audit['calls'])==1
     assert audit['calls'][0]['estimated_cost_microeur']==9000
     assert audit['result'] is None
+    assert audit['calls'][0]['untrusted_response']['source_ids']==['fabricated']
+    assert audit['validation_details']==[{'type':'review_identity_or_evidence_mismatch'}]

@@ -3,7 +3,7 @@ from copy import deepcopy
 from datetime import datetime
 from hashlib import sha256
 import json
-from typing import Literal
+from typing import Literal, Annotated
 from pydantic import Field
 from .paper_team import Frozen
 from .roles import AgentRole
@@ -32,10 +32,10 @@ class Review(Frozen):
     snapshot_id: str
     stage: str
     verdict: Literal['REJECT','MORE_EVIDENCE_REQUIRED','CONDITIONALLY_COHERENT']
-    rationale: str = Field(min_length=1,max_length=1200)
+    rationale: str = Field(min_length=1,max_length=600)
     source_ids: tuple[str,...] = Field(min_length=1,max_length=4)
     acknowledged_blockers: tuple[str,...]
-    concerns: tuple[str,...] = Field(max_length=3)
+    concerns: tuple[Annotated[str,Field(min_length=1,max_length=180)],...] = Field(max_length=3)
     reviewed_stages: tuple[str,...]
     trade_authorized: Literal[False]
 
@@ -58,8 +58,10 @@ def run(packet_json, ask, *, clock):
         now=clock()
         if now.tzinfo is None or not datetime.fromisoformat(packet['evaluated_at'])<=now<datetime.fromisoformat(packet['sources']['plan']['expires_at']):
             raise ValueError('expired_plan_review')
-        peers=deepcopy(reports) if stage in ('debate','conclusion') else []
+        peers=[{k:deepcopy(r[k]) for k in ('stage','verdict','rationale','source_ids','concerns')}
+               for r in reports] if stage in ('debate','conclusion') else []
         payload=dict(snapshot=deepcopy(packet),snapshot_id=digest,stage=stage,peer_reviews=peers)
+        if len(canonical(payload).encode())>32000: raise ValueError('review_prompt_too_large')
         response=Review.model_validate(ask(stage,payload,Review.model_json_schema()))
         if clock()>=datetime.fromisoformat(packet['sources']['plan']['expires_at']):
             raise ValueError('expired_plan_review')
@@ -121,7 +123,7 @@ def run_paid(client, packet_json, *, path, clock, enabled=False):
         from pydantic import ValidationError
         if isinstance(error,ValidationError):
             audit['validation_details']=[{'field':list(x['loc']),'type':x['type']} for x in error.errors(include_input=False,include_context=False,include_url=False)[:20]]
-        elif str(error) in ('packet_mismatch','plan_does_not_reproduce','expired_plan_review','review_identity_or_evidence_mismatch'):
+        elif str(error) in ('packet_mismatch','plan_does_not_reproduce','expired_plan_review','review_identity_or_evidence_mismatch','review_prompt_too_large'):
             audit['validation_details']=[{'type':str(error)}]
         else:audit['validation_details']=[{'type':'transport_budget_or_other_failure'}]
         audit['state']='blocked_or_failed';save()
