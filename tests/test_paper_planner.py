@@ -34,3 +34,24 @@ def test_cutoff_and_future_candle_block():
     assert run(inputs(),NOW.replace(hour=22))['plan'] is None
     args=inputs();args[0][-1]['timestamp']=NOW
     assert run(args)['plan'] is None
+
+
+def test_plan_never_outlives_fx_or_catalogue():
+    for evidence,age in [('fx',890),('catalogue',590)]:
+        rows,cat,fx=inputs()
+        if evidence=='fx':fx['observed_at']=NOW-timedelta(seconds=age)
+        else:cat['observed_at']=(NOW-timedelta(seconds=age)).isoformat()
+        plan=run((rows,cat,fx))['plan']
+        assert datetime.fromisoformat(plan['expires_at'])==NOW+timedelta(seconds=10)
+
+
+def test_evidence_expiry_boundary_cannot_issue_zero_lifetime_plan():
+    rows,cat,fx=inputs();fx['observed_at']=NOW-timedelta(seconds=900)
+    d=run((rows,cat,fx))
+    assert d['plan'] is None and 'evidence_expiry_reached' in d['failures']
+
+
+def test_candle_age_caps_plan_expiry():
+    rows,cat,fx=inputs()
+    for row in rows:row['timestamp']-=timedelta(minutes=4)
+    assert datetime.fromisoformat(run((rows,cat,fx))['plan']['expires_at'])==NOW+timedelta(minutes=1)

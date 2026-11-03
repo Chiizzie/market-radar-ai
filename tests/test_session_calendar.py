@@ -83,3 +83,8 @@ def test_transport_failure_never_exposes_credentials(monkeypatch):
         def get(self,*args,**kwargs):raise RuntimeError('test-secret')
     result=capture_calendar(now=NOW,session=Session())
     assert result['status']=='unavailable' and 'test-secret' not in str(result)
+
+
+def test_plan_cannot_outlive_calendar_evidence():
+    cal=evidence();cal['observed_at']=(NOW-timedelta(seconds=290)).isoformat()
+    assert datetime.fromisoformat(draft(cal)['plan']['expires_at'])==NOW+timedelta(seconds=10)

@@ -87,6 +87,14 @@ def draft_nvda(candles, catalogue, fx, *, now, paper_capital_eur, round_trip_cos
     exit_by=min(local.replace(hour=22,minute=0,second=0,microsecond=0),session_exit)
     if now>=exit_by: fail.append('session_exit_reached');return result
     expiry=min(expiry,exit_by)
+    # The plan must never outlive any evidence used to construct it.
+    expiry=min(expiry,rows[-1].timestamp+timedelta(seconds=600),
+               fx.observed_at+timedelta(seconds=900),
+               datetime.fromisoformat(catalogue['observed_at'])+timedelta(seconds=600))
+    if verified_session:
+        expiry=min(expiry,datetime.fromisoformat(calendar['observed_at'])+timedelta(seconds=300))
+    if expiry<=now:
+        fail.append('evidence_expiry_reached');return result
     result.update(state='conditional_paper_draft', failures=[], blockers=[
         'account_specific_eligibility_not_verified','live_bid_ask_and_costs_not_verified',
         'exchange_calendar_not_verified','independent_catalyst_review_pending',
