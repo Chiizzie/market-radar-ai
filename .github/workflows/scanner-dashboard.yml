@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -e '.[dev,market]'
-      - run: python -m pytest -q tests/test_snapshot_delivery.py tests/test_dashboard_cache.py tests/test_market_capture.py tests/test_scanner_news.py
+      - run: python -m pytest -q tests/test_snapshot_delivery.py tests/test_dashboard_cache.py tests/test_market_capture.py tests/test_scanner_news.py tests/test_capture_shortlist.py
       - name: Collect bounded stock and macro news leads without AI
         id: news
         continue-on-error: true
@@ -34,6 +34,8 @@ jobs:
         id: collect
         continue-on-error: true
         run: python -m market_radar_ai.market_data.capture --output artifacts/scanner/capture.json --stocks NVDA MSFT AAPL AMD META AMZN GOOGL TSLA --crypto XBTEUR ETHEUR SOLEUR XRPEUR
+      - name: Rank research candidates without AI or trade admission
+        run: python -m market_radar_ai.market_data.capture_shortlist --capture artifacts/scanner/capture.json --output artifacts/scanner/shortlist.json
       - name: Export honest coverage including provider failures
         run: python -m market_radar_ai.dashboard.export --capture artifacts/scanner/capture.json --output artifacts/scanner/dashboard.json --evidence artifacts/scanner/news.json
       - name: Send one signed research snapshot
