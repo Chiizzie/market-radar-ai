@@ -100,8 +100,14 @@ broker ticker, ISIN, quote currency and working schedule ID. It reads
 `TRADING212_API_KEY` and `TRADING212_API_SECRET` from the process environment, with
 50-second spacing and a 10-minute cache. Use a metadata-only key; do not commit or
 paste credentials into source. No account, portfolio or order endpoints are used.
-Credentialed connectivity has NOT been tested. Exchange/schedule and provider-ID
-mapping must be verified before these rows become admission evidence.
+Credentialed connectivity passed on 3 November 2026: workflow 41666508173 retrieved
+17,124 STOCK/ETF records. NVDA_US_EQ matched STOCK, US67066G1040, USD and working
+schedule 71, linked to NASDAQ (exchange 53). The authenticated catalogue does not
+prove account-specific buy permission or account type. This is recorded catalogue
+evidence, not automatic admission or trade authorization. See
+`docs/evaluations/trading212-catalogue-2026-11-03.json`. The read-only check runs
+manually or when its own workflow/module changes on the development branch; it
+uses no account, portfolio, order or AI endpoints.
 
 `RobinhoodEuropeCatalogue.fetch()` reads only the official Europe support page.
 Its parser is restricted to the Supported crypto section and rejects unexpected

@@ -1,0 +1,336 @@
+{
+  "version": "trading212-catalogue-check-v1",
+  "observed_at": "2026-11-03T15:42:02.848635+00:00",
+  "state": "catalogue_received",
+  "trade_authorized": false,
+  "model_calls": 0,
+  "account_type_verified": false,
+  "candidates": [
+    {
+      "ticker": "NVDSl_EQ",
+      "isin": "XS2944886188",
+      "currencyCode": "USD",
+      "type": "ETF",
+      "name": "Leverage Shares -1x NVIDIA",
+      "workingScheduleId": 154,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "3SNVl_EQ",
+      "isin": "XS2842095676",
+      "currencyCode": "USD",
+      "type": "ETF",
+      "name": "GraniteShares 3x Short NVIDIA",
+      "workingScheduleId": 154,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "ONVDd_EQ",
+      "isin": "XS2852999692",
+      "currencyCode": "EUR",
+      "type": "ETF",
+      "name": "IncomeShares NVIDIA NVDA Options (Dist)",
+      "workingScheduleId": 166,
+      "exchanges": [
+        {
+          "id": 41,
+          "name": "Deutsche B\u00f6rse Xetra"
+        }
+      ]
+    },
+    {
+      "ticker": "NV3Sl_EQ",
+      "isin": "XS2944874416",
+      "currencyCode": "USD",
+      "type": "ETF",
+      "name": "Leverage Shares -3x Short Nvidia NVDA",
+      "workingScheduleId": 154,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "NVD2l_EQ",
+      "isin": "XS2820604853",
+      "currencyCode": "USD",
+      "type": "ETF",
+      "name": "Leverage Shares 2x NVIDIA",
+      "workingScheduleId": 154,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "3LVEl_EQ",
+      "isin": "XS2734938835",
+      "currencyCode": "EUR",
+      "type": "ETF",
+      "name": "GraniteShares 3x Long NVIDIA",
+      "workingScheduleId": 153,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "2NVDl_EQ",
+      "isin": "XS2820604853",
+      "currencyCode": "GBX",
+      "type": "ETF",
+      "name": "Leverage Shares 2x NVIDIA",
+      "workingScheduleId": 70,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "3SVPl_EQ",
+      "isin": "XS2842095676",
+      "currencyCode": "GBX",
+      "type": "ETF",
+      "name": "GraniteShares 3x Short NVIDIA",
+      "workingScheduleId": 70,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "SNVDl_EQ",
+      "isin": "XS2944886188",
+      "currencyCode": "GBX",
+      "type": "ETF",
+      "name": "Leverage Shares -1x NVIDIA",
+      "workingScheduleId": 70,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "NVDEl_EQ",
+      "isin": "XS2820604853",
+      "currencyCode": "EUR",
+      "type": "ETF",
+      "name": "Leverage Shares 2x NVIDIA",
+      "workingScheduleId": 153,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "3NVDl_EQ",
+      "isin": "XS2820604770",
+      "currencyCode": "GBX",
+      "type": "ETF",
+      "name": "Leverage Shares 3x NVIDIA",
+      "workingScheduleId": 70,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "3LNVl_EQ",
+      "isin": "XS2734938835",
+      "currencyCode": "USD",
+      "type": "ETF",
+      "name": "GraniteShares 3x Long NVIDIA",
+      "workingScheduleId": 154,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "NVDII_EQ",
+      "isin": "XS2852999692",
+      "currencyCode": "USD",
+      "type": "ETF",
+      "name": "IncomeShares NVIDIA NVDA Options (Dist)",
+      "workingScheduleId": 154,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "NVDd_EQ",
+      "isin": "US67066G1040",
+      "currencyCode": "EUR",
+      "type": "STOCK",
+      "name": "Nvidia",
+      "workingScheduleId": 54,
+      "exchanges": [
+        {
+          "id": 41,
+          "name": "Deutsche B\u00f6rse Xetra"
+        }
+      ]
+    },
+    {
+      "ticker": "SNVEl_EQ",
+      "isin": "XS2944886188",
+      "currencyCode": "EUR",
+      "type": "ETF",
+      "name": "Leverage Shares -1x NVIDIA",
+      "workingScheduleId": 153,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "3LVPl_EQ",
+      "isin": "XS2734938835",
+      "currencyCode": "GBX",
+      "type": "ETF",
+      "name": "GraniteShares 3x Long NVIDIA",
+      "workingScheduleId": 70,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "3SVEl_EQ",
+      "isin": "XS2842095676",
+      "currencyCode": "EUR",
+      "type": "ETF",
+      "name": "GraniteShares 3x Short NVIDIA",
+      "workingScheduleId": 153,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "NVDDl_EQ",
+      "isin": "XS2852999692",
+      "currencyCode": "GBX",
+      "type": "ETF",
+      "name": "IncomeShares NVIDIA NVDA Options (Dist)",
+      "workingScheduleId": 70,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "3NVEl_EQ",
+      "isin": "XS2820604770",
+      "currencyCode": "EUR",
+      "type": "ETF",
+      "name": "Leverage Shares 3x NVIDIA",
+      "workingScheduleId": 153,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "NVD3l_EQ",
+      "isin": "XS2820604770",
+      "currencyCode": "USD",
+      "type": "ETF",
+      "name": "Leverage Shares 3x NVIDIA",
+      "workingScheduleId": 154,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "SNDEl_EQ",
+      "isin": "XS2944874416",
+      "currencyCode": "EUR",
+      "type": "ETF",
+      "name": "Leverage Shares -3x Short Nvidia NVDA",
+      "workingScheduleId": 153,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "SNV3l_EQ",
+      "isin": "XS2944874416",
+      "currencyCode": "GBX",
+      "type": "ETF",
+      "name": "Leverage Shares -3x Short Nvidia NVDA",
+      "workingScheduleId": 70,
+      "exchanges": [
+        {
+          "id": 42,
+          "name": "London Stock Exchange"
+        }
+      ]
+    },
+    {
+      "ticker": "NVDA_US_EQ",
+      "isin": "US67066G1040",
+      "currencyCode": "USD",
+      "type": "STOCK",
+      "name": "Nvidia",
+      "workingScheduleId": 71,
+      "exchanges": [
+        {
+          "id": 53,
+          "name": "NASDAQ"
+        }
+      ]
+    }
+  ],
+  "instrument_count": 17124,
+  "reason": "Catalogue availability is not account-specific order permission; confirm exact identity and account type.",
+  "run_url": "https://github.com/Chiizzie/market-radar-ai/actions/runs/41666508173",
+  "artifact_sha256": "83d0f211845f35100701599528ceacd18ccf3794db093914c282a817702061ef"
+}
