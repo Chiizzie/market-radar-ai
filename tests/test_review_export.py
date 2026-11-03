@@ -42,3 +42,10 @@ def test_bad_review_cannot_be_exported(fault):
     if fault=='cost':a['calls'][0]['estimated_cost_microeur']=-1
     with pytest.raises((ValueError,KeyError)):
         export_review(c,cat,d,a,now=NOW+timedelta(hours=1))
+
+
+def test_completion_after_expiry_rejected():
+    c,cat,d,a=bundle()
+    a['completed_at']=d['plan']['expires_at']
+    with pytest.raises(ValueError,match='invalid_review_timing'):
+        export_review(c,cat,d,a,now=NOW+timedelta(hours=1))

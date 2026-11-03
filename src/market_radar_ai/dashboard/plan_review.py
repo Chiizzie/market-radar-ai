@@ -32,7 +32,8 @@ def export_review(capture,catalogue,draft,audit,*,now):
         if response['stage']!=call['stage']:raise ValueError('stage_mismatch')
         responses.append(response)
     completed=aware(audit['completed_at'])
-    if not previous<=completed<=now:raise ValueError('invalid_review_timing')
+    if not previous<=completed<=now or completed>=aware(draft['plan']['expires_at']):
+        raise ValueError('invalid_review_timing')
     timeline=iter(times);replies=iter(responses)
     accepted=run(packet,lambda *_:next(replies),clock=lambda:next(timeline))
     if canonical(accepted)!=canonical(audit['result']):raise ValueError('review_result_mismatch')
