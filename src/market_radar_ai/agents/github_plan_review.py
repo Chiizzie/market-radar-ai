@@ -9,6 +9,7 @@ from .github_budget import GitHubBudgetStore, GitHubSpendingLedger, REPOSITORY
 from .openai_pilot import OpenAIPilot
 from ..market_data.broker_check import check
 from ..market_data.alpaca_check import capture
+from ..market_data.session_calendar import capture_calendar
 from ..market_data.providers.fx import YahooFxProvider
 
 
@@ -36,7 +37,10 @@ def execute(root, *, env, clock=lambda:datetime.now(timezone.utc)):
         save('status.json',status)
         # Slow catalogue first; no market evidence ages while it loads.
         cat=check();save('catalogue.json',cat)
-        market=capture();save('capture.json',market)
+        calendar=capture_calendar();save('calendar.json',calendar)
+        market=capture()
+        if calendar is not None:market['calendar']=calendar
+        save('capture.json',market)
         fx=YahooFxProvider().fetch('USD');save('fx.json',fx.model_dump(mode='json'))
         draft=build(market,cat,fx,now=clock())
         draft['fx_evidence']=fx.model_dump(mode='json');save('draft.json',draft)

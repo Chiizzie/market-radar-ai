@@ -9,7 +9,7 @@ from ..market_data.quality import validate_candles
 D = Decimal
 
 
-def draft_nvda(candles, catalogue, fx, *, now, paper_capital_eur, round_trip_cost_bps):
+def draft_nvda(candles, catalogue, fx, *, now, paper_capital_eur, round_trip_cost_bps, calendar=None):
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError('Aware clock required')
     capital, bps = D(str(paper_capital_eur)), D(str(round_trip_cost_bps))
@@ -20,6 +20,15 @@ def draft_nvda(candles, catalogue, fx, *, now, paper_capital_eur, round_trip_cos
     fail=result['failures']
     local=now.astimezone(ZoneInfo('Europe/Dublin'))
     if local.hour >= 22: fail.append('entry_cutoff')
+    verified_session = None
+    if calendar is not None:
+        from ..market_data.session_calendar import session_bounds
+        try:
+            verified_session = session_bounds(calendar, now=now)
+            if not verified_session[0] <= now < verified_session[1]-timedelta(minutes=5):
+                raise ValueError('outside_session')
+        except (KeyError,TypeError,ValueError):
+            fail.append('calendar_invalid_closed_or_outside_session')
     try:
         observed=datetime.fromisoformat(catalogue['observed_at'])
         if catalogue['state']!='catalogue_received' or not 0 <= (now-observed).total_seconds() <= 600:
@@ -49,6 +58,9 @@ def draft_nvda(candles, catalogue, fx, *, now, paper_capital_eur, round_trip_cos
             raise ValueError()
         if any(c.timestamp.astimezone(ZoneInfo('America/New_York')).date()!=now.astimezone(ZoneInfo('America/New_York')).date() for c in rows):
             raise ValueError()
+        if verified_session and any(not verified_session[0] <= c.timestamp
+                or c.timestamp+timedelta(minutes=5)>verified_session[1] for c in rows):
+            raise ValueError()
     except (TypeError,ValueError): fail.append('market_evidence_invalid_or_insufficient')
     try:
         fx=FxQuote.model_validate(fx.model_dump() if isinstance(fx,FxQuote) else fx)
@@ -70,6 +82,8 @@ def draft_nvda(candles, catalogue, fx, *, now, paper_capital_eur, round_trip_cos
     expiry=min(now+timedelta(minutes=5),local.replace(hour=22,minute=0,second=0,microsecond=0))
     # Conservative US cash-session exit assumption; calendar/holiday evidence still required.
     session_exit=now.astimezone(ZoneInfo('America/New_York')).replace(hour=16,minute=0,second=0,microsecond=0)
+    if verified_session:
+        session_exit=verified_session[1]-timedelta(minutes=5)
     exit_by=min(local.replace(hour=22,minute=0,second=0,microsecond=0),session_exit)
     if now>=exit_by: fail.append('session_exit_reached');return result
     expiry=min(expiry,exit_by)
@@ -91,6 +105,9 @@ def draft_nvda(candles, catalogue, fx, *, now, paper_capital_eur, round_trip_cos
         loss_note='Planned loss assumes stop-price fill; gaps, slippage and FX movement can increase actual loss.'))
     if rows[0].source=='alpaca_iex':
         result['blockers'].append('iex_limited_market_coverage')
+    if verified_session:
+        result['blockers'].remove('exchange_calendar_not_verified')
+        result['calendar_evidence']=calendar
     result['plan']['market_source']=rows[0].source
     result['plan']['market_observed_at']=rows[-1].timestamp.isoformat()
     return result

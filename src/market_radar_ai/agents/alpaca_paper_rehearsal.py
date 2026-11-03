@@ -27,7 +27,7 @@ def build(capture, catalogue, fx, *, now):
     except (KeyError,TypeError,ValueError):
         result['failures']=['alpaca_capture_invalid_or_stale']
         return result
-    result=draft_nvda(candles,catalogue,fx,now=now,paper_capital_eur=500,round_trip_cost_bps=40)
+    result=draft_nvda(candles,catalogue,fx,now=now,paper_capital_eur=500,round_trip_cost_bps=40,calendar=capture.get('calendar'))
     result['assumptions_note']='EUR 500 fictional paper allocation; 40 bps assumed round-trip costs. Neither is an account balance or verified broker fee.'
     result['capture_observed_at']=capture['observed_at']
     result['quote_context']=capture.get('quote',{})

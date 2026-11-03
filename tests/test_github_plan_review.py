@@ -17,6 +17,7 @@ def test_dry_run_builds_packet_without_paid_client(tmp_path,monkeypatch):
     import market_radar_ai.agents.github_plan_review as module
     from market_radar_ai.market_data.admission import FxQuote
     c,cat,d=data()
+    monkeypatch.setattr(module,'capture_calendar',lambda:None)
     monkeypatch.setattr(module,'check',lambda:cat)
     monkeypatch.setattr(module,'capture',lambda:c)
     class FX:
@@ -37,6 +38,7 @@ def test_paid_runner_exports_only_validated_reviews(tmp_path,monkeypatch,invalid
     from test_review_export import bundle
     c,cat,d,audit=bundle()
     if invalid:audit['calls'][0]['untrusted_response']['rationale']='unfinished'
+    monkeypatch.setattr(module,'capture_calendar',lambda:None)
     monkeypatch.setattr(module,'check',lambda:cat)
     monkeypatch.setattr(module,'capture',lambda:c)
     class FX:
