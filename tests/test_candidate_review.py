@@ -142,3 +142,42 @@ def test_manual_runner_guards(tmp_path,override):
 def test_no_candidates_is_honest_zero_calls(tmp_path):
     r=execute(capture(),None,tmp_path/'run',env=ENV,clock=lambda:NOW+timedelta(hours=1))
     assert r['state']=='no_reviewable_candidate' and r['model_calls']==0
+
+
+@pytest.mark.parametrize('delivery_fails',[False,True])
+def test_paid_runner_completes_eight_calls_and_archives_without_rerun(tmp_path,monkeypatch,delivery_fails):
+    import market_radar_ai.agents.github_candidate_review as runner
+    import market_radar_ai.agents.openai_pilot as pilot
+    import market_radar_ai.agents.github_budget as budget
+    import market_radar_ai.dashboard.candidate_delivery as delivery
+    from decimal import Decimal
+    from market_radar_ai.market_data.admission import FxQuote
+    stages=[]
+    class Ledger:
+        def __init__(self,store):pass
+        def summary(self):return {'test_only':True,'calls':len(stages)}
+    class Client:
+        def __init__(self,**kw):self.ledger=kw['ledger']
+        def call(self,**kw):
+            p=json.loads(kw['prompt']);stages.append(p['stage'])
+            return SimpleNamespace(data=answer(p['stage'],p,kw['schema']),response_id='test',cost_usd='0.001',
+                estimated_cost_microeur=900,input_tokens=1000,output_tokens=100,counted_input_tokens=1000)
+    class FX:
+        def fetch(self,*args,**kw):
+            return FxQuote(native_currency='USD',eur_per_unit=Decimal('0.9'),observed_at=NOW,source='test')
+    def send(*args,**kw):
+        if delivery_fails:raise RuntimeError('test transport failure')
+        return {'state':'candidate_archive_delivery_confirmed','trade_authorized':False}
+    monkeypatch.setattr(runner,'GitHubBudgetStore',lambda token:object())
+    for module in (runner,budget):monkeypatch.setattr(module,'GitHubSpendingLedger',Ledger)
+    for module in (runner,pilot):monkeypatch.setattr(module,'OpenAIPilot',Client)
+    monkeypatch.setattr(runner,'YahooFxProvider',FX)
+    monkeypatch.setattr(delivery,'deliver',send)
+    env={**ENV,'CANDIDATE_REVIEW_MODE':'paid','OPENAI_API_KEY':'test','GH_BUDGET_TOKEN':'test',
+         'SEND_CANDIDATE_REVIEW':'true'}
+    root=tmp_path/'run'
+    status=execute(capture(),None,root,env=env,clock=lambda:NOW)
+    assert status['state']=='completed' and status['model_calls']==8 and stages==STAGES
+    assert status['dashboard_delivery_state']==('blocked_or_unconfirmed' if delivery_fails else 'candidate_archive_delivery_confirmed')
+    assert json.loads((root/'dashboard-archive.json').read_text())['estimated_cost_microeur']==7200
+    assert json.loads((root/'budget-after.json').read_text())['calls']==8
