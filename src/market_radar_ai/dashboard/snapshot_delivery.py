@@ -1,4 +1,4 @@
-"""Manual capture-only scanner delivery; no models, orders or automatic retries."""
+"""Scoped capture-only scanner delivery; no models, orders or automatic retries."""
 import argparse
 from datetime import datetime, timezone
 import hashlib
@@ -15,16 +15,18 @@ MAX_BYTES = 2 * 1024 * 1024
 
 
 def deliver(capture, *, env, clock, evidence=None, session=None):
-    if (env.get('GITHUB_REPOSITORY') != 'Chiizzie/market-radar-ai'
-            or env.get('GITHUB_REF') != 'refs/heads/phase-1/market-data-layer'
-            or env.get('GITHUB_EVENT_NAME') != 'workflow_dispatch'
-            or env.get('GITHUB_RUN_ATTEMPT') != '1'
+    from .collection_schedule import scheduled_scope
+    now = clock()
+    manual = (env.get('GITHUB_REPOSITORY') == 'Chiizzie/market-radar-ai'
+              and env.get('GITHUB_REF') == 'refs/heads/phase-1/market-data-layer'
+              and env.get('GITHUB_EVENT_NAME') == 'workflow_dispatch'
+              and env.get('GITHUB_RUN_ATTEMPT') == '1')
+    if (not (manual or scheduled_scope(env, now))
             or env.get('SEND_SCANNER_SNAPSHOT') != 'true'):
         raise ValueError('manual_snapshot_delivery_required')
     secret = env.get('REVIEW_INGEST_SECRET', '')
     if len(secret) < 32:
         raise ValueError('ingestion_secret_missing_or_invalid')
-    now = clock()
     snapshot = build_snapshot(capture, now=now, evidence=evidence)
     if not any(snapshot['markets'].values()):
         raise ValueError('empty_capture_not_deliverable')
