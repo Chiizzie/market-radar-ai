@@ -36,3 +36,18 @@ confirmation write. Do not use transient Actions artifacts as the ledger.
 Remaining integration: initialize durable state, validate the trusted exported
 review, enforce the chosen freshness policy, wire a manually enabled report send,
 and verify its acknowledgement and duplicate rejection end to end.
+
+## Controlled historical report sender
+
+`telegram_report.py` binds delivery to the SHA-256 of the previously verified
+NVDA export. It validates and renders the report before reserving, acknowledges
+the durable reservation before making exactly one POST, then confirms only an
+acknowledged response for the configured chat. Failed confirmation never enables
+another send. No arbitrary file, URL, message body or AI output is accepted.
+
+The manual Telegram workflow now has a separate `send_historical_report` switch,
+default false. Its dedicated job requires the development branch and first manual
+attempt. Only that job receives contents-write permission for the ledger. The
+connection-test switch remains separate. Historical reports may be expired and
+are explicitly labelled as such; this is not a fresh-call delivery policy.
+No schedule or automatic report sending has been enabled.
