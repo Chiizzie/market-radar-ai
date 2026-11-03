@@ -53,7 +53,7 @@ def parse_feed(body, *, now, max_age_seconds=7*86400, publisher="Federal Reserve
         'coverage_complete':False,'trade_authorized':False}
 
 
-def fetch_feed(session=None, *, issuer=False, source=None):
+def _fetch_feed_once(session=None, *, issuer=False, source=None):
     if issuer and source is not None:
         raise ValueError('Select one source')
     selected = source or ('microsoft' if issuer else 'fed')
@@ -84,6 +84,16 @@ def fetch_feed(session=None, *, issuer=False, source=None):
         return {'schema_version':'1.0','provider':provider,'scope':scope,
             'status':'error','retrieved_at':datetime.now(timezone.utc).isoformat(),
             'items':[],'reason':reason,'http_status':http_status,'coverage_complete':False,'trade_authorized':False}
+
+
+def fetch_feed(session=None, *, issuer=False, source=None):
+    """At most two public reads; retry only a transport failure, never HTTP errors."""
+    result=_fetch_feed_once(session,issuer=issuer,source=source)
+    attempts=[{'status':result['status'],'reason':result.get('reason')}]
+    if result.get('status')=='error' and result.get('reason')=='transport_error':
+        result=_fetch_feed_once(session,issuer=issuer,source=source)
+        attempts.append({'status':result['status'],'reason':result.get('reason')})
+    return {**result,'fetch_attempts':attempts}
 
 
 def main():
