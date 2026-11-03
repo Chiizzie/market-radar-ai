@@ -151,6 +151,12 @@
         "response_id": "resp_038dfda8605f5ac2016ae9fde2f68087d199562d27e6fbe94a"
       }
     },
+    "live-research-v1:4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68:final_decision": {
+      "actual": null,
+      "day": "2026-11-03",
+      "reserved": 272442,
+      "usage": null
+    },
     "live-research-v1:4b3c145b301a5f1b19e7f13ac0c2903137c11256fe94ea21862c811c54f86b68:news_analyst": {
       "actual": 4933,
       "day": "2026-11-03",
