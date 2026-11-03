@@ -12,6 +12,11 @@ on:
         type: boolean
         required: true
         default: false
+      send_lovable_review:
+        description: 'Archive the completed review to the authenticated dashboard (requires paid_analysis)'
+        type: boolean
+        required: true
+        default: false
   push:
     branches: ['phase-1/market-data-layer']
     paths:
@@ -41,6 +46,8 @@ jobs:
       - name: Capture fresh evidence and optionally review the plan
         run: python -m market_radar_ai.agents.github_plan_review
         env:
+          SEND_LOVABLE_REVIEW: ${{ github.event_name == 'workflow_dispatch' && inputs.paid_analysis && inputs.send_lovable_review && 'true' || 'false' }}
+          REVIEW_INGEST_SECRET: ${{ github.event_name == 'workflow_dispatch' && inputs.paid_analysis && inputs.send_lovable_review && secrets.REVIEW_INGEST_SECRET || '' }}
           SEND_FRESH_REVIEW: ${{ github.event_name == 'workflow_dispatch' && inputs.paid_analysis && inputs.send_fresh_review && 'true' || 'false' }}
           TELEGRAM_BOT_TOKEN: ${{ github.event_name == 'workflow_dispatch' && inputs.paid_analysis && inputs.send_fresh_review && secrets.TELEGRAM_BOT_TOKEN || '' }}
           TELEGRAM_CHAT_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.paid_analysis && inputs.send_fresh_review && secrets.TELEGRAM_CHAT_ID || '' }}
