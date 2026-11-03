@@ -15,7 +15,7 @@ def draft_nvda(candles, catalogue, fx, *, now, paper_capital_eur, round_trip_cos
     capital, bps = D(str(paper_capital_eur)), D(str(round_trip_cost_bps))
     if not capital.is_finite() or capital <= 0 or not bps.is_finite() or bps < 0:
         raise ValueError('Explicit finite capital and cost assumptions required')
-    result = dict(version='eur-paper-draft-v1', state='blocked', trade_authorized=False,
+    result = dict(version='eur-paper-draft-v2', state='blocked', trade_authorized=False,
                   paper_only=True, model_calls=0, evaluated_at=now.isoformat(), failures=[], plan=None)
     fail=result['failures']
     local=now.astimezone(ZoneInfo('Europe/Dublin'))
@@ -31,10 +31,18 @@ def draft_nvda(candles, catalogue, fx, *, now, paper_capital_eur, round_trip_cos
     except (KeyError,TypeError,ValueError): fail.append('catalogue_identity_unverified_or_stale')
     try:
         rows=[Candle.model_validate(c.model_dump() if isinstance(c,Candle) else c) for c in candles]
-        if len(rows)<20 or any(c.symbol!='NVDA' or c.quote_currency!='USD' or c.interval!='5m'
-            or c.source!='yahoo_finance' or c.timestamp+timedelta(minutes=5)>now
+        result['market_evidence'] = dict(candle_count=len(rows), minimum_candles=20,
+            sources=sorted({c.source for c in rows}))
+        if len(rows)<20: fail.append('insufficient_completed_candles')
+        sources={c.source for c in rows}
+        if len(sources)!=1 or not sources <= {'yahoo_finance','alpaca_iex'}:
+            fail.append('market_source_unsupported_or_mixed')
+        if any(c.symbol!='NVDA' or c.quote_currency!='USD' or c.interval!='5m'
+            or c.timestamp+timedelta(minutes=5)>now
             or not all(v.is_finite() for v in (c.open,c.high,c.low,c.close,c.volume)) for c in rows):
             raise ValueError()
+        if any((b.timestamp-a.timestamp).total_seconds()!=300 for a,b in zip(rows,rows[1:])):
+            fail.append('market_candle_spacing_invalid')
         if rows!=sorted(rows,key=lambda c:c.timestamp) or validate_candles(rows,now=now,max_age_seconds=600,expected_interval_seconds=300):
             raise ValueError()
         if any(c.timestamp.astimezone(ZoneInfo('America/New_York')).date()!=now.astimezone(ZoneInfo('America/New_York')).date() for c in rows):
@@ -79,4 +87,8 @@ def draft_nvda(candles, catalogue, fx, *, now, paper_capital_eur, round_trip_cos
         expires_at=expiry.isoformat(),exit_by=exit_by.astimezone(ZoneInfo('Europe/Dublin')).isoformat(),
         invalidation='Cancel if stop is breached before entry, evidence expires, or any blocker remains unresolved.',
         loss_note='Planned loss assumes stop-price fill; gaps, slippage and FX movement can increase actual loss.'))
+    if rows[0].source=='alpaca_iex':
+        result['blockers'].append('iex_limited_market_coverage')
+    result['plan']['market_source']=rows[0].source
+    result['plan']['market_observed_at']=rows[-1].timestamp.isoformat()
     return result
