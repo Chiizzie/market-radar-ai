@@ -1,7 +1,7 @@
 """Instructions for the live research response contract, not paper-team schema."""
 from .roles import AgentRole
 
-VERSION = 'live-research-instructions-v5'
+VERSION = 'live-research-instructions-v6'
 TASKS = {
     AgentRole.OPPORTUNITY_HUNTER: 'Assess supplied price momentum and whether further research is justified.',
     AgentRole.TECHNICAL_ANALYST: 'Assess the supplied candle window and trend. Do not invent unseen levels or call a rolling window a trading session.',
@@ -20,7 +20,11 @@ def live_instruction(role=None, *, stage=None):
         'Return only the fields in the supplied JSON schema. '
         'source_ids is a list of at most eight individual exact IDs from snapshot.source_ids. '
         'Cite only sources used; never join multiple IDs into one string. Include the market source if making metric claims. '
-        'Write concise complete English sentences with terminal punctuation, below each length limit. '
+        'Write concise complete English sentences with terminal punctuation, well below each length limit. '
+        'For summary use one or two short sentences, aiming for under two hundred and fifty characters total. '
+        'Put additional objections in concerns, not in summary. Never start a sentence you cannot finish within the limit. '
+        'For discussion use at most four short sentences; for rationale use at most two. '
+        'Use at most one short sentence for each concern, counterargument and next_evidence item. '
         'Use no digits or numeric prices in prose. Numerical claims belong only in metric_claims and must copy '
         'computed_metrics exactly with its currency and source. An empty metric_claims list is appropriate when no price claim is needed. '
         'The computed values describe only the supplied rolling candle window, not a full session. '

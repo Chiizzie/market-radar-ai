@@ -269,7 +269,7 @@ def test_full_objection_register_and_risk_policy_reach_review(tmp_path,monkeypat
         assert policy['overnight_positions_allowed'] is False
         assert policy['trade_authorized'] is False
     assert report['version']=='live-research-v4'
-    assert report['instruction_version']=='live-research-instructions-v5'
+    assert report['instruction_version']=='live-research-instructions-v6'
 
 
 def test_live_prompt_uses_current_contract_without_legacy_tasks():
