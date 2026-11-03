@@ -323,6 +323,12 @@ def test_live_source_schema_allows_seven_exact_ids_and_rejects_packed_ids(tmp_pa
     assert not validator.is_valid({**good,'source_ids':[','.join(packet.source_ids)]})
     assert not validator.is_valid({**good,'source_ids':['invented']})
     assert schema['properties']['source_ids']['items']['enum']==list(packet.source_ids)
+    claim_schema=schema['$defs']['MetricClaim']['properties']
+    assert claim_schema['source_id']['enum']==[packet.market.source_id()]
+    assert claim_schema['quote_currency']['enum']==[packet.market.quote_currency]
+    bad_claim={'metric':'window_high','value':'209.13999938964844',
+        'quote_currency':'USD','source_id':packet.market.source_id()[:-10]}
+    assert not validator.is_valid({**good,'metric_claims':[bad_claim]})
 
 
 def test_invalid_citation_fails_client_schema_without_followup(tmp_path,monkeypatch):

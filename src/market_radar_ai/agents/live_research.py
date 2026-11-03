@@ -184,6 +184,8 @@ def run_research(client, packet, *, path, clock, enabled=False):
                          'trade_authorized':False}}
             response_schema=schema.model_json_schema()
             response_schema['properties']['source_ids']['items']['enum']=list(packet.source_ids)
+            response_schema['$defs']['MetricClaim']['properties']['source_id']['enum']=[packet.market.source_id()]
+            response_schema['$defs']['MetricClaim']['properties']['quote_currency']['enum']=[packet.market.quote_currency]
             reply=client.call(prompt=json.dumps(payload,separators=(',',':')),
                 schema=response_schema,request_id=request_id,now=now,
                 instructions=trusted,max_output_tokens=1024,reasoning_effort='none')
