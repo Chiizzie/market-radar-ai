@@ -9,6 +9,7 @@ PUBLIC_SOURCES = ('fed', 'microsoft', 'nvidia')
 
 
 def collect(*, company_fetch=fetch_company_news, public_fetch=fetch_feed,
+            crypto_fetch=None,
             clock=lambda: datetime.now(timezone.utc)):
     feeds = []
     for kind, names in (('company', COMPANY_SYMBOLS), ('publisher', PUBLIC_SOURCES)):
@@ -19,6 +20,12 @@ def collect(*, company_fetch=fetch_company_news, public_fetch=fetch_feed,
                 feed = {'status': 'error', 'items': [], 'scope': 'UNAVAILABLE',
                         'retrieved_at': clock().isoformat()}
             feeds.append(feed)
+    if crypto_fetch is not None:
+        try:
+            feeds.append(crypto_fetch())
+        except Exception:
+            feeds.append({'status':'error','items':[], 'scope':'CRYPTO_NEWS_UNAVAILABLE',
+                          'retrieved_at':clock().isoformat()})
     result = combine_feeds(feeds, now=clock())
     result['scope'] = 'BOUNDED_STOCK_AND_MACRO_LEADS_NO_CRYPTO_COVERAGE'
     result['limitations'] = [
@@ -28,6 +35,9 @@ def collect(*, company_fetch=fetch_company_news, public_fetch=fetch_feed,
         'News arrival does not verify broker eligibility or execution costs',
         'Disclosures do not identify real-time trader orders',
     ]
+    if crypto_fetch is not None:
+        result['scope'] = 'BOUNDED_STOCK_MACRO_AND_PUBLISHER_TAGGED_CRYPTO_NEWS'
+        result['limitations'][2] = 'Crypto relevance uses explicit publisher tags; one publisher is not independent confirmation'
     return result
 
 
@@ -38,7 +48,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    result = collect()
+    from .crypto_feed import fetch_crypto_feed
+    result = collect(crypto_fetch=fetch_crypto_feed)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2)+'\n')
     print(json.dumps({'status': result['status'], 'items': len(result['items']),

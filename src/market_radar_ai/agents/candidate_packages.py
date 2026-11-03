@@ -8,6 +8,8 @@ from .combined_input import build_market_evidence
 from .roles import AgentRole
 from ..dashboard.evidence import export_evidence
 from ..market_data.capture_shortlist import shortlist
+from ..market_data.reference_quotes import validate_capture
+from ..evidence.crypto_feed import matches as crypto_news_matches
 
 
 def canonical(value):
@@ -25,21 +27,31 @@ def build_packages(document, feed, *, now, stock_limit=3, crypto_limit=2):
     except (ValueError, TypeError, KeyError, AttributeError):
         evidence = {'status': 'error', 'items': [], 'scope': 'UNAVAILABLE'}
     packages = []
+    references = {}
+    if document.get('reference_quote_capture') is not None:
+        try:
+            references = validate_capture(document['reference_quote_capture'], now=now)
+        except (ValueError, TypeError, KeyError, ArithmeticError, AttributeError):
+            pass  # Keep candles; never use stale/malformed quotes to clear a gate.
     for market, selected in selection['markets'].items():
         for candidate in selected['candidates']:
             symbol = candidate['symbol']
             bars = build_market_evidence(document, symbol=symbol, now=now, market_name=market)
             source = bars.model_dump(mode='json')
+            reference = references.get(symbol) if market=='crypto' else None
+            if reference is not None:
+                source['reference_quote'] = reference
             sources = {'market:'+digest(source): source}
             news_ids = []
-            # Existing news feeds identify equities, not crypto base/pair namespaces.
-            # Do not infer BTC->XBTEUR or attach query-context/general headlines.
-            if market == 'stocks' and evidence['status'] in ('ok', 'partial'):
+            # Crypto uses explicit publisher asset tags in a separate namespace.
+            # A requested pair, equity ticker or headline mention is not a link.
+            if evidence['status'] in ('ok', 'partial'):
                 eligible = []
                 for item in evidence['items']:
                     retrieved = datetime.fromisoformat(item['retrieved_at'])
                     published = datetime.fromisoformat(item['published_at'])
-                    if (symbol in item['symbols'] and item['kind']=='news'
+                    linked = symbol in item['symbols'] if market=='stocks' else crypto_news_matches(item,symbol)
+                    if (linked and item['kind']=='news'
                             and 0 <= (now-retrieved).total_seconds() <= 900
                             and 0 <= (now-published).total_seconds() <= 7*86400):
                         eligible.append(item)
@@ -56,7 +68,12 @@ def build_packages(document, feed, *, now, stock_limit=3, crypto_limit=2):
                 'eur_trade_plan_missing', 'independent_catalyst_confirmation_missing',
                 'six_agent_review_not_run']
             if market=='stocks': missing.append('exchange_session_not_verified')
-            else: missing.append('crypto_news_identity_adapter_missing')
+            elif not news_ids: missing.append('crypto_news_identity_adapter_missing')
+            else: missing.append('crypto_news_coverage_incomplete')
+            if reference is not None:
+                missing.append('reference_venue_is_not_execution_broker')
+            elif market=='crypto' and 'reference_quote_capture' in document:
+                missing.append('reference_quote_unavailable_or_stale')
             if not any(sources[sid]['intraday_recent'] for sid in news_ids):
                 missing.append('current_symbol_linked_news_missing')
             if bars.quote_currency!='EUR': missing.append('fresh_fx_conversion_missing')
@@ -64,6 +81,8 @@ def build_packages(document, feed, *, now, stock_limit=3, crypto_limit=2):
                 missing.append('entry_cutoff_reached')
             expiry = min(now+timedelta(seconds=60), bars.retrieved_at+timedelta(seconds=900),
                          bars.candles[-1].timestamp+timedelta(seconds=900))
+            if reference is not None:
+                expiry = min(expiry, datetime.fromisoformat(reference['expires_at']))
             for sid in news_ids:
                 expiry = min(expiry,datetime.fromisoformat(sources[sid]['retrieved_at'])+timedelta(seconds=900))
             body = {

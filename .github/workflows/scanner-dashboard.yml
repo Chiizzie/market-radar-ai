@@ -42,8 +42,8 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -e '.[dev,market]'
-      - run: python -m pytest -q tests/test_snapshot_delivery.py tests/test_dashboard_cache.py tests/test_market_capture.py tests/test_scanner_news.py tests/test_capture_shortlist.py tests/test_candidate_packages.py tests/test_candidate_review.py tests/test_candidate_delivery.py
-      - name: Collect bounded stock and macro news leads without AI
+      - run: python -m pytest -q tests/test_snapshot_delivery.py tests/test_dashboard_cache.py tests/test_market_capture.py tests/test_scanner_news.py tests/test_capture_shortlist.py tests/test_candidate_packages.py tests/test_candidate_review.py tests/test_candidate_delivery.py tests/test_evidence_enrichment.py
+      - name: Collect bounded stock, macro and tagged crypto news without AI
         id: news
         continue-on-error: true
         run: python -m market_radar_ai.evidence.scanner_feed --output artifacts/scanner/news.json
@@ -51,20 +51,22 @@ jobs:
         id: collect
         continue-on-error: true
         run: python -m market_radar_ai.market_data.capture --output artifacts/scanner/capture.json --stocks NVDA MSFT AAPL AMD META AMZN GOOGL TSLA --crypto XBTEUR ETHEUR SOLEUR XRPEUR
+      - name: Add public EUR reference bid and ask without broker admission
+        run: python -m market_radar_ai.market_data.reference_quotes --capture artifacts/scanner/capture.json --output artifacts/scanner/enriched-capture.json
       - name: Rank research candidates without AI or trade admission
-        run: python -m market_radar_ai.market_data.capture_shortlist --capture artifacts/scanner/capture.json --output artifacts/scanner/shortlist.json
+        run: python -m market_radar_ai.market_data.capture_shortlist --capture artifacts/scanner/enriched-capture.json --output artifacts/scanner/shortlist.json
       - name: Assemble cited candidate evidence without paid model calls
-        run: python -m market_radar_ai.agents.candidate_packages --capture artifacts/scanner/capture.json --evidence artifacts/scanner/news.json --output artifacts/scanner/candidate-packages.json
+        run: python -m market_radar_ai.agents.candidate_packages --capture artifacts/scanner/enriched-capture.json --evidence artifacts/scanner/news.json --output artifacts/scanner/candidate-packages.json
       - name: Export honest coverage including provider failures
-        run: python -m market_radar_ai.dashboard.export --capture artifacts/scanner/capture.json --output artifacts/scanner/dashboard.json --evidence artifacts/scanner/news.json
+        run: python -m market_radar_ai.dashboard.export --capture artifacts/scanner/enriched-capture.json --output artifacts/scanner/dashboard.json --evidence artifacts/scanner/news.json
       - name: Send one signed research snapshot
         if: inputs.send_snapshot
-        run: python -m market_radar_ai.dashboard.snapshot_delivery --capture artifacts/scanner/capture.json --evidence artifacts/scanner/news.json
+        run: python -m market_radar_ai.dashboard.snapshot_delivery --capture artifacts/scanner/enriched-capture.json --evidence artifacts/scanner/news.json
         env:
           SEND_SCANNER_SNAPSHOT: 'true'
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
       - name: Review one generic candidate (dry run unless explicitly enabled)
-        run: python -m market_radar_ai.agents.github_candidate_review --capture artifacts/scanner/capture.json --evidence artifacts/scanner/news.json --output artifacts/scanner/candidate-review
+        run: python -m market_radar_ai.agents.github_candidate_review --capture artifacts/scanner/enriched-capture.json --evidence artifacts/scanner/news.json --output artifacts/scanner/candidate-review
         env:
           CANDIDATE_MARKET: ${{ inputs.candidate_market || 'auto' }}
           CANDIDATE_REVIEW_MODE: ${{ inputs.paid_analysis && 'paid' || 'dry_run' }}
