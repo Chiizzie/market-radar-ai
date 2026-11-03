@@ -23,7 +23,9 @@ class CandidateReview(Review):
 def reproduce(record, capture, feed, *, now):
     body = verify_package(record, now=now)
     rebuilt = build_packages(capture, feed, now=datetime.fromisoformat(body['assembled_at']))
-    if record not in rebuilt['packages']:
+    # JSON arrays round-trip tuples (selection reasons) as lists. Compare the
+    # canonical wire representation, not Python container implementation types.
+    if canonical(record) not in [canonical(item) for item in rebuilt['packages']]:
         raise ValueError('candidate_package_does_not_reproduce')
     return deepcopy(body)
 
@@ -125,6 +127,8 @@ def run_paid(client, record, capture, feed, *, path, clock, enabled=False):
                 'Bars may use lossless columnar-bars-v1 with explicit ordered columns. '
                 'Cite only supplied source IDs in source_ids. Acknowledge every missing_evidence '
                 'item exactly in acknowledged_blockers, including input review-not-run status. '
+                'That review-not-run item describes package assembly only: when peers are supplied, '
+                'do not claim the supplied reviews are absent or still awaiting completion. '
                 'List supplied peer stages in order. Keep rationale to two complete short sentences '
                 'under 600 characters and at most three concerns under 180 characters each. '
                 'No control characters; source IDs belong only in source_ids. '

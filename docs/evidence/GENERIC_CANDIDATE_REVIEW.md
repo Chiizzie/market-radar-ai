@@ -47,7 +47,7 @@ result and checks its paid usage audit before delivery.
 
 ## Verification at implementation
 
-630 local tests passed, including generic equity/crypto reviews, peer isolation,
+633 local tests passed, including generic equity/crypto reviews, peer isolation,
 package reproduction, invalid citations, incomplete roles, stale admission,
 expiry during review, review deadline, durable-client requirement, paid audit
 preservation, repository/manual-attempt guards, archive signatures and no retries.
@@ -61,3 +61,37 @@ All four requested crypto pairs were rankable, XRPEUR and ETHEUR were shortliste
 and the runner selected crypto:XRPEUR with state ready_dry_run and model_calls 0.
 The eight stock captures were not rankable at this time. No paid review, dashboard
 archive delivery or trade is claimed by that dry run.
+
+## Verified metered integration
+
+Run **41727193991** at commit **a9c98dc83450bf1a77ef782de8bd3c9913080480**
+completed a real eight-call review of **crypto:XRPEUR** and confirmed signed
+delivery to the published dashboard. Started 2026-11-03 22:03:00.297841, completed
+22:03:45.201603 Europe/Dublin; original evidence expiry 22:03:59.228585. Evidence
+was current at completion and becomes stale at its original expiry, not when
+someone later opens the archive. The entry cutoff was already reached.
+
+- Package: `30a3060f020a144aa0f8edd095a5b8a7d1bf83d26c93c15bc090ca9a020a23de`
+- Signed raw-body archive: `56c5db9f611adb24cdcd62810642d99d729ada0c3378ea05fae3b9219acc4146`
+- Downloaded artifact 13274347178 SHA256: `5ebc25aa5ced0255e3528b981f675a4c8da0c074fa0b02efdab111d4e2497e04`
+- Eight calls; estimated cost **EUR 0.033951**. Shared ledger after run:
+  settled EUR 0.638836, held zero, remaining lifetime pilot allowance EUR 0.361164.
+- First seven stages MORE_EVIDENCE_REQUIRED; conclusion **REJECT**. No plan,
+  authorization, order, paper position, P&L or accuracy result was created.
+
+Downloaded JSON replay exposed Python tuple/list representation differences in
+selection reasons. Reproduction now compares canonical wire representations;
+the full downloaded result and exact delivered archive hash reproduce without
+calling a model. A regression test covers this persistence boundary. Safe audit
+diagnostics preserve field/error categories without exposing provider bodies.
+
+Lovable's published candidate research implementation uses commit
+`9bda12ea7cc5ba9e8064e3d4ec89446b86f13702`; it reports 235 passing tests,
+clean typecheck/build and validates the exact Python-generated test fixture.
+The fixture is parse-only synthetic test data, never inserted as production
+research. The public page was observed requiring viewer sign-in after deployment.
+
+The original package's NOT_RUN and six_agent_review_not_run are historical input
+fields. Eight completed reports are separately present in the result. Prompt
+instructions now explicitly forbid describing supplied peer reviews as absent;
+the already stored review is retained unchanged as the original model output.

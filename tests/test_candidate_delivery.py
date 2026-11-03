@@ -74,3 +74,9 @@ def test_unconfirmed_or_duplicate_delivery_never_retries(code):
 
 def test_delivery_requires_manual_authorization():
     with pytest.raises(ValueError):deliver(*bundle(),env=ENV,clock=lambda:NOW)
+
+
+def test_downloaded_json_artifacts_reproduce_the_exact_archive():
+    original=bundle()
+    restored=json.loads(json.dumps(original))
+    assert export_archive(*restored)==export_archive(*original)
