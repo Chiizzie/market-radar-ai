@@ -73,3 +73,27 @@ row labels. Reload only reread storage; sign-out removed protected data and
 signed-out access exposed no capture. No seed data or code changes were used.
 The feed contains no catalyst items yet (evidence not_connected), no agent reviews
 and no trade decisions; these are distinct remaining integration milestones.
+
+## News integration verified — 3 November 2026
+
+Backend commit e1d024d31bafb364254da2f2f566ffc62897fb01 connects the bounded
+scanner_feed news collector to both export and signed delivery. Local suite:
+566 passed. GitHub run 41718634698 completed successfully and acknowledged snapshot
+ba7131ec52eb4e4fd94aafc0c449860b963dbe2724170f9d43f82adc6a54209d.
+Generated 21:06:29.636165 Dublin; expires 21:07:29. Artifact 13271362384 digest:
+25c371a17c228d84cedd3e26bae0c46848939ba239bf9a8b24b7aab71194519b.
+Downloaded evidence independently reconstructed the exact acknowledged body hash.
+
+The feed contains 37 deduplicated items and explicitly reports partial coverage.
+NVDA/MSFT/AAPL query feeds each supplied 10 leads; Fed supplied 2 items and NVIDIA
+Newsroom 6 before cross-feed deduplication. Microsoft publisher delivery failed.
+Query context never supplies inferred symbol attribution. Only NVIDIA publisher
+items carry NVDA attribution in this capture. Crypto news is explicitly uncovered.
+
+Lovable acceptance message umsg_01m6hkrt38eweaqghahmq0z5z2 verified the actual
+stored row and published News & Catalysts screen: 37 linked items, original times,
+PARTIAL FEED and STALE FEED indicators, and expired-snapshot warning. No deployment
+was needed. No AI analysis, orders, new accounts or role changes occurred.
+These research leads do not satisfy independent catalyst confirmation by themselves.
+See ../evidence/LIVE_CALL_GAPS.md and ../FUTURE_ORDER_EXECUTION.md for remaining
+call requirements and the user's future execution interest (not live activation).
