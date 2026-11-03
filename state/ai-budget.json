@@ -631,6 +631,12 @@
         "response_id": "resp_0c7a2e5a1347f5d0016aea1114090c87d196426e21b4976408"
       }
     },
+    "paper-plan-review-v1:02b032bf21c3c1dc937b01b79bd685cdeb06576848482622729c842d749c1fbb:risk_manager": {
+      "actual": null,
+      "day": "2026-11-03",
+      "reserved": 272076,
+      "usage": null
+    },
     "paper-plan-review-v1:02b032bf21c3c1dc937b01b79bd685cdeb06576848482622729c842d749c1fbb:technical_analyst": {
       "actual": 7204,
       "day": "2026-11-03",
