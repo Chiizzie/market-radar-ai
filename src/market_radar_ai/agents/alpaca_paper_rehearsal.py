@@ -5,6 +5,8 @@ from pathlib import Path
 
 from .paper_planner import draft_nvda
 from .execution_evidence import assess_quote
+from .cost_scenarios import fx_scenarios
+from decimal import Decimal
 from ..market_data.providers.fx import YahooFxProvider
 
 
@@ -33,6 +35,10 @@ def build(capture, catalogue, fx, *, now):
     result['capture_observed_at']=capture['observed_at']
     result['quote_context']=capture.get('quote',{})
     result['execution_evidence']=assess_quote(capture.get('quote',{}),now=now)
+    if result.get('plan'):
+        p=result['plan']; quantity=Decimal(p['quantity'])
+        result['fx_cost_scenarios_at_stop']=fx_scenarios(
+            Decimal(p['entry_eur'])*quantity,Decimal(p['stop_eur'])*quantity)
     result['news_context']={k:capture.get('news',{}).get(k) for k in ('status','count','more_available','catalysts_verified')}
     # Quote/news are context only: neither clears execution, cost or catalyst gates.
     return result
