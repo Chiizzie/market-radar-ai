@@ -59,3 +59,27 @@ def test_accepted_debate_links_to_durable_outcome(tmp_path):
     assert record_replay(store,'one',quotes,entry_expires_at=NOW+timedelta(minutes=5))==result
     with pytest.raises(ValueError):
         record_replay(store,'one',[q(0,99.9,100)],entry_expires_at=NOW+timedelta(minutes=5))
+
+
+def breakout(rows):
+    return replay_long(plan(),rows,decision_at=NOW,
+        entry_expires_at=NOW+timedelta(minutes=5),entry_mode='breakout')
+
+
+def test_breakout_waits_for_trigger_and_uses_observed_ask():
+    r=breakout([q(0,'99.4','99.5'),q(1,'100.1','100.2'),q(2,'102','102.1')])
+    assert r.entry_at==NOW+timedelta(minutes=1)
+    assert r.entry_fill==Decimal('100.2') and r.net_pnl_eur==17
+
+
+def test_breakout_never_fills_below_trigger():
+    assert breakout([q(0,'99.4','99.5')]).status=='not_filled'
+
+
+def test_breakout_rejects_excessive_trigger_gap():
+    assert breakout([q(0,'102','102.1')]).reason=='trigger_gap_exceeds_risk_budget'
+
+
+def test_breakout_invalidated_before_trigger_cannot_reenter():
+    r=breakout([q(0,'98','98.1'),q(1,'100','100.1')])
+    assert r.reason=='entry_already_invalidated' and r.entry_fill is None

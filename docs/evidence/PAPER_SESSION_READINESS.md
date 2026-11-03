@@ -12,8 +12,11 @@ outcomes with null P&L/accuracy. A completed research review removes only the
 Live validation should include a rejected/no-plan session as well as any eventual
 admitted paper trade. Never manufacture a fill or score a rejected candidate as a
 winner. The existing quote-replay simulator requires an accepted recorded plan
-and observed bid/ask evidence. Candle-based breakout drafts are not automatically
-compatible with its limit-entry strategy and must not be silently replayed as such.
+and observed bid/ask evidence. Quote replay now supports explicit limit and breakout entry modes. Breakout
+mode requires an observed ask at/above its trigger, preserves pre-trigger stop
+invalidation and rejects trigger-gap risk above EUR20. It remains a simplified
+simulation without volume/queue/slippage modelling. Admission and observed quote
+collection are still required; drafts are never automatically converted to trades.
 
 ## Broker API review — 3 November 2026
 
@@ -34,3 +37,13 @@ source, observation time and expiry. Integrate that evidence with decision admis
 before scheduling a paper pilot. Keep cost assumptions, external research quotes,
 calendar checks and independent catalyst relevance separately visible. No live
 orders or new trading permissions are enabled by session accounting.
+
+## Verified run and tests
+
+GitHub dry run 41721924057 (commit 3c617d4a496127b05d7c710193b11d2e85543e71)
+completed with no_reviewable_plan / alpaca_capture_invalid_or_stale and zero model
+calls. Downloaded artifact 13272462292 verified digest
+c8dc64617a851d0bc1c8ed1b8088613e0c101f910d0c53f770850554e1fdc94b.
+Its session report correctly recorded UNREVIEWED_NO_TRADE, no position and null
+P&L/accuracy. This verifies rejection accounting, not an admitted paper session.
+The expanded local suite including breakout quote replay passed 579 tests.
