@@ -105,3 +105,17 @@ def test_incomplete_or_corrupted_prose_rejected(bad):
     def malformed(stage,p,s):
         r=answer(stage,p,s);r['rationale']=bad;return r
     with pytest.raises(ValueError):run(prepare(*data()),malformed,clock=lambda:NOW)
+
+
+def test_columnar_prompt_preserves_all_bar_values_and_original_identity():
+    from copy import deepcopy
+    from market_radar_ai.agents.plan_review import prompt_snapshot, canonical
+    c,cat,d=data()
+    packet=json.loads(prepare(c,cat,d)); original=deepcopy(packet)
+    compact=prompt_snapshot(packet)
+    bars=compact['sources']['market']['bars']['candles']
+    assert bars['encoding']=='columnar-bars-v1'
+    assert [dict(zip(bars['columns'],r)) for r in bars['rows']]==packet['sources']['market']['bars']['candles']
+    assert packet==original
+    assert compact['source_ids']==packet['source_ids']
+    assert len(canonical(compact))<len(canonical(packet))

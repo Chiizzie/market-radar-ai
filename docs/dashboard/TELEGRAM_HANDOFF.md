@@ -83,3 +83,14 @@ Notification failure is recorded separately from successful review completion
 and budget settlement. It must never cause a paid review to be rerun. No schedule
 is enabled yet: the current small pilot spending cap and fresh-delivery trial
 must be verified before recurring paid analysis is introduced.
+
+### Fresh trial 41705886995 and prompt repair
+
+Run 41705886995 completed six model calls, then stopped before debate with
+review_prompt_too_large. No export or Telegram delivery was produced. Cost was
+EUR 0.049889; lifetime settled EUR 0.542572, held zero, pilot remainder EUR
+0.457428. The 32,000-byte limit is unchanged. Lossless columnar candle encoding
+reduces this exact debate payload from 33,758 to 27,919 bytes while retaining every
+bar value, source ID, original snapshot hash, news item and peer review. Tests
+verify reversibility and original packet immutability. This is prompt formatting,
+not evidence deletion or a larger token/spending cap.
