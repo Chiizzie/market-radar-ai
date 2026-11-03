@@ -1,0 +1,11 @@
+# Historical review import v1
+
+The new `dashboard.plan_review.export_review` produces `paper-review-dashboard-v1` only after reproducing the draft, revalidating all eight responses/citations/blockers, checking call times through original expiry, and matching the accepted result. It allows only plan fields reconstructed by the planner, validated reviews and aggregate estimated run cost. No raw API responses, request/response IDs, credentials or budget ledger are exported.
+
+Envelope: schema_version, mode=HISTORICAL_PAPER_REVIEW, trade_authorized=false, live_orders_enabled=false, snapshot_id (64 lowercase hex), evaluated_at, review_completed_at, expires_at, expired (recompute in browser), plan (existing EUR draft plan), assumptions_note, input_blockers, review_status=COMPLETED_UNAPPROVED, reviews (exact eight stages in order), final_verdict (matches conclusion), estimated_review_cost_eur (nonnegative decimal string), notice.
+
+Stages: opportunity_hunter, technical_analyst, news_analyst, devils_advocate, risk_manager, final_decision, debate, conclusion. Each review includes matching snapshot_id, stage, verdict REJECT/MORE_EVIDENCE_REQUIRED/CONDITIONALLY_COHERENT, complete rationale <=600 chars, source_ids (1–4), acknowledged_blockers, concerns (0–3 complete strings <=180 chars), reviewed_stages (empty for specialists, preceding six/seven stages for synthesis), trade_authorized=false.
+
+Frontend must always block actionability, preserve original expiry with a ticking stale label, label imported/non-live status and treat source hashes as identifiers rather than authentication. input_blockers describe conditions supplied before review, including the then-pending review; never describe that field as proof the completed reports did not run. Show all eight reports, final verdict, EUR plan and clearly assumed costs/capital. Render text as text. Existing raw paper draft and schema-1.0 imports must continue working.
+
+TEST-review-contract.json is generated with controlled responses. Its fixture=true and TEST notice must remain conspicuous; it is not a real paid result. The last actual paid report fails the new prose checks and is deliberately not exported. A fresh paid verification remains outstanding.

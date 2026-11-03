@@ -53,6 +53,8 @@ def execute(root, *, env, clock=lambda:datetime.now(timezone.utc)):
                 save('budget-before.json',ledger.summary())
                 client=OpenAIPilot(api_key=key,ledger=ledger,eur_per_usd=fx.eur_per_unit,enabled=True)
                 result=run_paid(client,packet,path=root/'review.json',clock=clock,enabled=True)
+                from ..dashboard.plan_review import export_review
+                save('dashboard-review.json',export_review(market,cat,draft,result,now=clock()))
                 status.update(state=result['state'],model_calls=len(result['calls']))
     except Exception:
         status.update(state='blocked_or_failed',reason='Inspect saved artifacts and budget; no automatic retry')

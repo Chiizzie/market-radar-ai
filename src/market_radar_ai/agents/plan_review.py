@@ -102,7 +102,7 @@ def run_paid(client, packet_json, *, path, clock, enabled=False):
         temporary=path.with_suffix('.tmp');temporary.write_text(json.dumps(audit,indent=2)+'\n');temporary.replace(path)
     save()
     def ask(stage,payload,schema):
-        call=dict(stage=stage,state='attempting',prompt_bytes=len(canonical(payload).encode()));audit['calls'].append(call);save()
+        call=dict(stage=stage,state='attempting',started_at=clock().isoformat(),prompt_bytes=len(canonical(payload).encode()));audit['calls'].append(call);save()
         schema['properties']['source_ids']['items']['enum']=list(payload['snapshot']['source_ids'].values())
         schema['properties']['snapshot_id']['enum']=[payload['snapshot_id']]
         schema['properties']['stage']['enum']=[stage]
@@ -123,7 +123,7 @@ def run_paid(client, packet_json, *, path, clock, enabled=False):
               'Put source IDs ONLY in source_ids, never in rationale or concerns. Put reviewed stage names ONLY in reviewed_stages. '
               'Use at most three complete concise concerns, each preferably under 120 characters. No control characters. '
               'The six_agent_plan_review_not_run blocker describes the input before this run; acknowledge it exactly but do not claim no reports were supplied when peers are present.'),max_output_tokens=1024,reasoning_effort='none')
-        call.update(state='received',response_id=reply.response_id,cost_usd=str(reply.cost_usd),
+        call.update(state='received',received_at=clock().isoformat(),response_id=reply.response_id,cost_usd=str(reply.cost_usd),
                     estimated_cost_microeur=reply.estimated_cost_microeur)
         encoded=canonical(reply.data)
         call['untrusted_response']=reply.data if len(encoded.encode())<=32768 else None
@@ -131,7 +131,7 @@ def run_paid(client, packet_json, *, path, clock, enabled=False):
         return reply.data
     try:
         audit['result']=run(packet_json,ask,clock=clock)
-        audit['state']='completed';save()
+        audit['state']='completed';audit['completed_at']=clock().isoformat();save()
     except Exception as error:
         from pydantic import ValidationError
         if isinstance(error,ValidationError):
