@@ -73,7 +73,9 @@ def test_bad_citation_keeps_usage_and_stops(tmp_path,monkeypatch):
     with pytest.raises(RuntimeError):run_research(client,packet,path=path,clock=lambda:NOW,enabled=True)
     report=json.loads(path.read_text())
     assert report['state']=='blocked_or_failed' and len(requests)==1
-    assert report['calls'][0]['state']=='received'
+    assert report['calls'][0]['state']=='rejected'
+    assert report['calls'][0]['validation_details']==[{'field':['source_ids'],'type':'unknown_response_citation'}]
+    assert report['calls'][0]['rejected_response']['data']['source_ids']==['invented']
     assert next(iter(store.state['entries'].values()))['actual'] is not None
 
 
@@ -275,3 +277,22 @@ def test_live_prompt_uses_current_contract_without_legacy_tasks():
         assert 'UNKNOWN_NO_SPREAD_OR_DEPTH' in prompt
         assert 'computed_metrics exactly' in prompt
     assert 'reviewed_concern_ids' in live_instruction()
+
+
+@pytest.mark.parametrize('field,value,code', [
+    ('snapshot_id','wrong-snapshot','snapshot_identity_mismatch'),
+    ('role','risk_manager','specialist_role_mismatch'),
+])
+def test_identity_rejections_preserve_diagnostic_and_usage(tmp_path,monkeypatch,field,value,code):
+    packet,client,store,requests=setup(monkeypatch,mutate=lambda data,payload:data.update({field:value}))
+    path=tmp_path/'identity.json'
+    with pytest.raises(RuntimeError):
+        run_research(client,packet,path=path,clock=lambda:NOW,enabled=True)
+    report=json.loads(path.read_text())
+    assert len(requests)==1 and report['assessments']==[]
+    call=report['calls'][0]
+    assert call['state']=='rejected'
+    assert call['validation_details']==[{'field':[field],'type':code}]
+    assert call['rejected_response']['data'][field]==value
+    assert call['rejected_response']['trade_authorized'] is False
+    assert next(iter(store.state['entries'].values()))['actual'] is not None

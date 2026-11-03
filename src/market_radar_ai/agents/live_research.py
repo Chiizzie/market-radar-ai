@@ -191,6 +191,12 @@ def run_research(client, packet, *, path, clock, enabled=False):
             save()
             try:
                 parsed=schema.model_validate(reply.data)
+                if parsed.snapshot_id!=digest:
+                    raise ValueError('snapshot_identity_mismatch')
+                if any(source not in packet.source_ids for source in parsed.source_ids):
+                    raise ValueError('unknown_response_citation')
+                if role is not None and parsed.role!=role:
+                    raise ValueError('specialist_role_mismatch')
                 validate_claims(parsed,packet,metrics)
                 if isinstance(parsed,ReviewedResponse):
                     validate_review(parsed,payload)
@@ -206,7 +212,10 @@ def run_research(client, packet, *, path, clock, enabled=False):
                                                  include_url=False)[:20]]
                 else:
                     code=str(error)
-                    field={'research_metric_mismatch':'metric_claims',
+                    field={'snapshot_identity_mismatch':'snapshot_id',
+                           'unknown_response_citation':'source_ids',
+                           'specialist_role_mismatch':'role',
+                           'research_metric_mismatch':'metric_claims',
                            'concern_review_mismatch':'reviewed_concern_ids',
                            'missing_data_review_mismatch':'acknowledged_missing_data',
                            'decisive_concern_mismatch':'decisive_concern_ids',
@@ -225,10 +234,6 @@ def run_research(client, packet, *, path, clock, enabled=False):
                 call['validation_error']='response_quality_or_metric_validation_failed'
                 save()
                 raise
-            if parsed.snapshot_id!=digest or any(s not in packet.source_ids for s in parsed.source_ids):
-                raise ValueError('Invalid response citation or identity')
-            if role is not None and parsed.role!=role:
-                raise ValueError('Wrong specialist role')
             call['state']='validated';save()
             return parsed
         for role in AgentRole:

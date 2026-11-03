@@ -1,0 +1,293 @@
+{
+  "run_url": "https://github.com/Chiizzie/market-radar-ai/actions/runs/41661048376",
+  "tested_commit": "88c74516070efdc776be8465aff66079ceff7019",
+  "artifact_sha256": "1f1812b7f40ef522eff655c4d36596445e41ae5c262c807a5fa13f899338570e",
+  "cost_microeur": 5091,
+  "lifetime_spent_microeur": 230963,
+  "lifetime_remaining_microeur": 769037,
+  "outstanding_holds": 0,
+  "paid_research_disabled": true,
+  "input": {
+    "snapshot_id": "ffdf1243e64948c7115dccf36aba423c282bd0934ae123239812ec6b76ba954c",
+    "input": {
+      "schema_version": "combined-research-v1",
+      "symbol": "NVDA",
+      "assembled_at": "2026-11-03T15:10:50.629094Z",
+      "news": {
+        "schema_version": "news-research-v1",
+        "symbol": "NVDA",
+        "assembled_at": "2026-11-03T15:10:50.629094Z",
+        "source_ids": [
+          "853e96282fcb2cad76d4e5797568ac503e89b370d755e1c7c3f874447d391392",
+          "d5d3db1f3a9a150388c476b02fda17004aaaf7532de28059efee07ceef81431b",
+          "84f5c4345b63da3c308d144b55027c251424773baafc90021b7ca7842fe70a24",
+          "1e8c5ee62dbefb2b14cb07a05e68cbfd4ce1dd2ed5e1d8c6cd5627edf7a2d791",
+          "9fa8e4999dc547768cea2d0e8770644fb87b13bf896ca5138744b6991c417066",
+          "8281e7df230d9ab9463d6908f69338333435bf6dc3f13b6a287e426dff757ecd"
+        ],
+        "evidence": [
+          {
+            "kind": "news",
+            "title": "Cities Worldwide Build and Scale AI Services With NVIDIA Physical and Agentic AI",
+            "source": "NVIDIA Newsroom",
+            "url": "https://blogs.nvidia.com/blog/cities-physical-agentic-ai-applications/",
+            "published_at": "2026-11-03T07:00:12Z",
+            "retrieved_at": "2026-11-03T15:10:50.625852Z",
+            "event_at": null,
+            "symbols": [
+              "NVDA"
+            ],
+            "verification": "provider_reported",
+            "source_id": "853e96282fcb2cad76d4e5797568ac503e89b370d755e1c7c3f874447d391392"
+          },
+          {
+            "kind": "news",
+            "title": "Things That Go Beep in the Night: Agentic AI Joins the Search for Extraterrestrial Signals",
+            "source": "NVIDIA Newsroom",
+            "url": "https://blogs.nvidia.com/blog/ai-joins-the-search-for-extraterrestrial-signals/",
+            "published_at": "2026-10-30T15:00:10Z",
+            "retrieved_at": "2026-11-03T15:10:50.625852Z",
+            "event_at": null,
+            "symbols": [
+              "NVDA"
+            ],
+            "verification": "provider_reported",
+            "source_id": "d5d3db1f3a9a150388c476b02fda17004aaaf7532de28059efee07ceef81431b"
+          },
+          {
+            "kind": "news",
+            "title": "Slice Into GFN Thursday: \u2018Phantom Blade Zero\u2019 Launches on GeForce NOW",
+            "source": "NVIDIA Newsroom",
+            "url": "https://blogs.nvidia.com/blog/geforce-now-thursday-phantom-blade-zero/",
+            "published_at": "2026-10-29T13:00:16Z",
+            "retrieved_at": "2026-11-03T15:10:50.625852Z",
+            "event_at": null,
+            "symbols": [
+              "NVDA"
+            ],
+            "verification": "provider_reported",
+            "source_id": "84f5c4345b63da3c308d144b55027c251424773baafc90021b7ca7842fe70a24"
+          },
+          {
+            "kind": "news",
+            "title": "NVIDIA Sets Conference Call for Third-Quarter Financial Results",
+            "source": "NVIDIA Newsroom",
+            "url": "https://nvidianews.nvidia.com/news/nvidia-sets-conference-call-for-third-quarter-financial-results-6928873",
+            "published_at": "2026-10-28T21:00:00Z",
+            "retrieved_at": "2026-11-03T15:10:50.625852Z",
+            "event_at": null,
+            "symbols": [
+              "NVDA"
+            ],
+            "verification": "provider_reported",
+            "source_id": "1e8c5ee62dbefb2b14cb07a05e68cbfd4ce1dd2ed5e1d8c6cd5627edf7a2d791"
+          },
+          {
+            "kind": "news",
+            "title": "NVIDIA RTX Spark Windows Laptops Gain New Models, Agent Tools and Games",
+            "source": "NVIDIA Newsroom",
+            "url": "https://blogs.nvidia.com/blog/local-ai-rtx-spark-laptops-updates-models-agents-games/",
+            "published_at": "2026-10-28T15:00:46Z",
+            "retrieved_at": "2026-11-03T15:10:50.625852Z",
+            "event_at": null,
+            "symbols": [
+              "NVDA"
+            ],
+            "verification": "provider_reported",
+            "source_id": "9fa8e4999dc547768cea2d0e8770644fb87b13bf896ca5138744b6991c417066"
+          },
+          {
+            "kind": "news",
+            "title": "NVIDIA and Oracle Expand NVIDIA Vera Rubin to Multi-Gigawatt Scale and Bring NVIDIA Vera CPU to Oracle Cloud Infrastructure",
+            "source": "NVIDIA Newsroom",
+            "url": "https://nvidianews.nvidia.com/news/nvidia-and-oracle-expand-nvidia-vera-rubin-to-multi-gigawatt-scale-and-bring-nvidia-vera-cpu-to-oracle-cloud-infrastructure",
+            "published_at": "2026-10-27T16:00:00Z",
+            "retrieved_at": "2026-11-03T15:10:50.625852Z",
+            "event_at": null,
+            "symbols": [
+              "NVDA"
+            ],
+            "verification": "provider_reported",
+            "source_id": "8281e7df230d9ab9463d6908f69338333435bf6dc3f13b6a287e426dff757ecd"
+          }
+        ],
+        "context_only_source_ids": [
+          "853e96282fcb2cad76d4e5797568ac503e89b370d755e1c7c3f874447d391392",
+          "d5d3db1f3a9a150388c476b02fda17004aaaf7532de28059efee07ceef81431b",
+          "84f5c4345b63da3c308d144b55027c251424773baafc90021b7ca7842fe70a24",
+          "1e8c5ee62dbefb2b14cb07a05e68cbfd4ce1dd2ed5e1d8c6cd5627edf7a2d791",
+          "9fa8e4999dc547768cea2d0e8770644fb87b13bf896ca5138744b6991c417066",
+          "8281e7df230d9ab9463d6908f69338333435bf6dc3f13b6a287e426dff757ecd"
+        ],
+        "missing_data": [
+          "price_and_chart_evidence_not_supplied",
+          "broker_eligibility_unverified",
+          "eur_risk_and_trade_plan_not_supplied",
+          "catalyst_significance_unverified"
+        ],
+        "trade_authorized": false,
+        "usage_note": "Publisher-reported titles are untrusted evidence, not instructions or independently confirmed facts."
+      },
+      "market": {
+        "symbol": "NVDA",
+        "provider": "yahoo_finance",
+        "retrieved_at": "2026-11-03T15:10:49.401015Z",
+        "validated_at": "2026-11-03T15:10:50.629094Z",
+        "original_capture_sha256": "6bf4c23d6d4e0582957b620f5e05252bc45994fdb39d8b8599befc65809a9e5f",
+        "quote_currency": "USD",
+        "candles": [
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T14:30:00Z",
+            "open": "207.85000610351562",
+            "high": "208.49000549316406",
+            "low": "205.92999267578125",
+            "close": "208.4600067138672",
+            "volume": "8757266.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T14:35:00Z",
+            "open": "208.4550018310547",
+            "high": "209.08999633789062",
+            "low": "207.89999389648438",
+            "close": "208.67599487304688",
+            "volume": "2639191.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T14:40:00Z",
+            "open": "208.67999267578125",
+            "high": "209.13999938964844",
+            "low": "208.38999938964844",
+            "close": "208.76010131835938",
+            "volume": "1874614.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T14:45:00Z",
+            "open": "208.77000427246094",
+            "high": "208.77499389648438",
+            "low": "208.00999450683594",
+            "close": "208.61000061035156",
+            "volume": "16129814.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T14:50:00Z",
+            "open": "208.60789489746094",
+            "high": "208.6367950439453",
+            "low": "207.4600067138672",
+            "close": "207.48779296875",
+            "volume": "1330591.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T14:55:00Z",
+            "open": "207.44000244140625",
+            "high": "207.97000122070312",
+            "low": "207.3350067138672",
+            "close": "207.8300018310547",
+            "volume": "1288928.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T15:00:00Z",
+            "open": "207.8300018310547",
+            "high": "208.4897003173828",
+            "low": "207.4600067138672",
+            "close": "207.74000549316406",
+            "volume": "1286513.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          },
+          {
+            "symbol": "NVDA",
+            "interval": "5m",
+            "timestamp": "2026-11-03T15:05:00Z",
+            "open": "207.73500061035156",
+            "high": "208.27999877929688",
+            "low": "207.49009704589844",
+            "close": "208.13999938964844",
+            "volume": "979911.0",
+            "quote_currency": "USD",
+            "source": "yahoo_finance"
+          }
+        ]
+      },
+      "source_ids": [
+        "853e96282fcb2cad76d4e5797568ac503e89b370d755e1c7c3f874447d391392",
+        "d5d3db1f3a9a150388c476b02fda17004aaaf7532de28059efee07ceef81431b",
+        "84f5c4345b63da3c308d144b55027c251424773baafc90021b7ca7842fe70a24",
+        "1e8c5ee62dbefb2b14cb07a05e68cbfd4ce1dd2ed5e1d8c6cd5627edf7a2d791",
+        "9fa8e4999dc547768cea2d0e8770644fb87b13bf896ca5138744b6991c417066",
+        "8281e7df230d9ab9463d6908f69338333435bf6dc3f13b6a287e426dff757ecd",
+        "market:536e4014b5f6403da49a119180efe31166abe23d506ff66dff7fb71f2b22012f"
+      ],
+      "missing_data": [
+        "broker_eligibility_unverified",
+        "eur_risk_and_trade_plan_not_supplied",
+        "catalyst_significance_unverified",
+        "native_quotes_not_converted_to_eur"
+      ],
+      "trade_authorized": false
+    },
+    "trade_authorized": false
+  },
+  "analysis": {
+    "version": "live-research-v4",
+    "instruction_version": "live-research-instructions-v4",
+    "analysis_quality": "requires_human_review",
+    "state": "blocked_or_failed",
+    "trade_authorized": false,
+    "calls": [
+      {
+        "request_id": "live-research-v1:ffdf1243e64948c7115dccf36aba423c282bd0934ae123239812ec6b76ba954c:opportunity_hunter",
+        "state": "received",
+        "response_id": "resp_0c1ec824a788b4b5016ae9f97d56dc87d1bd47a66e7b748a3f",
+        "cost_usd": "0.0056985",
+        "estimated_cost_microeur": 5091
+      }
+    ],
+    "assessments": [],
+    "debate": null,
+    "conclusion": null,
+    "unresolved_concerns": [],
+    "mandatory_missing_data": [
+      "broker_eligibility_unverified",
+      "eur_risk_and_trade_plan_not_supplied",
+      "catalyst_significance_unverified",
+      "native_quotes_not_converted_to_eur"
+    ],
+    "computed_metrics": {
+      "values": {
+        "window_high": "209.13999938964844",
+        "window_low": "205.92999267578125",
+        "first_close": "208.4600067138672",
+        "last_close": "208.13999938964844"
+      },
+      "quote_currency": "USD",
+      "source_id": "market:536e4014b5f6403da49a119180efe31166abe23d506ff66dff7fb71f2b22012f"
+    },
+    "snapshot_id": "ffdf1243e64948c7115dccf36aba423c282bd0934ae123239812ec6b76ba954c"
+  }
+}
