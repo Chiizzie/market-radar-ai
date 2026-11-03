@@ -56,7 +56,7 @@ class PilotReply:
 
 
 class OpenAIPilot:
-    def __init__(self, *, api_key, ledger, eur_per_usd, enabled=False):
+    def __init__(self, *, api_key, ledger, eur_per_usd, enabled=False, count_input_tokens=False):
         if enabled is not True:
             raise ValueError('Paid pilot is disabled')
         if not isinstance(api_key, str) or not api_key.strip():
@@ -67,6 +67,32 @@ class OpenAIPilot:
         if ledger.monthly_limit is None or ledger.lifetime_limit is None:
             raise ValueError('Monthly and lifetime pilot limits are required')
         self._key, self.ledger, self.rate = api_key, ledger, rate
+        if type(count_input_tokens) is not bool:
+            raise ValueError('Token counting flag must be boolean')
+        self.count_input_tokens = count_input_tokens
+
+    def _input_reservation(self, payload):
+        if not self.count_input_tokens:
+            return 400000
+        # Count the same model, prompt, instructions and structured-output schema.
+        # Do not send generation-only options to the counting endpoint.
+        counted = {k: deepcopy(payload[k]) for k in
+                   ('model', 'input', 'instructions', 'text', 'reasoning') if k in payload}
+        try:
+            response = requests.post(ENDPOINT+'/input_tokens', json=counted,
+                headers={'Authorization':'Bearer '+self._key}, timeout=(10, 15),
+                allow_redirects=False)
+            if response.status_code != 200:
+                raise ValueError('count_failed')
+            body = response.json()
+            n = body['input_tokens']
+            if (body.get('object') != 'response.input_tokens' or type(n) is not int
+                    or not 0 < n <= 400000):
+                raise ValueError('invalid_count')
+        except Exception:
+            raise RuntimeError('Input token count unavailable; generation not started') from None
+        # Extra headroom; never treat a local character count as a token count.
+        return min(400000, n + max(1024, (n+9)//10))
 
     def _eur(self, usd):
         return int((usd*self.rate*1_000_000).to_integral_value(rounding=ROUND_CEILING))
@@ -90,9 +116,8 @@ class OpenAIPilot:
             payload['instructions'] = instructions
         if len(json.dumps(payload).encode('utf-8')) > 64000:
             raise ValueError('Pilot request too large')
-        # Reserve the full context window at uncached price, plus output cap.
-        # This deliberately avoids claiming a byte-count token estimate is exact.
-        bound = (400000*INPUT_USD_PER_MILLION + max_output_tokens*OUTPUT_USD_PER_MILLION)/1_000_000
+        incoming_bound = self._input_reservation(payload)
+        bound = (incoming_bound*INPUT_USD_PER_MILLION + max_output_tokens*OUTPUT_USD_PER_MILLION)/1_000_000
         self.ledger.reserve(request_id, self._eur(bound), now)
         try:
             response = requests.post(ENDPOINT, json=payload,

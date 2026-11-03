@@ -155,3 +155,54 @@ def test_actual_debate_context_fits_new_bounded_limit(tmp_path,monkeypatch):
     calls=mock_response(monkeypatch,body())
     c.call(prompt=prompt,schema=SCHEMA,request_id='debate-size',now=NOW)
     assert len(calls)==1
+
+
+def test_provider_count_preserves_schema_and_settles(tmp_path, monkeypatch):
+    c = client(tmp_path, enabled=True, count_input_tokens=True)
+    calls = []
+    def post(url, **kwargs):
+        calls.append((url, kwargs))
+        data = ({'object':'response.input_tokens', 'input_tokens':1000}
+                if url.endswith('/input_tokens') else body())
+        return type('Reply', (), {'status_code':200, 'json':lambda self:data})()
+    monkeypatch.setattr('market_radar_ai.agents.openai_pilot.requests.post', post)
+    assert run(c).estimated_cost_microeur == 959
+    assert len(calls) == 2
+    assert calls[0][1]['json']['text'] == calls[1][1]['json']['text']
+    assert calls[0][1]['json']['input'] == calls[1][1]['json']['input']
+    assert calls[0][1]['allow_redirects'] is False
+    with sqlite3.connect(c.ledger.path) as db:
+        reserved, actual = db.execute('SELECT reserved, actual FROM spend').fetchone()
+    assert reserved == 3440 and actual == 959
+
+
+@pytest.mark.parametrize('count', [True, -1, 0, 400001, '1000', None])
+def test_bad_provider_count_stops_before_generation(tmp_path, monkeypatch, count):
+    c = client(tmp_path, enabled=True, count_input_tokens=True)
+    calls = mock_response(monkeypatch, {'object':'response.input_tokens','input_tokens':count})
+    with pytest.raises(RuntimeError, match='generation not started'):
+        run(c)
+    assert len(calls) == 1 and calls[0][0][0].endswith('/input_tokens')
+    with sqlite3.connect(c.ledger.path) as db:
+        assert db.execute('SELECT count(*) FROM spend').fetchone() == (0,)
+
+
+def test_count_timeout_redacts_and_never_generates(tmp_path, monkeypatch):
+    c = client(tmp_path, enabled=True, count_input_tokens=True)
+    def fail(*args, **kwargs):
+        raise TimeoutError('test-key provider secret')
+    monkeypatch.setattr('market_radar_ai.agents.openai_pilot.requests.post', fail)
+    with pytest.raises(RuntimeError) as exc:
+        run(c)
+    assert 'test-key' not in str(exc.value)
+    with sqlite3.connect(c.ledger.path) as db:
+        assert db.execute('SELECT count(*) FROM spend').fetchone() == (0,)
+
+
+def test_count_does_not_bypass_budget(tmp_path, monkeypatch):
+    c = client(tmp_path, enabled=True, count_input_tokens=True)
+    c.ledger.limit = 0
+    calls = mock_response(monkeypatch, {'object':'response.input_tokens','input_tokens':1000})
+    with pytest.raises(RuntimeError, match='daily_spending_limit'):
+        run(c)
+    assert len(calls) == 1 and calls[0][0][0].endswith('/input_tokens')
