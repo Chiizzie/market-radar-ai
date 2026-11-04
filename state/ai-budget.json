@@ -16,6 +16,12 @@
         "response_id": "resp_0364cdb0279010ba016aeb1fcaf4f887d19d5eaa384439c152"
       }
     },
+    "candidate-review-v1:23648319095857d392131053678dafb238d9cce63fefee19e0eb5a2f6eba0b10:final_decision": {
+      "actual": null,
+      "day": "2026-11-04",
+      "reserved": 8071,
+      "usage": null
+    },
     "candidate-review-v1:23648319095857d392131053678dafb238d9cce63fefee19e0eb5a2f6eba0b10:news_analyst": {
       "actual": 4412,
       "day": "2026-11-04",
