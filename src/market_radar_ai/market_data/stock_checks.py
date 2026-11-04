@@ -131,3 +131,31 @@ def main():
     args.output.write_text(json.dumps(doc,indent=2)+'\n')
 
 if __name__=='__main__': main()
+
+
+def briefing_references(document, *, now):
+    """Freeze validated checks for citation; quote expiry remains explicit."""
+    from datetime import timedelta
+    record=document.get('stock_reference_checks')
+    if record is None:return {}
+    try:
+        result=evaluate(record,now=now)
+    except (KeyError,TypeError,ValueError,ArithmeticError,AttributeError):return {}
+    output={}
+    for row in result['stocks']:
+        quote_at=row.get('observed_at')
+        output[row['symbol']]={
+            'schema_version':'stock-briefing-reference-v1','symbol':row['symbol'],
+            'evaluated_at':now.isoformat(),'original_checks_sha256':record['payload_sha256'],
+            'quote_status_at_assembly':row['quote_status'],
+            'quote_observed_at':quote_at,
+            'quote_expires_at':(timestamp(quote_at)+timedelta(seconds=30)).isoformat() if quote_at else None,
+            'bid_usd':row.get('bid'),'ask_usd':row.get('ask'),
+            'indicative_bid_eur':row.get('indicative_bid_eur'),'indicative_ask_eur':row.get('indicative_ask_eur'),
+            'fx_observed_at':row.get('fx_observed_at'),'fx_source':row.get('fx_source'),
+            'market_status_at_assembly':result['market_clock']['status'],
+            'market_observed_at':result['market_clock'].get('observed_at'),
+            'catalogue_status':row['catalogue_status'],
+            'remaining_blockers':row['remaining_blockers'],
+            'use':'CAPTURED_REFERENCE_ONLY_NOT_EXECUTABLE','trade_authorized':False}
+    return output

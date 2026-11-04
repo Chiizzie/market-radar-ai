@@ -159,3 +159,44 @@ def test_oversized_session_is_rejected_before_any_agent_call(monkeypatch):
     with pytest.raises(ValueError,match='before_generation'):
         m.run(r,d,None,lambda *a:calls.append(a),clock=lambda:NOW)
     assert calls==[]
+
+
+def reference_bundle():
+    from test_stock_checks import payload
+    d=universe();p=payload()
+    p['symbols']=['AAPL','MSFT'];p['retrieved_at']=NOW.isoformat()
+    p['market_clock']['timestamp']=NOW.isoformat()
+    p['market_clock']['next_open']=(NOW+timedelta(days=1)).isoformat()
+    p['market_clock']['next_close']=(NOW+timedelta(hours=5)).isoformat()
+    p['fx']['observed_at']=NOW.isoformat()
+    q=p['quotes']['quotes'].pop('IBM');q['t']=NOW.isoformat()
+    p['quotes']['quotes']={s:deepcopy(q) for s in p['symbols']}
+    p['catalogue_candidates']={s:[] for s in p['symbols']}
+    d['stock_reference_checks']={'payload':p,'payload_sha256':digest(p)}
+    record=build_briefing(d,None,now=NOW)['packages'][0]
+    result=run(record,d,None,session_answer,clock=lambda:NOW)
+    audit=dict(schema_version='paid-session-briefing-v1',state='completed',trade_authorized=False,
+        result=result,calls=[dict(stage=r['stage'],state='received',estimated_cost_microeur=1,untrusted_response=r) for r in result['reviews']])
+    return record,d,None,audit
+
+
+def test_reference_checks_reach_reproducible_paid_archive_without_admission():
+    record,d,feed,audit=reference_bundle()
+    p=record['package']
+    assert p['eur_conversion']=='indicative_reference_only'
+    assert 'fresh_fx_conversion_missing' not in p['missing_evidence']
+    assert 'broker_account_eligibility_unverified' in p['missing_evidence']
+    for source in p['sources'].values():
+        if source.get('schema_version')=='stock-session-summary-v1':
+            assert source['reference_checks']['symbol']==source['symbol']
+            assert source['reference_checks']['indicative_bid_eur']=='90.0'
+    assert export_archive(record,d,feed,audit)['trade_authorized'] is False
+
+
+def test_stale_checks_do_not_clear_fx_or_enter_briefing():
+    record,d,feed,audit=reference_bundle()
+    p=d['stock_reference_checks']['payload'];p['retrieved_at']=(NOW-timedelta(seconds=61)).isoformat()
+    d['stock_reference_checks']['payload_sha256']=digest(p)
+    rebuilt=build_briefing(d,feed,now=NOW)['packages'][0]['package']
+    assert rebuilt['eur_conversion']=='not_supplied'
+    assert all('reference_checks' not in s for s in rebuilt['sources'].values())

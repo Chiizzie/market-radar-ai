@@ -29,6 +29,8 @@ def build_briefing(document, feed, *, now):
     batch=build_context_packages(document,feed,now=now)
     requested=sorted({r['requested_symbol'] for r in document['captures'] if r['market']=='stocks'})
     if len(requested)>20: raise ValueError('briefing_universe_limit')
+    from ..market_data.stock_checks import briefing_references
+    references=briefing_references(document,now=now)
     covered=[]; sources={}; by_symbol={}; news_ids=[]; calendar_ids=[]; macro_ids=[]; expiries=[]
     for record in sorted(batch['packages'],key=lambda r:r['package']['symbol']):
         p=record['package']; symbol=p['symbol'];covered.append(symbol)
@@ -44,6 +46,8 @@ def build_briefing(document, feed, *, now):
             daily_status=original['daily']['status'],intraday_status=original['intraday']['status'],
             research_mode=p['research_mode'],use='CONTEXT_ONLY_NOT_EXECUTABLE',
             phase_is_exchange_calendar_verified=False,trade_authorized=False)
+        if symbol in references:
+            summary['reference_checks']=references[symbol]
         sid='context:'+digest(summary);sources[sid]=summary
         symbol_sources=[sid]
         # One latest linked story per stock, one shared macro source, retained calendars.
@@ -58,10 +62,12 @@ def build_briefing(document, feed, *, now):
           'eur_trade_plan_missing','fresh_fx_conversion_missing','independent_catalyst_confirmation_missing',
           'exchange_session_not_verified','iex_limited_market_coverage','six_agent_review_not_run',
           'context_is_not_trade_admission','corporate_actions_not_verified','complete_event_calendar_missing']
+    converted=all(references.get(s,{}).get('indicative_bid_eur') is not None for s in covered)
+    if converted:gaps.remove('fresh_fx_conversion_missing')
     body=dict(schema_version=SCHEMA,candidate_id='stocks:MARKET_OVERVIEW',symbol='MARKET_OVERVIEW',
         market='stocks',research_mode=slot.upper()+'_BRIEFING',review_slot=slot,
         assembled_at=now.isoformat(),expires_at=min(expiries).isoformat(),
-        native_currency='USD',reporting_currency='EUR',eur_conversion='not_supplied',
+        native_currency='USD',reporting_currency='EUR',eur_conversion='indicative_reference_only' if converted else 'not_supplied',
         requested_symbols=requested,covered_symbols=covered,
         unavailable_symbols=[s for s in requested if s not in covered],
         sources=sources,source_ids=list(sources),symbol_evidence=by_symbol,
@@ -71,7 +77,8 @@ def build_briefing(document, feed, *, now):
         missing_evidence=gaps,roles=p['roles'],constraints=p['constraints'],
         research_questions=['Prioritise or avoid each covered stock for the opening watchlist.',
             'State what changed, cited catalysts, bullish/bearish opening conditions and invalidation.',
-            'Do not invent missing news, forecasts, live prices, converted EUR levels or trade approval.'],
+            'Do not invent missing news, forecasts, live prices, converted EUR levels or trade approval.',
+            'reference_checks are frozen observations: obey quote_expires_at, never call them executable or current after expiry. Indicative EUR quotes are not a EUR trade plan.'],
         usage_note='Whole requested stock universe preparation. Prior-session levels are historical USD context. No twenty-bar requirement; missing current-session candles do not prevent research. Watchlist decisions are not trade calls.',
         review_status='NOT_RUN',model_calls=0,trade_authorized=False,plan=None)
     # Deterministic source/field ordering across processes.
