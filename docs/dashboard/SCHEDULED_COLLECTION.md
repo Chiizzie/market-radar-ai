@@ -8,11 +8,15 @@ running scheduled collector. No code in `Chiizzie/market-radar` is involved.
 
 ## Cadence and limits
 
-- GitHub cron targets minutes 02, 07, 12, …, 57 during UTC hours 07–22 daily.
-  The Python guard permits actual collection only 08:00 inclusive to 23:00
-  exclusive Europe/Dublin, including DST. First target is 08:02 Dublin.
-- GitHub scheduling is best-effort and may be delayed or skip runs. A five-minute
-  target is not a streaming quote service or guaranteed delivery deadline.
+- cron-job.org job 8790954 targets every five minutes from 08:00 inclusive to
+  23:00 exclusive Europe/Dublin (`*/5 8-22 * * *`), including DST.
+  It POSTs a workflow_dispatch request to the default-branch workflow with
+  `{"ref":"main","inputs":{"verify_outside_hours":false}}`.
+- The Python guard independently enforces the same Dublin window. External
+  dispatch does not override it. Native GitHub cron is removed only after two
+  automatic external executions are verified; see EXTERNAL_SCHEDULER_VERIFICATION.md.
+- Dispatch and runner startup can still be delayed or fail. A five-minute target
+  is not a streaming quote service or guaranteed delivery deadline.
 - A single non-overlapping job collects the existing eight stocks and four EUR
   crypto pairs. Provider responses, network time and artifact retention remain bounded.
 - News and Finnhub calendar responses are cached for less than 900 seconds from
@@ -26,7 +30,10 @@ running scheduled collector. No code in `Chiizzie/market-radar` is involved.
   passed to this workflow. It cannot run the paid candidate-review path. Six-agent
   review counts remain zero. This is recurring evidence collection, not trade calls.
 - Main workflow has contents-read permission. Only the four existing data/ingest
-  secrets are supplied to collection. No new account or permissions are needed.
+  secrets are supplied to collection. The external scheduler uses a separately
+  owner-entered GitHub token limited to this repository with Actions write.
+  Never put its value in this repository or logs. Its observed expiry is
+  2027-02-02 11:17:20 UTC; owner renewal is required before expiry.
 
 ## Manual verification and stopping
 
@@ -38,8 +45,9 @@ NO_ACTION. Rerun attempts are blocked. Inspect storage before issuing a new
 dispatch after an ambiguous delivery failure, since successful storage may have
 preceded a network timeout.
 
-Pause via GitHub Actions → Scheduled research collection → Disable workflow.
-Re-enable there to resume. Artifact `collection-report.json` records delivery
+Pause the recurring trigger by disabling cron-job.org job 8790954.
+GitHub Actions → Scheduled research collection → Disable workflow also blocks
+manual/external dispatch; re-enable it before resuming the cron job. Artifact `collection-report.json` records delivery
 identity, original evidence collection start, cache reuse, failures and zero
 model calls. Compare two runs' `delivery.json` and `news.json` to verify new market
 captures and unchanged cached news timestamps.
@@ -59,11 +67,11 @@ workflows run on the default branch, have a minimum five-minute interval, and
 can be delayed/dropped during high load:
 https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule
 
-## Tomorrow's verification
+## Ongoing verification
 
-Confirm a schedule-triggered run after 08:02 Dublin, successful signed delivery,
-then a subsequent different snapshot ID. Compare original evidence timestamps
-and cache reports across runs. Observe the published viewer receiving the newer
-capture through its 30-second storage poll. Regular-market stock evidence will
-still depend on provider coverage and exchange hours. There is no profitability
-or trade-quality claim from successful delivery alone.
+Check cron-job.org execution history, the corresponding GitHub run, and signed
+storage delivery. A dispatch HTTP success is not a delivery receipt. Confirm
+subsequent snapshot IDs and original evidence timestamps. The viewer polls
+storage every 30 seconds. Regular-market stock evidence still depends on
+provider coverage and exchange hours. Successful delivery does not establish
+profitability or trade quality.
