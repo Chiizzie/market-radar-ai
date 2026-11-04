@@ -99,7 +99,14 @@ def test_cycle_delivers_once_then_skips_without_more_models(tmp_path,monkeypatch
     monkeypatch.setattr('market_radar_ai.agents.scheduled_review.OpenAIPilot',lambda **k:object())
     fx=SimpleNamespace(eur_per_unit='0.9',model_dump=lambda **k:{'eur_per_unit':'0.9'})
     monkeypatch.setattr('market_radar_ai.agents.scheduled_review.YahooFxProvider',lambda:SimpleNamespace(fetch=lambda *a,**k:fx))
-    monkeypatch.setattr('market_radar_ai.agents.scheduled_review.run_paid',lambda *a,**k:(calls.append('eight') or audit))
+    def paid(client, record, capture, feed, **kwargs):
+        from market_radar_ai.agents.candidate_review import run
+        from test_candidate_review import answer
+        calls.append('eight')
+        result=run(record,capture,feed,answer,clock=kwargs['clock'])
+        return {**audit,'result':result,'calls':[{'stage':r['stage'],'state':'received',
+                'estimated_cost_microeur':123,'untrusted_response':r} for r in result['reviews']]}
+    monkeypatch.setattr('market_radar_ai.agents.scheduled_review.run_paid',paid)
     monkeypatch.setattr('market_radar_ai.agents.scheduled_review.deliver',lambda *a,**k:{'state':'candidate_archive_delivery_confirmed'})
     # Fixture is a weekday within the authorized clock window.
     env={**ENV,'OPENAI_API_KEY':'test','GH_BUDGET_TOKEN':'test'}

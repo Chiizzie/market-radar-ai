@@ -21,3 +21,11 @@ The current momentum shortlist requires 20 completed five-minute bars. Stock con
 ## Verification
 
 807 local tests passed before deployment, including the new weekday/DST/scope gates, durable quota, lost-write behavior, budget headroom, archive validation and one-complete-cycle/no-second-model-call integration test. Live model completion and dashboard delivery must be verified from the subsequent production run, not inferred from these tests.
+
+## V2 conditional scenario contract
+
+`candidate-review-archive-v2` keeps the v1 envelope and result fields (both top-level `plan` values remain null; trade_authorized remains false), but carries `candidate-evidence-package-v2`. Its package `plan` is null or `conditional-eur-paper-scenario-v1`: symbol, currency EUR, native_currency, positive decimal-string entry_eur/stop_eur/target_eur/quantity/planned_loss_eur, assumed_round_trip_cost_eur, paper_capital_eur='500', assumed_round_trip_cost_bps='40', entry_buffer_bps='10', fx_rate, fx_source, aware expires_at/exit_by, trade_authorized=false, and bounded assumptions/trigger/invalidation/loss_note text. Require stop < entry < target; risk <= 20; package expiry <= plan expiry; same-day Dublin exit <=22:00; exact symbol/currency binding. The plan is conditional illustrative research with fictional capital and cost assumptions, never an approved trade. Every role now receives it. Missing broker/account/execution/catalyst checks still prevent admission. UI must show these assumptions alongside levels and must never enable actionable status.
+
+Calendar enrichment already uses optional package calendar_source_ids and source keys `calendar:<sha256>`. Treat those as cited dated research, never independently confirmed catalysts. Preserve strict validation of unknown keys, source IDs, eight stages, original timestamps and hashes. Existing v1 archives must remain readable. No snapshot contract change, keys in browser, order controls or frontend-triggered AI calls.
+
+The v2 fixture is synthetic test input only, not a paid/live result. Local validation expanded to 811 passing tests. Production model and ingestion checks remain required.

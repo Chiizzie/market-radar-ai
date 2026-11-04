@@ -34,7 +34,7 @@ def export_archive(record, capture, feed, audit):
                 or type(amount) is not int or amount < 0):
             raise ValueError('invalid_candidate_usage_record')
         spent += amount
-    return {'schema_version': 'candidate-review-archive-v1',
+    return {'schema_version': ('candidate-review-archive-v2' if record['package']['schema_version']=='candidate-evidence-package-v2' else 'candidate-review-archive-v1'),
             'package_id': record['package_id'], 'candidate_id': result['candidate_id'],
             # Hash exact package_json UTF-8 bytes; do not reserialize in another language.
             'package_json': canonical(record['package']), 'result_json': canonical(result),

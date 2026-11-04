@@ -74,8 +74,8 @@ def decision_summary(record, capture, feed, audit):
                 completed_at=result['completed_at'], review_origin='PAID_AI',
                 research_verdict='REJECT' if rejected else 'WATCHLIST' if follow else 'MORE_EVIDENCE_REQUIRED',
                 final_decision='NO_ACTION', trade_authorized=False, paper_only=True,
-                plan=None, blockers=list(dict.fromkeys(gaps)),
-                reason='Research review completed; no verified EUR trade plan or execution admission supplied.',
+                plan=record['package'].get('plan'), blockers=list(dict.fromkeys(gaps)),
+                reason='Research review completed; no approved EUR trade plan or execution admission supplied.',
                 estimated_cost_microeur=archive['estimated_cost_microeur'],
                 model_calls=8, evidence_status=result['evidence_status'])
 
@@ -111,9 +111,21 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
             status['state'] = 'daily_review_quota_reached'
             return status
         record = choices[0]  # existing stable shortlist: stocks before crypto
-        save('package.json', record)
         fx = YahooFxProvider().fetch('USD', now=clock())
         save('cost-fx.json', fx.model_dump(mode='json'))
+        from copy import deepcopy
+        capture = deepcopy(capture)
+        capture['paper_scenarios_enabled'] = True
+        capture['paper_plan_fx'] = fx.model_dump(mode='json')
+        refreshed = build_packages(capture, feed, now=clock())
+        matches = [r for r in refreshed['packages']
+                   if r['package']['candidate_id'] == record['package']['candidate_id']]
+        if not matches:
+            status['state'] = 'candidate_expired_during_preparation'
+            return status
+        record = matches[0]
+        save('decision-capture.json', capture)
+        save('package.json', record)
         reproduce(record, capture, feed, now=clock())
         if not permitted(env, clock()):
             status['state'] = 'outside_review_scope_or_window'
