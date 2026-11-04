@@ -1922,7 +1922,7 @@
       }
     },
     "scheduled-research-v1:2026-11-04:crypto": {
-      "actual": null,
+      "actual": 0,
       "day": "2026-11-04",
       "reserved": 1,
       "usage": null
