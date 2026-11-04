@@ -2104,6 +2104,12 @@
         "response_id": "resp_0967225ca69c86a9016aeb4ff866b487d1b400b1d4e9b4376c"
       }
     },
+    "session-review-v1:1cb33002e39140226ee706f15271b6ce5fbe12320fdde173bc550edd203cdb7d:risk_manager": {
+      "actual": null,
+      "day": "2026-11-04",
+      "reserved": 21301,
+      "usage": null
+    },
     "session-review-v1:1cb33002e39140226ee706f15271b6ce5fbe12320fdde173bc550edd203cdb7d:technical_analyst": {
       "actual": 16548,
       "day": "2026-11-04",
