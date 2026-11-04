@@ -1,6 +1,12 @@
 {
   "currency": "EUR",
   "entries": {
+    "candidate-review-v1:23648319095857d392131053678dafb238d9cce63fefee19e0eb5a2f6eba0b10:conclusion": {
+      "actual": null,
+      "day": "2026-11-04",
+      "reserved": 8785,
+      "usage": null
+    },
     "candidate-review-v1:23648319095857d392131053678dafb238d9cce63fefee19e0eb5a2f6eba0b10:debate": {
       "actual": 5065,
       "day": "2026-11-04",
