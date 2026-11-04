@@ -8,9 +8,11 @@ from datetime import datetime, timedelta
 import json
 from pathlib import Path
 from typing import Literal
+from pydantic import Field
+from .paper_team import Frozen
 
 from .candidate_packages import build_packages, canonical, verify_package
-from .plan_review import Review
+from .plan_review import Review, ReviewProse
 from .roles import AgentRole
 
 STAGES = [role.value for role in AgentRole] + ['debate', 'conclusion']
@@ -20,12 +22,28 @@ class CandidateReview(Review):
     verdict: Literal['REJECT', 'MORE_EVIDENCE_REQUIRED', 'RESEARCH_WORTH_FOLLOWING']
 
 
+class SymbolDecision(Frozen):
+    symbol: str
+    posture: Literal['WATCHLIST', 'AVOID', 'MORE_EVIDENCE_REQUIRED']
+    rationale: ReviewProse = Field(min_length=1, max_length=140)
+    opening_condition: ReviewProse = Field(min_length=1, max_length=160)
+    invalidation: ReviewProse = Field(min_length=1, max_length=160)
+    source_ids: tuple[str, ...] = Field(min_length=1, max_length=3)
+
+
+class SessionReview(CandidateReview):
+    symbol_decisions: tuple[SymbolDecision, ...] = Field(min_length=1, max_length=20)
+
+
 def reproduce(record, capture, feed, *, now):
     body = verify_package(record, now=now)
     builder = build_packages
     if body.get('schema_version') == 'context-evidence-package-v1':
         from .context_packages import build_context_packages
         builder = build_context_packages
+    if body.get('schema_version') == 'session-evidence-package-v1':
+        from .session_briefing import build_briefing
+        builder = build_briefing
     rebuilt = builder(capture, feed, now=datetime.fromisoformat(body['assembled_at']))
     # JSON arrays round-trip tuples (selection reasons) as lists. Compare the
     # canonical wire representation, not Python container implementation types.
@@ -49,7 +67,9 @@ def prompt_snapshot(body):
 def run(record, capture, feed, ask, *, clock):
     started = clock()
     body = reproduce(record, capture, feed, now=started)
-    context_only = body.get('schema_version') == 'context-evidence-package-v1'
+    session_briefing = body.get('schema_version') == 'session-evidence-package-v1'
+    context_only = session_briefing or body.get('schema_version') == 'context-evidence-package-v1'
+    response_type = SessionReview if session_briefing else CandidateReview
     current_status = 'CURRENT_CONTEXT_ONLY' if context_only else 'CURRENT_RESEARCH_DATA'
     expiry = datetime.fromisoformat(body['expires_at'])
     deadline = started + timedelta(minutes=10)
@@ -61,12 +81,15 @@ def run(record, capture, feed, ask, *, clock):
             raise ValueError('candidate_review_deadline')
         peers = [{k: deepcopy(r[k]) for k in ('stage', 'verdict', 'rationale', 'source_ids', 'concerns')}
                  for r in reports] if stage in ('debate', 'conclusion') else []
+        if session_briefing and peers:
+            for peer, report in zip(peers, reports):
+                peer['symbol_decisions'] = deepcopy(report['symbol_decisions'])
         payload = {'snapshot': prompt_snapshot(body), 'snapshot_id': record['package_id'],
                    'stage': stage, 'peer_reviews': peers,
                    'evidence_status': current_status if at < expiry else 'STALE_RESEARCH_ONLY'}
-        if len(canonical(payload).encode()) > 32000:
+        if len(canonical(payload).encode()) > (64000 if session_briefing else 32000):
             raise ValueError('review_prompt_too_large')
-        response = CandidateReview.model_validate(ask(stage, payload, CandidateReview.model_json_schema()))
+        response = response_type.model_validate(ask(stage, payload, response_type.model_json_schema()))
         finished = clock()
         if finished.tzinfo is None or not at <= finished < deadline:
             raise ValueError('candidate_review_deadline')
@@ -76,9 +99,16 @@ def run(record, capture, feed, ask, *, clock):
                 or sorted(response.acknowledged_blockers) != sorted(body['missing_evidence'])
                 or list(response.reviewed_stages) != [r['stage'] for r in peers]):
             raise ValueError('review_identity_or_evidence_mismatch')
+        if session_briefing:
+            if [r.symbol for r in response.symbol_decisions] != body['covered_symbols']:
+                raise ValueError('briefing_symbol_coverage_mismatch')
+            for item in response.symbol_decisions:
+                allowed = set(body['symbol_evidence'][item.symbol]['source_ids'] + body['macro_source_ids'])
+                if len(set(item.source_ids)) != len(item.source_ids) or not set(item.source_ids) <= allowed:
+                    raise ValueError('briefing_symbol_citation_mismatch')
         reports.append(response.model_dump(mode='json'))
         previous = finished
-    return {'schema_version': 'context-review-result-v1' if context_only else 'candidate-review-result-v1', 'package_id': record['package_id'],
+    return {'schema_version': 'session-briefing-result-v1' if session_briefing else 'context-review-result-v1' if context_only else 'candidate-review-result-v1', 'package_id': record['package_id'],
             'candidate_id': body['candidate_id'], 'state': 'research_review_completed',
             'started_at': started.isoformat(), 'completed_at': finished.isoformat(),
             'evidence_expires_at': body['expires_at'],
@@ -95,8 +125,9 @@ def run_paid(client, record, capture, feed, *, path, clock, enabled=False):
     path = Path(path)
     if path.exists():
         raise ValueError('preserve_existing_review')
-    context_only = record['package'].get('schema_version') == 'context-evidence-package-v1'
-    audit = {'schema_version': 'paid-context-review-v1' if context_only else 'paid-candidate-review-v1', 'state': 'preflight',
+    session_briefing = record['package'].get('schema_version') == 'session-evidence-package-v1'
+    context_only = session_briefing or record['package'].get('schema_version') == 'context-evidence-package-v1'
+    audit = {'schema_version': 'paid-session-briefing-v1' if session_briefing else 'paid-context-review-v1' if context_only else 'paid-candidate-review-v1', 'state': 'preflight',
              'trade_authorized': False, 'calls': [], 'result': None}
 
     def save():
@@ -111,6 +142,11 @@ def run_paid(client, record, capture, feed, *, path, clock, enabled=False):
         save()
         props = schema['properties']
         props['source_ids']['items']['enum'] = payload['snapshot']['source_ids']
+        if session_briefing:
+            symbols = payload['snapshot']['covered_symbols']
+            props['symbol_decisions'].update(minItems=len(symbols), maxItems=len(symbols))
+            schema['$defs']['SymbolDecision']['properties']['symbol']['enum'] = symbols
+            schema['$defs']['SymbolDecision']['properties']['source_ids']['items']['enum'] = payload['snapshot']['source_ids']
         props['snapshot_id']['enum'] = [payload['snapshot_id']]
         props['stage']['enum'] = [stage]
         gaps = payload['snapshot']['missing_evidence']
@@ -121,9 +157,17 @@ def run_paid(client, record, capture, feed, *, path, clock, enabled=False):
         if peers:
             props['reviewed_stages']['items']['enum'] = peers
         reply = client.call(prompt=canonical(payload), schema=schema,
-            request_id=f"{'context' if context_only else 'candidate'}-review-v1:{payload['snapshot_id']}:{stage}", now=clock(),
-            max_output_tokens=1024, reasoning_effort='none', instructions=(
+            request_id=f"{'session' if session_briefing else 'context' if context_only else 'candidate'}-review-v1:{payload['snapshot_id']}:{stage}", now=clock(),
+            max_output_tokens=3072 if session_briefing else 1024, reasoning_effort='none', instructions=(
                 'Review only this evidence package in your assigned specialist role. '
+                'For session-evidence-package-v1, prepare the whole covered stock universe: emit one '
+                'symbol_decisions item for EVERY covered_symbols entry in its original order. Give '
+                'WATCHLIST, AVOID or MORE_EVIDENCE_REQUIRED, a short reason, conditional opening '
+                'trigger and invalidation. Use only that symbol_evidence source_ids or shared macro IDs '
+                'for each symbol. Keep each field to one short sentence. No executable entry approval. '
+                'Morning/preopen knowledge uses prior-session levels, dated news and available '
+                'premarket observations; it does not need 20 current-session bars. Do not treat '
+                'missing premarket candles as absence of useful prior-session/news evidence. '
                 'If schema_version is context-evidence-package-v1, this is premarket, opening, '
                 'intraday or after-hours research without a twenty-bar requirement. Address the '
                 'supplied research_questions with conditional scenarios and invalidation evidence, '

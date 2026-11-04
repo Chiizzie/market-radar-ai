@@ -6,6 +6,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from .candidate_packages import build_packages
+from .session_briefing import build_briefing
 from .candidate_review import run_paid, reproduce
 from .github_budget import GitHubBudgetStore, GitHubSpendingLedger, validate_state, REPOSITORY
 from .openai_pilot import OpenAIPilot
@@ -30,13 +31,18 @@ def permitted(env, now):
             and local.weekday() < 5 and 8 <= local.hour < 22)
 
 
+def quota_bucket(record):
+    p = record['package']
+    return 'stocks_'+p['review_slot'] if p['schema_version']=='session-evidence-package-v1' else p['market']
+
+
 def claim_review(store, market, now):
     """One durable attempt per market/day, including failures and lost replies.
 
     The CAS marker costs one micro-euro of held budget until its zero-cost
     settlement. A concurrent/lost write never allows generation to start.
     """
-    if market not in ('stocks', 'crypto'):
+    if market not in ('stocks', 'crypto', 'stocks_morning', 'stocks_preopen', 'stocks_opening'):
         raise ValueError('invalid_market')
     state, _ = store.load()
     validate_state(state)
@@ -67,7 +73,7 @@ def decision_summary(record, capture, feed, audit):
     rejected = any(r['verdict'] == 'REJECT' for r in reviews)
     follow = (not rejected and reviews[-1]['verdict'] == 'RESEARCH_WORTH_FOLLOWING')
     gaps = [x for x in result['missing_evidence'] if x != 'six_agent_review_not_run']
-    if result['evidence_status'] != 'CURRENT_RESEARCH_DATA':
+    if result['evidence_status'] not in ('CURRENT_RESEARCH_DATA', 'CURRENT_CONTEXT_ONLY'):
         gaps.append('review_evidence_expired')
     return dict(schema_version='scheduled-research-decision-v1',
                 candidate_id=result['candidate_id'], package_id=result['package_id'],
@@ -77,7 +83,9 @@ def decision_summary(record, capture, feed, audit):
                 plan=record['package'].get('plan'), blockers=list(dict.fromkeys(gaps)),
                 reason='Research review completed; no approved EUR trade plan or execution admission supplied.',
                 estimated_cost_microeur=archive['estimated_cost_microeur'],
-                model_calls=8, evidence_status=result['evidence_status'])
+                model_calls=8, evidence_status=result['evidence_status'],
+                research_mode=record['package'].get('research_mode'),
+                symbol_decisions=reviews[-1].get('symbol_decisions', []))
 
 
 def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc)):
@@ -93,7 +101,9 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
         if not permitted(env, clock()):
             status['state'] = 'outside_review_scope_or_window'
             return status
+        briefing = build_briefing(capture, feed, now=clock())
         batch = build_packages(capture, feed, now=clock())
+        batch['packages'] = briefing['packages'] + batch['packages']
         if not batch['packages']:
             status['state'] = 'no_reviewable_candidate'
             return status
@@ -106,7 +116,7 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
         state, _ = store.load()
         day = clock().astimezone(ZoneInfo('Europe/Dublin')).date().isoformat()
         choices = [r for r in batch['packages']
-                   if PREFIX+day+':'+r['package']['market'] not in state['entries']]
+                   if PREFIX+day+':'+quota_bucket(r) not in state['entries']]
         if not choices:
             status['state'] = 'daily_review_quota_reached'
             return status
@@ -117,7 +127,8 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
         capture = deepcopy(capture)
         capture['paper_scenarios_enabled'] = True
         capture['paper_plan_fx'] = fx.model_dump(mode='json')
-        refreshed = build_packages(capture, feed, now=clock())
+        refreshed = (build_briefing if record['package']['schema_version']=='session-evidence-package-v1'
+                     else build_packages)(capture, feed, now=clock())
         matches = [r for r in refreshed['packages']
                    if r['package']['candidate_id'] == record['package']['candidate_id']]
         if not matches:
@@ -130,7 +141,7 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
         if not permitted(env, clock()):
             status['state'] = 'outside_review_scope_or_window'
             return status
-        if not claim_review(store, record['package']['market'], clock()):
+        if not claim_review(store, quota_bucket(record), clock()):
             status['state'] = 'quota_or_budget_deferred'
             return status
         client = OpenAIPilot(api_key=key, ledger=ledger, eur_per_usd=fx.eur_per_unit,
