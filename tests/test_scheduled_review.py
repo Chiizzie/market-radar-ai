@@ -53,7 +53,7 @@ def test_lost_marker_reply_blocks_generation_and_retry():
     assert next(iter(s.state['entries'].values()))['actual'] is None
 
 def test_budget_headroom_defers_without_reset():
-    s=Store(); s.state['entries']['old']={'day':'2026-11-03','reserved':900000,'actual':900000,'usage':None}
+    s=Store(); s.state['entries']['old']={'day':'2026-11-03','reserved':4900000,'actual':4900000,'usage':None}
     assert not claim_review(s,'stocks',NOW)
     assert s.version==0
 
@@ -142,3 +142,16 @@ def test_recovery_cannot_bypass_spending_limit():
     s.state['entries']['previous-paid-call']={'day':'2026-11-04','reserved':400000,'actual':400000,'usage':None}
     assert not claim_review(s,'stocks_verified_recovery',NOW)
     assert s.version==0
+
+
+def test_reference_verification_requires_dated_checks_and_cannot_repeat():
+    from market_radar_ai.agents.scheduled_review import authorized_recovery_bucket
+    r={'package':{'schema_version':'session-evidence-package-v1','review_slot':'intraday'}}
+    env={**ENV,'REFERENCE_VERIFICATION_DATE':'2026-11-04','ENABLE_STOCK_CHECKS':'true'}
+    assert authorized_recovery_bucket(r,env,NOW)=='stocks_reference_verification'
+    assert authorized_recovery_bucket(r,env,NOW+timedelta(days=1))=='stocks_intraday'
+    assert authorized_recovery_bucket(r,{**env,'ENABLE_STOCK_CHECKS':'false'},NOW)=='stocks_intraday'
+    s=Store()
+    assert claim_review(s,'stocks_verified_recovery',NOW)
+    assert claim_review(s,'stocks_reference_verification',NOW)
+    assert not claim_review(s,'stocks_reference_verification',NOW)

@@ -46,6 +46,11 @@ def opening_recovery_allowed(state, day):
 def authorized_recovery_bucket(record, env, now):
     """Explicit dated authorization for one fresh attempt, never a ledger reset."""
     day = now.astimezone(ZoneInfo('Europe/Dublin')).date().isoformat()
+    if (permitted(env, now) and env.get('REFERENCE_VERIFICATION_DATE') == day
+            and env.get('ENABLE_STOCK_CHECKS') == 'true'
+            and record['package'].get('review_slot') == 'intraday'
+            and record['package'].get('schema_version') == 'session-evidence-package-v1'):
+        return 'stocks_reference_verification'
     if (permitted(env, now) and env.get('SCHEDULED_RECOVERY_DATE') == day
             and record['package'].get('review_slot') == 'intraday'
             and record['package'].get('schema_version') == 'session-evidence-package-v1'):
@@ -59,7 +64,7 @@ def claim_review(store, market, now):
     The CAS marker costs one micro-euro of held budget until its zero-cost
     settlement. A concurrent/lost write never allows generation to start.
     """
-    if market not in ('stocks', 'crypto', 'stocks_morning', 'stocks_preopen', 'stocks_opening', 'stocks_intraday', 'stocks_verified_recovery'):
+    if market not in ('stocks', 'crypto', 'stocks_morning', 'stocks_preopen', 'stocks_opening', 'stocks_intraday', 'stocks_verified_recovery', 'stocks_reference_verification'):
         raise ValueError('invalid_market')
     state, _ = store.load()
     validate_state(state)
@@ -137,7 +142,7 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
         safe_recovery = opening_recovery_allowed(state, day)
         batch['packages'] = [r for r in batch['packages']
             if r['package'].get('review_slot') != 'intraday' or safe_recovery
-            or authorized_recovery_bucket(r, env, clock()) == 'stocks_verified_recovery']
+            or authorized_recovery_bucket(r, env, clock()) in ('stocks_verified_recovery', 'stocks_reference_verification')]
         choices = [r for r in batch['packages']
                    if PREFIX+day+':'+authorized_recovery_bucket(r, env, clock()) not in state['entries']]
         if not choices:

@@ -41,6 +41,7 @@ def test_conflict_cannot_overwrite_reservation():
 def test_lifetime_survives_month_boundary():
     store=MemoryStore()
     ledger=GitHubSpendingLedger(store)
+    store.state['entries']['older']={'day':'2026-10-01','reserved':4000000,'actual':4000000,'usage':None}
     ledger.reserve('one',400000,NOW)
     ledger.reserve('two',400000,NOW.replace(month=12))
     with pytest.raises(RuntimeError,match='lifetime'):
