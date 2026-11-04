@@ -29,3 +29,13 @@ The current momentum shortlist requires 20 completed five-minute bars. Stock con
 Calendar enrichment already uses optional package calendar_source_ids and source keys `calendar:<sha256>`. Treat those as cited dated research, never independently confirmed catalysts. Preserve strict validation of unknown keys, source IDs, eight stages, original timestamps and hashes. Existing v1 archives must remain readable. No snapshot contract change, keys in browser, order controls or frontend-triggered AI calls.
 
 The v2 fixture is synthetic test input only, not a paid/live result. Local validation expanded to 811 passing tests. Production model and ingestion checks remain required.
+
+## Production verification — 4 November 2026, 12:07 Dublin
+
+Owner explicitly approved publication. Lovable production now serves v2 compatibility revision dd425771479bc6091958cc935743931806418525 (457 frontend tests/build/browser checks reported passed; one build used 7 credits). Verified HTTP 200 and live candidate-route JavaScript with v2/scenario support. Release PR #1 merged to main as 802300a13a11c547609b48ca77c433e05a02277d, pinning tested backend a2e5a886f3b29906e00aa9138dd98dcf2c4a417d.
+
+First automatic run https://github.com/Chiizzie/market-radar-ai/actions/runs/41826219511 passed both collection and review. Eight real model stages reviewed crypto:XRPEUR and completed at 12:07:02.269852 UTC/Dublin. Result: MORE_EVIDENCE_REQUIRED, application decision NO_ACTION. The conditional scenario remained unapproved; missing broker eligibility, executable quotes/costs and independent catalyst evidence were retained. No order or new Telegram delivery occurred.
+
+Lovable production database independently confirmed candidate-review-archive-v2 ID 96b05edebe2e6261f328a8bf470df77e7d108544c705ee643561899dcc23571a, package 23648319095857d392131053678dafb238d9cce63fefee19e0eb5a2f6eba0b10, eight ordered reviews and the original conditional EUR scenario. Durable ledger settled all eight calls at total EUR 0.036653; its crypto/day marker is present. Total lifetime recorded spend is EUR 0.675489 with no unsettled reservations. Original scenario/package expiry is preserved; this becomes historical research after expiry.
+
+This verifies the production decision-and-archive path, not profitability, executable trade admission, a stock-session run, or a production viewer interaction. The stock momentum strategy still needs 20 completed five-minute bars. The collector continues independently; one stock and one crypto review attempt per weekday and existing monetary caps remain in force.
