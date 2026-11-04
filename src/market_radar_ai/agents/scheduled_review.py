@@ -207,6 +207,12 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
         status['state'] = 'blocked_or_failed'
         raise RuntimeError('Scheduled review stopped; inspect artifacts and durable budget, never replay paid calls') from None
     finally:
+        if status['state'] in ('quota_or_budget_deferred','daily_review_quota_reached'):
+            from ..dashboard.scheduled_notification import notify_pause
+            try:
+                status['telegram_status_notice']=notify_pause(status['state'],env=env,clock=clock)['state']
+            except Exception:
+                status['telegram_status_notice']='unconfirmed_do_not_retry'
         save('status.json', status)
         if ledger is not None:
             try:

@@ -141,7 +141,9 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         failed.append('news_unavailable')
     if any(r['payload']['status'] in ('error', 'not_configured') for r in doc['earnings_calendars']):
         failed.append('calendar_unavailable')
-    report = {'state': 'delivered_with_failures' if failed else 'delivered',
+    gaps = [c['requested_symbol'] for c in doc.get('captures', []) if not c['payload']['quality_passed_at_capture']]
+    report = {'state': 'delivered_with_failures' if failed else 'delivered_with_data_gaps' if gaps else 'delivered',
+              'unusable_or_stale_symbols': gaps,
               'started_at': started.isoformat(), 'delivery': receipt, 'stages': stages,
               'evidence_cache': 'reused_original_timestamps' if cache else 'collected',
               'evidence_collection_started_at': cache['collection_started_at'] if cache else started.isoformat(),

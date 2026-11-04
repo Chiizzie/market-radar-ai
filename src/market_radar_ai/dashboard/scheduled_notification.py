@@ -60,3 +60,34 @@ def deliver(record, capture, feed, audit, *, env, clock, ledger=None, session=No
         raise RuntimeError('Telegram delivery unconfirmed; do not retry') from None
     return {'state': 'telegram_research_delivery_confirmed', 'trade_authorized': False,
             'package_id': archive['package_id']}
+
+
+def notify_pause(reason, *, env, clock, ledger=None, session=None):
+    """One non-AI operational notice per day/reason; never a trade/review result."""
+    from hashlib import sha256
+    from ..agents.scheduled_review import permitted
+    reasons={'quota_or_budget_deferred':'AI review paused: the remaining spending allowance is below the reserve needed for another review.',
+             'daily_review_quota_reached':'AI review paused: today’s permitted review slots have been used.'}
+    now=clock()
+    if reason not in reasons or env.get('SEND_SCHEDULED_TELEGRAM')!='true':return {'state':'disabled'}
+    if not permitted(env,now):raise ValueError('notification_outside_scheduled_scope')
+    token,chat=env.get('TELEGRAM_BOT_TOKEN',''),env.get('TELEGRAM_CHAT_ID','')
+    if not token or not chat.lstrip('-').isdigit():raise ValueError('telegram_secrets_missing_or_invalid')
+    day=now.astimezone(ZoneInfo('Europe/Dublin')).date().isoformat()
+    key='research:'+sha256(('operational-pause-v1:'+day+':'+reason).encode()).hexdigest()
+    ledger=ledger or DeliveryLedger(GitHubDeliveryStore(env.get('GH_BUDGET_TOKEN','')))
+    try:ledger.reserve(key)
+    except ValueError as e:
+        if str(e)=='delivery_already_attempted_do_not_retry':return {'state':'pause_notice_already_attempted'}
+        raise
+    text='\n'.join(['ℹ️ STATUS — Market Radar AI',now.astimezone(ZoneInfo('Europe/Dublin')).strftime('%d %b %H:%M Dublin'),reasons[reason],
+        'No new AI review or trade call was produced by this run. Scheduled data collection is separate; this notice does not confirm its success.',DASHBOARD])
+    try:
+        response=(session or requests).post('https://api.telegram.org/bot'+token+'/sendMessage',
+            json={'chat_id':chat,'text':text,'protect_content':True,'link_preview_options':{'is_disabled':True}},
+            timeout=(10,20),allow_redirects=False)
+        body=response.json()
+        if response.status_code!=200 or body.get('ok') is not True or str(body['result']['chat']['id'])!=chat or type(body['result']['message_id']) is not int:raise ValueError()
+        ledger.confirm(key)
+    except Exception:raise RuntimeError('Telegram pause notice unconfirmed; do not retry') from None
+    return {'state':'telegram_pause_notice_confirmed','trade_authorized':False}

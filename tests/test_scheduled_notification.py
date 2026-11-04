@@ -29,3 +29,22 @@ def test_duplicate_reservation_prevents_post():
 
 def test_disabled_sends_nothing():
     assert deliver(None,None,None,None,env={},clock=lambda:NOW)=={'state':'disabled'}
+
+
+def test_budget_pause_notice_is_operational_and_deduplicated():
+    from market_radar_ai.dashboard.scheduled_notification import notify_pause
+    ledger=Mock();session=Mock()
+    session.post.return_value=Mock(status_code=200,json=lambda:{'ok':True,'result':{'chat':{'id':123},'message_id':2}})
+    r=notify_pause('quota_or_budget_deferred',env=ENV,clock=lambda:NOW,ledger=ledger,session=session)
+    assert r['state']=='telegram_pause_notice_confirmed'
+    assert session.post.call_args.kwargs['json']['text'].startswith('ℹ️ STATUS')
+    ledger.reserve.side_effect=ValueError('delivery_already_attempted_do_not_retry')
+    assert notify_pause('quota_or_budget_deferred',env=ENV,clock=lambda:NOW,ledger=ledger,session=session)['state']=='pause_notice_already_attempted'
+    session.post.assert_called_once()
+
+
+def test_lost_pause_notice_is_not_confirmed_or_retried():
+    from market_radar_ai.dashboard.scheduled_notification import notify_pause
+    ledger=Mock();session=Mock();session.post.side_effect=TimeoutError()
+    with pytest.raises(RuntimeError):notify_pause('quota_or_budget_deferred',env=ENV,clock=lambda:NOW,ledger=ledger,session=session)
+    ledger.confirm.assert_not_called();session.post.assert_called_once()

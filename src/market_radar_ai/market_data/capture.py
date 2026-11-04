@@ -103,6 +103,16 @@ def capture_markets(stock_symbols, crypto_pairs, *, stock_fetch, crypto_fetch,
             "coverage": coverage, "captures": captures}
 
 
+def connectivity_exit_code(document):
+    # A valid empty series is a data gap, not a failed HTTP/provider connection.
+    rows=document['captures']
+    if any(c['payload']['provider_status'] != 'ok' for c in rows):return 1
+    for market in {c.get('market','unknown') for c in rows}:
+        group=[c['payload'] for c in rows if c.get('market','unknown')==market]
+        if group and not any(p.get('candles') for p in group) and not all(any(i['code']=='regular_session_not_started' for i in p.get('quality_issues',[])) for p in group):return 1
+    return 0
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
@@ -150,7 +160,7 @@ def main() -> None:
             "provider_status": p["provider_status"], "candles_saved": p["candles_saved"],
             "quality_passed": p["quality_passed_at_capture"], "issues": p["quality_issues"]}))
     # Report provider failures as a failing connectivity check, preserving the evidence first.
-    return int(any(c["attempted"] != c["successful"] + c["not_requested"] for c in document["coverage"].values()))
+    return connectivity_exit_code(document)
 
 
 if __name__ == "__main__":

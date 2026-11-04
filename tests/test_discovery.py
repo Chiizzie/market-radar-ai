@@ -28,3 +28,15 @@ def test_stale_bad_or_missing_credentials_report_fallback():
     for session,env in [(Session((NOW-timedelta(days=1)).isoformat()),{'ALPACA_API_KEY':'x','ALPACA_API_SECRET':'y'}),(Session(bad=True),{'ALPACA_API_KEY':'x','ALPACA_API_SECRET':'y'}),(Session(),{})]:
         r=discover(env=env,now=NOW,fallback=['AAPL'],session=session)
         assert r['fallback_used'] and r['discovered_count']==0 and r['selected_symbols']==['AAPL']
+
+
+def test_catalogue_and_quality_screen_filters_before_selection(monkeypatch):
+    from types import SimpleNamespace
+    from market_radar_ai.market_data.models import ProviderResult
+    monkeypatch.setattr('market_radar_ai.market_data.providers.catalogues.Trading212Catalogue.fetch',lambda self:[SimpleNamespace(ticker='S'+str(i)+'_US_EQ',type='STOCK',currencyCode='USD') for i in range(15)])
+    monkeypatch.setattr('market_radar_ai.market_data.providers.alpaca.AlpacaIexProvider.fetch_history',lambda self,s:s)
+    monkeypatch.setattr('market_radar_ai.market_data.capture.capture_result',lambda r,**k:{'payload':{'quality_passed_at_capture':r!='S0'}})
+    r=discover(env={'ALPACA_API_KEY':'x','ALPACA_API_SECRET':'y','SCREEN_DISCOVERY_DATA':'true'},now=NOW,fallback=['AAPL'],session=Session())
+    assert 'S0' not in r['selected_symbols'] and 'S0' in r['screening']['rejected']
+    assert len(r['selected_symbols'])==8 and not r['fallback_used']
+    assert not r['screening']['account_permission_verified']
