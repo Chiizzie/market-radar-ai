@@ -1921,6 +1921,12 @@
         "response_id": "resp_016f264c2429b9b8016ae8f249783c87d2aa098f7366a19d7d"
       }
     },
+    "scheduled-research-v1:2026-11-04:crypto": {
+      "actual": null,
+      "day": "2026-11-04",
+      "reserved": 1,
+      "usage": null
+    },
     "storage-check-v1": {
       "actual": 0,
       "day": "2026-11-02",
