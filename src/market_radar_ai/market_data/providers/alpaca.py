@@ -65,7 +65,10 @@ class AlpacaIexProvider:
             start = local.replace(hour=9, minute=30, second=0, microsecond=0)
             end = min(now, local.replace(hour=16, minute=0, second=0, microsecond=0))
             if local.weekday() >= 5 or end <= start:
-                return ProviderResult(provider='alpaca_iex', retrieved_at=now, candles=[])
+                return ProviderResult(provider='alpaca_iex', retrieved_at=now, candles=[],
+                    issues=[ValidationIssue(code='regular_session_not_started',
+                        message='Regular-session capture deliberately not requested before open or on weekends',
+                        symbol=symbol)])
             # Fixed data-only host/path suffix, no redirects, pagination or fallback.
             reason = 'transport_failure'
             with self.session.get(f'https://data.alpaca.markets/v2/stocks/{symbol}/bars',

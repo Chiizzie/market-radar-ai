@@ -134,3 +134,21 @@ def test_cache_namespace_uses_selected_stock_provider():
     capture_markets(['MSFT'], [], stock_fetch=provider().fetch_history, crypto_fetch=None,
         now=NOW, stock_provider='alpaca_iex', cache=Cache())
     assert seen == ['alpaca_iex', 'alpaca_iex']
+
+
+def test_preopen_capture_is_explicitly_skipped_not_successful_or_actionable():
+    now = NOW.replace(hour=10)
+    d = capture_markets(['MSFT'], [], stock_fetch=provider(now=now).fetch_history,
+        crypto_fetch=None, now=now, stock_provider='alpaca_iex')
+    assert d['coverage']['stocks']['not_requested'] == 1
+    assert d['coverage']['stocks']['successful'] == 0
+    assert not d['captures'][0]['payload']['quality_passed_at_capture']
+    assert d['captures'][0]['payload']['disposition'] == 'NO_ACTION'
+
+
+def test_open_session_empty_and_auth_failure_are_not_excused():
+    for p in (provider(Session({'symbol':'MSFT','bars':[]})), provider(now=NOW.replace(hour=10),env={})):
+        d = capture_markets(['MSFT'], [], stock_fetch=p.fetch_history,
+            crypto_fetch=None, now=NOW, stock_provider='alpaca_iex')
+        assert d['coverage']['stocks']['not_requested'] == 0
+        assert d['coverage']['stocks']['successful'] == 0

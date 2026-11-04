@@ -60,6 +60,7 @@ def capture_markets(stock_symbols, crypto_pairs, *, stock_fetch, crypto_fetch,
         selected = unique[:per_market_limit]
         successful = 0
         fresh = 0
+        not_requested = 0
         for symbol in selected:
             start = clock()
             try:
@@ -83,6 +84,10 @@ def capture_markets(stock_symbols, crypto_pairs, *, stock_fetch, crypto_fetch,
                     ValidationIssue(code="requested_symbol_mismatch", message="Unexpected symbol in provider response", symbol=symbol)]})
             if cache is not None and not cache_hit:
                 cache.put(provider_name, symbol, result, now=now or datetime.now(timezone.utc))
+            not_requested += int(
+                market == 'stocks' and result.provider == 'alpaca_iex'
+                and result.status == 'ok' and not result.candles
+                and {i.code for i in result.issues} == {'regular_session_not_started'})
             elapsed = max(0, clock() - start)
             captured = capture_result(result, now=now or datetime.now(timezone.utc))
             captured.update(market=market, requested_symbol=symbol, cache_hit=cache_hit,
@@ -91,7 +96,7 @@ def capture_markets(stock_symbols, crypto_pairs, *, stock_fetch, crypto_fetch,
             successful += int(result.status == "ok" and bool(result.candles))
             fresh += int(captured["payload"]["quality_passed_at_capture"])
         coverage[market] = dict(requested=len(unique), attempted=len(selected),
-            successful=successful, quality_passed=fresh,
+            successful=successful, quality_passed=fresh, not_requested=not_requested,
             deferred=unique[per_market_limit:])
     return {"format_version": 2, "purpose": "historical_research_replay_not_live_signal",
             "coverage_scope": "explicit_requested_symbols_not_full_market",
@@ -145,7 +150,7 @@ def main() -> None:
             "provider_status": p["provider_status"], "candles_saved": p["candles_saved"],
             "quality_passed": p["quality_passed_at_capture"], "issues": p["quality_issues"]}))
     # Report provider failures as a failing connectivity check, preserving the evidence first.
-    return int(any(c["attempted"] != c["successful"] for c in document["coverage"].values()))
+    return int(any(c["attempted"] != c["successful"] + c["not_requested"] for c in document["coverage"].values()))
 
 
 if __name__ == "__main__":
