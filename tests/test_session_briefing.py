@@ -45,7 +45,7 @@ def bundle(no_intraday=False):
     ('2026-11-04T07:59:59+00:00',None),('2026-11-04T08:00:00+00:00','morning'),
     ('2026-11-04T13:29:59+00:00','morning'),('2026-11-04T13:30:00+00:00','preopen'),
     ('2026-11-04T14:29:59+00:00','preopen'),('2026-11-04T14:30:00+00:00','opening'),
-    ('2026-11-04T15:00:00+00:00',None),('2026-11-07T09:00:00+00:00',None),
+    ('2026-11-04T15:00:00+00:00','intraday'),('2026-11-07T09:00:00+00:00',None),
     ('2026-03-16T12:30:00+00:00','preopen'),('2026-03-16T13:30:00+00:00','opening'),
     ('2026-07-06T07:00:00+00:00','morning')])
 def test_morning_preopen_opening_and_dst(date,slot):
@@ -118,3 +118,26 @@ def test_scheduler_runs_preopen_despite_empty_momentum_shortlist(tmp_path,monkey
     assert r['state']=='decision_completed' and calls==[['AAPL','MSFT']]
     r=execute(d,None,tmp_path/'two',env={**ENV,'OPENAI_API_KEY':'test','GH_BUDGET_TOKEN':'test'},clock=lambda:NOW)
     assert r['state']=='daily_review_quota_reached' and len(calls)==1
+
+
+def test_intraday_recovery_quota_is_single_and_preserves_opening():
+    s=Store()
+    assert claim_review(s,'stocks_opening',NOW)
+    assert claim_review(s,'stocks_intraday',NOW)
+    assert not claim_review(s,'stocks_intraday',NOW)
+    assert not claim_review(s,'stocks_opening',NOW)
+
+
+def test_recovery_refuses_any_model_reservation_or_uncertain_opening():
+    from market_radar_ai.agents.scheduled_review import opening_recovery_allowed, PREFIX
+    s=Store();day='2026-11-04'
+    assert not opening_recovery_allowed(s.state,day)
+    assert claim_review(s,'stocks_opening',NOW)
+    assert opening_recovery_allowed(s.state,day)
+    s.state['entries']['session-review-v1:package:stage']={'day':day,'reserved':100,'actual':None,'usage':None}
+    assert not opening_recovery_allowed(s.state,day)
+    s.state['entries']['session-review-v1:package:stage']['actual']=0
+    assert not opening_recovery_allowed(s.state,day)
+    del s.state['entries']['session-review-v1:package:stage']
+    s.state['entries'][PREFIX+day+':stocks_opening']['actual']=None
+    assert not opening_recovery_allowed(s.state,day)

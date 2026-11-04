@@ -36,13 +36,20 @@ def quota_bucket(record):
     return 'stocks_'+p['review_slot'] if p['schema_version']=='session-evidence-package-v1' else p['market']
 
 
+def opening_recovery_allowed(state, day):
+    opening = state['entries'].get(PREFIX+day+':stocks_opening')
+    return (opening is not None and opening['actual'] == 0
+            and not any(k.startswith('session-review-v1:') and e['day'] == day
+                        for k, e in state['entries'].items()))
+
+
 def claim_review(store, market, now):
     """One durable attempt per market/day, including failures and lost replies.
 
     The CAS marker costs one micro-euro of held budget until its zero-cost
     settlement. A concurrent/lost write never allows generation to start.
     """
-    if market not in ('stocks', 'crypto', 'stocks_morning', 'stocks_preopen', 'stocks_opening'):
+    if market not in ('stocks', 'crypto', 'stocks_morning', 'stocks_preopen', 'stocks_opening', 'stocks_intraday'):
         raise ValueError('invalid_market')
     state, _ = store.load()
     validate_state(state)
@@ -115,6 +122,11 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
         save('budget-before.json', ledger.summary())
         state, _ = store.load()
         day = clock().astimezone(ZoneInfo('Europe/Dublin')).date().isoformat()
+        # Catch up only a failed opening attempt that never reserved a model call.
+        # Retain the original marker; claim a separate single recovery slot.
+        safe_recovery = opening_recovery_allowed(state, day)
+        batch['packages'] = [r for r in batch['packages']
+            if r['package'].get('review_slot') != 'intraday' or safe_recovery]
         choices = [r for r in batch['packages']
                    if PREFIX+day+':'+quota_bucket(r) not in state['entries']]
         if not choices:

@@ -18,6 +18,7 @@ def briefing_slot(now):
     if minutes<510: return 'morning'
     if minutes<570: return 'preopen'
     if minutes<600: return 'opening'
+    if minutes<960: return 'intraday'
     return None
 
 
