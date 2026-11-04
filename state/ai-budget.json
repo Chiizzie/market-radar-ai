@@ -2048,7 +2048,7 @@
       "usage": null
     },
     "scheduled-research-v1:2026-11-04:stocks_intraday": {
-      "actual": null,
+      "actual": 0,
       "day": "2026-11-04",
       "reserved": 1,
       "usage": null
