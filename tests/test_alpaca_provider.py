@@ -152,3 +152,23 @@ def test_open_session_empty_and_auth_failure_are_not_excused():
             crypto_fetch=None, now=NOW, stock_provider='alpaca_iex')
         assert d['coverage']['stocks']['not_requested'] == 0
         assert d['coverage']['stocks']['successful'] == 0
+
+
+def test_capture_cli_preopen_success_and_unexpected_empty_failure(tmp_path, monkeypatch):
+    import sys
+    from market_radar_ai.market_data.capture import main
+    from market_radar_ai.market_data.providers.kraken import KrakenProvider
+    from market_radar_ai.market_data.models import ProviderResult
+    monkeypatch.setattr(KrakenProvider, 'fetch_ohlc', lambda *a, **k: ProviderResult(
+        provider='kraken', retrieved_at=NOW, status='error'))
+    # Empty crypto selection via universe keeps this regression specific to stocks.
+    universe = tmp_path/'universe.json'
+    universe.write_text(json.dumps({'stocks':['MSFT'], 'crypto':[]}))
+    monkeypatch.setattr(sys, 'argv', ['capture', '--output', str(tmp_path/'capture.json'),
+        '--stock-provider', 'alpaca_iex', '--universe', str(universe), '--queue-db', str(tmp_path/'queue.db')])
+    skip = provider(now=NOW.replace(hour=10)).fetch_history('MSFT')
+    monkeypatch.setattr(AlpacaIexProvider, 'fetch_history', lambda *a: skip)
+    assert main() == 0
+    monkeypatch.setattr(AlpacaIexProvider, 'fetch_history', lambda *a: ProviderResult(
+        provider='alpaca_iex', retrieved_at=NOW))
+    assert main() == 1
