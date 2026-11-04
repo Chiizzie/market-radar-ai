@@ -1,4 +1,4 @@
-# Deployment template: replace f105af2fa10239b41415843d7919cbd6ac5054cc with a verified backend SHA.
+# Deployment template: replace 6713e8b44682c032ba833f53dce525d9f16943cb with a verified backend SHA.
 # Install as .github/workflows/scheduled-scanner.yml on this repository's main branch.
 name: Scheduled research collection
 on:
@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: f105af2fa10239b41415843d7919cbd6ac5054cc
+          ref: 6713e8b44682c032ba833f53dce525d9f16943cb
           persist-credentials: false
       - name: Enforce Dublin operating hours before provider calls
         id: window
@@ -93,7 +93,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: f105af2fa10239b41415843d7919cbd6ac5054cc
+          ref: 6713e8b44682c032ba833f53dce525d9f16943cb
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
@@ -109,6 +109,7 @@ jobs:
         run: python -m market_radar_ai.agents.scheduled_review --capture artifacts/scheduled/enriched-capture.json --evidence artifacts/scheduled/news.json --output artifacts/decision
         env:
           SCHEDULED_REVIEW_MODE: paid
+          REFERENCE_VERIFICATION_DATE: '2026-11-04'
           ENABLE_STOCK_CHECKS: 'true'
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
