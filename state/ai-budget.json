@@ -2059,6 +2059,12 @@
       "reserved": 1,
       "usage": null
     },
+    "scheduled-research-v1:2026-11-04:stocks_verified_recovery": {
+      "actual": null,
+      "day": "2026-11-04",
+      "reserved": 1,
+      "usage": null
+    },
     "session-review-v1:1cb33002e39140226ee706f15271b6ce5fbe12320fdde173bc550edd203cdb7d:devils_advocate": {
       "actual": 16444,
       "day": "2026-11-04",
