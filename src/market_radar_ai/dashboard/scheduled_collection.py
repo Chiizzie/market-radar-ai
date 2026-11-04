@@ -121,6 +121,10 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         payload = {'version': 1, 'stocks': list(stocks), 'collection_started_at': started.isoformat(),
                    'news': feed, 'calendars': doc['earnings_calendars']}
         write_json(cache_path, {'payload': payload, 'sha256': digest(payload)})
+    if env.get('ENABLE_STOCK_CHECKS') == 'true':
+        checked = output/'checked-capture.json'
+        stage('stock_checks', 'market_data.stock_checks', ['--capture', enriched, '--output', checked], checked)
+        write_json(enriched, json.loads(checked.read_text()))
     for label, module, name in (
         ('context_packages', 'agents.context_packages', 'context-packages.json'),
         ('readiness', 'market_data.readiness', 'readiness.json'),

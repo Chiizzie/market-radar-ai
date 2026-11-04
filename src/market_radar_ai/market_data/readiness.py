@@ -22,6 +22,13 @@ def readiness(document, feed, *, now):
                          'broker_executable': False}
         except (ValueError, TypeError, KeyError, ArithmeticError, AttributeError):
             reference = {'status': 'unavailable_invalid_or_stale', 'pairs': []}
+    stock_checks = {'status':'not_supplied'}
+    if document.get('stock_reference_checks') is not None:
+        from .stock_checks import evaluate
+        try:
+            stock_checks = evaluate(document['stock_reference_checks'], now=now)
+        except (ValueError,TypeError,KeyError,ArithmeticError,AttributeError):
+            stock_checks = {'status':'invalid_or_stale','trade_authorized':False}
     candidates = []
     for record in batch['packages']:
         body = verify_package(record, now=now)
@@ -50,7 +57,7 @@ def readiness(document, feed, *, now):
         'entry_window_note': 'Time gate only; does not verify exchange session or admit a trade.',
         'coverage': snapshot['coverage'], 'selection': batch['selection']['markets'],
         'providers': sorted({c['payload']['provider'] for c in document['captures']}),
-        'reference_quotes': reference, 'candidates': candidates,
+        'reference_quotes': reference, 'stock_reference_checks': stock_checks, 'candidates': candidates,
         'news': {'status': snapshot['evidence']['status'],
                  'items': len(snapshot['evidence']['items']), 'coverage_complete': False},
         'capture_expiry_replay': {'tested_at': (now+timedelta(minutes=16)).isoformat(),
