@@ -210,7 +210,9 @@ def run_paid(client, record, capture, feed, *, path, clock, enabled=False):
                 for x in error.errors(include_input=False, include_context=False, include_url=False)[:20]]
         elif str(error) in ('candidate_package_does_not_reproduce', 'candidate_review_deadline',
                             'review_identity_or_evidence_mismatch', 'review_prompt_too_large',
-                            'package_expired_or_future', 'package_digest_mismatch'):
+                            'package_expired_or_future', 'package_digest_mismatch',
+                            'Pilot prompt must be 1 to 64000 UTF-8 bytes',
+                            'Pilot output cap must be 16 to 3072 tokens', 'Pilot request too large'):
             audit['validation_details'] = [{'type':str(error)}]
         else:
             audit['validation_details'] = [{'type':'transport_budget_or_other_failure'}]

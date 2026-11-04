@@ -219,3 +219,18 @@ def test_count_mismatch_settles_then_stops(tmp_path, monkeypatch):
         run(c)
     with sqlite3.connect(c.ledger.path) as db:
         assert db.execute('SELECT actual FROM spend').fetchone() == (959,)
+
+
+def test_session_briefing_limits_reach_transport(tmp_path, monkeypatch):
+    c=client(tmp_path, enabled=True)
+    calls=mock_response(monkeypatch, body())
+    reply=c.call(prompt='x'*64000, schema=SCHEMA, request_id='session-limit', now=NOW, max_output_tokens=3072)
+    assert reply.data=={'ok':True}
+    assert calls[0][1]['json']['max_output_tokens']==3072
+
+
+@pytest.mark.parametrize('prompt,cap', [('x'*64001,3072), ('ok',3073)])
+def test_session_limits_remain_bounded(tmp_path,monkeypatch,prompt,cap):
+    c=client(tmp_path,enabled=True);calls=mock_response(monkeypatch,body())
+    with pytest.raises(ValueError):c.call(prompt=prompt,schema=SCHEMA,request_id='too-large',now=NOW,max_output_tokens=cap)
+    assert calls==[]
