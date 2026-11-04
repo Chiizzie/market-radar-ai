@@ -9,7 +9,7 @@ running scheduled collector. No code in `Chiizzie/market-radar` is involved.
 ## Cadence and limits
 
 - cron-job.org job 8790954 targets every five minutes from 08:00 inclusive to
-  23:00 exclusive Europe/Dublin (`*/5 8-22 * * *`), including DST.
+  23:00 exclusive Europe/Dublin (`*/5 8-22 * * 1-5`), including DST.
   It POSTs a workflow_dispatch request to the default-branch workflow with
   `{"ref":"main","inputs":{"verify_outside_hours":false}}`.
 - The Python guard independently enforces the same Dublin window. External
@@ -75,3 +75,7 @@ subsequent snapshot IDs and original evidence timestamps. The viewer polls
 storage every 30 seconds. Regular-market stock evidence still depends on
 provider coverage and exchange hours. Successful delivery does not establish
 profitability or trade quality.
+
+## Weekday-only operation — 4 November 2026
+
+At the owner’s request, both external schedules now exclude Saturday and Sunday, including crypto collection. Job 8790954 uses `*/5 8-22 * * 1-5`; original scanner job 8651177 uses `*/15 8-22 * * 1-5`. Both use Europe/Dublin. Saved selections were independently verified after reload. This changes scheduled triggers; manual workflow dispatch remains available.
