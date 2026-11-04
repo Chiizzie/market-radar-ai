@@ -11,11 +11,11 @@ on:
         required: true
 permissions:
   contents: read
-concurrency:
-  group: market-radar-ai-scheduled-capture
-  cancel-in-progress: false
 jobs:
   collect:
+    concurrency:
+      group: market-radar-ai-scheduled-capture
+      cancel-in-progress: false
     if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 8
@@ -74,4 +74,46 @@ jobs:
           name: scheduled-capture-${{ github.run_id }}
           path: artifacts/scheduled/
           retention-days: 3
+          if-no-files-found: warn
+
+  review:
+    needs: collect
+    if: needs.collect.result == 'success' && !inputs.verify_outside_hours
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    concurrency:
+      group: market-radar-ai-budget
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: TESTED_COLLECTOR_COMMIT
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install -e '.[market]'
+      - uses: actions/download-artifact@v4
+        with:
+          name: scheduled-capture-${{ github.run_id }}
+          path: artifacts/scheduled/
+      - name: Six independent reviews, debate and gated research decision
+        run: python -m market_radar_ai.agents.scheduled_review --capture artifacts/scheduled/enriched-capture.json --evidence artifacts/scheduled/news.json --output artifacts/decision
+        env:
+          SCHEDULED_REVIEW_MODE: paid
+          SCANNER_VERIFY_OUTSIDE_WINDOW: 'false'
+          OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
+          GH_BUDGET_TOKEN: ${{ github.token }}
+          SEND_CANDIDATE_REVIEW: 'true'
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scheduled-decision-${{ github.run_id }}
+          path: artifacts/decision/
+          retention-days: 7
           if-no-files-found: warn

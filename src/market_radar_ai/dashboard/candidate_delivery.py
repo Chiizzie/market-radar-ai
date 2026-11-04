@@ -44,10 +44,12 @@ def export_archive(record, capture, feed, audit):
 
 
 def deliver(record, capture, feed, audit, *, env, clock, session=None):
-    if (env.get('GITHUB_REPOSITORY') != 'Chiizzie/market-radar-ai'
-            or env.get('GITHUB_REF') != 'refs/heads/phase-1/market-data-layer'
-            or env.get('GITHUB_EVENT_NAME') != 'workflow_dispatch'
-            or env.get('GITHUB_RUN_ATTEMPT') != '1'
+    from ..agents.scheduled_review import permitted
+    manual = (env.get('GITHUB_REPOSITORY') == 'Chiizzie/market-radar-ai'
+              and env.get('GITHUB_REF') == 'refs/heads/phase-1/market-data-layer'
+              and env.get('GITHUB_EVENT_NAME') == 'workflow_dispatch'
+              and env.get('GITHUB_RUN_ATTEMPT') == '1')
+    if (not (manual or permitted(env, clock()))
             or env.get('SEND_CANDIDATE_REVIEW') != 'true'):
         raise ValueError('manual_candidate_delivery_required')
     secret = env.get('REVIEW_INGEST_SECRET', '')
