@@ -155,9 +155,19 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
         status.update(state='decision_completed', model_calls=8, final_decision=summary['final_decision'],
                       research_verdict=summary['research_verdict'])
         # Delivery failure must not cause another paid review on the next tick.
-        receipt = deliver(record, capture, feed, audit, env=env, clock=clock)
-        save('dashboard-delivery.json', receipt)
-        status['dashboard_delivery_state'] = receipt['state']
+        from ..dashboard.scheduled_notification import deliver as notify
+        delivery_failures = []
+        for channel, sender in [('dashboard', deliver), ('telegram', notify)]:
+            try:
+                receipt = sender(record, capture, feed, audit, env=env, clock=clock)
+                save(channel+'-delivery.json', receipt)
+                status[channel+'_delivery_state'] = receipt['state']
+            except Exception:
+                save(channel+'-delivery.json', {'state':'unconfirmed_do_not_retry'})
+                status[channel+'_delivery_state'] = 'unconfirmed_do_not_retry'
+                delivery_failures.append(channel)
+        if delivery_failures:
+            raise RuntimeError('Research delivery incomplete; do not replay paid review')
         return status
     except Exception:
         status['state'] = 'blocked_or_failed'
