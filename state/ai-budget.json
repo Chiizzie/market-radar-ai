@@ -2296,6 +2296,12 @@
         "response_id": "resp_0f7e3f4fa2126330016aeb5ce6b6c487d188c26f60137670cd"
       }
     },
+    "session-review-v1:4ec0a35481a3a7f872b0b082358d926de992ffc7d0eced3664d2c28cf77de1a9:technical_analyst": {
+      "actual": null,
+      "day": "2026-11-04",
+      "reserved": 23117,
+      "usage": null
+    },
     "storage-check-v1": {
       "actual": 0,
       "day": "2026-11-02",
