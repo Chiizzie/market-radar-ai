@@ -1,4 +1,4 @@
-# Deployment template: replace cdb274e3b6bda6f89fe3366a85f60393bebb9f1e with a verified backend SHA.
+# Deployment template: replace 22f102f72440a821b29dc41ad905b152eefb9587 with a verified backend SHA.
 # Install as .github/workflows/scheduled-scanner.yml on this repository's main branch.
 name: Scheduled research collection
 on:
@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: cdb274e3b6bda6f89fe3366a85f60393bebb9f1e
+          ref: 22f102f72440a821b29dc41ad905b152eefb9587
           persist-credentials: false
       - name: Enforce Dublin operating hours before provider calls
         id: window
@@ -89,7 +89,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: cdb274e3b6bda6f89fe3366a85f60393bebb9f1e
+          ref: 22f102f72440a821b29dc41ad905b152eefb9587
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
@@ -109,6 +109,9 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
           GH_BUDGET_TOKEN: ${{ github.token }}
           SEND_CANDIDATE_REVIEW: 'true'
+          SEND_SCHEDULED_TELEGRAM: 'true'
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
       - uses: actions/upload-artifact@v4
         if: always()
