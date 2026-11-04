@@ -229,7 +229,7 @@ def test_session_briefing_limits_reach_transport(tmp_path, monkeypatch):
     assert calls[0][1]['json']['max_output_tokens']==3072
 
 
-@pytest.mark.parametrize('prompt,cap', [('x'*64001,3072), ('ok',3073)])
+@pytest.mark.parametrize('prompt,cap', [('x'*256001,3072), ('ok',3073)])
 def test_session_limits_remain_bounded(tmp_path,monkeypatch,prompt,cap):
     c=client(tmp_path,enabled=True);calls=mock_response(monkeypatch,body())
     with pytest.raises(ValueError):c.call(prompt=prompt,schema=SCHEMA,request_id='too-large',now=NOW,max_output_tokens=cap)

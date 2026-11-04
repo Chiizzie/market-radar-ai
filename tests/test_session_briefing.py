@@ -141,3 +141,21 @@ def test_recovery_refuses_any_model_reservation_or_uncertain_opening():
     del s.state['entries']['session-review-v1:package:stage']
     s.state['entries'][PREFIX+day+':stocks_opening']['actual']=None
     assert not opening_recovery_allowed(s.state,day)
+
+
+def test_compact_decisions_roundtrip_without_losing_citations():
+    from market_radar_ai.agents.candidate_review import compact_decisions
+    r,d,f,a=bundle()
+    original=a['result']['reviews'][0]['symbol_decisions']
+    compact=compact_decisions(original)
+    assert [dict(zip(compact['columns'],row)) for row in compact['rows']]==original
+
+
+def test_oversized_session_is_rejected_before_any_agent_call(monkeypatch):
+    import market_radar_ai.agents.candidate_review as m
+    d=universe();r=build_briefing(d,None,now=NOW)['packages'][0]
+    monkeypatch.setattr(m,'SESSION_PROMPT_BYTES',100)
+    calls=[]
+    with pytest.raises(ValueError,match='before_generation'):
+        m.run(r,d,None,lambda *a:calls.append(a),clock=lambda:NOW)
+    assert calls==[]

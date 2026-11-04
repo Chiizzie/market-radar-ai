@@ -101,8 +101,8 @@ class OpenAIPilot:
         return int((usd*self.rate*1_000_000).to_integral_value(rounding=ROUND_CEILING))
 
     def call(self, *, prompt, schema, request_id, now, max_output_tokens=512, instructions=None, reasoning_effort='none'):
-        if not isinstance(prompt, str) or not 0 < len(prompt.encode('utf-8')) <= 64000:
-            raise ValueError('Pilot prompt must be 1 to 64000 UTF-8 bytes')
+        if not isinstance(prompt, str) or not 0 < len(prompt.encode('utf-8')) <= 256000:
+            raise ValueError('Pilot prompt must be 1 to 256000 UTF-8 bytes')
         if type(max_output_tokens) is not int or not 16 <= max_output_tokens <= 3072:
             raise ValueError('Pilot output cap must be 16 to 3072 tokens')
         if reasoning_effort not in ('none', 'low'):
@@ -117,7 +117,7 @@ class OpenAIPilot:
             if not isinstance(instructions, str) or not 0 < len(instructions) <= 8000:
                 raise ValueError('Invalid trusted instructions')
             payload['instructions'] = instructions
-        if len(json.dumps(payload).encode('utf-8')) > 128000:
+        if len(json.dumps(payload).encode('utf-8')) > 512000:
             raise ValueError('Pilot request too large')
         incoming_bound = self._input_reservation(payload)
         bound = (incoming_bound*INPUT_USD_PER_MILLION + max_output_tokens*OUTPUT_USD_PER_MILLION)/1_000_000

@@ -64,6 +64,33 @@ def prompt_snapshot(body):
     return result
 
 
+SESSION_PROMPT_BYTES = 256000
+
+
+def compact_decisions(items):
+    columns = ['symbol', 'posture', 'rationale', 'opening_condition', 'invalidation', 'source_ids']
+    return {'encoding':'columnar-decisions-v1', 'columns':columns,
+            'rows':[[item[k] for k in columns] for item in items]}
+
+
+def preflight_session_size(body, package_id):
+    # Bound the final seven-peer prompt before the first paid request. Four-byte
+    # characters conservatively cover UTF-8 prose at all schema length limits.
+    prose = lambda n: '\U00010000' * n
+    sources = sorted(body['source_ids'], key=len, reverse=True)
+    refs = (sources * 4)[:4]
+    decisions = [dict(symbol=s, posture='MORE_EVIDENCE_REQUIRED',
+        rationale=prose(140), opening_condition=prose(160), invalidation=prose(160),
+        source_ids=refs[:3]) for s in body['covered_symbols']]
+    peer = dict(stage='opportunity_hunter',verdict='MORE_EVIDENCE_REQUIRED',
+        rationale=prose(600),source_ids=refs,concerns=[prose(180)]*3,
+        symbol_decisions=compact_decisions(decisions))
+    payload=dict(snapshot=prompt_snapshot(body),snapshot_id=package_id,stage='conclusion',
+        peer_reviews=[peer]*7,evidence_status='STALE_RESEARCH_ONLY')
+    if len(canonical(payload).encode()) > SESSION_PROMPT_BYTES:
+        raise ValueError('session_prompt_capacity_exceeded_before_generation')
+
+
 def run(record, capture, feed, ask, *, clock):
     started = clock()
     body = reproduce(record, capture, feed, now=started)
@@ -73,6 +100,8 @@ def run(record, capture, feed, ask, *, clock):
     current_status = 'CURRENT_CONTEXT_ONLY' if context_only else 'CURRENT_RESEARCH_DATA'
     expiry = datetime.fromisoformat(body['expires_at'])
     deadline = started + timedelta(minutes=10)
+    if session_briefing:
+        preflight_session_size(body, record['package_id'])
     reports = []
     previous = started
     for stage in STAGES:
@@ -83,11 +112,11 @@ def run(record, capture, feed, ask, *, clock):
                  for r in reports] if stage in ('debate', 'conclusion') else []
         if session_briefing and peers:
             for peer, report in zip(peers, reports):
-                peer['symbol_decisions'] = deepcopy(report['symbol_decisions'])
+                peer['symbol_decisions'] = compact_decisions(report['symbol_decisions'])
         payload = {'snapshot': prompt_snapshot(body), 'snapshot_id': record['package_id'],
                    'stage': stage, 'peer_reviews': peers,
                    'evidence_status': current_status if at < expiry else 'STALE_RESEARCH_ONLY'}
-        if len(canonical(payload).encode()) > (64000 if session_briefing else 32000):
+        if len(canonical(payload).encode()) > (SESSION_PROMPT_BYTES if session_briefing else 32000):
             raise ValueError('review_prompt_too_large')
         response = response_type.model_validate(ask(stage, payload, response_type.model_json_schema()))
         finished = clock()
@@ -187,6 +216,7 @@ def run_paid(client, record, capture, feed, *, path, clock, enabled=False):
                 'do not claim the supplied reviews are absent or still awaiting completion. '
                 'List supplied peer stages in order. Keep rationale to two complete short sentences '
                 'under 600 characters and at most three concerns under 180 characters each. '
+                'Peer symbol_decisions may be lossless columnar-decisions-v1: map each row to the named columns. Return normal schema objects. '
                 'No control characters; source IDs belong only in source_ids. '
                 'If evidence_status is STALE_RESEARCH_ONLY this is historical analysis.'))
         call.update(state='received', response_id=reply.response_id,
@@ -212,7 +242,7 @@ def run_paid(client, record, capture, feed, *, path, clock, enabled=False):
                             'review_identity_or_evidence_mismatch', 'review_prompt_too_large',
                             'package_expired_or_future', 'package_digest_mismatch',
                             'Pilot prompt must be 1 to 64000 UTF-8 bytes',
-                            'Pilot output cap must be 16 to 3072 tokens', 'Pilot request too large'):
+                            'Pilot output cap must be 16 to 3072 tokens', 'Pilot request too large', 'session_prompt_capacity_exceeded_before_generation'):
             audit['validation_details'] = [{'type':str(error)}]
         else:
             audit['validation_details'] = [{'type':'transport_budget_or_other_failure'}]
