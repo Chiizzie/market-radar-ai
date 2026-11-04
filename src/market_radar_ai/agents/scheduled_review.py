@@ -150,6 +150,12 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
         capture = deepcopy(capture)
         capture['paper_scenarios_enabled'] = True
         capture['paper_plan_fx'] = fx.model_dump(mode='json')
+        if env.get('ENABLE_STOCK_CHECKS') == 'true' and record['package']['market'] == 'stocks':
+            from types import SimpleNamespace
+            from ..market_data.stock_checks import collect
+            symbols=[r['requested_symbol'] for r in capture['captures'] if r['market']=='stocks']
+            capture['stock_reference_checks']=collect(symbols,env=env,clock=clock,
+                fx_provider=SimpleNamespace(fetch=lambda *a,**k:fx))
         refreshed = (build_briefing if record['package']['schema_version']=='session-evidence-package-v1'
                      else build_packages)(capture, feed, now=clock())
         matches = [r for r in refreshed['packages']
