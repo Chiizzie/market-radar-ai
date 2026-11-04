@@ -141,3 +141,32 @@ def test_scheduled_collector_refuses_paid_credentials_before_any_call(tmp_path, 
         run_cycle(env={**ENV, key: 'test'}, output=tmp_path/'out', cache_path=tmp_path/'cache',
                   clock=lambda: NOW, run=fake_stages(calls))
     assert calls == []
+
+
+def test_cache_cannot_cross_dynamic_shortlists(tmp_path):
+    path=tmp_path/'cache.json'
+    cached(path)
+    assert load_cache(path,NOW,stocks=('OTHER',)) is None
+
+
+def test_dynamic_discovery_symbols_reach_news_and_market(tmp_path,monkeypatch):
+    selected=('IBM','ORCL')
+    monkeypatch.setattr('market_radar_ai.market_data.discovery.discover',lambda **k:{'selected_symbols':list(selected),'status':'ok'})
+    def run(module,args):
+        path=args[args.index('--output')+1]
+        if module=='evidence.scanner_feed':
+            assert args[args.index('--symbols')+1:]==list(selected)
+            body={'status':'ok','items':[],'retrieved_at':NOW.isoformat(),'scope':'test'}
+        else:
+            if module=='market_data.capture':
+                assert args[args.index('--stocks')+1:args.index('--crypto')]==list(selected)
+            rows=[]
+            for symbol in selected:
+                p=CalendarCapture(symbol=symbol,retrieved_at=NOW,request_from=NOW.date(),request_to=NOW.date(),status='empty',raw_payload_sha256='a'*64).model_dump(mode='json')
+                rows.append({'payload':p,'payload_sha256':digest(p)})
+            body={'earnings_calendars':rows}
+        write_json(path,body)
+        return 0
+    report=run_cycle(env={**ENV,'ENABLE_STOCK_DISCOVERY':'true'},output=tmp_path/'out',cache_path=tmp_path/'cache.json',clock=lambda:NOW,run=run,delivery=lambda *a,**k:{'state':'scanner_snapshot_delivery_confirmed'})
+    assert report['stock_discovery']['selected_symbols']==list(selected)
+    assert load_cache(tmp_path/'cache.json',NOW,selected) is not None

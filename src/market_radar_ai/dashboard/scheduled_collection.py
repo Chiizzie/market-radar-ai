@@ -24,9 +24,9 @@ def digest(value):
                                     ensure_ascii=False).encode()).hexdigest()
 
 
-def validate_evidence(news, calendars, now):
+def validate_evidence(news, calendars, now, stocks=STOCKS):
     export_evidence(news, now=now)
-    if not isinstance(calendars, list) or len(calendars) != len(STOCKS):
+    if not isinstance(calendars, list) or len(calendars) != len(stocks):
         raise ValueError('cached_calendar_count')
     seen = set()
     for record in calendars:
@@ -34,12 +34,12 @@ def validate_evidence(news, calendars, now):
         if digest(payload) != record['payload_sha256']:
             raise ValueError('cached_calendar_checksum')
         parsed = CalendarCapture.model_validate(payload)
-        if parsed.symbol not in STOCKS or parsed.symbol in seen or parsed.retrieved_at > now:
+        if parsed.symbol not in stocks or parsed.symbol in seen or parsed.retrieved_at > now:
             raise ValueError('cached_calendar_identity_or_clock')
         seen.add(parsed.symbol)
 
 
-def load_cache(path, now):
+def load_cache(path, now, stocks=STOCKS):
     """Corrupt, future and expired caches cause a fresh collection, never redating."""
     try:
         if path.stat().st_size > MAX_CACHE_BYTES:
@@ -48,12 +48,12 @@ def load_cache(path, now):
         payload = cache['payload']
         if cache['sha256'] != digest(payload) or payload['version'] != 1:
             return None
-        if payload['stocks'] != list(STOCKS):
+        if payload['stocks'] != list(stocks):
             return None
         collected = datetime.fromisoformat(payload['collection_started_at'])
         if collected.tzinfo is None or not 0 <= (now-collected).total_seconds() < TTL_SECONDS:
             return None
-        validate_evidence(payload['news'], payload['calendars'], now)
+        validate_evidence(payload['news'], payload['calendars'], now, stocks)
         return payload
     except (OSError, ValueError, TypeError, KeyError, AttributeError):
         return None
@@ -80,7 +80,14 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
     if any(env.get(k) for k in ('OPENAI_API_KEY', 'OPEN_API_KEY', 'GH_BUDGET_TOKEN')):
         raise ValueError('paid_credentials_forbidden_in_scheduled_collection')
     output.mkdir(parents=True, exist_ok=True)
-    cache = load_cache(cache_path, started)
+    discovery = None
+    stocks = STOCKS
+    if env.get('ENABLE_STOCK_DISCOVERY') == 'true':
+        from ..market_data.discovery import discover
+        discovery = discover(env=env, now=started, fallback=STOCKS)
+        stocks = tuple(discovery['selected_symbols'])
+        write_json(output/'discovery.json', discovery)
+    cache = load_cache(cache_path, started, stocks)
     stages = {}
 
     def stage(label, module, args, file):
@@ -94,10 +101,10 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         write_json(news, cache['news'])
     else:
         stage('news', 'evidence.scanner_feed', ['--output', news, '--company-provider',
-              'alpaca', '--symbols', *STOCKS], news)
+              'alpaca', '--symbols', *stocks], news)
     capture = output/'capture.json'
     stage('market', 'market_data.capture', ['--output', capture, '--stock-provider',
-          'alpaca_iex', '--stocks', *STOCKS, '--crypto', *CRYPTO], capture)
+          'alpaca_iex', '--stocks', *stocks, '--crypto', *CRYPTO], capture)
     context = output/'context-capture.json'
     stage('context', 'market_data.stock_context', ['--capture', capture, '--output', context], context)
     quotes = output/'quote-capture.json'
@@ -110,8 +117,8 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
     else:
         stage('calendar', 'evidence.earnings_calendar', ['--capture', quotes, '--output', enriched], enriched)
         feed, doc = json.loads(news.read_text()), json.loads(enriched.read_text())
-        validate_evidence(feed, doc['earnings_calendars'], clock())
-        payload = {'version': 1, 'stocks': list(STOCKS), 'collection_started_at': started.isoformat(),
+        validate_evidence(feed, doc['earnings_calendars'], clock(), stocks)
+        payload = {'version': 1, 'stocks': list(stocks), 'collection_started_at': started.isoformat(),
                    'news': feed, 'calendars': doc['earnings_calendars']}
         write_json(cache_path, {'payload': payload, 'sha256': digest(payload)})
     for label, module, name in (
@@ -135,7 +142,7 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
               'evidence_cache': 'reused_original_timestamps' if cache else 'collected',
               'evidence_collection_started_at': cache['collection_started_at'] if cache else started.isoformat(),
               'failures': failed, 'target_interval_seconds': 300, 'model_calls': 0,
-              'trade_authorized': False}
+              'trade_authorized': False, 'stock_discovery': discovery}
     write_json(output/'collection-report.json', report)
     return report
 
