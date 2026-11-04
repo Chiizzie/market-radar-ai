@@ -10,11 +10,11 @@ A compare-and-swap marker on state/ai-budget permits one stock and one crypto re
 
 ## What the result means
 
-Artifacts include the original package, eight model responses, usage, deterministic decision.json, signed dashboard archive and receipt. The existing Candidate research archive receives the real reviews without a frontend rebuild. No Telegram messages are added by this connection.
+Artifacts include the original package, eight model responses, usage, deterministic decision.json, signed dashboard archive and receipt. The versioned Candidate research archive receives real reviews after the matching v2 frontend compatibility update. No Telegram messages are added by this connection.
 
-Research verdicts are REJECT, WATCHLIST or MORE_EVIDENCE_REQUIRED. Every result remains NO_ACTION because this research contract supplies no verified EUR trade plan or execution admission. An optimistic model cannot waive that. Completed reviews remove only the review-not-run diagnostic from the decision summary; original package gaps remain auditable. Expired reviews are explicitly historical. No live orders exist.
+Research verdicts are REJECT, WATCHLIST or MORE_EVIDENCE_REQUIRED. Every result remains NO_ACTION because conditional scenarios are not approved trade plans and execution admission is unverified. An optimistic model cannot waive that. Completed reviews remove only the review-not-run diagnostic from the decision summary; original package gaps remain auditable. Expired reviews are explicitly historical. No live orders exist.
 
-This milestone does not complete actionable trade calls: generic EUR plans reviewed by the agents, account-specific broker eligibility, executable prices/costs, catalyst verification and final admission still need connection. The old NVDA plan rehearsal is not silently reused for other symbols.
+This milestone does not complete actionable trade calls: account-specific broker eligibility, executable prices/costs, catalyst verification and final admission still need connection. Generic conditional EUR scenarios are now supplied to all eight stages; their capital and fee assumptions are explicitly fictional. The old NVDA plan rehearsal is not silently reused for other symbols.
 
 The current momentum shortlist requires 20 completed five-minute bars. Stock context is collected earlier, but this job does not yet run paid premarket/context reviews or their separate dashboard contract. Do not promise a stock decision at the opening tick. Coverage is the collector's requested universe, not every listed stock.
 
