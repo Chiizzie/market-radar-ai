@@ -2059,6 +2059,12 @@
       "reserved": 1,
       "usage": null
     },
+    "session-review-v1:1cb33002e39140226ee706f15271b6ce5fbe12320fdde173bc550edd203cdb7d:news_analyst": {
+      "actual": null,
+      "day": "2026-11-04",
+      "reserved": 21304,
+      "usage": null
+    },
     "session-review-v1:1cb33002e39140226ee706f15271b6ce5fbe12320fdde173bc550edd203cdb7d:opportunity_hunter": {
       "actual": 16320,
       "day": "2026-11-04",
