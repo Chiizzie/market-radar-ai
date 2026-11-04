@@ -1,4 +1,4 @@
-# Deployment template: replace 2d8d77f599d649c9e3c68002c009ad53e2125a12 with a verified backend SHA.
+# Deployment template: replace a1871d67330ec5e1ed0524506f2e777b4a3da8d2 with a verified backend SHA.
 # Install as .github/workflows/scheduled-scanner.yml on this repository's main branch.
 name: Scheduled research collection
 on:
@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 2d8d77f599d649c9e3c68002c009ad53e2125a12
+          ref: a1871d67330ec5e1ed0524506f2e777b4a3da8d2
           persist-credentials: false
       - name: Enforce Dublin operating hours before provider calls
         id: window
