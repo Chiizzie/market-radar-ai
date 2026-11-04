@@ -2,8 +2,6 @@
 # Install as .github/workflows/scheduled-scanner.yml on this repository's main branch.
 name: Scheduled research collection
 on:
-  schedule:
-    - cron: '2-57/5 7-22 * * *'
   workflow_dispatch:
     inputs:
       verify_outside_hours:
