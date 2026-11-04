@@ -43,13 +43,23 @@ def opening_recovery_allowed(state, day):
                         for k, e in state['entries'].items()))
 
 
+def authorized_recovery_bucket(record, env, now):
+    """Explicit dated authorization for one fresh attempt, never a ledger reset."""
+    day = now.astimezone(ZoneInfo('Europe/Dublin')).date().isoformat()
+    if (permitted(env, now) and env.get('SCHEDULED_RECOVERY_DATE') == day
+            and record['package'].get('review_slot') == 'intraday'
+            and record['package'].get('schema_version') == 'session-evidence-package-v1'):
+        return 'stocks_verified_recovery'
+    return quota_bucket(record)
+
+
 def claim_review(store, market, now):
     """One durable attempt per market/day, including failures and lost replies.
 
     The CAS marker costs one micro-euro of held budget until its zero-cost
     settlement. A concurrent/lost write never allows generation to start.
     """
-    if market not in ('stocks', 'crypto', 'stocks_morning', 'stocks_preopen', 'stocks_opening', 'stocks_intraday'):
+    if market not in ('stocks', 'crypto', 'stocks_morning', 'stocks_preopen', 'stocks_opening', 'stocks_intraday', 'stocks_verified_recovery'):
         raise ValueError('invalid_market')
     state, _ = store.load()
     validate_state(state)
@@ -126,9 +136,10 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
         # Retain the original marker; claim a separate single recovery slot.
         safe_recovery = opening_recovery_allowed(state, day)
         batch['packages'] = [r for r in batch['packages']
-            if r['package'].get('review_slot') != 'intraday' or safe_recovery]
+            if r['package'].get('review_slot') != 'intraday' or safe_recovery
+            or authorized_recovery_bucket(r, env, clock()) == 'stocks_verified_recovery']
         choices = [r for r in batch['packages']
-                   if PREFIX+day+':'+quota_bucket(r) not in state['entries']]
+                   if PREFIX+day+':'+authorized_recovery_bucket(r, env, clock()) not in state['entries']]
         if not choices:
             status['state'] = 'daily_review_quota_reached'
             return status
@@ -153,7 +164,7 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
         if not permitted(env, clock()):
             status['state'] = 'outside_review_scope_or_window'
             return status
-        if not claim_review(store, quota_bucket(record), clock()):
+        if not claim_review(store, authorized_recovery_bucket(record, env, clock()), clock()):
             status['state'] = 'quota_or_budget_deferred'
             return status
         client = OpenAIPilot(api_key=key, ledger=ledger, eur_per_usd=fx.eur_per_unit,

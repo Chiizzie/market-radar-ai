@@ -115,3 +115,30 @@ def test_cycle_delivers_once_then_skips_without_more_models(tmp_path,monkeypatch
     result=execute(capture,feed,tmp_path/'two',env=env,clock=lambda:FIXTURE_NOW)
     assert result['state']=='daily_review_quota_reached' and result['model_calls']==0
     assert calls==['eight']
+
+
+def test_explicit_recovery_is_date_scope_and_package_bound():
+    from market_radar_ai.agents.scheduled_review import authorized_recovery_bucket
+    record={'package': {'schema_version':'session-evidence-package-v1', 'review_slot':'intraday'}}
+    env={**ENV,'SCHEDULED_RECOVERY_DATE':'2026-11-04'}
+    assert authorized_recovery_bucket(record,env,NOW)=='stocks_verified_recovery'
+    assert authorized_recovery_bucket(record,ENV,NOW)=='stocks_intraday'
+    assert authorized_recovery_bucket(record,env,NOW+timedelta(days=1))=='stocks_intraday'
+    assert authorized_recovery_bucket(record,{**env,'GITHUB_RUN_ATTEMPT':'2'},NOW)=='stocks_intraday'
+
+
+def test_paid_failure_recovery_preserves_charges_and_only_claims_once():
+    s=Store()
+    s.state['entries']['previous-paid-call']={'day':'2026-11-04','reserved':100000,'actual':98000,'usage':None}
+    assert claim_review(s,'stocks_intraday',NOW)
+    original=deepcopy(s.state['entries'])
+    assert claim_review(s,'stocks_verified_recovery',NOW)
+    assert not claim_review(s,'stocks_verified_recovery',NOW)
+    assert all(s.state['entries'][k]==v for k,v in original.items())
+
+
+def test_recovery_cannot_bypass_spending_limit():
+    s=Store()
+    s.state['entries']['previous-paid-call']={'day':'2026-11-04','reserved':400000,'actual':400000,'usage':None}
+    assert not claim_review(s,'stocks_verified_recovery',NOW)
+    assert s.version==0
