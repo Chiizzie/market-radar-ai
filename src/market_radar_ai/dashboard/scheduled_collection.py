@@ -131,6 +131,7 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         ('context_packages', 'agents.context_packages', 'context-packages.json'),
         ('readiness', 'market_data.readiness', 'readiness.json'),
         ('qualification', 'agents.qualification', 'qualification.json'),
+        ('paper_packets', 'agents.paper_verdict', 'paper-review-packets.json'),
         ('dashboard', 'dashboard.export', 'dashboard.json'),
     ):
         path = output/name

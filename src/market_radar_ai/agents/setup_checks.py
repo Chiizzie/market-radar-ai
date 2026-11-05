@@ -23,6 +23,8 @@ def reference_checks(document, *, symbol, market, now):
     result['catalogue_candidate'] = ('PASS' if row['catalogue_status']=='single_candidate_unverified'
                                      else 'FAIL' if row['catalogue_status'] in ('not_found','ambiguous') else 'UNKNOWN')
     result['reference_quote'] = 'PASS' if row['quote_status']=='current_reference_only' else 'UNKNOWN'
+    result['indicative_ask_eur'] = row.get('indicative_ask_eur')
+    result['quote_observed_at'] = row.get('observed_at')
     result['fx'] = 'PASS' if assessed['fx_status']=='current_indicative' else 'UNKNOWN'
     clock = assessed['market_clock']
     result['market_session'] = 'PASS' if clock['status']=='open' else 'FAIL' if clock['status']=='closed' else 'UNKNOWN'

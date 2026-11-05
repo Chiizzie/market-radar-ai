@@ -10,7 +10,7 @@ def test_free_report_exposes_blockers_without_mutating_capture():
     assert capture == original
     assert report['shortlisted_count'] == 1
     assert report['paid_eligible_count'] == report['model_calls'] == 0
-    assert 'broker_account_eligibility_unverified' in report['blocker_counts']
+    assert 'catalogue_candidate_not_confirmed' in report['blocker_counts']
     assert not report['trade_authorized']
 
 
@@ -21,7 +21,7 @@ def test_clearing_labels_cannot_authorize_legacy_research():
     record['package_id'] = digest(record['package'])
     gate = paid_review_gate(record, now=NOW)
     assert not gate['eligible_for_paid_review']
-    assert 'validated_final_verdict_contract_not_implemented' in gate['blockers']
+    assert 'legacy_research_package_not_a_paper_verdict' in gate['blockers']
 
 
 def test_unqualified_scheduler_never_touches_budget_or_models(tmp_path, monkeypatch):

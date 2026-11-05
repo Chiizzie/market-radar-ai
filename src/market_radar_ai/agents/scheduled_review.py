@@ -111,6 +111,9 @@ def decision_summary(record, capture, feed, audit):
 
 
 def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc)):
+    if env.get('PAPER_FINAL_VERDICTS') == 'true':
+        from .paper_dispatch import execute as paper_execute
+        return paper_execute(capture, feed, root, env=env, clock=clock)
     root = Path(root)
     if root.exists():
         raise ValueError('preserve_existing_artifacts')

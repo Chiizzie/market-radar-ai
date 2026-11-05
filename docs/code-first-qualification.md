@@ -1,50 +1,26 @@
-# Code-first qualification: paid review paused
+# Code-first qualification
 
-At the user's request, scheduled paid reviews are disabled and the scheduled
-review job no longer receives an OpenAI key. Data collection continues.
-The EUR 1/day, EUR 5 lifetime and EUR 10/month limits remain ceilings, not targets.
+Paid scheduled reviews remain paused at the user's request; collection continues.
+The EUR 1/day, EUR 5 lifetime and EUR 10/month limits are ceilings, not targets.
 
-Each collection writes `qualification.json` alongside the capture artifact.
-It reuses validated capture freshness and hash checks, ranks stock and crypto
-candidates using momentum/relative volume, and attempts conditional EUR paper
-plans without calling a model or any additional provider. FX is reused only
-from an intact stock-reference record and validated by the planner. Rejection
-reasons and counts remain explicit. A conditional plan uses fictional EUR 500
-capital and assumed 40 bps round-trip costs; it is not an approved setup.
+Each collection writes qualification.json and paper-review-packets.json. Code
+validates freshness, ranks momentum/participation, measures rolling VWAP, attempts
+conditional EUR paper plans and independently recomputes risk. Paper blockers
+are reported separately from the stricter live-execution unknowns.
 
-A second gate in the scheduled reviewer blocks legacy research packages before
-budget access, FX fetching, quota reservation, or model construction. Removing
-missing-evidence labels cannot bypass it. No existing package has a validated
-final-verdict contract, so none can currently qualify for paid review.
+The paper-final-verdict contract now allows a current Trading 212 catalogue match
+and explicitly assumed paper costs. Unknown live account order permission is not
+misrepresented as verified. Kraken quotes still cannot establish Robinhood
+availability. See paper-final-verdict.md for eligibility and decision policy.
 
-## Remaining work before paid final verdicts can resume
+The original research package remains blocked from paid dispatch: deleting gap
+labels cannot promote legacy research into a trade. The new dispatcher requires
+PAPER_FINAL_VERDICTS=true and explicit paid mode. The deployed workflow has its
+review job disabled and no OpenAI secret, so this change does not resume costs.
 
-- Supply and validate broker/account eligibility, current broker-relevant quote
-  evidence, costs, FX, session/exit timing, and independent catalyst evidence.
-- Replace the research-only decision adapter (which always returns NO_ACTION)
-  with an explicitly validated paper-decision contract. AI approval must not
-  override deterministic risk, freshness, identity or session failures.
-- Recheck evidence after model completion; short quote expiry can precede a
-  six-agent review's completion.
-- Deduplicate by setup and material evidence change, persist paper outcomes,
-  and measure cost per qualified verdict. No paid retry for an unchanged setup.
-- Connect qualification summaries to the authenticated dashboard/Telegram
-  schema. For now these diagnostics are GitHub artifacts and workflow logs.
-
-Keep paid reviews paused until that complete path is verified. Passing local
-unit tests alone does not establish live admission or profitable calls.
-
-## Deterministic setup checks
-
-The report now exposes rolling 20-bar VWAP (not session VWAP), 20-bar momentum,
-5-versus-15-bar relative volume, and the conditional breakout level. These
-measurements are not a validated profitable strategy. Independent risk checks
-recompute loss, net reward after assumed costs, capital usage and expiry; a
-false claimed loss cannot pass. Stock plans use the earlier of the current
-Alpaca market close minus five minutes and 22:00 Dublin when a fresh clock is
-available. Instrument halts and broker-specific sessions remain unknown.
-
-Reference checks separately show catalogue candidate, reference quote, FX and
-market clock versus account permission, broker quote and costs. Only the former
-can currently pass; a catalogue match never clears the latter. All diagnostics
-remain in the capture artifact. No paid review or trade is authorized.
+The final path binds six specialist reports, debate and conclusion to one fixed
+plan and source set, refreshes provider data, then rechecks unchanged economics,
+freshness, risk and time limits. A conditional PAPER_WATCH_FOR_ENTRY is simulation
+only; it does not open a paper or live position. Signed archive ingestion and
+Telegram use explicit paper labels. Paper fill/outcome tracking remains a
+separate component; no profitable performance has been established.
