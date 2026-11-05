@@ -129,6 +129,15 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
         if not batch['packages']:
             status['state'] = 'no_reviewable_candidate'
             return status
+        from .qualification import paid_review_gate
+        qualification = [dict(candidate_id=r['package']['candidate_id'],
+                              **paid_review_gate(r, now=clock())) for r in batch['packages']]
+        save('qualification.json', qualification)
+        batch['packages'] = [r for r, gate in zip(batch['packages'], qualification)
+                             if gate['eligible_for_paid_review']]
+        if not batch['packages']:
+            status['state'] = 'no_qualified_candidate_zero_cost'
+            return status
         key, token = env.get('OPENAI_API_KEY'), env.get('GH_BUDGET_TOKEN')
         if not key or not token:
             raise ValueError('missing_review_credentials')

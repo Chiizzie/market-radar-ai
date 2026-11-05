@@ -99,7 +99,7 @@ def test_each_phase_has_own_durable_quota_not_consuming_stock_plan():
         assert claim_review(s,phase,NOW)
         assert not claim_review(s,phase,NOW)
 
-def test_scheduler_runs_preopen_despite_empty_momentum_shortlist(tmp_path,monkeypatch):
+def test_scheduler_does_not_buy_preopen_context_reviews(tmp_path,monkeypatch):
     import market_radar_ai.agents.scheduled_review as m
     s=Store();calls=[];d=universe(no_intraday=True)
     monkeypatch.setattr(m,'build_packages',lambda *a,**k:{'packages':[]})
@@ -115,9 +115,9 @@ def test_scheduler_runs_preopen_despite_empty_momentum_shortlist(tmp_path,monkey
     monkeypatch.setattr(m,'run_paid',paid)
     monkeypatch.setattr(m,'deliver',lambda *a,**k:{'state':'candidate_archive_delivery_confirmed'})
     r=execute(d,None,tmp_path/'one',env={**ENV,'OPENAI_API_KEY':'test','GH_BUDGET_TOKEN':'test'},clock=lambda:NOW)
-    assert r['state']=='decision_completed' and calls==[['AAPL','MSFT']]
+    assert r['state']=='no_qualified_candidate_zero_cost' and calls==[]
     r=execute(d,None,tmp_path/'two',env={**ENV,'OPENAI_API_KEY':'test','GH_BUDGET_TOKEN':'test'},clock=lambda:NOW)
-    assert r['state']=='daily_review_quota_reached' and len(calls)==1
+    assert r['state']=='no_qualified_candidate_zero_cost' and calls==[] and s.version==0
 
 
 def test_intraday_recovery_quota_is_single_and_preserves_opening():

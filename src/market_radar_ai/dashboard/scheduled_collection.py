@@ -128,6 +128,7 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
     for label, module, name in (
         ('context_packages', 'agents.context_packages', 'context-packages.json'),
         ('readiness', 'market_data.readiness', 'readiness.json'),
+        ('qualification', 'agents.qualification', 'qualification.json'),
         ('dashboard', 'dashboard.export', 'dashboard.json'),
     ):
         path = output/name

@@ -90,7 +90,7 @@ def test_scheduled_delivery_accepts_only_exact_workflow():
     with pytest.raises(ValueError):
         deliver(*bundle(),env={**ENV,'GITHUB_WORKFLOW_REF':'bad','SEND_CANDIDATE_REVIEW':'true'},clock=lambda:NOW,session=Session())
 
-def test_cycle_delivers_once_then_skips_without_more_models(tmp_path,monkeypatch):
+def test_incomplete_cycle_never_spends_even_with_credentials(tmp_path,monkeypatch):
     from types import SimpleNamespace
     from test_candidate_review import NOW as FIXTURE_NOW
     record,capture,feed,audit=bundle()
@@ -111,10 +111,10 @@ def test_cycle_delivers_once_then_skips_without_more_models(tmp_path,monkeypatch
     # Fixture is a weekday within the authorized clock window.
     env={**ENV,'OPENAI_API_KEY':'test','GH_BUDGET_TOKEN':'test'}
     result=execute(capture,feed,tmp_path/'one',env=env,clock=lambda:FIXTURE_NOW)
-    assert result['state']=='decision_completed' and result['model_calls']==8
+    assert result['state']=='no_qualified_candidate_zero_cost' and result['model_calls']==0
     result=execute(capture,feed,tmp_path/'two',env=env,clock=lambda:FIXTURE_NOW)
-    assert result['state']=='daily_review_quota_reached' and result['model_calls']==0
-    assert calls==['eight']
+    assert result['state']=='no_qualified_candidate_zero_cost' and result['model_calls']==0
+    assert calls==[] and s.version==0
 
 
 def test_explicit_recovery_is_date_scope_and_package_bound():
