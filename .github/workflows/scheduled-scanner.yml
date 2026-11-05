@@ -83,7 +83,7 @@ jobs:
 
   review:
     needs: collect
-    if: always() && (needs.collect.result == 'success' || needs.collect.result == 'failure') && !inputs.verify_outside_hours
+    if: ${{ false }} # User-requested paid-review pause; collection continues
     runs-on: ubuntu-latest
     timeout-minutes: 12
     permissions:
@@ -109,7 +109,7 @@ jobs:
       - name: Six independent reviews, debate and gated research decision
         run: python -m market_radar_ai.agents.scheduled_review --capture artifacts/scheduled/enriched-capture.json --evidence artifacts/scheduled/news.json --output artifacts/decision
         env:
-          SCHEDULED_REVIEW_MODE: paid
+          SCHEDULED_REVIEW_MODE: paused
           REFERENCE_VERIFICATION_DATE: '2026-11-04'
           ENABLE_STOCK_CHECKS: 'true'
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
@@ -118,7 +118,6 @@ jobs:
           TRADING212_API_SECRET: ${{ secrets.TRADING212_API_SECRET }}
           SCHEDULED_RECOVERY_DATE: '2026-11-04'
           SCANNER_VERIFY_OUTSIDE_WINDOW: 'false'
-          OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
           GH_BUDGET_TOKEN: ${{ github.token }}
           SEND_CANDIDATE_REVIEW: 'true'
           SEND_SCHEDULED_TELEGRAM: 'true'
