@@ -168,13 +168,28 @@ def run_metered(client, packet, document, feed, *, path, clock, enabled=False):
         path.write_text(json.dumps({'calls':calls,'result':result,'trade_authorized':False},indent=2)+'\n')
     def ask(stage,prompt,schema):
         calls.append({'stage':stage,'state':'attempting'});save()
-        reply=client.call(prompt=canonical(prompt),schema=schema,
+        # Identity and peer bookkeeping belong to the orchestrator. The model
+        # supplies only its assessment and citations from the supplied evidence.
+        model_schema=deepcopy(schema)
+        metadata=('stage','packet_id','reviewed_stages')
+        for field in metadata: model_schema['properties'].pop(field)
+        model_schema['required']=[f for f in model_schema['required'] if f not in metadata]
+        model_schema['properties']['source_ids']['items']['enum']=list(prompt['packet']['source_ids'])
+        instructions=prompt['instruction']+' Return only verdict, rationale, source_ids and concerns. Cite distinct IDs from the supplied source_ids list. The application supplies stage, packet identity and reviewed-stage bookkeeping.'
+        reply=client.call(prompt=canonical(prompt),schema=model_schema,
             request_id='paper-final-v1:'+packet['packet_id']+':'+stage,now=clock(),
-            max_output_tokens=1024,reasoning_effort='none',
-            instructions=prompt['instruction'])
-        calls[-1]['state']='received';save()
-        return reply.data
-    result=review(packet,document,feed,ask,clock=clock)
+            max_output_tokens=1024,reasoning_effort='none',instructions=instructions)
+        calls[-1].update(state='received', assessment=reply.data);save()
+        from jsonschema import Draft202012Validator
+        Draft202012Validator(model_schema).validate(reply.data)
+        return {**reply.data,'stage':stage,'packet_id':packet['packet_id'],
+                'reviewed_stages':[r['stage'] for r in prompt['peer_reviews']]}
+    try:
+        result=review(packet,document,feed,ask,clock=clock)
+    except Exception:
+        if calls:
+            calls[-1]['state']='failed_review';save()
+        raise
     save(result)
     return result
 

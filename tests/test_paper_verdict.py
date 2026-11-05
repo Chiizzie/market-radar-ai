@@ -93,9 +93,10 @@ def test_metered_pipeline_connections_and_durable_duplicate_guard(tmp_path,monke
     calls=[];deliveries=[];refreshes=[]
     def call(**kw):
         p=json.loads(kw['prompt']);calls.append(p['stage'])
-        return SimpleNamespace(data=dict(stage=p['stage'],packet_id=p['packet_id'],verdict='APPROVE_PAPER',
-            rationale='Synthetic pipeline test',source_ids=['news:test'],concerns=[],
-            reviewed_stages=[r['stage'] for r in p['peer_reviews']]))
+        assert set(kw['schema']['properties'])=={'verdict','rationale','source_ids','concerns'}
+        assert kw['schema']['properties']['source_ids']['items']['enum']==p['packet']['source_ids']
+        return SimpleNamespace(data=dict(verdict='APPROVE_PAPER',
+            rationale='Synthetic pipeline test',source_ids=['news:test'],concerns=[]))
     monkeypatch.setattr(client,'call',call)
     def refresh():refreshes.append(True);return {},None
     def deliver(result):deliveries.append(result);return {'state':'test_receipt'}
@@ -118,3 +119,28 @@ def test_no_metered_activation_by_default(tmp_path):
 def test_current_quote_must_still_be_between_stop_and_trigger(field,blocker):
     row=qualified_row();row['reference_checks']['indicative_ask_eur']=row['conditional_paper_plan'][field]
     assert blocker in paper_gate(row,now=NOW)['paper_blockers']
+
+
+@pytest.mark.parametrize('fault',['unknown_source','duplicate_source','forged_metadata'])
+def test_metered_invalid_assessments_fail_closed_and_remain_auditable(tmp_path,monkeypatch,fault):
+    import json
+    from types import SimpleNamespace
+    from market_radar_ai.agents.paper_verdict import run_metered
+    from market_radar_ai.agents.openai_pilot import OpenAIPilot
+    from market_radar_ai.agents.github_budget import GitHubSpendingLedger
+    from test_github_budget import MemoryStore
+    _,packet,_,_=fixture(monkeypatch)
+    client=OpenAIPilot(api_key='fake',ledger=GitHubSpendingLedger(MemoryStore()),eur_per_usd='0.9',enabled=True)
+    answer={'verdict':'APPROVE_PAPER','rationale':'Synthetic test','source_ids':['news:test'],'concerns':[]}
+    if fault=='unknown_source':answer['source_ids']=['invented']
+    if fault=='duplicate_source':answer['source_ids']*=2
+    if fault=='forged_metadata':answer['packet_id']='forged'
+    calls=[]
+    def call(**kw):calls.append(kw);return SimpleNamespace(data=answer)
+    monkeypatch.setattr(client,'call',call)
+    path=tmp_path/'review.json'
+    with pytest.raises(Exception):run_metered(client,packet,{},None,path=path,clock=lambda:NOW,enabled=True)
+    saved=json.loads(path.read_text())
+    assert len(calls)==1 and saved['result'] is None
+    assert saved['calls'][0]['assessment']==answer
+    assert saved['calls'][0]['state']=='failed_review'
