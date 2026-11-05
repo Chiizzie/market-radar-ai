@@ -2422,6 +2422,12 @@
         "response_id": "resp_09ec73a2f0bdcb2c016aec386495c887d19ba323c65ab8f4ad"
       }
     },
+    "session-review-v1:8e8f5da840a2409822838f9e0eb06be94f2786a2a109cc1d1918a2476e71ad8b:technical_analyst": {
+      "actual": null,
+      "day": "2026-11-05",
+      "reserved": 22675,
+      "usage": null
+    },
     "storage-check-v1": {
       "actual": 0,
       "day": "2026-11-02",
