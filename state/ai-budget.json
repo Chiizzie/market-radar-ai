@@ -2071,6 +2071,12 @@
       "reserved": 1,
       "usage": null
     },
+    "scheduled-research-v1:2026-11-05:crypto": {
+      "actual": null,
+      "day": "2026-11-05",
+      "reserved": 1,
+      "usage": null
+    },
     "scheduled-research-v1:2026-11-05:stocks_morning": {
       "actual": 0,
       "day": "2026-11-05",
