@@ -2407,6 +2407,12 @@
         "response_id": "resp_064aef614ec02b80016aeb5cf640f887d1b3371bc25e7bf8bf"
       }
     },
+    "session-review-v1:8e8f5da840a2409822838f9e0eb06be94f2786a2a109cc1d1918a2476e71ad8b:conclusion": {
+      "actual": null,
+      "day": "2026-11-05",
+      "reserved": 32172,
+      "usage": null
+    },
     "session-review-v1:8e8f5da840a2409822838f9e0eb06be94f2786a2a109cc1d1918a2476e71ad8b:debate": {
       "actual": 25249,
       "day": "2026-11-05",
