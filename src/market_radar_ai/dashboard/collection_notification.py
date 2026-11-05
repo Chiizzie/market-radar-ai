@@ -25,7 +25,9 @@ def notify(report, *, env, clock, ledger=None, session=None):
     lines=['ℹ️ NO ACTION — collection update' if delivered else '⚠️ SCANNER FAILURE — check required',
            'Market Radar AI • Paper/research only',local.strftime('%d %b %H:%M Dublin'),
            'Dashboard capture delivered.' if delivered else 'Collection failed. No new dashboard delivery confirmed.',
-           'Paid AI is paused. This is a free operational update, not a trade call.']
+           ('Final AI review is enabled only for qualified setups. This update used no AI.'
+            if env.get('AI_FINAL_REVIEW_ENABLED')=='true' else
+            'Paid AI is paused. This is a free operational update, not a trade call.')]
     if delivered:
         for market,counts in report['delivery'].get('coverage',{}).items():
             lines.append(f"{market.title()}: {counts['current']}/{counts['attempted']} current; {counts['unusable_or_stale']} unavailable/stale.")

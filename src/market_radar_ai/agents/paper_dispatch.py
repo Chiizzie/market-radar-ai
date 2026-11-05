@@ -1,5 +1,6 @@
 """Scheduled paper pipeline adapters; activation remains separately paused."""
-from datetime import datetime,timezone
+from datetime import datetime,timezone,timedelta
+from zoneinfo import ZoneInfo
 from pathlib import Path
 import json,os,subprocess,sys
 from .paper_verdict import build_packets,run_pipeline
@@ -14,6 +15,15 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
         raise ValueError('paper_dispatch_disabled')
     root=Path(root)
     if root.exists():raise ValueError('preserve_existing_paper_attempt')
+    # Explicit zero-cost warm-up guard, including when invoked outside the workflow.
+    local=clock().astimezone(ZoneInfo('America/New_York'))
+    earliest=local.replace(hour=9,minute=30,second=0,microsecond=0)+timedelta(minutes=100)
+    if local<earliest:
+        root.mkdir(parents=True)
+        status={'state':'waiting_for_stock_history_zero_cost','model_calls':0,'trade_authorized':False,
+                'earliest_review_at':earliest.astimezone(ZoneInfo('Europe/Dublin')).isoformat()}
+        (root/'status.json').write_text(json.dumps(status)+'\n')
+        return status
     # No FX or budget access until the code has a complete paper candidate.
     batch=build_packets(document,feed,now=clock())
     if not batch['packets']:
