@@ -12,7 +12,7 @@ from .providers.alpaca import SYMBOL, NY
 from .reference_quotes import digest
 
 
-def parse_series(data, *, symbol, start, end, timeframe):
+def parse_series(data, *, symbol, start, end, timeframe, source="alpaca_iex"):
     if not isinstance(data, dict) or data.get('symbol') != symbol or data.get('next_page_token'):
         raise ValueError('identity_or_pagination')
     if 'bars' not in data or (data['bars'] is not None and not isinstance(data['bars'], list)):
@@ -40,7 +40,7 @@ def parse_series(data, *, symbol, start, end, timeframe):
         if not all(v.is_finite() for v in values.values()):
             raise ValueError('nonfinite_bar')
         c = Candle(symbol=symbol, interval='1d' if timeframe=='1Day' else '5m',
-                   timestamp=at, quote_currency='USD', source='alpaca_iex', **values)
+                   timestamp=at, quote_currency='USD', source=source, **values)
         rows.append(c.model_dump(mode='json'))
     return rows[-10:] if timeframe=='1Day' else rows[-24:]
 
@@ -112,6 +112,9 @@ def main():
     if args.capture.stat().st_size>4_000_000:
         raise ValueError('input_too_large')
     result = enrich(json.loads(args.capture.read_text()))
+    if os.environ.get('ENABLE_DELAYED_PREMARKET') == 'true':
+        from .delayed_context import enrich_delayed
+        result = enrich_delayed(result)
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps({'stock_context':[{'symbol':r['payload']['symbol'],

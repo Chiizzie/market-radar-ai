@@ -35,3 +35,12 @@ def test_tampered_captures_fail_report():
     d = capture();d['captures'][0]['payload']['candles'][0]['close'] = '1'
     with pytest.raises(ValueError, match='checksum'):
         readiness(d, None, now=NOW)
+
+
+def test_journal_does_not_crash_future_market_expiry_replay():
+    doc=capture()
+    doc['paper_tracking_report']={'schema_version':'paper-tracking-v1','as_of':NOW.isoformat(),
+        'trades':[],'model_calls':0,'trade_authorized':False,'note':'Sampled simulation.'}
+    result=readiness(doc,news(),now=NOW)
+    assert result['capture_expiry_replay']['all_original_captures_rejected']
+    assert doc['paper_tracking_report']['as_of']==NOW.isoformat()

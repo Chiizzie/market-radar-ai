@@ -29,7 +29,8 @@ The scheduled journal uses `GH_PAPER_TOKEN` (the workflow's GitHub token with
 contents write permission). It is not an AI key and cannot enable paid calls.
 Reports remain workflow artifacts and also travel inside the signed scanner snapshot
 as `research-diagnostics-v1`. The published Scanner and Paper journal screens validate
-and render them through the existing viewer-only feed. No Telegram alerts are added.
+and render them through the existing viewer-only feed. Free collection status messages are separate from trade alerts: at most one success
+and one failure notice per Dublin hour, with durable deduplication.
 The final paper verdict notification remains separate.
 
 Local tooling:
@@ -43,3 +44,19 @@ Only ingest decisions produced by the trusted final-verdict pipeline. This journ
 validates plan arithmetic/scope but is not an independent re-run of the eight reviews.
 Routine collection is now Monday–Friday, 08:00–23:00 Europe/Dublin; an explicit
 manual out-of-window verification remains available.
+
+## Reliability and premarket correction
+
+The readiness replay tests market expiry 16 minutes in the future, excluding the
+independently validated paper-journal report. Previously that synthetic clock caused
+`paper_tracking_report_clock_mismatch` and prevented delivery. The real snapshot
+still validates the journal's original timestamp.
+
+`ENABLE_DELAYED_PREMARKET=true` requests separate Alpaca historical SIP bars ending
+16 minutes before request time. This uses the documented free historical window:
+https://docs.alpaca.markets/us/docs/market-data-faq
+These records never replace IEX captures, current quotes, or qualification inputs.
+Early screening can use them only as explicitly delayed context when IEX context is
+unavailable. The dashboard requires the delay label and original observation time.
+No new subscription or paid model call is enabled. Actual provider availability
+remains subject to verification on the account.

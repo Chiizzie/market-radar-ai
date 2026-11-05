@@ -29,6 +29,11 @@ def screen(document, *, now):
                 result['state'] = 'WEEKEND_CLOSED'
                 rows.append(result)
                 continue
+            delayed = p['provider'] == 'alpaca_sip_delayed'
+            if p['provider'] not in ('alpaca_iex', 'alpaca_sip_delayed'):
+                raise ValueError('unknown_context_source')
+            if delayed and (p.get('data_delay_seconds') != 900 or p.get('schema_version') != 'delayed-stock-context-v1'):
+                raise ValueError('delayed_context_label_missing')
             bars = [Candle.model_validate(b) for b in p['intraday']['bars']]
             if any(b.symbol != symbol or b.source != p['provider'] or b.interval != '5m'
                    or b.quote_currency != p['native_currency']
@@ -40,7 +45,8 @@ def screen(document, *, now):
             if any(b.timestamp <= a.timestamp for a,b in zip(bars,bars[1:])):
                 raise ValueError('unordered_bars')
             reason = 'no_completed_intraday_bars' if not bars else 'intraday_bars_stale'
-            if not bars or not 300 <= (now-bars[-1].timestamp).total_seconds() < 900:
+            age = (now-bars[-1].timestamp).total_seconds() if bars else -1
+            if not bars or not (1200 <= age < 2400 if delayed else 300 <= age < 900):
                 raise ValueError('missing_current_bars')
             prem = [b for b in bars if b.timestamp < opening]
             regular = [b for b in bars if b.timestamp >= opening]
@@ -50,6 +56,8 @@ def screen(document, *, now):
                           regular_bars_available=len(regular),
                           latest_close_native=str(bars[-1].close),
                           context_sha256=record['payload_sha256'])
+            if delayed:
+                result['data_delay_seconds'] = 900
             if prem:
                 result['available_premarket_high_native'] = str(max(b.high for b in prem))
                 result['available_premarket_low_native'] = str(min(b.low for b in prem))
@@ -67,7 +75,12 @@ def screen(document, *, now):
                 result['available_regular_bar_vwap_native']=str(vwap)
         except (ValueError, KeyError, TypeError, ArithmeticError):
             result = {'symbol': symbol, 'state': 'UNAVAILABLE', 'reason': reason, 'trade_authorized': False}
+        if result['state'] == 'UNAVAILABLE':
+            fallback = [r for r in document.get('delayed_stock_context', []) if r.get('payload', {}).get('symbol') == symbol]
+            if len(fallback) == 1:
+                assessed = screen({'stock_context': fallback}, now=now)['candidates'][0]
+                if assessed['state'] != 'UNAVAILABLE': result = assessed
         rows.append(result)
     return {'schema_version':'early-screening-v1', 'evaluated_at':now.isoformat(),
             'candidates':rows,'model_calls':0,'trade_authorized':False,
-            'note':'Research only; native-currency observations from available IEX bars, not full-market or full-session coverage. Exchange calendar, news, EUR risk and final review remain separate checks.'}
+            'note':'Research only; native-currency observations from available source bars. alpaca_sip_delayed is at least 15 minutes delayed and never current entry evidence. Coverage is incomplete. Exchange calendar, news, EUR risk and final review remain separate checks.'}

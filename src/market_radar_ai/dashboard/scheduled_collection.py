@@ -184,7 +184,18 @@ def main():
     if not collection_window(now) and os.environ.get('GITHUB_EVENT_NAME') == 'schedule':
         print(json.dumps({'state': 'outside_collection_window', 'model_calls': 0}))
         return 0
-    result = run_cycle(env=os.environ, output=args.output, cache_path=args.cache)
+    from .collection_notification import notify
+    try:
+        result = run_cycle(env=os.environ, output=args.output, cache_path=args.cache)
+    except Exception:
+        try:
+            receipt = notify({'state':'failed'}, env=os.environ, clock=lambda: datetime.now(timezone.utc))
+            write_json(args.output/'collection-notification.json', receipt)
+        except Exception:
+            print('Collection failure notification unavailable; inspect run logs.')
+        raise
+    receipt = notify(result, env=os.environ, clock=lambda: datetime.now(timezone.utc))
+    write_json(args.output/'collection-notification.json', receipt)
     print(json.dumps(result))
     return int(bool(result['failures']))
 
