@@ -15,6 +15,7 @@ def screen(document, *, now):
     for record in document.get('stock_context', []):
         symbol = record.get('payload', {}).get('symbol', 'UNKNOWN')
         result = {'symbol': symbol, 'state': 'UNAVAILABLE', 'trade_authorized': False}
+        reason = 'context_invalid_or_stale'
         try:
             p = record['payload']
             if digest(p) != record['payload_sha256'] or p['trade_authorized'] is not False:
@@ -38,6 +39,7 @@ def screen(document, *, now):
                 raise ValueError('invalid_bars')
             if any(b.timestamp <= a.timestamp for a,b in zip(bars,bars[1:])):
                 raise ValueError('unordered_bars')
+            reason = 'no_completed_intraday_bars' if not bars else 'intraday_bars_stale'
             if not bars or not 300 <= (now-bars[-1].timestamp).total_seconds() < 900:
                 raise ValueError('missing_current_bars')
             prem = [b for b in bars if b.timestamp < opening]
@@ -64,7 +66,7 @@ def screen(document, *, now):
                 vwap=sum((b.high+b.low+b.close)/Decimal(3)*b.volume for b in regular)/total
                 result['available_regular_bar_vwap_native']=str(vwap)
         except (ValueError, KeyError, TypeError, ArithmeticError):
-            result = {'symbol': symbol, 'state': 'UNAVAILABLE', 'trade_authorized': False}
+            result = {'symbol': symbol, 'state': 'UNAVAILABLE', 'reason': reason, 'trade_authorized': False}
         rows.append(result)
     return {'schema_version':'early-screening-v1', 'evaluated_at':now.isoformat(),
             'candidates':rows,'model_calls':0,'trade_authorized':False,

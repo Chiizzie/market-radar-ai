@@ -74,6 +74,9 @@ def build_snapshot(document, *, now, evidence=None):
     if 'stock_context' in document:
         from .briefing import build_briefing
         snapshot['research_briefing']=build_briefing(document,evidence,now=now)
+    if document.get("stock_context") or "paper_tracking_report" in document:
+        from .diagnostics import build_diagnostics
+        snapshot["research_diagnostics"] = build_diagnostics(document, now=now)
     return snapshot
 
 

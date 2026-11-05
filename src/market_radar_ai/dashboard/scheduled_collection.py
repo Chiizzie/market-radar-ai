@@ -139,8 +139,11 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
     write_json(output/'early-screening.json', screen(json.loads(enriched.read_text()), now=clock()))
     if env.get('GH_PAPER_TOKEN'):
         from ..agents.github_paper_tracking import update
-        write_json(output/'paper-tracking.json', update(env['GH_PAPER_TOKEN'],
-            now=clock(), capture=json.loads(enriched.read_text())))
+        doc = json.loads(enriched.read_text())
+        report = update(env['GH_PAPER_TOKEN'], now=clock(), capture=doc)
+        write_json(output/'paper-tracking.json', report)
+        doc['paper_tracking_report'] = report
+        write_json(enriched, doc)
     for label, module, name in (
         ('context_packages', 'agents.context_packages', 'context-packages.json'),
         ('readiness', 'market_data.readiness', 'readiness.json'),
