@@ -1000,6 +1000,12 @@
         "response_id": "resp_037bbc981de5dd20016aecd8dfb79087d181aa1ee98826f015"
       }
     },
+    "paper-final-v1:3129dd4ed436e646447e47cfd677e3aca597ac674dbe4bf0aa8fbfa5721327f2:final_decision": {
+      "actual": null,
+      "day": "2026-11-05",
+      "reserved": 10679,
+      "usage": null
+    },
     "paper-final-v1:3129dd4ed436e646447e47cfd677e3aca597ac674dbe4bf0aa8fbfa5721327f2:news_analyst": {
       "actual": 2192,
       "day": "2026-11-05",
