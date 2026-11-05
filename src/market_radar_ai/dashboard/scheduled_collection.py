@@ -87,6 +87,14 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         discovery = discover(env=env, now=started, fallback=STOCKS)
         stocks = tuple(discovery['selected_symbols'])
         write_json(output/'discovery.json', discovery)
+    if env.get('GH_PAPER_TOKEN'):
+        from ..agents.github_paper_tracking import update
+        prior = update(env['GH_PAPER_TOKEN'], now=started)
+        active = [r['symbol'] for r in prior['trades'] if r['state'] in ('watching', 'open_simulation')]
+        # Keep watched symbols in the quote batch even when discovery rotates.
+        if len(set(active)) > 20:
+            raise RuntimeError('paper_tracking_capacity_exceeded')
+        stocks = tuple(dict.fromkeys([*active, *stocks]))[:20]
     cache = load_cache(cache_path, started, stocks)
     stages = {}
 
@@ -127,6 +135,12 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
     # Collect short-lived crypto references after slow calendar/catalogue work.
     stage('quotes', 'market_data.reference_quotes', ['--capture', enriched, '--output', quotes], quotes)
     write_json(enriched, json.loads(quotes.read_text()))
+    from ..agents.early_screening import screen
+    write_json(output/'early-screening.json', screen(json.loads(enriched.read_text()), now=clock()))
+    if env.get('GH_PAPER_TOKEN'):
+        from ..agents.github_paper_tracking import update
+        write_json(output/'paper-tracking.json', update(env['GH_PAPER_TOKEN'],
+            now=clock(), capture=json.loads(enriched.read_text())))
     for label, module, name in (
         ('context_packages', 'agents.context_packages', 'context-packages.json'),
         ('readiness', 'market_data.readiness', 'readiness.json'),

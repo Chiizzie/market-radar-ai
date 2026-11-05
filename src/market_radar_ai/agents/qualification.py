@@ -29,6 +29,8 @@ def paid_review_gate(record, *, now):
 
 
 def qualify(document, feed, *, now):
+    from .early_screening import screen
+    early = screen(document, now=now)
     batch = build_packages(document, feed, now=now)
     fx = None
     checked = document.get('stock_reference_checks')
@@ -78,7 +80,7 @@ def qualify(document, feed, *, now):
                                     'REGULAR_SESSION_CLOSED_OR_EXIT_WINDOW' if session=='FAIL' else 'SESSION_UNKNOWN')
     counts = Counter(b for r in rows for b in set(r['paper_blockers']))
     return {'schema_version': 'free-qualification-v1', 'evaluated_at': now.isoformat(),
-            'selection': batch['selection'], 'candidates': rows, 'market_context': market_context,
+            'early_screening': early, 'selection': batch['selection'], 'candidates': rows, 'market_context': market_context,
             'shortlisted_count': len(rows), 'paid_eligible_count': 0,
             'paper_review_ready_count': sum(r['eligible_for_paper_review'] for r in rows),
             'blocker_counts': dict(sorted(counts.items())),

@@ -41,5 +41,8 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
         return json.loads((output/'enriched-capture.json').read_text()),json.loads((output/'news.json').read_text())
     def delivery(archive):
         from ..dashboard.paper_final_delivery import deliver
+        if archive['decision']['verdict'] == 'PAPER_WATCH_FOR_ENTRY':
+            from .github_paper_tracking import update
+            update(env.get('GH_PAPER_TOKEN'),now=clock(),decision=archive['decision'])
         return deliver(archive,env=env,clock=clock)
     return run_pipeline(document,feed,client=client,root=root,refresh=refresh,deliver=delivery,clock=clock,enabled=True)

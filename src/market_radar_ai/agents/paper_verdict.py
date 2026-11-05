@@ -232,6 +232,11 @@ def run_pipeline(document, feed, *, client, root, refresh, deliver, clock, enabl
     save('fresh-capture.json',current);save('fresh-news.json',current_feed)
     decision=finalize(packet,audit,current,current_feed,now=clock())
     save('decision.json',decision)
+    if decision['verdict'] == 'PAPER_WATCH_FOR_ENTRY':
+        from .paper_tracking import PaperTracker
+        tracker = PaperTracker(root/'paper-journal.sqlite')
+        tracker.register(decision)
+        save('paper-tracking.json', tracker.report(now=clock()))
     archive=export_archive(packet,audit,decision)
     save("dashboard-archive.json",archive)
     receipt=deliver(archive)

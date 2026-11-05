@@ -10,7 +10,7 @@ def collection_window(now: datetime) -> bool:
     if now.tzinfo is None:
         raise ValueError('aware_clock_required')
     local = now.astimezone(ZoneInfo('Europe/Dublin'))
-    return 8 <= local.hour < 23
+    return local.weekday() < 5 and 8 <= local.hour < 23
 
 
 def scheduled_scope(env, now):

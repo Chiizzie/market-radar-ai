@@ -20,9 +20,9 @@ ENV = {**MANUAL_ENV, 'GITHUB_REF': 'refs/heads/main', 'GITHUB_EVENT_NAME': 'sche
 @pytest.mark.parametrize('stamp,expected', [
     ('2026-11-04T07:59:59+00:00', False), ('2026-11-04T08:00:00+00:00', True),
     ('2026-11-04T22:59:59+00:00', True), ('2026-11-04T23:00:00+00:00', False),
-    ('2026-07-04T06:59:59+00:00', False), ('2026-07-04T07:00:00+00:00', True),
-    ('2026-07-04T21:59:59+00:00', True), ('2026-07-04T22:00:00+00:00', False),
-    ('2026-03-29T07:00:00+00:00', True), ('2026-10-25T07:00:00+00:00', False),
+    ('2026-07-04T06:59:59+00:00', False), ('2026-07-04T07:00:00+00:00', False),
+    ('2026-07-04T21:59:59+00:00', False), ('2026-07-04T22:00:00+00:00', False),
+    ('2026-03-29T07:00:00+00:00', False), ('2026-10-25T07:00:00+00:00', False),
 ])
 def test_irish_hours_include_dst_and_weekends(stamp, expected):
     assert collection_window(datetime.fromisoformat(stamp)) is expected
@@ -186,3 +186,24 @@ def test_short_lived_quotes_follow_slow_checks(tmp_path,cached_evidence):
     assert calls.count('market_data.reference_quotes')==1
     if not cached_evidence:
         assert calls.index('evidence.earnings_calendar') < calls.index('market_data.reference_quotes')
+
+
+def test_active_paper_symbols_survive_discovery_rotation(tmp_path,monkeypatch):
+    import market_radar_ai.agents.github_paper_tracking as journal
+    seen=[]
+    def update(token,**kwargs):
+        seen.append(kwargs)
+        return {'trades':[{'symbol':'TRACKED','state':'open_simulation'}]}
+    monkeypatch.setattr(journal,'update',update)
+    def run(module,args):
+        if module=='market_data.capture':assert args[args.index('--stocks')+1]=='TRACKED'
+        return fake_stages([])(module,args)
+    # Seed a matching cache to keep this fixture's calendar universe coherent.
+    news,calendars=evidence()
+    stocks=('TRACKED',*STOCKS)
+    from market_radar_ai.dashboard import scheduled_collection as collection
+    monkeypatch.setattr(collection,'load_cache',lambda *a,**k:{'news':news,'calendars':calendars,'collection_started_at':NOW.isoformat()})
+    run_cycle(env={**ENV,'GH_PAPER_TOKEN':'fixture'}, output=tmp_path/'run',cache_path=tmp_path/'cache',
+              clock=lambda:NOW,run=run,delivery=lambda *a,**k:{'state':'fixture'})
+    assert len(seen)==2 and 'capture' in seen[1]
+    assert (tmp_path/'run/paper-tracking.json').exists()
