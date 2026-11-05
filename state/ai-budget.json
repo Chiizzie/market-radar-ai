@@ -2661,7 +2661,7 @@
     }
   },
   "limits_microeur": {
-    "daily": 500000,
+    "daily": 1000000,
     "lifetime": 5000000,
     "monthly": 10000000
   },
