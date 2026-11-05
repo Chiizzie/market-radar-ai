@@ -1111,6 +1111,12 @@
         "response_id": "resp_0103f50cf9e4e3e0016aecd8d173d887d18a88576f86daa9fd"
       }
     },
+    "paper-final-v1:439db77e6d1bdf7f39d2b988aaca1be7c6254948f563ee1b8a9ccf2a3cad0666:news_analyst": {
+      "actual": null,
+      "day": "2026-11-05",
+      "reserved": 10267,
+      "usage": null
+    },
     "paper-final-v1:439db77e6d1bdf7f39d2b988aaca1be7c6254948f563ee1b8a9ccf2a3cad0666:opportunity_hunter": {
       "actual": 6985,
       "day": "2026-11-05",
