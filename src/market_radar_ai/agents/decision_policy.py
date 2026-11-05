@@ -31,7 +31,7 @@ def mandatory_blocks(facts: PolicyFacts, now: datetime):
         blocks.append('stale_or_incomplete_data')
     if facts.currency!='EUR': blocks.append('currency_mismatch')
     if facts.plan.planned_loss>Decimal('20'): blocks.append('excess_planned_risk')
-    if (local.hour>=22 or exit_at<=local or exit_at.date()!=local.date()
+    if (local.weekday()>=5 or local.hour>=22 or exit_at<=local or exit_at.date()!=local.date()
             or exit_at>exit_at.replace(hour=22,minute=0,second=0,microsecond=0)):
         blocks.append('time_rule')
     return blocks

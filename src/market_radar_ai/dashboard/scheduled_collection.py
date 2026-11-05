@@ -108,14 +108,13 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
     context = output/'context-capture.json'
     stage('context', 'market_data.stock_context', ['--capture', capture, '--output', context], context)
     quotes = output/'quote-capture.json'
-    stage('quotes', 'market_data.reference_quotes', ['--capture', context, '--output', quotes], quotes)
     enriched = output/'enriched-capture.json'
     if cache:
-        doc = json.loads(quotes.read_text())
+        doc = json.loads(context.read_text())
         doc['earnings_calendars'] = cache['calendars']
         write_json(enriched, doc)
     else:
-        stage('calendar', 'evidence.earnings_calendar', ['--capture', quotes, '--output', enriched], enriched)
+        stage('calendar', 'evidence.earnings_calendar', ['--capture', context, '--output', enriched], enriched)
         feed, doc = json.loads(news.read_text()), json.loads(enriched.read_text())
         validate_evidence(feed, doc['earnings_calendars'], clock(), stocks)
         payload = {'version': 1, 'stocks': list(stocks), 'collection_started_at': started.isoformat(),
@@ -125,6 +124,9 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         checked = output/'checked-capture.json'
         stage('stock_checks', 'market_data.stock_checks', ['--capture', enriched, '--output', checked], checked)
         write_json(enriched, json.loads(checked.read_text()))
+    # Collect short-lived crypto references after slow calendar/catalogue work.
+    stage('quotes', 'market_data.reference_quotes', ['--capture', enriched, '--output', quotes], quotes)
+    write_json(enriched, json.loads(quotes.read_text()))
     for label, module, name in (
         ('context_packages', 'agents.context_packages', 'context-packages.json'),
         ('readiness', 'market_data.readiness', 'readiness.json'),

@@ -170,3 +170,19 @@ def test_dynamic_discovery_symbols_reach_news_and_market(tmp_path,monkeypatch):
     report=run_cycle(env={**ENV,'ENABLE_STOCK_DISCOVERY':'true'},output=tmp_path/'out',cache_path=tmp_path/'cache.json',clock=lambda:NOW,run=run,delivery=lambda *a,**k:{'state':'scanner_snapshot_delivery_confirmed'})
     assert report['stock_discovery']['selected_symbols']==list(selected)
     assert load_cache(tmp_path/'cache.json',NOW,selected) is not None
+
+
+@pytest.mark.parametrize('cached_evidence',[False,True])
+def test_short_lived_quotes_follow_slow_checks(tmp_path,cached_evidence):
+    calls=[]
+    cache=tmp_path/'cache.json'
+    if cached_evidence:
+        cached(cache)
+    run_cycle(env={**ENV,'ENABLE_STOCK_CHECKS':'true'}, output=tmp_path/'out',
+              cache_path=cache, clock=lambda:NOW, run=fake_stages(calls),
+              delivery=lambda *a,**k:{'state':'scanner_snapshot_delivery_confirmed'})
+    assert calls.index('market_data.stock_checks') < calls.index('market_data.reference_quotes')
+    assert calls.index('market_data.reference_quotes') < calls.index('agents.qualification')
+    assert calls.count('market_data.reference_quotes')==1
+    if not cached_evidence:
+        assert calls.index('evidence.earnings_calendar') < calls.index('market_data.reference_quotes')
