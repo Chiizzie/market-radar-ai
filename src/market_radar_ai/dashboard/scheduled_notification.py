@@ -67,7 +67,7 @@ def notify_pause(reason, *, env, clock, ledger=None, session=None):
     from hashlib import sha256
     from ..agents.scheduled_review import permitted
     reasons={'quota_or_budget_deferred':'AI review paused: the remaining spending allowance is below the reserve needed for another review.',
-             'daily_review_quota_reached':'AI review paused: today’s permitted review slots have been used.'}
+             'daily_review_quota_reached':'No unused AI review slot is available for the current session phase. Later stock phases have separate slots, subject to budget and valid evidence. This does not mean the daily budget is exhausted.'}
     now=clock()
     if reason not in reasons or env.get('SEND_SCHEDULED_TELEGRAM')!='true':return {'state':'disabled'}
     if not permitted(env,now):raise ValueError('notification_outside_scheduled_scope')

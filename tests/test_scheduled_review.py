@@ -58,7 +58,7 @@ def test_budget_headroom_defers_without_reset():
     assert s.version==0
 
 def test_unknown_budget_charge_counts_as_spent():
-    s=Store(); s.state['entries']['unknown']={'day':'2026-11-04','reserved':400000,'actual':None,'usage':None}
+    s=Store(); s.state['entries']['unknown']={'day':'2026-11-04','reserved':900000,'actual':None,'usage':None}
     assert not claim_review(s,'crypto',NOW)
 
 def test_offscope_no_network_or_models(tmp_path,monkeypatch):
@@ -139,7 +139,7 @@ def test_paid_failure_recovery_preserves_charges_and_only_claims_once():
 
 def test_recovery_cannot_bypass_spending_limit():
     s=Store()
-    s.state['entries']['previous-paid-call']={'day':'2026-11-04','reserved':400000,'actual':400000,'usage':None}
+    s.state['entries']['previous-paid-call']={'day':'2026-11-04','reserved':900000,'actual':900000,'usage':None}
     assert not claim_review(s,'stocks_verified_recovery',NOW)
     assert s.version==0
 

@@ -20,13 +20,13 @@ class MemoryStore:
 
 def test_restarts_keep_holds_and_duplicate_ids():
     store=MemoryStore()
-    GitHubSpendingLedger(store).reserve('one',300000,NOW)
+    GitHubSpendingLedger(store).reserve('one',600000,NOW)
     fresh=GitHubSpendingLedger(store)
-    with pytest.raises(RuntimeError): fresh.reserve('two',300000,NOW)
+    with pytest.raises(RuntimeError): fresh.reserve('two',600000,NOW)
     with pytest.raises(ValueError): fresh.reserve('one',1,NOW)
     fresh.settle('one',100)
-    fresh.reserve('two',300000,NOW)
-    assert fresh.summary()['held_microeur']==300000
+    fresh.reserve('two',600000,NOW)
+    assert fresh.summary()['held_microeur']==600000
     assert fresh.summary()['settled_microeur']==100
 
 
@@ -66,8 +66,8 @@ def test_corrupt_limits_are_not_silently_reset():
 def test_overrun_and_idempotent_settlement():
     store=MemoryStore();ledger=GitHubSpendingLedger(store)
     ledger.reserve('one',1,NOW)
-    with pytest.raises(RuntimeError,match='actual_charge_recorded'): ledger.settle('one',500001)
-    ledger.settle('one',500001)
+    with pytest.raises(RuntimeError,match='actual_charge_recorded'): ledger.settle('one',1000001)
+    ledger.settle('one',1000001)
     with pytest.raises(ValueError): ledger.settle('one',1)
     with pytest.raises(RuntimeError): ledger.reserve('two',1,NOW)
 
