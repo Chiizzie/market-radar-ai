@@ -985,6 +985,12 @@
         "response_id": "resp_05129c92c14da796016aecc28582dc87d1a28a6609fe2bb75c"
       }
     },
+    "paper-final-v1:3129dd4ed436e646447e47cfd677e3aca597ac674dbe4bf0aa8fbfa5721327f2:opportunity_hunter": {
+      "actual": null,
+      "day": "2026-11-05",
+      "reserved": 10679,
+      "usage": null
+    },
     "paper-final-v1:7330bca066a100e3d14f6f432a6fabb08d74a5ed81f68c393848139d559e0976:opportunity_hunter": {
       "actual": 5474,
       "day": "2026-11-05",
