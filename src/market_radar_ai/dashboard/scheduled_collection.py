@@ -13,7 +13,7 @@ from .evidence import export_evidence
 from .snapshot_delivery import deliver
 from ..evidence.earnings_calendar import CalendarCapture
 
-STOCKS = ('NVDA', 'MSFT', 'AAPL', 'AMD', 'META', 'AMZN', 'GOOGL', 'TSLA')
+STOCKS = ('NVDA', 'MSFT', 'AAPL', 'AMD', 'META', 'AMZN', 'GOOGL', 'TSLA', 'MU')
 CRYPTO = ('XBTEUR', 'ETHEUR', 'SOLEUR', 'XRPEUR')
 TTL_SECONDS = 900
 MAX_CACHE_BYTES = 2_000_000
@@ -87,6 +87,8 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         discovery = discover(env=env, now=started, fallback=STOCKS)
         stocks = tuple(discovery['selected_symbols'])
         write_json(output/'discovery.json', discovery)
+    # User watchlist supplements rotating discovery, without replacing its candidates.
+    stocks = tuple(dict.fromkeys([*stocks, 'MU']))
     if env.get('GH_PAPER_TOKEN'):
         from ..agents.github_paper_tracking import update
         prior = update(env['GH_PAPER_TOKEN'], now=started)

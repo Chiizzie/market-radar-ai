@@ -151,17 +151,18 @@ def test_cache_cannot_cross_dynamic_shortlists(tmp_path):
 
 def test_dynamic_discovery_symbols_reach_news_and_market(tmp_path,monkeypatch):
     selected=('IBM','ORCL')
+    watched=(*selected,'MU')
     monkeypatch.setattr('market_radar_ai.market_data.discovery.discover',lambda **k:{'selected_symbols':list(selected),'status':'ok'})
     def run(module,args):
         path=args[args.index('--output')+1]
         if module=='evidence.scanner_feed':
-            assert args[args.index('--symbols')+1:]==list(selected)
+            assert args[args.index('--symbols')+1:]==list(watched)
             body={'status':'ok','items':[],'retrieved_at':NOW.isoformat(),'scope':'test'}
         else:
             if module=='market_data.capture':
-                assert args[args.index('--stocks')+1:args.index('--crypto')]==list(selected)
+                assert args[args.index('--stocks')+1:args.index('--crypto')]==list(watched)
             rows=[]
-            for symbol in selected:
+            for symbol in watched:
                 p=CalendarCapture(symbol=symbol,retrieved_at=NOW,request_from=NOW.date(),request_to=NOW.date(),status='empty',raw_payload_sha256='a'*64).model_dump(mode='json')
                 rows.append({'payload':p,'payload_sha256':digest(p)})
             body={'earnings_calendars':rows}
@@ -169,7 +170,7 @@ def test_dynamic_discovery_symbols_reach_news_and_market(tmp_path,monkeypatch):
         return 0
     report=run_cycle(env={**ENV,'ENABLE_STOCK_DISCOVERY':'true'},output=tmp_path/'out',cache_path=tmp_path/'cache.json',clock=lambda:NOW,run=run,delivery=lambda *a,**k:{'state':'scanner_snapshot_delivery_confirmed'})
     assert report['stock_discovery']['selected_symbols']==list(selected)
-    assert load_cache(tmp_path/'cache.json',NOW,selected) is not None
+    assert load_cache(tmp_path/'cache.json',NOW,watched) is not None
 
 
 @pytest.mark.parametrize('cached_evidence',[False,True])
