@@ -27,8 +27,9 @@ execution-quality backtesting, and must not be used to advertise a win rate.
 
 The scheduled journal uses `GH_PAPER_TOKEN` (the workflow's GitHub token with
 contents write permission). It is not an AI key and cannot enable paid calls.
-Reports are workflow artifacts; dashboard rendering of this new journal and early
-screen format is not implemented in this change. No Telegram alerts are added.
+Reports remain workflow artifacts and also travel inside the signed scanner snapshot
+as `research-diagnostics-v1`. The published Scanner and Paper journal screens validate
+and render them through the existing viewer-only feed. No Telegram alerts are added.
 The final paper verdict notification remains separate.
 
 Local tooling:
