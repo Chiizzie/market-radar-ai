@@ -33,3 +33,18 @@ final-verdict contract, so none can currently qualify for paid review.
 
 Keep paid reviews paused until that complete path is verified. Passing local
 unit tests alone does not establish live admission or profitable calls.
+
+## Deterministic setup checks
+
+The report now exposes rolling 20-bar VWAP (not session VWAP), 20-bar momentum,
+5-versus-15-bar relative volume, and the conditional breakout level. These
+measurements are not a validated profitable strategy. Independent risk checks
+recompute loss, net reward after assumed costs, capital usage and expiry; a
+false claimed loss cannot pass. Stock plans use the earlier of the current
+Alpaca market close minus five minutes and 22:00 Dublin when a fresh clock is
+available. Instrument halts and broker-specific sessions remain unknown.
+
+Reference checks separately show catalogue candidate, reference quote, FX and
+market clock versus account permission, broker quote and costs. Only the former
+can currently pass; a catalogue match never clears the latter. All diagnostics
+remain in the capture artifact. No paid review or trade is authorized.

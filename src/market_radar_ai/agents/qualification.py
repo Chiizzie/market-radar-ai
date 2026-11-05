@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from .candidate_packages import build_packages, digest, verify_package
 from .combined_input import build_market_evidence
 from .candidate_plan import draft
+from .setup_checks import reference_checks, technical_checks, validate_paper_plan
 
 
 def paid_review_gate(record, *, now):
@@ -39,10 +40,17 @@ def qualify(document, feed, *, now):
         p = record['package']
         result = paid_review_gate(record, now=now)
         plan = None
+        technical = {"state": "UNAVAILABLE"}
+        checks = reference_checks(document, symbol=p["symbol"], market=p["market"], now=now)
         try:
             bars = build_market_evidence(document, symbol=p['symbol'],
                                          market_name=p['market'], now=now)
+            technical = technical_checks(bars)
             plan = draft(bars, fx, now=now)
+            if plan and checks["exit_deadline"]:
+                plan["exit_by"] = checks["exit_deadline"]
+                plan["expires_at"] = min(datetime.fromisoformat(plan["expires_at"]),
+                                          datetime.fromisoformat(plan["exit_by"])).isoformat()
             if plan is None:
                 result['blockers'].append('conditional_setup_not_formed')
         except (ValueError, TypeError, KeyError, ArithmeticError):
@@ -50,12 +58,22 @@ def qualify(document, feed, *, now):
         if plan is not None:
             result['blockers'] = [x for x in result['blockers'] if x != 'eur_trade_plan_missing']
             result['blockers'].append('paper_costs_and_allocation_are_assumptions')
-        rows.append({'candidate_id': p['candidate_id'], 'symbol': p['symbol'],
+        risk = validate_paper_plan(plan, now=now, exit_deadline=checks['exit_deadline'])
+        if risk['state'] == 'FAIL':
+            result['blockers'].extend(risk['failures'])
+        rows.append({'technical_checks': technical, 'reference_checks': checks, 'paper_risk_check': risk,
+                     'candidate_id': p['candidate_id'], 'symbol': p['symbol'],
                      'market': p['market'], 'selection': p['selection'],
                      'conditional_paper_plan': plan, **result})
+    market_context = {'stocks': 'SESSION_UNKNOWN', 'crypto': 'CAPTURE_CHECKS_REQUIRED'}
+    stocks = [c['requested_symbol'] for c in document.get('captures', []) if c['market']=='stocks']
+    if stocks:
+        session = reference_checks(document, symbol=stocks[0], market='stocks', now=now)['market_session']
+        market_context['stocks'] = ('REGULAR_SESSION_OPEN' if session=='PASS' else
+                                    'REGULAR_SESSION_CLOSED_OR_EXIT_WINDOW' if session=='FAIL' else 'SESSION_UNKNOWN')
     counts = Counter(b for r in rows for b in set(r['blockers']))
     return {'schema_version': 'free-qualification-v1', 'evaluated_at': now.isoformat(),
-            'selection': batch['selection'], 'candidates': rows,
+            'selection': batch['selection'], 'candidates': rows, 'market_context': market_context,
             'shortlisted_count': len(rows), 'paid_eligible_count': 0,
             'blocker_counts': dict(sorted(counts.items())),
             'model_calls': 0, 'trade_authorized': False,
@@ -74,7 +92,7 @@ def main():
                      now=datetime.now(timezone.utc))
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2)+'\n')
-    print(json.dumps({k: result[k] for k in ('shortlisted_count', 'paid_eligible_count', 'blocker_counts', 'model_calls')}))
+    print(json.dumps({k: result[k] for k in ('market_context', 'shortlisted_count', 'paid_eligible_count', 'blocker_counts', 'model_calls')}))
 
 
 if __name__ == '__main__':
