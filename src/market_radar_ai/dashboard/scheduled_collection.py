@@ -73,7 +73,7 @@ def run_stage(module, args):
 
 
 def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.utc),
-              run=run_stage, delivery=deliver):
+              run=run_stage, delivery=deliver, stock_symbols=None):
     started = clock()
     if not scheduled_scope(env, started):
         raise ValueError('scheduled_collection_scope_or_window_invalid')
@@ -82,13 +82,19 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
     output.mkdir(parents=True, exist_ok=True)
     discovery = None
     stocks = STOCKS
-    if env.get('ENABLE_STOCK_DISCOVERY') == 'true':
+    if stock_symbols is not None:
+        from ..market_data.discovery import SYMBOL
+        if not 1 <= len(stock_symbols) <= 20 or len(set(stock_symbols)) != len(stock_symbols) or any(not isinstance(s,str) or not SYMBOL.fullmatch(s) for s in stock_symbols):
+            raise ValueError('invalid_targeted_stock_symbols')
+        stocks = tuple(stock_symbols)
+    if stock_symbols is None and env.get('ENABLE_STOCK_DISCOVERY') == 'true':
         from ..market_data.discovery import discover
         discovery = discover(env=env, now=started, fallback=STOCKS)
         stocks = tuple(discovery['selected_symbols'])
         write_json(output/'discovery.json', discovery)
     # User watchlist supplements rotating discovery, without replacing its candidates.
-    stocks = tuple(dict.fromkeys([*stocks, 'MU']))
+    if stock_symbols is None:
+        stocks = tuple(dict.fromkeys([*stocks, 'MU']))
     if env.get('GH_PAPER_TOKEN'):
         from ..agents.github_paper_tracking import update
         prior = update(env['GH_PAPER_TOKEN'], now=started)
@@ -114,7 +120,7 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
               'alpaca', '--symbols', *stocks], news)
     capture = output/'capture.json'
     stage('market', 'market_data.capture', ['--output', capture, '--stock-provider',
-          'alpaca_iex', '--stocks', *stocks, '--crypto', *CRYPTO], capture)
+          'alpaca_iex', '--per-market-limit', '20', '--stocks', *stocks, '--crypto', *CRYPTO], capture)
     context = output/'context-capture.json'
     stage('context', 'market_data.stock_context', ['--capture', capture, '--output', context], context)
     quotes = output/'quote-capture.json'

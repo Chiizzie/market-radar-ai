@@ -6,8 +6,8 @@ from ..dashboard.export import build_snapshot
 
 
 def shortlist(document, *, now, stock_limit=3, crypto_limit=2):
-    if any(type(n) is not int or not 1 <= n <= 10 for n in (stock_limit, crypto_limit)):
-        raise ValueError('shortlist_limits_must_be_1_to_10')
+    if any(type(n) is not int or not 1 <= n <= 20 for n in (stock_limit, crypto_limit)):
+        raise ValueError('shortlist_limits_must_be_1_to_20')
     snapshot = build_snapshot(document, now=now)  # verifies hashes and freshness
     output = {}
     for market, limit in (('stocks', stock_limit), ('crypto', crypto_limit)):

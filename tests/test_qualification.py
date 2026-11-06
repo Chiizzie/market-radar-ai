@@ -38,3 +38,18 @@ def test_unqualified_scheduler_never_touches_budget_or_models(tmp_path, monkeypa
     result = mod.execute(stock_capture(), feed(), tmp_path/'run', env=ENV, clock=lambda:NOW)
     assert result['state'] == 'no_qualified_candidate_zero_cost'
     assert result['model_calls'] == 0
+
+
+def test_free_qualification_checks_all_twenty_collected_stocks():
+    from test_capture_shortlist import capture
+    symbols=tuple('S'+str(i) for i in range(20))
+    # Build valid independent symbol captures; the normal helper defaults to ten.
+    doc=stock_capture();doc['captures']=[]
+    for symbol in symbols:
+        one=capture((symbol,))['captures'][0];one['market']='stocks'
+        doc['captures'].append(one)
+    doc['coverage']['stocks'].update(requested=20,attempted=20,successful=20,quality_passed=20,deferred=[])
+    report=qualify(doc,feed(symbols),now=NOW)
+    assert {r['symbol'] for r in report['candidates']}==set(symbols)
+    assert report['selection']['markets']['stocks']['deferred_by_limit']==0
+    assert report['model_calls']==0 and not report['trade_authorized']

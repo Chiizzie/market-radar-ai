@@ -31,7 +31,7 @@ def paid_review_gate(record, *, now):
 def qualify(document, feed, *, now):
     from .early_screening import screen
     early = screen(document, now=now)
-    batch = build_packages(document, feed, now=now)
+    batch = build_packages(document, feed, now=now, stock_limit=20)
     fx = None
     checked = document.get('stock_reference_checks')
     if isinstance(checked, dict) and isinstance(checked.get('payload'), dict):

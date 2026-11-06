@@ -209,7 +209,7 @@ def run_metered(client, packet, document, feed, *, path, clock, enabled=False):
 def run_pipeline(document, feed, *, client, root, refresh, deliver, clock, enabled=False):
     """Complete backend path with injected refresh/delivery and durable spending.
 
-    Refresh must return newly collected capture/news. Delivery receives a paper
+    Refresh receives the reviewed symbol and must return newly collected capture/news. Delivery receives a paper
     decision only after finalization. Failed attempts are never paid-replayed.
     The scheduled workflow remains disabled separately.
     """
@@ -255,7 +255,7 @@ def run_pipeline(document, feed, *, client, root, refresh, deliver, clock, enabl
     client.ledger.reserve(attempt,1,now);client.ledger.settle(attempt,0)
     save('packet.json',packet)
     audit=run_metered(client,packet,document,feed,path=root/'review.json',clock=clock,enabled=True)
-    current,current_feed=refresh()
+    current,current_feed=refresh(body['symbol'])
     save('fresh-capture.json',current);save('fresh-news.json',current_feed)
     decision=finalize(packet,audit,current,current_feed,now=clock())
     save('decision.json',decision)

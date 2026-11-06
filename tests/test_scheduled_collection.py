@@ -149,9 +149,10 @@ def test_cache_cannot_cross_dynamic_shortlists(tmp_path):
     assert load_cache(path,NOW,stocks=('OTHER',)) is None
 
 
-def test_dynamic_discovery_symbols_reach_news_and_market(tmp_path,monkeypatch):
-    selected=('IBM','ORCL')
-    watched=(*selected,'MU')
+@pytest.mark.parametrize('targeted',[False,True])
+def test_dynamic_discovery_symbols_reach_news_and_market(tmp_path,monkeypatch,targeted):
+    selected=tuple('S'+str(i) for i in range(19))
+    watched=('TARGET',) if targeted else (*selected,'MU')
     monkeypatch.setattr('market_radar_ai.market_data.discovery.discover',lambda **k:{'selected_symbols':list(selected),'status':'ok'})
     def run(module,args):
         path=args[args.index('--output')+1]
@@ -161,6 +162,7 @@ def test_dynamic_discovery_symbols_reach_news_and_market(tmp_path,monkeypatch):
         else:
             if module=='market_data.capture':
                 assert args[args.index('--stocks')+1:args.index('--crypto')]==list(watched)
+                assert args[args.index('--per-market-limit')+1]=='20'
             rows=[]
             for symbol in watched:
                 p=CalendarCapture(symbol=symbol,retrieved_at=NOW,request_from=NOW.date(),request_to=NOW.date(),status='empty',raw_payload_sha256='a'*64).model_dump(mode='json')
@@ -168,8 +170,9 @@ def test_dynamic_discovery_symbols_reach_news_and_market(tmp_path,monkeypatch):
             body={'earnings_calendars':rows}
         write_json(path,body)
         return 0
-    report=run_cycle(env={**ENV,'ENABLE_STOCK_DISCOVERY':'true'},output=tmp_path/'out',cache_path=tmp_path/'cache.json',clock=lambda:NOW,run=run,delivery=lambda *a,**k:{'state':'scanner_snapshot_delivery_confirmed'})
-    assert report['stock_discovery']['selected_symbols']==list(selected)
+    report=run_cycle(env={**ENV,'ENABLE_STOCK_DISCOVERY':'true'},output=tmp_path/'out',cache_path=tmp_path/'cache.json',clock=lambda:NOW,run=run,delivery=lambda *a,**k:{'state':'scanner_snapshot_delivery_confirmed'},stock_symbols=('TARGET',) if targeted else None)
+    if targeted:assert report['stock_discovery'] is None
+    else:assert report['stock_discovery']['selected_symbols']==list(selected)
     assert load_cache(tmp_path/'cache.json',NOW,watched) is not None
 
 

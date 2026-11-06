@@ -35,19 +35,19 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
     fx=YahooFxProvider().fetch('USD',now=clock())
     client=OpenAIPilot(api_key=env.get('OPENAI_API_KEY'),ledger=GitHubSpendingLedger(GitHubBudgetStore(env.get('GH_BUDGET_TOKEN'))),
                       eur_per_usd=fx.eur_per_unit,enabled=True,count_input_tokens=True)
-    def refresh():
+    def refresh(symbol):
         from ..dashboard.scheduled_collection import run_cycle
         clean={**env,'SCANNER_COLLECTION_MODE':'scheduled','ENABLE_STOCK_DISCOVERY':'true',
                'SCREEN_DISCOVERY_DATA':'true','ENABLE_STOCK_CHECKS':'true'}
-        for k in ('OPENAI_API_KEY','OPEN_API_KEY','GH_BUDGET_TOKEN'):clean.pop(k,None)
+        for k in ('OPENAI_API_KEY','OPEN_API_KEY','GH_BUDGET_TOKEN','GH_PAPER_TOKEN'):clean.pop(k,None)
         process_env={**os.environ,**clean}
-        for k in ('OPENAI_API_KEY','OPEN_API_KEY','GH_BUDGET_TOKEN'):process_env.pop(k,None)
+        for k in ('OPENAI_API_KEY','OPEN_API_KEY','GH_BUDGET_TOKEN','GH_PAPER_TOKEN'):process_env.pop(k,None)
         def stage(module,args):
             return subprocess.run([sys.executable,'-m','market_radar_ai.'+module,*map(str,args)],
                                   env=process_env,timeout=240,check=False).returncode
         output=root/'fresh-collector'
         run_cycle(env=clean,output=output,cache_path=root/'fresh-cache.json',clock=clock,run=stage,
-                  delivery=lambda *a,**k:{'state':'internal_paper_revalidation_only'})
+                  delivery=lambda *a,**k:{'state':'internal_paper_revalidation_only'},stock_symbols=(symbol,))
         return json.loads((output/'enriched-capture.json').read_text()),json.loads((output/'news.json').read_text())
     def delivery(archive):
         from ..dashboard.paper_final_delivery import deliver

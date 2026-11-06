@@ -119,6 +119,7 @@ def main() -> None:
     parser.add_argument("--stocks", nargs="+", default=["MSFT", "AAPL", "NVDA"])
     parser.add_argument("--crypto", nargs="+", default=["XBTEUR", "ETHEUR"])
     parser.add_argument('--stock-provider', choices=['yahoo_finance', 'alpaca_iex'], default='yahoo_finance')
+    parser.add_argument('--per-market-limit', type=int, default=10)
     parser.add_argument('--universe', type=Path, help='JSON object with stocks and crypto symbol lists')
     parser.add_argument('--queue-db', type=Path, help='Persistent fair scan queue; required with --universe')
     args = parser.parse_args()
@@ -146,7 +147,7 @@ def main() -> None:
     else:
         stock_fetch = lambda symbol: YahooFinanceProvider().fetch_history(symbol, period="1d", interval="5m")
     document = capture_markets(args.stocks, args.crypto,
-        stock_fetch=stock_fetch, stock_provider=args.stock_provider,
+        stock_fetch=stock_fetch, stock_provider=args.stock_provider, per_market_limit=args.per_market_limit,
         crypto_fetch=lambda pair: KrakenProvider().fetch_ohlc(pair, interval_minutes=5))
     if selection is not None:
         document['queue_selection'] = selection

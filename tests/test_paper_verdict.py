@@ -98,7 +98,9 @@ def test_metered_pipeline_connections_and_durable_duplicate_guard(tmp_path,monke
         return SimpleNamespace(data=dict(verdict='APPROVE_PAPER',
             rationale='Synthetic pipeline test',source_ids=['news:test'],concerns=[]))
     monkeypatch.setattr(client,'call',call)
-    def refresh():refreshes.append(True);return {},None
+    def refresh(symbol):
+        assert symbol=='TEST'
+        refreshes.append(symbol);return {},None
     def deliver(result):deliveries.append(result);return {'state':'test_receipt'}
     result=run_pipeline({},None,client=client,root=tmp_path/'first',refresh=refresh,deliver=deliver,clock=lambda:NOW,enabled=True)
     assert result['verdict']=='PAPER_WATCH_FOR_ENTRY'
