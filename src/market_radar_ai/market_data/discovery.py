@@ -1,4 +1,4 @@
-"""Bounded Alpaca activity/mover discovery; selection is not trade admission."""
+"""Bounded activity and catalogue discovery; selection is not trade admission."""
 from datetime import datetime, timezone
 from itertools import zip_longest
 import json
@@ -40,7 +40,22 @@ def technical_priority(result):
     return (qualified,float(max(Decimal('-10'),min(Decimal('10'),momentum))+min(relative,Decimal('5'))))
 
 
-def discover(*, env, now, fallback, session=None):
+def catalogue_selection(activity, universe, now, *, limit):
+    """Reserve half the batch for fresh leaders, rotate every other catalogue name.
+
+    With no fresh activity, the entire batch rotates. Catalogue order is stable
+    across runners, so no process-local cursor or stale mover list is required.
+    """
+    pool = list(dict.fromkeys(universe))
+    members = set(pool)
+    leaders = list(dict.fromkeys(s for s in activity if s in members))[:limit // 2]
+    tail = [s for s in pool if s not in leaders]
+    slots = limit - len(leaders)
+    offset = (int(now.timestamp()) // 300 * slots) % max(1, len(tail))
+    return leaders + (tail[offset:] + tail[:offset])[:slots]
+
+
+def discover(*, env, now, fallback, session=None, universe_cache_path=None):
     if now.tzinfo is None:
         raise ValueError('aware_clock_required')
     transport = session or requests.Session()
@@ -77,33 +92,37 @@ def discover(*, env, now, fallback, session=None):
             failures.append(endpoint+'_unavailable_or_stale')
     ranked, selected=select(groups, now)
     screening = {'enabled':False}
-    if env.get('SCREEN_DISCOVERY_DATA') == 'true' and ranked:
-        from .providers.catalogues import Trading212Catalogue
+    universe = None
+    pool = list(ranked)
+    if env.get('SCREEN_DISCOVERY_DATA') == 'true':
+        from .discovery_universe import load_universe
         from .providers.alpaca import AlpacaIexProvider
         from .capture import capture_result
         from zoneinfo import ZoneInfo
-        eligible = set()
-        try:
-            eligible={r.ticker[:-6] for r in Trading212Catalogue().fetch()
-                      if r.ticker.endswith('_US_EQ') and r.type=='STOCK' and r.currencyCode=='USD'}
-        except Exception:
-            failures.append('discovery_catalogue_unavailable')
-        pool=[s for s in ranked if s in eligible]
+        # Fetch/reuse the catalogue even when both activity sources are stale.
+        universe = load_universe(now=now, cache_path=universe_cache_path)
+        failures.extend(universe['failures'])
+        pool = universe['symbols']
         # Metadata candidates only, never account buy permission. Excludes ETFs/warrants.
         screening={'enabled':True,'catalogue_stock_candidates':len(pool),
                    'checked':0,'rejected':[],'not_checked':[],'account_permission_verified':False}
         # Screen a broad bounded pool before selecting the enrichment batch.
         # No early stop at the first eight usable symbols; rotation reaches the tail.
-        _,ordered=select([pool],now,limit=min(100,len(pool)) or 19)
+        ordered = catalogue_selection(ranked, pool, now, limit=100)
         candidates=[]
         local=now.astimezone(ZoneInfo('America/New_York'))
         regular=local.weekday()<5 and (9,30)<=(local.hour,local.minute)<(16,0)
         priority={}
         if regular:
             def check(symbol):
-                result=AlpacaIexProvider(env=env).fetch_history(symbol)
-                checked=capture_result(result,now=datetime.now(timezone.utc))['payload']
-                return symbol,checked['quality_passed_at_capture'],technical_priority(result)
+                try:
+                    result=AlpacaIexProvider(env=env).fetch_history(symbol)
+                    checked=capture_result(result,now=datetime.now(timezone.utc))['payload']
+                    return symbol,checked['quality_passed_at_capture'],technical_priority(result)
+                except Exception:
+                    # A provider failure is an unavailable observation, not a
+                    # reason to abort unrelated symbols or expose raw errors.
+                    return symbol, False, (False, 0)
             # Independent sessions per worker; four requests in flight at most.
             with ThreadPoolExecutor(max_workers=4) as executor:
                 for symbol,usable,score in executor.map(check,ordered):
@@ -112,21 +131,40 @@ def discover(*, env, now, fallback, session=None):
                         candidates.append(symbol);priority[symbol]=score
                     else:screening['rejected'].append(symbol)
         else:
-            candidates=list(ordered)
+            # Pre-open selection prepares news/calendars only. No technical
+            # observation has occurred, so do not call these symbols usable.
+            candidates=[]
         candidates.sort(key=lambda s:priority.get(s,(False,0)),reverse=True)
-        _,selected=select([candidates],now,limit=19)
-        screening['not_checked']=[s for s in pool if s not in ordered]
+        if regular:
+            _,selected=select([candidates],now,limit=19)
+        else:
+            selected=catalogue_selection(ranked,pool,now,limit=19)
+        checked_symbols=set(ordered) if regular else set()
+        screening['not_checked']=[s for s in pool if s not in checked_symbols]
         screening['usable_count']=len(candidates)
         screening['deferred_after_screen']=[s for s in candidates if s not in selected]
         screening['technical_screen_limit']=100
         screening['enrichment_limit']=19
         screening['regular_session_quality_screen']=regular
 
-    if not selected: selected=list(fallback)
-    return {'schema_version':'stock-discovery-v1','retrieved_at':now.isoformat(),
+    fallback_used = not selected
+    if fallback_used: selected=list(dict.fromkeys(fallback))[:19]
+    selected_members = set(selected) & set(pool)
+    checked_count = screening.get('checked', 0)
+    usable_count = screening.get('usable_count', 0)
+    coverage = {'catalogue_candidates':len(universe['symbols']) if universe else 0,
+                'fresh_activity_leads':len(ranked), 'candidate_pool':len(pool),
+                'technical_checked':checked_count, 'technical_usable':usable_count,
+                'technical_unavailable':len(screening.get('rejected', [])),
+                'technical_deferred':len(pool)-checked_count,
+                'research_selected':len(selected_members),
+                'research_deferred':len(pool)-len(selected_members)}
+    return {'schema_version':'stock-discovery-v2','retrieved_at':now.isoformat(),
             'status':'partial' if failures else 'ok','sources':sources,'failures':failures,
-            'scope':'provider_activity_and_movers_not_full_exchange_scan',
+            'scope':'catalogue_and_fresh_activity_not_full_exchange_scan' if universe else 'provider_activity_and_movers_not_full_exchange_scan',
             'discovered_count':len(ranked),'selected_symbols':selected,
-            'deferred_symbols':[s for s in ranked if s not in selected],
-            'selection_policy':'screen_up_to_100_then_9_leaders_plus_10_rotating_every_5_minutes',
-            'screening':screening,'fallback_used':not ranked or (screening['enabled'] and not candidates),'broker_eligibility':'unknown', 'trade_authorized':False}
+            'deferred_symbols':[s for s in pool if s not in selected],
+            'selection_policy':'fresh_leaders_and_catalogue_rotation_every_5_minutes_screen_100_enrich_19',
+            'universe':universe, 'coverage':coverage,
+            'screening':screening,'fallback_used':fallback_used,
+            'broker_eligibility':'unknown', 'trade_authorized':False}
