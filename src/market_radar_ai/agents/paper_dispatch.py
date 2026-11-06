@@ -28,6 +28,8 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
         status={'state':'no_qualified_candidate_zero_cost','model_calls':0,'trade_authorized':False}
         (root/'status.json').write_text(json.dumps(status)+'\n')
         (root/'qualification.json').write_text(json.dumps(batch['qualification'],indent=2)+'\n')
+        from .paper_comparison import cohort_snapshot
+        (root/'comparison-cohort.json').write_text(json.dumps(cohort_snapshot([],now=clock()),indent=2)+'\n')
         return status
     fx=YahooFxProvider().fetch('USD',now=clock())
     client=OpenAIPilot(api_key=env.get('OPENAI_API_KEY'),ledger=GitHubSpendingLedger(GitHubBudgetStore(env.get('GH_BUDGET_TOKEN'))),

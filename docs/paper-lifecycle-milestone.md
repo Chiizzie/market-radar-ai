@@ -121,3 +121,14 @@ be observed. Do not loosen the gates or manufacture a trade to close the milesto
 Discovery expansion, code-versus-AI comparison and a meaningful forward performance
 sample are subsequent work, not completed by this checkpoint. The original
 `market-radar` project and live brokerage execution remain outside this work.
+
+## Further roadmap implementation
+
+[Specialist review instructions and the prospective comparison framework](paper-comparison.md)
+are now implemented and tested in development. The paid path has distinct,
+versioned specialist responsibilities; the comparison engine handles separate
+code-only and AI timelines, rejection counterfactuals, cost reconciliation and
+SQLite backup/recovery. Scheduled comparison observation is not activated: it
+still needs durable collection for every enrolled candidate. Production remains
+pinned to the verified lifecycle observer described above. Concurrent reviewers,
+broader discovery and relaxed material-change rules remain subsequent work.
