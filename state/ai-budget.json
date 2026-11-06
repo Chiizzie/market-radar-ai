@@ -952,6 +952,12 @@
       "reserved": 1,
       "usage": null
     },
+    "paper-cooldown-v1:2dace7248795db0843e4869e6635dff6587a4dc8f76d7e1584f3bd48df20d15e:1793998372": {
+      "actual": null,
+      "day": "2026-11-06",
+      "reserved": 1,
+      "usage": null
+    },
     "paper-cooldown-v1:3e5cf5d7f68666ace9da15af69e90096aa44e705012b461a102765908096a3ae:1793959935": {
       "actual": 0,
       "day": "2026-11-06",
