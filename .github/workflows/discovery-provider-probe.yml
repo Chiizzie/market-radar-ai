@@ -37,6 +37,7 @@ jobs:
                       r = requests.get('https://data.alpaca.markets/v2/stocks/'+endpoint, params=params, headers=headers, timeout=(5,15), allow_redirects=False)
                       data = r.json()
                       message = str(data.get('message', '')).lower() if isinstance(data, dict) else ''
+                      for credential in headers.values(): message = message.replace(credential.lower(), '[redacted]')
                       bars = data.get('bars') if isinstance(data, dict) else None
                       print(json.dumps({'endpoint': endpoint, 'group': label, 'http_status': r.status_code, 'bytes': len(r.content), 'requested_count': len(symbols), 'root_count': len(data) if isinstance(data, dict) else None,
                           'envelope_keys': [k for k in ('bars', 'snapshots', 'next_page_token', 'message', 'code') if isinstance(data, dict) and k in data],
@@ -47,6 +48,7 @@ jobs:
                           'unexpected_bar_symbols': sorted(set(bars)-set(symbols))[:5] if isinstance(bars, dict) else [],
                           'null_bar_series': sum(v is None for v in bars.values()) if isinstance(bars, dict) else None,
                           'next_page': bool(data.get('next_page_token')) if isinstance(data, dict) else None,
+                          'sanitized_symbol_rejection': message[:120] if r.status_code==400 and 'symbol' in message else None,
                           'invalid_symbol_error': 'symbol' in message and ('invalid' in message or 'not found' in message),
                           'capacity_error': 'limit' in message or 'too many' in message,
                           'authorization_error': r.status_code in (401,403)}))
