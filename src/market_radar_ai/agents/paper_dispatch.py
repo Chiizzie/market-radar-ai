@@ -18,6 +18,11 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
     # Qualification chooses the appropriate per-market strategy. Crypto is not
     # held behind a US-stock timer; stock opening bars are independently checked.
     batch=build_packets(document,feed,now=clock())
+    if env.get('PAPER_WATCHER_ENABLED')=='false':
+        root.mkdir(parents=True)
+        status={'state':'paper_watcher_disabled_zero_cost','model_calls':0,'trade_authorized':False}
+        (root/'status.json').write_text(json.dumps(status)+'\n')
+        return status
     if not batch['packets']:
         root.mkdir(parents=True)
         status={'state':'no_qualified_candidate_zero_cost','model_calls':0,'trade_authorized':False}
@@ -43,8 +48,25 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
         return json.loads((output/'enriched-capture.json').read_text()),json.loads((output/'news.json').read_text())
     def delivery(archive):
         from ..dashboard.paper_final_delivery import deliver
+        watch_env={**env,'SCANNER_COLLECTION_MODE':'scheduled'}
+        for k in ('OPENAI_API_KEY','OPEN_API_KEY','GH_BUDGET_TOKEN'):watch_env.pop(k,None)
         if archive['decision']['verdict'] == 'PAPER_WATCH_FOR_ENTRY':
             from .github_paper_tracking import update
             update(env.get('GH_PAPER_TOKEN'),now=clock(),decision=archive['decision'])
-        return deliver(archive,env=env,clock=clock)
+            from .paper_watcher import poll_once
+            from .paper_observer import ReferenceObserver
+            observer=ReferenceObserver(watch_env,clock=clock)
+            # Start observing before dashboard/Telegram delivery can consume the
+            # short entry window. Notification follows the original watch alert.
+            armed=poll_once(env=watch_env,observer=observer,clock=clock,notifications=False)
+            (root/'paper-tracking.json').write_text(json.dumps(armed['report'],indent=2)+'\n')
+        try:
+            return deliver(archive,env=env,clock=clock)
+        finally:
+            if archive['decision']['verdict'] == 'PAPER_WATCH_FOR_ENTRY':
+                from .paper_watcher import run
+                # Bridge the entire entry window even if the next runner is late.
+                # The independent overlapping watcher continues open positions.
+                run(env=watch_env,output=root/'entry-watcher',duration=65,
+                    clock=clock,observer=observer)
     return run_pipeline(document,feed,client=client,root=root,refresh=refresh,deliver=delivery,clock=clock,enabled=True)

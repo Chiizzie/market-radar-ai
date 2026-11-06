@@ -12,7 +12,7 @@ CONDITIONS = {'below_rolling_vwap', 'nonpositive_momentum', 'relative_volume_bel
               'setup_invalidated_before_entry', 'conditional_setup_not_formed'}
 RISK = {'risk_limit_or_arithmetic', 'net_reward_below_2r', 'paper_capital_exceeded',
         'invalid_expiry_or_overnight', 'outside_entry_or_exit_window', 'exit_after_market_deadline'}
-ZERO_STATES = {'no_qualified_candidate_zero_cost','paper_review_cooldown',
+ZERO_STATES = {'no_qualified_candidate_zero_cost','paper_review_cooldown','paper_watcher_disabled_zero_cost',
                'paper_setup_already_attempted','budget_deferred','waiting_for_stock_history_zero_cost'}
 
 

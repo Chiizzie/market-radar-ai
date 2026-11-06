@@ -73,7 +73,7 @@ class PaperTracker:
                 quotes=sorted((q for q in quotes if q.observed_at<=now),key=lambda q:q.observed_at)
                 expiry=datetime.fromisoformat(p['expires_at'])
                 result=replay_long(plan,quotes,decision_at=datetime.fromisoformat(d['evaluated_at']),
-                                   entry_expires_at=expiry,entry_mode='breakout')
+                                   entry_expires_at=expiry,entry_mode='breakout',exit_window_seconds=30)
                 status=result.status
                 if status=='not_filled' and result.reason=='no_observed_eligible_fill' and now<expiry:
                     status='watching'
@@ -83,7 +83,35 @@ class PaperTracker:
                              'quote_count':len(quotes),'outcome':result.model_dump(mode='json')})
         return {'schema_version':'paper-tracking-v1','as_of':now.isoformat(),'trades':rows,
                 'model_calls':0,'trade_authorized':False,
-                'note':'Reference-quote simulation only. Sparse observations can miss triggers or stops; no observed fill is not proof that entry never occurred. Missing deadline quotes remain unresolved.'}
+                'note':'Reference-quote simulation only. Scheduled exits use an observed bid in the final 30 seconds before the cutoff; never a later quote. Only decision-changing observations need be retained. Sampling gaps can miss triggers or stops. Missing entry or exit evidence never creates profit.'}
+
+    def decisions(self):
+        with sqlite3.connect(self.path) as db:
+            return [json.loads(r[0]) for r in db.execute('SELECT payload FROM tracked_plans ORDER BY id')]
+
+    def observe_transition(self, key, quote, *, symbol, source, now):
+        """Keep immutable causal entry/invalidation/exit evidence, not every poll.
+
+        A late observation cannot rewrite a recorded entry or exit. Repeated
+        provider ticks are harmless across overlapping watcher processes.
+        """
+        quote = Quote.model_validate(quote.model_dump())
+        before = next((r for r in self.report(now=now)['trades'] if r['packet_id']==key), None)
+        if before is None: raise ValueError('unknown_plan')
+        if before['state']=='closed' or (before['state']=='not_filled' and before['outcome']['reason']!='no_observed_eligible_fill'):
+            return False
+        with sqlite3.connect(self.path) as db:
+            stored = [json.loads(r[0]) for r in db.execute('SELECT payload FROM tracked_quotes WHERE id=?',(key,))]
+        if stored and quote.observed_at <= max(datetime.fromisoformat(r['quote']['observed_at']) for r in stored):
+            return False
+        self.observe(key,quote,symbol=symbol,source=source,now=now)
+        after = next(r for r in self.report(now=now)['trades'] if r['packet_id']==key)
+        if after['outcome']==before['outcome']:
+            with sqlite3.connect(self.path) as db:
+                db.execute('DELETE FROM tracked_quotes WHERE id=? AND at=?',
+                           (key,quote.observed_at.astimezone(timezone.utc).isoformat()))
+            return False
+        return True
 
 
 def ingest_capture(tracker, document, *, now):
@@ -100,23 +128,22 @@ def ingest_capture(tracker, document, *, now):
     with sqlite3.connect(tracker.path) as db:
         plans=[(key,json.loads(body)) for key,body in db.execute('SELECT id,payload FROM tracked_plans')]
     active = {r['packet_id'] for r in tracker.report(now=now)['trades']
-              if r['state'] in ('watching', 'open_simulation', 'unresolved')}
+              if r['state'] != 'closed' and r['outcome']['reason'] in
+                 ('no_observed_eligible_fill', 'no_observed_exit_by_deadline')}
     for key,d in plans:
-        if key not in active or now > datetime.fromisoformat(d['plan']['exit_by']): continue
+        if key not in active: continue
         if d['candidate_id'].startswith('crypto:'):
             q=crypto_quotes.get(d['plan']['symbol'])
             if q:
                 quote=Quote(observed_at=q['retrieved_at'],bid=q['bid'],ask=q['ask'])
                 if quote.observed_at>=datetime.fromisoformat(d['evaluated_at']):
-                    tracker.observe(key,quote,symbol=q['symbol'],source='kraken:'+q['source_payload_sha256'],now=now)
-                    count+=1
+                    count+=tracker.observe_transition(key,quote,symbol=q['symbol'],source='kraken:'+q['source_payload_sha256'],now=now)
             continue
         for row in stock_rows:
             if row['symbol']!=d['plan']['symbol'] or row['quote_status']!='current_reference_only':continue
             quote=Quote(observed_at=row['observed_at'],bid=row['indicative_bid_eur'],ask=row['indicative_ask_eur'])
             if quote.observed_at<datetime.fromisoformat(d['evaluated_at']):continue
-            tracker.observe(key,quote,symbol=row['symbol'],source='alpaca_iex:'+document['stock_reference_checks']['payload_sha256'],now=now)
-            count+=1
+            count+=tracker.observe_transition(key,quote,symbol=row['symbol'],source='alpaca_iex:'+document['stock_reference_checks']['payload_sha256'],now=now)
     return count
 
 

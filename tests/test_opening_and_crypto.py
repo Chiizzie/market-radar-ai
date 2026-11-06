@@ -49,8 +49,10 @@ def test_crypto_full_qualification_review_refresh_and_tracking(tmp_path):
     decision=finalize(packet,audit,d,news(),now=NOW)
     assert decision['verdict']=='PAPER_WATCH_FOR_ENTRY' and not decision['trade_authorized']
     tracker=PaperTracker(tmp_path/'journal.sqlite');tracker.register(decision)
-    assert ingest_capture(tracker,d,now=NOW)==1
-    assert tracker.report(now=NOW)['trades'][0]['quote_count']==1
+    # A below-trigger poll changes no decision and need not grow the durable log.
+    assert ingest_capture(tracker,d,now=NOW)==0
+    row=tracker.report(now=NOW)['trades'][0]
+    assert row['quote_count']==0 and row['state']=='watching'
     d['crypto_catalogue']['payload']['retrieved_at']=(NOW+timedelta(seconds=1)).isoformat()
     d['crypto_catalogue']['payload_sha256']=digest(d['crypto_catalogue']['payload'])
     assert finalize(packet,audit,d,news(),now=NOW+timedelta(seconds=1))['verdict']=='PAPER_WATCH_FOR_ENTRY'

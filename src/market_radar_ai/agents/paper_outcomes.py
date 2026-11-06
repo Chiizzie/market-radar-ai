@@ -1,5 +1,5 @@
 """Deterministic EUR quote replay. No broker orders or claim of executable fills."""
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Literal
 from pydantic import AwareDatetime, Field
@@ -24,7 +24,8 @@ class PaperOutcome(Frozen):
 
 
 def replay_long(plan: PaperPlan, quotes: list[Quote], *, decision_at: datetime,
-                entry_expires_at: datetime, entry_mode: Literal['limit', 'breakout'] = 'limit') -> PaperOutcome:
+                entry_expires_at: datetime, entry_mode: Literal['limit', 'breakout'] = 'limit',
+                exit_window_seconds: int = 0) -> PaperOutcome:
     """Limit-entry long simulation, using asks for entry and bids for exit.
 
     First eligible ask at/below entry fills at the ask. A stop gap exits at the
@@ -34,6 +35,8 @@ def replay_long(plan: PaperPlan, quotes: list[Quote], *, decision_at: datetime,
     entry and skips trigger gaps whose projected stop loss exceeds EUR20.
     Estimated round-trip costs are deducted once. No volume/queue/slippage model.
     """
+    if type(exit_window_seconds) is not int or not 0 <= exit_window_seconds <= 30:
+        raise ValueError('Invalid scheduled exit window')
     if entry_mode not in ('limit', 'breakout'):
         raise ValueError('Unknown entry mode')
     from zoneinfo import ZoneInfo
@@ -51,10 +54,13 @@ def replay_long(plan: PaperPlan, quotes: list[Quote], *, decision_at: datetime,
     if any(b.observed_at <= a.observed_at for a,b in zip(rows,rows[1:])):
         raise ValueError('Quotes must be strictly ordered without duplicates')
     entry = None
+    exit_start = plan.exit_by - timedelta(seconds=exit_window_seconds)
     for q in rows:
         if q.observed_at < decision_at: continue
         if q.observed_at > plan.exit_by: break
         if entry is None:
+            if exit_window_seconds and q.observed_at >= exit_start:
+                break  # Never open a new simulation during its scheduled exit window.
             if q.observed_at >= entry_expires_at: break
             if entry_mode == 'breakout':
                 # Invalidate before trigger; never buy a breakout below its trigger.
@@ -68,7 +74,8 @@ def replay_long(plan: PaperPlan, quotes: list[Quote], *, decision_at: datetime,
                 return PaperOutcome(status='not_filled', reason='entry_already_invalidated')
             entry = q
         reason = ('stop' if q.bid <= plan.stop else 'target' if q.bid >= plan.target
-                  else 'deadline' if q.observed_at == plan.exit_by else None)
+                  else 'deadline' if q.observed_at == plan.exit_by
+                  else 'scheduled_exit' if exit_window_seconds and q.observed_at >= exit_start else None)
         if reason:
             return PaperOutcome(status='closed', reason=reason, entry_at=entry.observed_at,
                 exit_at=q.observed_at, entry_fill=entry.ask, exit_fill=q.bid,
