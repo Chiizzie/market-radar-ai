@@ -4,6 +4,7 @@ import json
 import re
 import time
 from datetime import date
+from threading import RLock
 from zoneinfo import ZoneInfo
 from typing import Literal
 import requests
@@ -133,8 +134,16 @@ class GitHubSpendingLedger:
 
     def __init__(self, store):
         self.store = store
+        # Forked model clients share this ledger. Serialize each entire read +
+        # CAS write transaction, not their provider calls. Cross-process races
+        # still fail closed through the existing remote compare-and-swap check.
+        self._lock = RLock()
 
     def reserve(self, request_id, maximum_microeur, now):
+        with self._lock:
+            return self._reserve(request_id, maximum_microeur, now)
+
+    def _reserve(self, request_id, maximum_microeur, now):
         if (not re.fullmatch(r'[a-zA-Z0-9:_-]{1,160}', request_id)
                 or now.tzinfo is None or now.utcoffset() is None
                 or type(maximum_microeur) is not int or maximum_microeur <= 0):
@@ -156,6 +165,10 @@ class GitHubSpendingLedger:
         self.store.save(state, sha)
 
     def settle(self, request_id, actual_microeur, *, usage=None):
+        with self._lock:
+            return self._settle(request_id, actual_microeur, usage=usage)
+
+    def _settle(self, request_id, actual_microeur, *, usage=None):
         if type(actual_microeur) is not int or actual_microeur < 0:
             raise ValueError('Invalid actual cost')
         state, sha = self.store.load()

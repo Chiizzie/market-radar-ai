@@ -14,10 +14,23 @@ six reports plus debate. Sources and peer text remain untrusted data.
 
 The version is saved in the internal `review.json`. The dashboard archive schema,
 eight-call limit, durable spending controls, deterministic risk arithmetic and
-fresh finalization are unchanged. Reviewers remain sequential in this release.
-Concurrency needs coordinated budget reservations and isolated per-request token
-accounting; it is not safe to add a thread pool around the current shared client.
-This change does not relax material-evidence comparisons or strategy requirements.
+fresh finalization are unchanged. `PARALLEL_PAPER_SPECIALISTS=true` enables six
+concurrent independent assessments, followed by sequential debate and conclusion.
+Each specialist gets an isolated model client and token counter. All share one
+ledger that serializes complete reservation/settlement transactions; generation
+occurs outside that lock. Cross-process CAS conflicts still fail closed, and no
+paid call is automatically retried. Set the workflow variable to `false` to return
+to sequential review. Manual adapters default to sequential unless opted in.
+
+Independent results are assembled in fixed role order, regardless of completion
+order. All six see empty peer lists; debate waits for all six valid assessments,
+and conclusion receives those six plus debate. Failure waits for in-flight calls
+and settlements before returning, preserves each stage's audit record, and stops
+the dependent stages. Thus parallel mode can incur costs for all six launched
+specialists even if one fails. It does not increase the eight-generation maximum
+or any spending limit. Stage durations and execution mode are saved in the local
+review audit. This change does not relax material-evidence comparisons or strategy
+requirements; live latency improvement remains to be measured on natural reviews.
 
 ## Prospective experiment
 
@@ -94,10 +107,11 @@ create an empty database that could masquerade as a completed experiment.
 
 ## Deployment and remaining work
 
-This change is prepared on `roadmap/reviewer-comparison`. The production scheduler
-remains pinned to the previously verified observer while its first natural paper
-lifecycle is still being collected. No additional AI calls, paid retries or
-spending-limit changes are needed to run the tests or comparison report.
+Specialist instructions and the prospective comparison framework were merged in
+PR #3; independent reviewer concurrency is the next deployment milestone. The
+comparison store itself remains unconnected to scheduled production. No additional
+AI calls, paid retries or spending-limit changes are needed to run the tests or
+comparison report.
 
 Before claiming a live code-versus-AI test, connect a durable experiment store
 and a bounded quote collector covering **all enrolled candidates, including
@@ -106,6 +120,11 @@ observation gaps/capacity explicitly and back up that store. The current product
 watcher observes approved plans only and cannot supply a complete baseline by
 itself. Historical candles or later quotes cannot reconstruct the missing stream.
 The optional comparison hook is not enabled in scheduled production by this change.
+Actions caches and expiring artifacts are not a shared durable experiment database.
+Activation needs persistent mounted storage (or a separately validated durable
+event store), explicit initialization, missing-storage refusal, and a tested
+recovery procedure. Freeze the reviewer execution mode in the experiment protocol
+before collecting forward evaluation data.
 
 Validation covers the actual paid prompt construction with mocked transport,
 prospective enrolment, review-delay misses, rejection counterfactuals, stop gaps,

@@ -71,4 +71,5 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
                 # The independent overlapping watcher continues open positions.
                 run(env=watch_env,output=root/'entry-watcher',duration=65,
                     clock=clock,observer=observer)
-    return run_pipeline(document,feed,client=client,root=root,refresh=refresh,deliver=delivery,clock=clock,enabled=True)
+    return run_pipeline(document,feed,client=client,root=root,refresh=refresh,deliver=delivery,clock=clock,enabled=True,
+                        parallel_specialists=env.get('PARALLEL_PAPER_SPECIALISTS')=='true')

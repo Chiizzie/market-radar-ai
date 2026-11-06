@@ -77,8 +77,10 @@ def build_packets(document, feed, *, now):
     return {'packets':packets,'qualification':report,'model_calls':0,'trade_authorized':False}
 
 
-def review(packet, document, feed, ask, *, clock):
+def review(packet, document, feed, ask, *, clock, parallel_specialists=False):
     """Six independent specialists, then debate/conclusion; never a live order."""
+    if type(parallel_specialists) is not bool:
+        raise ValueError('invalid_parallel_review_setting')
     started=clock()
     rebuilt=build_packets(document,feed,now=datetime.fromisoformat(packet['packet']['assembled_at']))
     if canonical(packet) not in [canonical(p) for p in rebuilt['packets']]:
@@ -86,11 +88,9 @@ def review(packet, document, feed, ask, *, clock):
     body=packet['packet']; deadline=datetime.fromisoformat(body['review_deadline'])
     if not datetime.fromisoformat(body['assembled_at'])<=started<datetime.fromisoformat(body['plan']['expires_at']):
         raise ValueError('paper_packet_expired_before_review')
-    reports=[]; previous=started
-    for stage in STAGES:
+    def assess(stage, peers, not_before):
         at=clock()
-        if not previous<=at<deadline:raise ValueError('paper_review_deadline')
-        peers=deepcopy(reports) if stage in ('debate','conclusion') else []
+        if not not_before<=at<deadline:raise ValueError('paper_review_deadline')
         prompt={'packet':deepcopy(body),'packet_id':packet['packet_id'],'stage':stage,'peer_reviews':peers,
                 'instruction':instruction(stage)}
         answer=VerdictReview.model_validate(ask(stage,prompt,VerdictReview.model_json_schema()))
@@ -101,7 +101,22 @@ def review(packet, document, feed, ask, *, clock):
             or not set(answer.source_ids)<=set(body['source_ids'])
             or list(answer.reviewed_stages)!=[p['stage'] for p in peers]):
             raise ValueError('paper_review_identity_or_citations')
-        reports.append(answer.model_dump(mode='json'));previous=finished
+        return answer.model_dump(mode='json'), finished
+
+    reports=[]; previous=started
+    if parallel_specialists:
+        from concurrent.futures import ThreadPoolExecutor
+        # Each role sees only the immutable packet. The context manager waits
+        # for every in-flight call/settlement even when one result fails.
+        with ThreadPoolExecutor(max_workers=6) as executor:
+            pending=[executor.submit(assess, stage, [], started) for stage in STAGES[:6]]
+            independent=[future.result() for future in pending]
+        reports=[result for result, _ in independent]
+        previous=max(finished for _, finished in independent)
+    for stage in STAGES[6:] if parallel_specialists else STAGES:
+        peers=deepcopy(reports) if stage in ('debate','conclusion') else []
+        result,finished=assess(stage,peers,previous)
+        reports.append(result);previous=finished
     return {'schema_version':'paper-ai-review-v1','packet_id':packet['packet_id'],
             'completed_at':finished.isoformat(),'reviews':reports,'model_calls':8,
             'trade_authorized':False}
@@ -167,23 +182,36 @@ def stable_evidence(sources):
         values.append(canonical({'kind':kind,'content':value}))
     return sorted(values)
 
-def run_metered(client, packet, document, feed, *, path, clock, enabled=False):
+def run_metered(client, packet, document, feed, *, path, clock, enabled=False,
+                parallel_specialists=False):
     """Explicit opt-in adapter; no automatic scheduler activation."""
     import json
     from pathlib import Path
     from .openai_pilot import OpenAIPilot
     from .github_budget import GitHubSpendingLedger
+    from threading import RLock
+    from time import monotonic
     if enabled is not True or type(client) is not OpenAIPilot or type(client.ledger) is not GitHubSpendingLedger:
         raise ValueError('metered_paper_review_not_enabled')
     path=Path(path)
     if path.exists():raise ValueError('preserve_existing_review')
-    calls=[]
-    def save(result=None):
+    if type(parallel_specialists) is not bool:
+        raise ValueError('invalid_parallel_review_setting')
+    calls={}; audit_lock=RLock()
+    def save(result=None, state='in_progress'):
         path.parent.mkdir(parents=True,exist_ok=True)
-        path.write_text(json.dumps({'review_policy_version':REVIEW_POLICY_VERSION,
-                                   'calls':calls,'result':result,'trade_authorized':False},indent=2)+'\n')
+        temporary=path.with_name(path.name+'.tmp')
+        temporary.write_text(json.dumps({'review_policy_version':REVIEW_POLICY_VERSION,
+                                   'execution_mode':'parallel_specialists' if parallel_specialists else 'sequential',
+                                   'review_state':state,
+                                   'calls':[calls[s] for s in STAGES if s in calls],
+                                   'result':result,'trade_authorized':False},indent=2)+'\n')
+        temporary.replace(path)
     def ask(stage,prompt,schema):
-        calls.append({'stage':stage,'state':'attempting'});save()
+        began=monotonic()
+        with audit_lock:
+            if stage in calls:raise ValueError('paper_stage_already_attempted')
+            calls[stage]={'stage':stage,'state':'attempting'};save()
         # Identity and peer bookkeeping belong to the orchestrator. The model
         # supplies only its assessment and citations from the supplied evidence.
         model_schema=deepcopy(schema)
@@ -192,21 +220,31 @@ def run_metered(client, packet, document, feed, *, path, clock, enabled=False):
         model_schema['required']=[f for f in model_schema['required'] if f not in metadata]
         model_schema['properties']['source_ids']['items']['enum']=list(prompt['packet']['source_ids'])
         instructions=prompt['instruction']+' Return only verdict, rationale, source_ids and concerns. Cite distinct IDs from the supplied source_ids list. The application supplies stage, packet identity and reviewed-stage bookkeeping.'
-        reply=client.call(prompt=canonical(prompt),schema=model_schema,
-            request_id='paper-final-v1:'+packet['packet_id']+':'+stage,now=clock(),
-            max_output_tokens=1024,reasoning_effort='none',instructions=instructions)
-        calls[-1].update(state='received', assessment=reply.data);save()
-        from jsonschema import Draft202012Validator
-        Draft202012Validator(model_schema).validate(reply.data)
-        return {**reply.data,'stage':stage,'packet_id':packet['packet_id'],
-                'reviewed_stages':[r['stage'] for r in prompt['peer_reviews']]}
+        role_client=client.fork() if parallel_specialists and stage in STAGES[:6] else client
+        try:
+            reply=role_client.call(prompt=canonical(prompt),schema=model_schema,
+                request_id='paper-final-v1:'+packet['packet_id']+':'+stage,now=clock(),
+                max_output_tokens=1024,reasoning_effort='none',instructions=instructions)
+            with audit_lock:
+                calls[stage].update(state='received', assessment=reply.data,
+                                    elapsed_seconds=round(monotonic()-began,3));save()
+            from jsonschema import Draft202012Validator
+            Draft202012Validator(model_schema).validate(reply.data)
+            if len(set(reply.data['source_ids']))!=len(reply.data['source_ids']):
+                raise ValueError('paper_review_identity_or_citations')
+            return {**reply.data,'stage':stage,'packet_id':packet['packet_id'],
+                    'reviewed_stages':[r['stage'] for r in prompt['peer_reviews']]}
+        except Exception:
+            with audit_lock:
+                calls[stage].update(state='failed_review',elapsed_seconds=round(monotonic()-began,3));save()
+            raise
     try:
-        result=review(packet,document,feed,ask,clock=clock)
+        result=review(packet,document,feed,ask,clock=clock,
+                      parallel_specialists=parallel_specialists)
     except Exception:
-        if calls:
-            calls[-1]['state']='failed_review';save()
+        with audit_lock:save(state='failed')
         raise
-    save(result)
+    with audit_lock:save(result,state='completed')
     return result
 
 
@@ -253,7 +291,8 @@ def choose_unreviewed_packet(packets, entries, *, now):
     return None,None,None,skipped
 
 
-def run_pipeline(document, feed, *, client, root, refresh, deliver, clock, enabled=False, comparison=None):
+def run_pipeline(document, feed, *, client, root, refresh, deliver, clock, enabled=False,
+                 comparison=None, parallel_specialists=False):
     """Complete backend path with injected refresh/delivery and durable spending.
 
     Refresh receives the reviewed symbol and must return newly collected capture/news. Delivery receives a paper
@@ -308,7 +347,8 @@ def run_pipeline(document, feed, *, client, root, refresh, deliver, clock, enabl
     if comparison is not None:
         comparison.begin_review(packet, now=clock())
     try:
-        audit=run_metered(client,packet,document,feed,path=root/'review.json',clock=clock,enabled=True)
+        audit=run_metered(client,packet,document,feed,path=root/'review.json',clock=clock,enabled=True,
+                          parallel_specialists=parallel_specialists)
     finally:
         if comparison is not None:
             comparison.reconcile_cost(packet, client.ledger.store.load()[0], now=clock())

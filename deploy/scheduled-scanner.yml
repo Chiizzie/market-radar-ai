@@ -158,6 +158,7 @@ jobs:
           SCHEDULED_REVIEW_MODE: paid
           OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
           PAPER_FINAL_VERDICTS: 'true'
+          PARALLEL_PAPER_SPECIALISTS: ${{ vars.PARALLEL_PAPER_SPECIALISTS != 'false' && 'true' || 'false' }}
           PAPER_WATCHER_ENABLED: ${{ vars.PAPER_WATCHER_ENABLED != 'false' && 'true' || 'false' }}
           SEND_PAPER_LIFECYCLE_TELEGRAM: 'true'
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
