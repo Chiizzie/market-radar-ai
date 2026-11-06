@@ -1,4 +1,4 @@
-# Deployment template: replace 1a52bb1d8c7e60f8068523df2eb537b424728f47 with a verified backend SHA.
+# Deployment template: replace e3e2d6563e738a0989a54afb4e0c9e29a293c7e3 with a verified backend SHA.
 # Install as .github/workflows/scheduled-scanner.yml on this repository's main branch.
 name: Scheduled research collection
 on:
@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 1a52bb1d8c7e60f8068523df2eb537b424728f47
+          ref: e3e2d6563e738a0989a54afb4e0c9e29a293c7e3
           persist-credentials: false
       - name: Enforce Dublin operating hours before provider calls
         id: window
@@ -100,7 +100,7 @@ jobs:
       group: market-radar-ai-budget
       cancel-in-progress: false
     steps:
-      - name: Enforce stock warm-up before any paid review
+      - name: Enforce weekday review window; qualify each market independently
         id: review_window
         run: |
           python - <<'PY'
@@ -110,16 +110,15 @@ jobs:
           now = datetime.now(timezone.utc)
           ny = now.astimezone(ZoneInfo('America/New_York'))
           dublin = now.astimezone(ZoneInfo('Europe/Dublin'))
-          earliest = ny.replace(hour=9, minute=30, second=0, microsecond=0) + timedelta(minutes=100)
-          allowed = ny.weekday() < 5 and ny >= earliest and dublin.hour < 22
+          allowed = dublin.weekday() < 5 and 8 <= dublin.hour < 22
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               f.write('run=' + str(allowed).lower() + '\n')
-          print('Free qualification may proceed; no paid call unless it passes.' if allowed else 'Waiting for completed stock history; no AI calls.')
+          print('Free qualification may proceed; no paid call unless it passes.' if allowed else 'Outside weekday review window; no AI calls.')
           PY
       - uses: actions/checkout@v4
         if: steps.review_window.outputs.run == 'true'
         with:
-          ref: 1a52bb1d8c7e60f8068523df2eb537b424728f47
+          ref: e3e2d6563e738a0989a54afb4e0c9e29a293c7e3
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.review_window.outputs.run == 'true'
@@ -138,7 +137,8 @@ jobs:
         if: steps.review_window.outputs.run == 'true'
         run: |
           python -m market_radar_ai.market_data.stock_checks --capture artifacts/scheduled/enriched-capture.json --output artifacts/scheduled/fresh-reference-capture.json
-          python -m market_radar_ai.agents.scheduled_review --capture artifacts/scheduled/fresh-reference-capture.json --evidence artifacts/scheduled/news.json --output artifacts/decision
+          python -m market_radar_ai.market_data.reference_quotes --capture artifacts/scheduled/fresh-reference-capture.json --output artifacts/scheduled/fresh-all-reference-capture.json
+          python -m market_radar_ai.agents.scheduled_review --capture artifacts/scheduled/fresh-all-reference-capture.json --evidence artifacts/scheduled/news.json --output artifacts/decision
         env:
           SCHEDULED_REVIEW_MODE: paid
           OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
