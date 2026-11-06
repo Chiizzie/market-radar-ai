@@ -1048,6 +1048,12 @@
       "reserved": 1,
       "usage": null
     },
+    "paper-final-v1:10e517d9c48f83cbd1788b27ba0c5dd24939b9893be20b335895e3502f20c0c2:debate": {
+      "actual": null,
+      "day": "2026-11-06",
+      "reserved": 11308,
+      "usage": null
+    },
     "paper-final-v1:10e517d9c48f83cbd1788b27ba0c5dd24939b9893be20b335895e3502f20c0c2:devils_advocate": {
       "actual": 5967,
       "day": "2026-11-06",
