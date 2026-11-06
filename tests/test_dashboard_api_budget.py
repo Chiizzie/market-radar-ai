@@ -84,3 +84,21 @@ def test_export_keeps_usage_aggregates_without_changing_trade_gates():
     assert snapshot['api_budget'] == doc['api_budget']
     assert snapshot['paper_outcomes'] is None and not snapshot['live_orders_enabled']
     assert all(r['decision'] == 'NO_ACTION' for rows in snapshot['markets'].values() for r in rows)
+
+
+@pytest.mark.parametrize('available', [True, False])
+def test_market_expiry_replay_does_not_redate_independent_usage(available):
+    from market_radar_ai.dashboard.api_budget import unavailable
+    from market_radar_ai.market_data.readiness import readiness
+    doc = capture()
+    doc['api_budget'] = summarize(ledger(), now=NOW) if available else unavailable(NOW)
+    original = deepcopy(doc)
+    result = readiness(doc, None, now=NOW)
+    assert result['capture_expiry_replay']['all_original_captures_rejected']
+    assert result['model_calls'] == 0 and not result['trade_authorized']
+    assert doc == original
+    # A real future export must still refuse stale usage; only the market-only
+    # internal expiry rehearsal omits the independent operational metadata.
+    from datetime import timedelta
+    with pytest.raises(ValueError, match='usage clock'):
+        build_snapshot(doc, now=NOW+timedelta(minutes=16))

@@ -47,9 +47,10 @@ def readiness(document, feed, *, now):
             'expiry_replay': {'tested_at': expiry.isoformat(), 'rejected': expiry_rejected,
                               'kind': 'DETERMINISTIC_GUARD_TEST_NOT_FUTURE_OBSERVATION'}})
     # Re-evaluate original captures, never extend timestamps to make data pass.
-    # Replay market-capture expiry only. Journal has its own independently tested
-    # clock guard and must not be re-dated into a hypothetical future snapshot.
-    replay_document = {k: v for k, v in document.items() if k != 'paper_tracking_report'}
+    # Replay market-capture expiry only. Journal and usage summaries have their
+    # own clock guards and must not be re-dated into a hypothetical snapshot.
+    replay_document = {k: v for k, v in document.items()
+                       if k not in ('paper_tracking_report', 'api_budget')}
     later = build_snapshot(replay_document, now=now+timedelta(minutes=16))
     stale_rejected = all(v['current'] == 0 for v in later['coverage'].values())
     if not stale_rejected:
