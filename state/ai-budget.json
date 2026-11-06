@@ -946,6 +946,12 @@
         "response_id": "resp_0d141a907a998a96016ae8ea37d7f087d0a307d206bd1edae9"
       }
     },
+    "paper-cooldown-v1:1b82928a7f8aafb662bb9e22faa8d5e9c943bcecd27e7c579afe0db1b91c92c3:1793997472": {
+      "actual": null,
+      "day": "2026-11-06",
+      "reserved": 1,
+      "usage": null
+    },
     "paper-cooldown-v1:3e5cf5d7f68666ace9da15af69e90096aa44e705012b461a102765908096a3ae:1793959935": {
       "actual": 0,
       "day": "2026-11-06",
