@@ -1,4 +1,4 @@
-# Deployment template: replace f26f122b69a3be8cba5393a0a011fc3967e53172 with a verified backend SHA.
+# Collector: verified persistent catalogue discovery; review and watcher retain their lifecycle revision.
 # Install as .github/workflows/scheduled-scanner.yml on this repository's main branch.
 name: Scheduled research collection
 on:
@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: f26f122b69a3be8cba5393a0a011fc3967e53172
+          ref: b2b79b36b7c5dd1e7564bdd38c9fde09750ccb5c
           persist-credentials: false
       - name: Enforce Dublin operating hours before provider calls
         id: window
@@ -63,6 +63,12 @@ jobs:
           path: .scanner-cache/evidence.json
           key: scanner-evidence-v1-${{ github.run_id }}
           restore-keys: scanner-evidence-v1-
+      - uses: actions/cache/restore@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          path: .scanner-cache/discovery-universe.json
+          key: scanner-universe-v1-${{ github.run_id }}
+          restore-keys: scanner-universe-v1-
       - name: Collect and deliver without models or orders
         if: steps.window.outputs.run == 'true'
         run: python -m market_radar_ai.dashboard.scheduled_collection
@@ -85,6 +91,11 @@ jobs:
         with:
           path: .scanner-cache/evidence.json
           key: scanner-evidence-v1-${{ github.run_id }}
+      - uses: actions/cache/save@v4
+        if: always() && steps.window.outputs.run == 'true' && hashFiles('.scanner-cache/discovery-universe.json') != ''
+        with:
+          path: .scanner-cache/discovery-universe.json
+          key: scanner-universe-v1-${{ github.run_id }}
       - uses: actions/upload-artifact@v4
         if: always() && steps.window.outputs.run == 'true'
         with:
