@@ -68,3 +68,56 @@ Passing these tests and provider checks establishes engineering readiness. A
 naturally qualified, AI-approved setup followed by recorded market observations is
 still required for the first genuine forward paper outcome. Neither synthetic
 outcomes nor successful workflow counts establish profitability.
+
+## Continuation checkpoint — 6 November 2026
+
+The agreed milestone is **an approved paper watch followed by an observed entry
+and an observed stop, target or scheduled exit**, with expired unfilled plans and
+missing exits reported honestly. Engineering readiness is verified; the first
+genuine forward paper outcome is still pending.
+
+The implementation is on `phase-1/market-data-layer`. Production's scheduler is
+on `main` and explicitly checks out tested backend
+`f26f122b69a3be8cba5393a0a011fc3967e53172`; the deployment commit is
+`2fbf88a0c95e7c72bdc32a7c58de095c30f405ce`. Reading only the older source files
+on `main` does not show the deployed implementation. Do not replace these pins
+with the superseded morning-preparation draft PR.
+
+Verified evidence:
+
+| Check | Observed result |
+| --- | --- |
+| [Backend CI 42215269210](https://github.com/Chiizzie/market-radar-ai/actions/runs/42215269210) | 1,061 tests passed; compilation, offline scenarios and budget-storage check succeeded. Paid evaluation steps were skipped. |
+| [Production run 42216881068](https://github.com/Chiizzie/market-radar-ai/actions/runs/42216881068) | Collection, review gating, paper watcher and private account sync all succeeded. |
+| Watcher, 12:20:40–12:26:10 Europe/Dublin | 66 polls; maximum interval 5 seconds; zero error polls; zero unconfirmed notifications; zero active plans and zero observed trade quotes. This verifies an idle watcher, not an executed lifecycle. |
+| Provider smoke check | Current Kraken XBTEUR reference verified at 12:20:40 Dublin, using local receipt time. No plan or entry was created. |
+| Review at 12:22:16 Dublin | `no_qualified_candidate_zero_cost`; zero model calls. Nine requested stocks had no usable regular-session evidence during premarket. All four crypto candidates lacked current symbol-linked news; ETH/XRP also failed relative volume, and BTC failed relative volume and momentum. |
+| Crypto reference and catalogue checks | All four candidates passed paper catalogue availability, reference quote, EUR pricing and session checks. The old statement that crypto catalogue integration is absent is superseded by the deployed code and `SCANNER_COVERAGE.md`. Live account permission and broker execution prices remain unknown. |
+| Durable production journal | `state/paper-journal` contains zero decisions and zero observations (blob `783be593209c8016221ed08469a539c265d989af`). No genuine paper result or performance statistic exists yet. |
+
+The downloaded decision artifact `13502161496` was independently checked against
+SHA-256 `9798189e9d052e1dbd3ef3afe3653705d0f34eb2df574a6d84b9b65cb274e33f`.
+The continuation check made no model calls, placed no orders, injected no
+synthetic production records, and did not change qualification or spending.
+
+### Remaining acceptance evidence
+
+1. Let an actual candidate pass current free qualification and the complete
+   eight-stage review, then verify fresh finalization and immutable registration.
+2. Confirm the journal's entry is supported by a post-decision reference quote
+   before expiry. A watch that expires without entry is not a completed trade.
+3. Confirm an observed stop, target or scheduled exit before the plan deadline,
+   with net EUR P/L recomputed from recorded fills and disclosed assumed costs.
+   A missing exit remains unresolved and cannot count as a scored result.
+4. Verify the subsequent dashboard receipt and persisted lifecycle notification
+   acknowledgements. A successful empty run does not establish these transitions.
+5. Retain the decision, review chain, quote provenance, outcome and delivery
+   evidence. One completed paper lifecycle proves integration, not profitability.
+
+The deployed scheduler already continues collection and observation. Regular
+stock admission additionally needs the exchange to open and at least six complete
+contiguous five-minute opening bars; broad regular-session discovery remains to
+be observed. Do not loosen the gates or manufacture a trade to close the milestone.
+Discovery expansion, code-versus-AI comparison and a meaningful forward performance
+sample are subsequent work, not completed by this checkpoint. The original
+`market-radar` project and live brokerage execution remain outside this work.
