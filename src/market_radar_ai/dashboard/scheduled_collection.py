@@ -89,9 +89,9 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         stocks = tuple(stock_symbols)
     if stock_symbols is None and env.get('ENABLE_STOCK_DISCOVERY') == 'true':
         from ..market_data.discovery import discover
-        discovery = discover(env=env, now=started, fallback=STOCKS)
+        discovery = discover(env=env, now=started, fallback=STOCKS,
+                             universe_cache_path=cache_path.with_name('discovery-universe.json'))
         stocks = tuple(discovery['selected_symbols'])
-        write_json(output/'discovery.json', discovery)
     # User watchlist supplements rotating discovery, without replacing its candidates.
     if stock_symbols is None:
         stocks = tuple(dict.fromkeys([*stocks, 'MU']))
@@ -103,6 +103,22 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         if len(set(active)) > 20:
             raise RuntimeError('paper_tracking_capacity_exceeded')
         stocks = tuple(dict.fromkeys([*active, *stocks]))[:20]
+    if discovery is not None:
+        # The journal can displace rotating candidates. Report what will really
+        # be researched, retaining the original discovery shortlist separately.
+        discovery['collection_selected_symbols'] = list(stocks)
+        discovery['displaced_symbols'] = [s for s in discovery['selected_symbols'] if s not in stocks]
+        if 'coverage' in discovery:
+            if discovery.get('universe'):
+                pool = set(discovery['universe']['symbols'])
+            else:
+                pool = set(discovery['deferred_symbols'])
+                if not discovery['fallback_used']:
+                    pool.update(discovery['selected_symbols'])
+            discovery['coverage']['research_selected'] = len(pool.intersection(stocks))
+            discovery['coverage']['research_deferred'] = len(pool.difference(stocks))
+            discovery['deferred_symbols'] = sorted(pool.difference(stocks))
+        write_json(output/'discovery.json', discovery)
     cache = load_cache(cache_path, started, stocks)
     stages = {}
 

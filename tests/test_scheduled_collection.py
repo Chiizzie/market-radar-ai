@@ -211,3 +211,44 @@ def test_active_paper_symbols_survive_discovery_rotation(tmp_path,monkeypatch):
               clock=lambda:NOW,run=run,delivery=lambda *a,**k:{'state':'fixture'})
     assert len(seen)==2 and 'capture' in seen[1]
     assert (tmp_path/'run/paper-tracking.json').exists()
+
+
+@pytest.mark.parametrize('fallback_only', [False, True])
+def test_discovery_counts_follow_actual_collection_cap_without_counting_fallback(tmp_path, monkeypatch, fallback_only):
+    from market_radar_ai.dashboard import scheduled_collection as collection
+    from market_radar_ai.dashboard.run_diagnostics import discovery_summary
+    pool = [] if fallback_only else [f'S{i}' for i in range(50)]
+    chosen = list(STOCKS) if fallback_only else pool[:19]
+    discovery = {'selected_symbols': chosen, 'deferred_symbols': pool[19:],
+                 'universe': {'symbols': pool} if pool else None,
+                 'fallback_used': fallback_only, 'coverage': {
+                     'catalogue_candidates': len(pool), 'fresh_activity_leads': 0,
+                     'candidate_pool': len(pool), 'technical_checked': 0,
+                     'technical_usable': 0, 'technical_unavailable': 0,
+                     'technical_deferred': len(pool),
+                     'research_selected': 19 if pool else 0,
+                     'research_deferred': 31 if pool else 0}}
+    def discover(**kwargs):
+        assert kwargs['universe_cache_path'] == tmp_path/'discovery-universe.json'
+        return deepcopy(discovery)
+    monkeypatch.setattr('market_radar_ai.market_data.discovery.discover', discover)
+    active = ['S49', *[f'TRACK{i}' for i in range(19)]]
+    monkeypatch.setattr('market_radar_ai.agents.github_paper_tracking.update',
+                        lambda *a, **kw: {'trades': [dict(symbol=s, state='open_simulation') for s in active]})
+    news, calendars = evidence()
+    monkeypatch.setattr(collection, 'load_cache', lambda *a, **kw: {
+        'news': news, 'calendars': calendars, 'collection_started_at': NOW.isoformat()})
+    def stages(module, args):
+        if module == 'market_data.capture':
+            assert args[args.index('--stocks')+1:args.index('--crypto')] == active
+        return fake_stages([])(module, args)
+    report = run_cycle(env={**ENV, 'ENABLE_STOCK_DISCOVERY': 'true', 'GH_PAPER_TOKEN': 'fixture'},
+                       output=tmp_path/'out', cache_path=tmp_path/'cache.json', clock=lambda: NOW,
+                       run=stages, delivery=lambda *a, **kw: {'state': 'fixture'})
+    final = report['stock_discovery']
+    assert final['collection_selected_symbols'] == active
+    assert final['displaced_symbols'] == chosen
+    assert final['coverage']['research_selected'] == (0 if fallback_only else 1)
+    assert final['coverage']['research_deferred'] == (0 if fallback_only else 49)
+    assert discovery_summary(final, now=NOW)['coverage_status'] == 'validated'
+    assert json.loads((tmp_path/'out/discovery.json').read_text()) == final

@@ -100,3 +100,85 @@ def test_full_report_from_actual_crypto_failure_replay_if_available(tmp_path):
     r=build_report(tmp_path,tmp_path,now=NOW)
     assert r['review']['stages_with_assessments']==4 and r['review']['stages_started']==5
     assert not r['review']['validated_eight_stage_review'] and r['spending']['generation_records'] is None
+
+
+def discovery():
+    return {'discovered_count': 500, 'fallback_used': False, 'failures': [],
+            'coverage': {'catalogue_candidates': 500, 'fresh_activity_leads': 30,
+                         'candidate_pool': 500, 'technical_checked': 100,
+                         'technical_usable': 85, 'technical_unavailable': 15,
+                         'technical_deferred': 400, 'research_selected': 19,
+                         'research_deferred': 481},
+            'universe': {'source': 'trading212_metadata', 'retrieved_at': NOW.isoformat(),
+                         'cache_status': 'reused', 'freshness': 'fresh',
+                         'symbols': ['SECRET'], 'account_permission_verified': True}}
+
+
+def test_discovery_counts_reconcile_without_passing_through_catalogue_or_permission(tmp_path):
+    write(tmp_path, 'discovery.json', discovery())
+    report = build_report(tmp_path, now=NOW)
+    result = report['discovery']
+    assert result['coverage_status'] == 'validated'
+    assert result['coverage'] == discovery()['coverage']
+    assert result['universe']['retrieved_at'] == NOW.isoformat()
+    assert result['universe']['account_permission_verified'] is False
+    assert 'SECRET' not in json.dumps(report)
+    summary = markdown(report)
+    assert '| Technical checks attempted | 100 |' in summary
+    assert '| Technically usable / unavailable | 85 / 15 |' in summary
+    assert 'does not mean technically checked, AI reviewed or approved' in summary
+
+
+def test_premarket_research_is_not_reported_as_technical_checks(tmp_path):
+    record = discovery()
+    record['coverage'].update(technical_checked=0, technical_usable=0,
+                              technical_unavailable=0, technical_deferred=500)
+    record['universe'].update(cache_status='reused', freshness='stale_but_valid',
+                              retrieved_at='2026-11-04T10:30:00+00:00')
+    write(tmp_path, 'discovery.json', record)
+    report = build_report(tmp_path, now=NOW)
+    assert report['discovery']['coverage_status'] == 'validated'
+    assert '| Technical checks attempted | 0 |' in markdown(report)
+    assert 'stale_but_valid' in markdown(report)
+    assert report['discovery']['universe']['retrieved_at'] == '2026-11-04T10:30:00+00:00'
+
+
+@pytest.mark.parametrize('field,value', [
+    ('technical_checked', True), ('technical_unavailable', -1),
+    ('technical_deferred', 399), ('research_deferred', 500),
+    ('research_selected', 21), ('catalogue_candidates', 20_001),
+    ('fresh_activity_leads', 201), ('technical_usable', '85'),
+    ('technical_checked', 101), ('candidate_pool', None),
+])
+def test_invalid_discovery_counts_cannot_claim_coverage(tmp_path, field, value):
+    record = discovery(); record['coverage'][field] = value
+    write(tmp_path, 'discovery.json', record)
+    report = build_report(tmp_path, now=NOW)
+    assert report['discovery']['coverage_status'] == 'invalid'
+    assert report['discovery']['coverage'] is None
+    assert '| Technical checks attempted |' not in markdown(report)
+
+
+@pytest.mark.parametrize('stamp', [
+    '<script>secret</script>', '2026-11-06T10:30:00', '2026-11-06T10:30:01+00:00', None,
+])
+def test_invalid_metadata_timestamp_does_not_escape_into_summary(tmp_path, stamp):
+    record = discovery()
+    record['universe']['retrieved_at'] = stamp
+    record['failures'] = ['[secret](https://bad.example)']
+    record['coverage']['secret'] = '<script>secret</script>'
+    write(tmp_path, 'discovery.json', record)
+    report = build_report(tmp_path, now=NOW)
+    assert report['discovery']['universe']['retrieved_at'] is None
+    assert report['discovery']['universe']['freshness'] == 'unavailable'
+    assert 'secret' not in json.dumps(report)
+    assert 'bad.example' not in markdown(report)
+
+
+def test_old_discovery_artifact_keeps_unknown_counts_explicit(tmp_path):
+    write(tmp_path, 'discovery.json', {'discovered_count': 9, 'fallback_used': True})
+    report = build_report(tmp_path, now=NOW)
+    assert report['discovery']['coverage_status'] == 'unavailable'
+    assert report['discovery']['coverage'] is None
+    assert report['discovery']['fallback_used'] is True
+    assert 'no broad-coverage claim' in markdown(report)

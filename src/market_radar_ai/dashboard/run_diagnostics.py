@@ -14,6 +14,9 @@ RISK = {'risk_limit_or_arithmetic', 'net_reward_below_2r', 'paper_capital_exceed
         'invalid_expiry_or_overnight', 'outside_entry_or_exit_window', 'exit_after_market_deadline'}
 ZERO_STATES = {'no_qualified_candidate_zero_cost','paper_review_cooldown','paper_watcher_disabled_zero_cost',
                'paper_setup_already_attempted','budget_deferred','waiting_for_stock_history_zero_cost'}
+DISCOVERY_COUNTS = ('catalogue_candidates', 'fresh_activity_leads', 'candidate_pool',
+                    'technical_checked', 'technical_usable', 'technical_unavailable',
+                    'technical_deferred', 'research_selected', 'research_deferred')
 
 
 def label(value):
@@ -39,6 +42,54 @@ def read(path, issues):
         return value
     except (OSError,ValueError,UnicodeError):
         issues.append(path.name);return None
+
+
+def discovery_summary(discovery, *, now):
+    """Only export bounded counts and known metadata; never raw catalogue records."""
+    def count(value, maximum=20_200):
+        return value if type(value) is int and 0 <= value <= maximum else None
+
+    failures = discovery.get('failures', [])
+    summary = {
+        'discovered_count': count(discovery.get('discovered_count')),
+        'fallback_used': discovery.get('fallback_used') if type(discovery.get('fallback_used')) is bool else None,
+        'failures': [label(x) for x in failures[:50]] if isinstance(failures, list) else ['unknown'],
+        'coverage_status': 'unavailable', 'coverage': None,
+        'universe': {'source': 'unknown', 'retrieved_at': None, 'cache_status': 'unavailable',
+                     'freshness': 'unavailable', 'account_permission_verified': False},
+    }
+    source = discovery.get('coverage')
+    if source is not None:
+        summary['coverage_status'] = 'invalid'
+        if isinstance(source, dict):
+            counts = {k: count(source.get(k)) for k in DISCOVERY_COUNTS}
+            if (all(v is not None for v in counts.values())
+                    and counts['catalogue_candidates'] <= 20_000
+                    and counts['fresh_activity_leads'] <= 200
+                    and counts['technical_checked'] <= 100
+                    and counts['research_selected'] <= 20
+                    and counts['technical_checked'] == counts['technical_usable'] + counts['technical_unavailable']
+                    and counts['candidate_pool'] == counts['technical_checked'] + counts['technical_deferred']
+                    and counts['candidate_pool'] == counts['research_selected'] + counts['research_deferred']):
+                summary['coverage_status'] = 'validated'
+                summary['coverage'] = counts
+    universe = discovery.get('universe')
+    if isinstance(universe, dict) and universe.get('source') == 'trading212_metadata':
+        metadata = summary['universe']
+        metadata['source'] = 'trading212_metadata'
+        if universe.get('cache_status') in ('refreshed', 'reused', 'unavailable'):
+            metadata['cache_status'] = universe['cache_status']
+        if universe.get('freshness') in ('fresh', 'stale_but_valid', 'unavailable'):
+            metadata['freshness'] = universe['freshness']
+        try:
+            stamp = datetime.fromisoformat(universe['retrieved_at'])
+            if stamp.tzinfo is not None and stamp <= now:
+                metadata['retrieved_at'] = stamp.isoformat()
+        except (KeyError, TypeError, ValueError):
+            pass
+        if metadata['retrieved_at'] is None:
+            metadata['cache_status'] = metadata['freshness'] = 'unavailable'
+    return summary
 
 
 def spending(packet, status, audit, *, budget_loader=None, phase='review'):
@@ -113,9 +164,7 @@ def build_report(collection, review=None, *, now, budget_loader=None):
     money=spending(packet,status,audit,budget_loader=budget_loader,phase=phase)
     return {'schema_version':'internal-run-diagnostics-v1','generated_at_dublin':now.astimezone(ZoneInfo('Europe/Dublin')).isoformat(),
             'phase':phase,'qualification_origin':origin,'qualification_available':bool(q),
-            'discovery':{'discovered_count':discovery.get('discovered_count'),
-                         'fallback_used':discovery.get('fallback_used'),
-                         'failures':[label(x) for x in discovery.get('failures',[])]},
+            'discovery':discovery_summary(discovery, now=now),
             'coverage':coverage,'candidates':candidates,'blocker_counts':dict(sorted(reasons.items())),
             'blocker_groups':dict(sorted(groups.items())),
             'review':{'state':label(status.get('state','not_confirmed')),
@@ -142,6 +191,23 @@ def markdown(report):
     money=report['spending']
     lines.append('AI cost: unavailable; reconciliation required.' if money['settled_estimated_eur'] is None else
                  f"AI cost estimate recorded: EUR {money['settled_estimated_eur']}; unresolved reservation maximum: EUR {money['held_maximum_eur']}.")
+    discovery = report['discovery']
+    counts = discovery['coverage']
+    if counts is None:
+        lines += ['', 'Discovery coverage counts: unavailable or invalid; no broad-coverage claim.']
+    else:
+        metadata = discovery['universe']
+        lines += ['', 'Stock discovery coverage (catalogue metadata is not account buying permission):', '',
+                  '| Measure | Stocks |', '|---|---:|',
+                  f"| Catalogue candidates | {counts['catalogue_candidates']} |",
+                  f"| Fresh activity/mover leads | {counts['fresh_activity_leads']} |",
+                  f"| Combined candidate pool | {counts['candidate_pool']} |",
+                  f"| Technical checks attempted | {counts['technical_checked']} |",
+                  f"| Technically usable / unavailable | {counts['technical_usable']} / {counts['technical_unavailable']} |",
+                  f"| Technical checks deferred | {counts['technical_deferred']} |",
+                  f"| Selected for detailed research / deferred | {counts['research_selected']} / {counts['research_deferred']} |", '',
+                  f"Catalogue: {metadata['cache_status']}; freshness: {metadata['freshness']}; source retrieved at: {metadata['retrieved_at'] or 'unavailable'}.",
+                  'These counts describe this run. Selected for research does not mean technically checked, AI reviewed or approved.']
     lines+=['', 'Blocker groups (overlap per candidate): '+(', '.join(f'{k}: {v}' for k,v in report['blocker_groups'].items()) or 'None recorded'), '', '| Candidate | Screening | Blockers |', '|---|---|---|']
     for row in report['candidates']:
         lines.append(f"| {row['candidate_id']} | {'Ready for review only' if row['ready_for_review'] else row['stage']} | {', '.join(row['blockers']) or 'None at screening'} |")
