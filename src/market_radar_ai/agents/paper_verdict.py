@@ -206,6 +206,49 @@ def run_metered(client, packet, document, feed, *, path, clock, enabled=False):
     return result
 
 
+PAPER_REVIEW_COOLDOWN_SECONDS = 15 * 60
+
+
+def paper_attempt_id(packet, *, now):
+    from zoneinfo import ZoneInfo
+    body=packet['packet']
+    identity={'day':now.astimezone(ZoneInfo('Europe/Dublin')).date().isoformat(),
+              'candidate_id':body['candidate_id'],
+              'plan':{k:v for k,v in body['plan'].items() if k!='expires_at'},
+              'evidence':stable_evidence(body['sources'])}
+    return 'paper-final-attempt-v1:'+digest(identity)
+
+
+def choose_unreviewed_packet(packets, entries, *, now):
+    """Skip paid duplicates and recent candidates without starving other setups.
+
+    Cooldown timestamps live in durable zero-cost ledger marker keys. The
+    scheduled workflow serializes budget users; reservations use compare-and-swap.
+    A failed attempt also cools down, so errors cannot trigger paid retry loops.
+    """
+    if now.tzinfo is None:raise ValueError('aware_clock_required')
+    skipped=[]
+    for packet in packets:
+        body=packet['packet'];candidate=body['candidate_id']
+        attempt=paper_attempt_id(packet,now=now)
+        if attempt in entries:
+            skipped.append({'candidate_id':candidate,'reason':'paper_setup_already_attempted'})
+            continue
+        prefix='paper-cooldown-v1:'+digest(candidate)+':'
+        stamps=[]
+        for key in entries:
+            if key.startswith(prefix):
+                stamp=key[len(prefix):]
+                if not stamp.isdigit() or len(stamp)!=10:
+                    raise ValueError('invalid_paper_cooldown_marker')
+                stamps.append(int(stamp))
+        if stamps and now.timestamp()-max(stamps)<PAPER_REVIEW_COOLDOWN_SECONDS:
+            skipped.append({'candidate_id':candidate,'reason':'paper_review_cooldown'})
+            continue
+        return packet,attempt,prefix+str(int(now.timestamp())),skipped
+    return None,None,None,skipped
+
+
 def run_pipeline(document, feed, *, client, root, refresh, deliver, clock, enabled=False):
     """Complete backend path with injected refresh/delivery and durable spending.
 
@@ -230,28 +273,27 @@ def run_pipeline(document, feed, *, client, root, refresh, deliver, clock, enabl
     if not batch['packets']:
         result={'state':'no_qualified_candidate_zero_cost','model_calls':0,'trade_authorized':False}
         save('status.json',result);return result
-    packet=batch['packets'][0]
-    body=packet['packet']
-    # Same economics and evidence cannot be repurchased merely by refreshing
-    # timestamps. A new Dublin day starts a new paper setup identity.
-    from zoneinfo import ZoneInfo
-    identity={'day':now.astimezone(ZoneInfo('Europe/Dublin')).date().isoformat(),
-              'candidate_id':body['candidate_id'],
-              'plan':{k:v for k,v in body['plan'].items() if k!='expires_at'},
-              'evidence':stable_evidence(body['sources'])}
-    attempt='paper-final-attempt-v1:'+digest(identity)
     state,_=client.ledger.store.load()
-    if attempt in state['entries']:
-        result={'state':'paper_setup_already_attempted','model_calls':0,'trade_authorized':False}
+    packet,attempt,cooldown,skipped=choose_unreviewed_packet(batch['packets'],state['entries'],now=now)
+    save('review-selection.json',{'skipped':skipped,
+         'selected_candidate_id':packet['packet']['candidate_id'] if packet else None,
+         'cooldown_seconds':PAPER_REVIEW_COOLDOWN_SECONDS,'model_calls':0})
+    if packet is None:
+        reason='paper_review_cooldown' if any(s['reason']=='paper_review_cooldown' for s in skipped) else 'paper_setup_already_attempted'
+        result={'state':reason,'model_calls':0,'trade_authorized':False,'skipped':skipped}
         save('status.json',result);return result
+    body=packet['packet']
+    from zoneinfo import ZoneInfo
+    day=now.astimezone(ZoneInfo('Europe/Dublin')).date().isoformat()
     # Fail before any paid call if the complete review lacks minimum headroom.
     for period,cap in state['limits_microeur'].items():
         entries=[e for e in state['entries'].values() if period=='lifetime'
-                 or period=='daily' and e['day']==identity['day']
-                 or period=='monthly' and e['day'][:7]==identity['day'][:7]]
+                 or period=='daily' and e['day']==day
+                 or period=='monthly' and e['day'][:7]==day[:7]]
         if cap-sum(e['reserved'] if e['actual'] is None else e['actual'] for e in entries)<150000:
             result={'state':'budget_deferred','model_calls':0,'trade_authorized':False}
             save('status.json',result);return result
+    client.ledger.reserve(cooldown,1,now);client.ledger.settle(cooldown,0)
     client.ledger.reserve(attempt,1,now);client.ledger.settle(attempt,0)
     save('packet.json',packet)
     audit=run_metered(client,packet,document,feed,path=root/'review.json',clock=clock,enabled=True)

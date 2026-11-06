@@ -88,7 +88,7 @@ def test_metered_pipeline_connections_and_durable_duplicate_guard(tmp_path,monke
     from market_radar_ai.agents.github_budget import GitHubSpendingLedger
     from test_github_budget import MemoryStore
     import json
-    fixture(monkeypatch)
+    row,_,_,_=fixture(monkeypatch)
     client=OpenAIPilot(api_key='fake',ledger=GitHubSpendingLedger(MemoryStore()),eur_per_usd='0.9',enabled=True)
     calls=[];deliveries=[];refreshes=[]
     def call(**kw):
@@ -99,7 +99,7 @@ def test_metered_pipeline_connections_and_durable_duplicate_guard(tmp_path,monke
             rationale='Synthetic pipeline test',source_ids=['news:test'],concerns=[]))
     monkeypatch.setattr(client,'call',call)
     def refresh(symbol):
-        assert symbol=='TEST'
+        assert symbol in ('TEST','SECOND')
         refreshes.append(symbol);return {},None
     def deliver(result):deliveries.append(result);return {'state':'test_receipt'}
     result=run_pipeline({},None,client=client,root=tmp_path/'first',refresh=refresh,deliver=deliver,clock=lambda:NOW,enabled=True)
@@ -108,6 +108,16 @@ def test_metered_pipeline_connections_and_durable_duplicate_guard(tmp_path,monke
     result=run_pipeline({},None,client=client,root=tmp_path/'second',refresh=refresh,deliver=deliver,clock=lambda:NOW,enabled=True)
     assert result['state']=='paper_setup_already_attempted' and len(calls)==8
     assert not deliveries[0]['trade_authorized']
+
+    second=deepcopy(row);second.update(candidate_id='stocks:SECOND',symbol='SECOND')
+    second['conditional_paper_plan']['symbol']='SECOND'
+    monkeypatch.setattr('market_radar_ai.agents.qualification.qualify',lambda *a,**k:{'candidates':[deepcopy(row),deepcopy(second)]})
+    result=run_pipeline({},None,client=client,root=tmp_path/'third',refresh=refresh,deliver=deliver,clock=lambda:NOW,enabled=True)
+    assert result['state']=='paper_decision_completed' and len(calls)==16
+    assert refreshes==['TEST','SECOND']
+    selection=json.loads((tmp_path/'third'/'review-selection.json').read_text())
+    assert selection['selected_candidate_id']=='stocks:SECOND'
+    assert selection['skipped']==[{'candidate_id':'stocks:TEST','reason':'paper_setup_already_attempted'}]
 
 
 def test_no_metered_activation_by_default(tmp_path):
@@ -222,3 +232,45 @@ def test_material_evidence_changes_still_invalidate_approval(monkeypatch,fault):
     result=finalize(packet,audit,{},None,now=NOW)
     assert result['verdict']=='NO_ACTION'
     assert 'evidence_changed_since_review' in result['blockers']
+
+
+@pytest.mark.parametrize('elapsed,blocked',[(1,True),(899,True),(900,False),(901,False)])
+def test_candidate_cooldown_is_sliding_and_survives_changed_setup(monkeypatch,elapsed,blocked):
+    from market_radar_ai.agents.paper_verdict import choose_unreviewed_packet
+    _,packet,_,_=fixture(monkeypatch)
+    _,_,marker,_=choose_unreviewed_packet([packet],{},now=NOW)
+    changed=deepcopy(packet);changed['packet']['plan']['entry_eur']='999'
+    selected,_,_,skipped=choose_unreviewed_packet([changed],{marker:{}},now=NOW+timedelta(seconds=elapsed))
+    assert (selected is None)==blocked
+    if blocked:assert skipped[0]['reason']=='paper_review_cooldown'
+
+
+def test_cooldown_skips_to_different_candidate_and_blocks_future_marker(monkeypatch):
+    from market_radar_ai.agents.paper_verdict import choose_unreviewed_packet
+    _,packet,_,_=fixture(monkeypatch)
+    _,_,marker,_=choose_unreviewed_packet([packet],{},now=NOW+timedelta(seconds=1))
+    second=deepcopy(packet);second['packet']['candidate_id']='stocks:OTHER'
+    selected,_,_,skipped=choose_unreviewed_packet([packet,second],{marker:{}},now=NOW)
+    assert selected==second and len(skipped)==1
+    with pytest.raises(ValueError,match='invalid_paper_cooldown_marker'):
+        choose_unreviewed_packet([packet],{marker.rsplit(':',1)[0]+':bad':{}},now=NOW)
+
+
+def test_failed_review_retains_durable_cooldown_without_paid_retry(tmp_path,monkeypatch):
+    from market_radar_ai.agents.paper_verdict import run_pipeline
+    from market_radar_ai.agents.openai_pilot import OpenAIPilot
+    from market_radar_ai.agents.github_budget import GitHubSpendingLedger
+    from test_github_budget import MemoryStore
+    row,_,_,_=fixture(monkeypatch)
+    client=OpenAIPilot(api_key='fake',ledger=GitHubSpendingLedger(MemoryStore()),eur_per_usd='0.9',enabled=True)
+    attempts=[]
+    def fail(*a,**k):
+        attempts.append(True)
+        raise RuntimeError('synthetic_review_failure')
+    monkeypatch.setattr('market_radar_ai.agents.paper_verdict.run_metered',fail)
+    with pytest.raises(RuntimeError,match='synthetic_review_failure'):
+        run_pipeline({},None,client=client,root=tmp_path/'first',refresh=None,deliver=None,clock=lambda:NOW,enabled=True)
+    row['review_sources']['news:test']['title']='Changed evidence must not buy an immediate retry'
+    result=run_pipeline({},None,client=client,root=tmp_path/'second',refresh=None,deliver=None,clock=lambda:NOW,enabled=True)
+    assert result['state']=='paper_review_cooldown' and result['model_calls']==0
+    assert len(attempts)==1

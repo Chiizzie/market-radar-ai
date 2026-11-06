@@ -30,3 +30,16 @@ remains separate; this change does not clear its broker-eligibility blocker.
 Paid model usage limits, maximum EUR 20 planned loss, paper-only operation,
 entry cutoff and stock-history warm-up are unchanged. Wider screening is not a
 promise of entries or profit.
+
+## Paid review selection
+
+Qualified packets are considered in rank order. Previously attempted identical
+setups are skipped, so a duplicate at rank one cannot prevent another qualified
+stock from being reviewed. Each stock has a sliding 15-minute cooldown recorded
+as a zero-cost durable budget-ledger marker before model dispatch. Small plan or
+evidence changes do not bypass the cooldown. Failures also retain the marker;
+there is no automatic paid retry. Free screening continues for all candidates.
+After cooldown, the stock must still qualify and have different economics or
+substantive evidence; an identical setup remains suppressed for that Dublin day.
+The review-selection artifact records the selected candidate and each skip reason.
+Only one candidate receives paid review per scheduled run; budget limits still apply.
