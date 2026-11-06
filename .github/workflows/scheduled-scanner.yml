@@ -176,3 +176,31 @@ jobs:
           path: artifacts/decision/
           retention-days: 7
           if-no-files-found: warn
+
+  account-sync:
+    if: ${{ vars.ACCOUNT_SYNC_ENABLED == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    concurrency:
+      group: market-radar-ai-private-account
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: afd5a0121bfdea8f5186f261bcca9e79a8d21879
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e .
+      - name: Sync private account without models or order operations
+        run: python -m market_radar_ai.dashboard.account_sync
+        env:
+          SCANNER_COLLECTION_MODE: scheduled
+          ENABLE_ACCOUNT_SYNC: 'true'
+          TRADING212_API_KEY: ${{ secrets.TRADING212_API_KEY }}
+          TRADING212_API_SECRET: ${{ secrets.TRADING212_API_SECRET }}
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+    # Deliberately no artifacts, caches, raw payload files or financial log summaries.
