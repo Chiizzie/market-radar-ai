@@ -10,6 +10,9 @@ from .limits import STOCK_SCREEN_LIMIT, STOCK_RESEARCH_LIMIT
 
 BASE = 'https://data.alpaca.markets/v1beta1/screener/stocks/'
 SYMBOL = re.compile(r'[A-Z][A-Z0-9.\-]{0,14}')
+# Trading 212 IDs such as AERO1_US_EQ are not exchange symbols. Never remove
+# the numeric suffix to guess an issuer; leave these identities unresolved.
+PROVIDER_SYMBOL = re.compile(r'[A-Z][A-Z.\-]{0,14}')
 
 
 def select(groups, now, limit=19):
@@ -108,6 +111,10 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
         universe = load_universe(now=now, cache_path=universe_cache_path)
         failures.extend(universe['failures'])
         pool = universe['symbols']
+        provider_unmapped = []
+        if broad:
+            provider_unmapped = [s for s in pool if not PROVIDER_SYMBOL.fullmatch(s)]
+            pool = [s for s in pool if PROVIDER_SYMBOL.fullmatch(s)]
         # Metadata candidates only, never account buy permission. Excludes ETFs/warrants.
         screening={'enabled':True,'catalogue_stock_candidates':len(pool),
                    'checked':0,'rejected':[],'not_checked':[],'account_permission_verified':False}
@@ -174,6 +181,8 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
                 'technical_deferred':len(pool)-checked_count,
                 'research_selected':len(selected_members),
                 'research_deferred':len(pool)-len(selected_members)}
+    if broad:
+        coverage['provider_unmapped'] = len(provider_unmapped) if universe else 0
     return {'schema_version':'stock-discovery-v2','retrieved_at':now.isoformat(),
             'status':'partial' if failures else 'ok','sources':sources,'failures':failures,
             'scope':'catalogue_and_fresh_activity_not_full_exchange_scan' if universe else 'provider_activity_and_movers_not_full_exchange_scan',
@@ -182,5 +191,6 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
             'selection_policy':f'fresh_leaders_and_catalogue_rotation_every_5_minutes_screen_{screen_limit}_enrich_{research_limit}',
             'snapshot_coverage':{k:v for k,v in snapshots.items() if k!='ranked_symbols'} if snapshots else None,
             'universe':universe, 'coverage':coverage,
+            'candidate_pool_symbols':pool,
             'screening':screening,'fallback_used':fallback_used,
             'broker_eligibility':'unknown', 'trade_authorized':False}

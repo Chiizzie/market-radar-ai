@@ -18,6 +18,14 @@ does not satisfy regular-session technical gates. The snapshot adapter rejects
 stale trades and prior-session daily data. Historical bars follow bounded pagination;
 an incomplete batch is unavailable, never a successful empty observation.
 
+Trading 212 numeric suffixes are internal catalogue identities, not assumed
+exchange symbols. Live provider probes rejected `AERO1` and `TTGT1`, poisoning
+otherwise valid snapshot/history batches. These unresolved identities are excluded
+before batch requests without stripping their suffixes or guessing another issuer.
+The initial catalogue contained 5,808 names, of which 82 required a verified mapping,
+leaving 5,726 provider-compatible discovery candidates. Coverage reports keep the
+full catalogue count and the unmapped count separate from that candidate pool.
+
 Crypto identities are explicit in `crypto_identities.py`, verified on 2026-11-06
 against the public broker list and Kraken AssetPairs. Live catalogue name/symbol and
 venue base/quote/wsname/internal-key/status checks remain mandatory. At verification,

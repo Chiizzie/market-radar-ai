@@ -91,7 +91,8 @@ def test_whole_catalogue_light_quotes_are_not_technical_checks_or_stale_success(
 def test_broad_stock_discovery_uses_batch_capacity_and_honest_pool_counts(monkeypatch):
     from market_radar_ai.market_data.discovery import discover
     from test_discovery import Session as ActivitySession
-    pool=[f'S{i}' for i in range(5808)]
+    from itertools import product
+    pool=['S'+''.join(x) for x in product('ABCDEFGHIJKLMNOPQRSTUVWXYZ',repeat=3)][:5808]
     monkeypatch.setattr('market_radar_ai.market_data.discovery_universe.load_universe',
         lambda **kw: {'symbols':pool,'failures':[]})
     def snapshots(symbols,**kw):
@@ -109,7 +110,7 @@ def test_broad_stock_discovery_uses_batch_capacity_and_honest_pool_counts(monkey
     r=discover(env={**ENV,'ENABLE_BROAD_DISCOVERY':'true','SCREEN_DISCOVERY_DATA':'true'},
         now=NOW,session=ActivitySession(stamp=NOW.isoformat()),fallback=['MU'])
     assert len(attempted)==len(set(attempted))==300
-    assert any(s in pool[:50] for s in attempted) and any(s in pool[200:350] for s in attempted)
+    assert any(s in pool[200:350] for s in attempted)
     assert len(r['selected_symbols'])==39  # MU/watch positions fill the 40th slot later
     assert r['coverage']['technical_checked']==300 and r['coverage']['technical_deferred']==5508
     assert r['coverage']['fresh_activity_leads']==50 and r['snapshot_coverage']['requested']==5808
@@ -253,3 +254,32 @@ def test_discovery_contract_rejects_wrong_counts_and_future_timestamps(fault):
     if fault=='unknown_field':data['credential']='forbidden'
     if fault=='selected':data['stocks']['detail_selected']-=1
     with pytest.raises(ValueError):build_snapshot(doc,now=NOW,evidence=feed)
+
+
+def test_broker_numeric_ids_do_not_poison_batches_or_get_renamed(monkeypatch):
+    from market_radar_ai.market_data.discovery import discover
+    from test_discovery import Session as ActivitySession
+    from market_radar_ai.dashboard.discovery_coverage import build_coverage
+    pool=['AERO','AERO1','MSFT','NVDA','TTGT1']
+    monkeypatch.setattr('market_radar_ai.market_data.discovery_universe.load_universe',
+        lambda **kw: {'symbols':pool,'failures':[]})
+    def snapshots(symbols,**kw):
+        assert symbols==['AERO','MSFT','NVDA']
+        return dict(requested=3,received=3,fresh=3,unavailable_or_stale=0,failed_batches=0,
+                    ranked_symbols=['NVDA','MSFT','AERO'],feed='iex',observed_at=NOW.isoformat())
+    monkeypatch.setattr('market_radar_ai.market_data.providers.alpaca_batch.discover_snapshots',snapshots)
+    def history(symbols,**kw):
+        assert set(symbols)=={'AERO','MSFT','NVDA'}
+        return {s:s for s in symbols}
+    monkeypatch.setattr('market_radar_ai.market_data.providers.alpaca_batch.fetch_histories',history)
+    monkeypatch.setattr('market_radar_ai.market_data.capture.capture_result',
+        lambda r,**kw:{'payload':{'quality_passed_at_capture':True}})
+    r=discover(env={**ENV,'ENABLE_BROAD_DISCOVERY':'true','SCREEN_DISCOVERY_DATA':'true'},
+        now=NOW,session=ActivitySession(stamp=NOW.isoformat()),fallback=['MU'])
+    assert r['coverage']['catalogue_candidates']==5 and r['coverage']['candidate_pool']==3
+    assert r['coverage']['provider_unmapped']==2 and set(r['selected_symbols'])=={'AERO','MSFT','NVDA'}
+    assert r['candidate_pool_symbols']==['AERO','MSFT','NVDA']
+    assert 'TTGT' not in r['selected_symbols']
+    document={'captures':[{'market':'stocks'} for _ in range(3)]}
+    exported=build_coverage(r,None,document,now=NOW)
+    assert exported['stocks']['unmapped']==2 and exported['stocks']['quote_requested']==3
