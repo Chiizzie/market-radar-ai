@@ -1,0 +1,54 @@
+name: Read-only discovery provider probe
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/discovery-provider-probe.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install requests
+      - name: Inspect public-data batch responses without exposing provider bodies
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+        run: |
+          import json, os
+          from datetime import datetime, timezone
+          from zoneinfo import ZoneInfo
+          import requests
+          headers = {'APCA-API-KEY-ID': os.environ['ALPACA_API_KEY'], 'APCA-API-SECRET-KEY': os.environ['ALPACA_API_SECRET']}
+          now = datetime.now(timezone.utc)
+          start = now.astimezone(ZoneInfo('America/New_York')).replace(hour=9, minute=30, second=0, microsecond=0)
+          groups = [('known', ['NVDA', 'MSFT']), ('catalogue_sample', ['NVDA', 'A', 'AA', 'AACG', 'AACI', 'AACQ', 'AACT', 'AADX', 'AAGIY', 'AAL', 'AAMC', 'AAME', 'AAN', 'AAOI', 'AAON', 'AAP', 'AAPL', 'AARD', 'AAT', 'AAXN', 'ABB'])]
+          for endpoint in ('snapshots', 'bars'):
+              for label, symbols in groups:
+                  params = {'symbols': ','.join(symbols), 'feed': 'iex'}
+                  if endpoint == 'bars':
+                      params.update(timeframe='5Min', start=start.isoformat(), end=now.isoformat(), currency='USD', adjustment='raw', asof='-', sort='asc', limit=10000)
+                  try:
+                      r = requests.get('https://data.alpaca.markets/v2/stocks/'+endpoint, params=params, headers=headers, timeout=(5,15), allow_redirects=False)
+                      data = r.json()
+                      message = str(data.get('message', '')).lower() if isinstance(data, dict) else ''
+                      bars = data.get('bars') if isinstance(data, dict) else None
+                      print(json.dumps({'endpoint': endpoint, 'group': label, 'http_status': r.status_code, 'bytes': len(r.content),
+                          'envelope_keys': [k for k in ('bars', 'snapshots', 'next_page_token', 'message', 'code') if isinstance(data, dict) and k in data],
+                          'root_symbol_count': len(set(symbols).intersection(data)) if isinstance(data, dict) else None,
+                          'root_null_count': sum(v is None for v in data.values()) if isinstance(data, dict) else None,
+                          'bars_symbol_count': len(bars) if isinstance(bars, dict) else None,
+                          'null_bar_series': sum(v is None for v in bars.values()) if isinstance(bars, dict) else None,
+                          'next_page': bool(data.get('next_page_token')) if isinstance(data, dict) else None,
+                          'invalid_symbol_error': 'symbol' in message and ('invalid' in message or 'not found' in message),
+                          'capacity_error': 'limit' in message or 'too many' in message,
+                          'authorization_error': r.status_code in (401,403)}))
+                  except Exception as e:
+                      print(json.dumps({'endpoint': endpoint, 'group': label, 'error_type': type(e).__name__}))
+          print('Read-only diagnostics complete; no models, orders or notifications.')
+        shell: python
