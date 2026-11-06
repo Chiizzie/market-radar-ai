@@ -178,7 +178,7 @@ jobs:
           if-no-files-found: warn
 
   account-sync:
-    if: ${{ vars.ACCOUNT_SYNC_ENABLED == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours }}
+    if: ${{ vars.ACCOUNT_SYNC_ENABLED != 'false' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours }}
     runs-on: ubuntu-latest
     timeout-minutes: 8
     permissions:
