@@ -71,6 +71,8 @@ def build_snapshot(document, *, now, evidence=None):
         'coverage': coverage, 'markets': markets, 'agents': {'status': 'NOT_RUN_ON_THIS_CAPTURE', 'reports': []},
         'evidence': export_evidence(evidence, now=now),
         'paper_outcomes': None, 'api_budget': None, 'live_orders_enabled': False}
+    from .charts import build_charts
+    snapshot['charts'] = build_charts(document, markets, now=now)
     if 'stock_context' in document:
         from .briefing import build_briefing
         snapshot['research_briefing']=build_briefing(document,evidence,now=now)
