@@ -73,6 +73,15 @@ class OpenAIPilot:
         self.count_input_tokens = count_input_tokens
         self.last_counted_input_tokens = None
 
+    def fork(self):
+        """Create isolated request accounting while retaining the same budget.
+
+        Concurrent callers must use one fork per worker. The shared durable
+        ledger serializes its own mutations; provider requests remain parallel.
+        """
+        return OpenAIPilot(api_key=self._key, ledger=self.ledger, eur_per_usd=self.rate,
+                           enabled=True, count_input_tokens=self.count_input_tokens)
+
     def _input_reservation(self, payload):
         if not self.count_input_tokens:
             return 400000
