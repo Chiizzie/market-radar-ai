@@ -85,6 +85,7 @@ def test_remote_write_uses_only_designated_state_branch(monkeypatch):
 
 @pytest.mark.parametrize('code',[403,404,409,500])
 def test_remote_read_failure_does_not_initialize(monkeypatch,code):
+    monkeypatch.setattr('market_radar_ai.agents.github_budget.time.sleep',lambda _:None)
     class Response: status_code=code
     monkeypatch.setattr('market_radar_ai.agents.github_budget.requests.get',lambda *a,**k:Response())
     with pytest.raises(RuntimeError,match='read failed'): GitHubBudgetStore('test').load()
@@ -162,3 +163,47 @@ def test_remote_record_round_trip(monkeypatch):
     monkeypatch.setattr('market_radar_ai.agents.github_budget.requests.get',lambda *a,**k:Response())
     state,sha=GitHubBudgetStore('test').load()
     assert state==initial_state() and sha=='a'*40
+
+
+@pytest.mark.parametrize('first', ['timeout', 429, 500, 502, 503, 504])
+def test_transient_read_retries_without_writes_and_preserves_existing_holds(monkeypatch,first):
+    import base64,json,requests
+    from types import SimpleNamespace
+    state=initial_state();state['entries']['held']={'day':'2026-11-06','reserved':100,'actual':None,'usage':None}
+    good=SimpleNamespace(status_code=200,json=lambda:{'sha':'b'*40,'size':400,'encoding':'base64',
+        'content':base64.b64encode(json.dumps(state).encode()).decode()})
+    calls=[];waits=[]
+    def get(*a,**k):
+        calls.append(k)
+        if len(calls)==1:
+            if first=='timeout':raise requests.Timeout('secret provider details')
+            return SimpleNamespace(status_code=first,headers={})
+        return good
+    monkeypatch.setattr('market_radar_ai.agents.github_budget.requests.get',get)
+    monkeypatch.setattr('market_radar_ai.agents.github_budget.time.sleep',waits.append)
+    def forbidden(*a,**k):raise AssertionError('read recovery must never write')
+    monkeypatch.setattr('market_radar_ai.agents.github_budget.requests.put',forbidden)
+    loaded,sha=GitHubBudgetStore('secret').load()
+    assert loaded==state and sha=='b'*40 and len(calls)==2 and waits==[1]
+    assert all(c['allow_redirects'] is False and c['params']=={'ref':BRANCH} for c in calls)
+
+
+@pytest.mark.parametrize('code,headers,expected', [(401,{},1),(403,{},1),(404,{},1),(302,{},1),
+    (429,{'Retry-After':'60'},1),(403,{'Retry-After':'1'},3),(503,{},3)])
+def test_read_retry_bound_and_permanent_errors_are_fail_closed(monkeypatch,code,headers,expected):
+    from types import SimpleNamespace
+    calls=[]
+    def get(*a,**k):calls.append(1);return SimpleNamespace(status_code=code,headers=headers)
+    monkeypatch.setattr('market_radar_ai.agents.github_budget.requests.get',get)
+    monkeypatch.setattr('market_radar_ai.agents.github_budget.time.sleep',lambda _:None)
+    with pytest.raises(RuntimeError,match=f'http_{code}') as e:GitHubBudgetStore('SECRET').load()
+    assert len(calls)==expected and 'SECRET' not in str(e.value)
+
+
+def test_corrupt_successful_response_is_not_retried(monkeypatch):
+    from types import SimpleNamespace
+    calls=[]
+    def get(*a,**k):calls.append(1);return SimpleNamespace(status_code=200,json=lambda:{'encoding':'wrong'})
+    monkeypatch.setattr('market_radar_ai.agents.github_budget.requests.get',get)
+    with pytest.raises(RuntimeError,match='invalid_payload'):GitHubBudgetStore('secret').load()
+    assert len(calls)==1

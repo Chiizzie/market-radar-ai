@@ -2,6 +2,7 @@
 import base64
 import json
 import re
+import time
 from datetime import date
 from zoneinfo import ZoneInfo
 from typing import Literal
@@ -69,21 +70,44 @@ class GitHubBudgetStore:
                          'X-GitHub-Api-Version':'2022-11-28'}
 
     def load(self):
-        try:
-            response = requests.get(URL, params={'ref':BRANCH}, headers=self._headers,
-                                    timeout=(10,30), allow_redirects=False)
-            if response.status_code != 200:
-                raise ValueError('Budget unavailable')
-            data = response.json()
-            if data['encoding'] != 'base64' or data['size'] > 500000:
-                raise ValueError('Invalid budget file')
-            state = json.loads(base64.b64decode(data['content']))
-            sha = data['sha']
-            if not re.fullmatch(r'[0-9a-f]{40}', sha):
-                raise ValueError('Invalid budget version')
-            return validate_state(state), sha
-        except Exception:
-            raise RuntimeError('Budget read failed; paid calls disabled') from None
+        # Only idempotent reads may retry. Never retry a write or an AI call.
+        reason = 'transport_unavailable'
+        for attempt in range(3):
+            response = None
+            delay = attempt + 1
+            try:
+                response = requests.get(URL, params={'ref':BRANCH}, headers=self._headers,
+                                        timeout=(10,30), allow_redirects=False)
+            except requests.RequestException:
+                reason = 'transport_unavailable'
+            else:
+                code = response.status_code
+                if code == 200:
+                    try:
+                        data = response.json()
+                        if data['encoding'] != 'base64' or data['size'] > 500000:
+                            raise ValueError('Invalid budget file')
+                        state = json.loads(base64.b64decode(data['content']))
+                        sha = data['sha']
+                        if not re.fullmatch(r'[0-9a-f]{40}', sha):
+                            raise ValueError('Invalid budget version')
+                        return validate_state(state), sha
+                    except Exception:
+                        # Corruption/configuration changes must not be hidden by retries.
+                        raise RuntimeError('Budget read failed [invalid_payload]; paid calls disabled') from None
+                reason = f'http_{code}'
+                retry_after = (getattr(response, 'headers', {}) or {}).get('Retry-After')
+                short_retry = (isinstance(retry_after,str) and retry_after.isdigit()
+                               and int(retry_after)<=5)
+                if code not in (429,500,502,503,504) and not (code==403 and short_retry):
+                    break
+                if retry_after is not None:
+                    if not short_retry:break
+                    delay=max(1,int(retry_after))
+            if attempt<2:
+                time.sleep(delay)
+        # Only an allowlisted reason code is logged, never headers or server bodies.
+        raise RuntimeError(f'Budget read failed [{reason}]; paid calls disabled') from None
 
     def save(self, state, expected_sha):
         state = validate_state(state)
