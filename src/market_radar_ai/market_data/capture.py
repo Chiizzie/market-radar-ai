@@ -87,7 +87,7 @@ def capture_markets(stock_symbols, crypto_pairs, *, stock_fetch, crypto_fetch,
             not_requested += int(
                 market == 'stocks' and result.provider == 'alpaca_iex'
                 and result.status == 'ok' and not result.candles
-                and {i.code for i in result.issues} == {'regular_session_not_started'})
+                and {i.code for i in result.issues} in ({'regular_session_not_started'}, {'regular_session_warmup'}))
             elapsed = max(0, clock() - start)
             captured = capture_result(result, now=now or datetime.now(timezone.utc))
             captured.update(market=market, requested_symbol=symbol, cache_hit=cache_hit,
@@ -109,7 +109,8 @@ def connectivity_exit_code(document):
     if any(c['payload']['provider_status'] != 'ok' for c in rows):return 1
     for market in {c.get('market','unknown') for c in rows}:
         group=[c['payload'] for c in rows if c.get('market','unknown')==market]
-        if group and not any(p.get('candles') for p in group) and not all(any(i['code']=='regular_session_not_started' for i in p.get('quality_issues',[])) for p in group):return 1
+        expected_wait = {'regular_session_not_started', 'regular_session_warmup'}
+        if group and not any(p.get('candles') for p in group) and not all(any(i['code'] in expected_wait for i in p.get('quality_issues',[])) for p in group):return 1
     return 0
 
 
