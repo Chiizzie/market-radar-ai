@@ -130,7 +130,9 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         discovery['collection_selected_symbols'] = list(stocks)
         discovery['displaced_symbols'] = [s for s in discovery['selected_symbols'] if s not in stocks]
         if 'coverage' in discovery:
-            if discovery.get('universe'):
+            if 'candidate_pool_symbols' in discovery:
+                pool = set(discovery['candidate_pool_symbols'])
+            elif discovery.get('universe'):
                 pool = set(discovery['universe']['symbols'])
             else:
                 pool = set(discovery['deferred_symbols'])

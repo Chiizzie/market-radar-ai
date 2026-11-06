@@ -64,7 +64,7 @@ def build_coverage(stocks, crypto, document, *, now):
     if stocks and 'coverage' in stocks:
         c=stocks['coverage'];q=stocks.get('snapshot_coverage') or {}
         out['stocks']=dict(catalogue=c['catalogue_candidates'],candidates=c['candidate_pool'],
-            unmapped=0,excluded=0,quote_requested=q.get('requested',0),quote_usable=q.get('fresh',0),
+            unmapped=c.get('provider_unmapped',0),excluded=0,quote_requested=q.get('requested',0),quote_usable=q.get('fresh',0),
             quote_unavailable=q.get('unavailable_or_stale',0),
             technical_checked=c['technical_checked'],technical_usable=c['technical_usable'],
             technical_unavailable=c['technical_unavailable'],technical_deferred=c['technical_deferred'],
