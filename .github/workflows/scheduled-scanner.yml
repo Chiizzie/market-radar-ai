@@ -1,4 +1,4 @@
-# Deployment template: replace e0d67fd35aa272fb213e1a1e726f563b4bd4b564 with a verified backend SHA.
+# Deployment template: replace f26f122b69a3be8cba5393a0a011fc3967e53172 with a verified backend SHA.
 # Install as .github/workflows/scheduled-scanner.yml on this repository's main branch.
 name: Scheduled research collection
 on:
@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: e0d67fd35aa272fb213e1a1e726f563b4bd4b564
+          ref: f26f122b69a3be8cba5393a0a011fc3967e53172
           persist-credentials: false
       - name: Enforce Dublin operating hours before provider calls
         id: window
@@ -122,7 +122,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.review_window.outputs.run == 'true'
         with:
-          ref: e0d67fd35aa272fb213e1a1e726f563b4bd4b564
+          ref: f26f122b69a3be8cba5393a0a011fc3967e53172
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.review_window.outputs.run == 'true'
@@ -207,7 +207,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: e0d67fd35aa272fb213e1a1e726f563b4bd4b564
+          ref: f26f122b69a3be8cba5393a0a011fc3967e53172
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
