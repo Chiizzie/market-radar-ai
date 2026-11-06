@@ -27,7 +27,7 @@ def paper_gate(row, *, now):
     blocks=[]
     checks=row['reference_checks']; tech=row['technical_checks']
     # Robinhood eligibility is not inferred from Kraken data.
-    if row['market']!='stocks': blocks.append('crypto_broker_catalogue_not_connected')
+    if row['market']=='crypto' and (checks.get('catalogue_candidate')!='PASS' or checks.get('catalogue_scope')!='public_europe_support_list_not_account_verification'): blocks.append('crypto_broker_catalogue_not_connected')
     for name in ('catalogue_candidate','market_session','reference_quote','fx'):
         if checks.get(name)!='PASS': blocks.append(name+'_not_confirmed')
     plan=row['conditional_paper_plan']
@@ -44,15 +44,16 @@ def paper_gate(row, *, now):
     if not checks.get('exit_deadline'): blocks.append('session_exit_missing')
     if tech.get('state')!='MEASURED':blocks.append('technical_measurements_missing')
     else:
-        if Decimal(tech['momentum_20_bars_pct'])<=0: blocks.append('nonpositive_momentum')
-        if Decimal(tech['relative_volume_5_vs_15'])<Decimal('1.5'):blocks.append('relative_volume_below_1_5')
+        early=tech.get('strategy_id')=='opening_continuation_30m_v1'
+        if Decimal(tech['momentum_window_pct'] if early else tech['momentum_20_bars_pct'])<=0: blocks.append('nonpositive_momentum')
+        if Decimal(tech['relative_volume_3_vs_prior'] if early else tech['relative_volume_5_vs_15'])<Decimal('1.5'):blocks.append('relative_volume_below_1_5')
         if tech['close_above_rolling_vwap'] is not True:blocks.append('below_rolling_vwap')
         if tech['trigger_state']!='WAITING_FOR_TRIGGER':blocks.append('conditional_entry_already_passed')
     if not row.get('current_news_source_ids'):blocks.append('current_symbol_linked_news_missing')
     return {'eligible_for_paper_review':not blocks,'paper_blockers':sorted(set(blocks)),
             'live_trade_authorized':False,
             'assumptions':['Catalogue match is paper availability evidence, not live account order permission.',
-                           'IEX reference prices, not broker execution quotes.',
+                           'IEX stock or Kraken crypto reference prices, not broker execution quotes.',
                            'Fictional EUR 500 allocation and assumed 40 bps round-trip costs, including FX/slippage allowance.',
                            'News attribution is evidence for the reviewers; catalyst strength is not pre-approved.']}
 
@@ -155,6 +156,7 @@ def stable_evidence(sources):
     metadata = {
         'market': {'retrieved_at', 'validated_at', 'original_capture_sha256', 'reference_quote'},
         'calendar': {'retrieved_at', 'original_calendar_sha256'},
+        'catalogue': {'retrieved_at'},
         'news': {'retrieved_at', 'publication_age_seconds'},
     }
     values=[]

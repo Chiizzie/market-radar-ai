@@ -15,16 +15,8 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
         raise ValueError('paper_dispatch_disabled')
     root=Path(root)
     if root.exists():raise ValueError('preserve_existing_paper_attempt')
-    # Explicit zero-cost warm-up guard, including when invoked outside the workflow.
-    local=clock().astimezone(ZoneInfo('America/New_York'))
-    earliest=local.replace(hour=9,minute=30,second=0,microsecond=0)+timedelta(minutes=100)
-    if local<earliest:
-        root.mkdir(parents=True)
-        status={'state':'waiting_for_stock_history_zero_cost','model_calls':0,'trade_authorized':False,
-                'earliest_review_at':earliest.astimezone(ZoneInfo('Europe/Dublin')).isoformat()}
-        (root/'status.json').write_text(json.dumps(status)+'\n')
-        return status
-    # No FX or budget access until the code has a complete paper candidate.
+    # Qualification chooses the appropriate per-market strategy. Crypto is not
+    # held behind a US-stock timer; stock opening bars are independently checked.
     batch=build_packets(document,feed,now=clock())
     if not batch['packets']:
         root.mkdir(parents=True)
@@ -47,7 +39,7 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
                                   env=process_env,timeout=240,check=False).returncode
         output=root/'fresh-collector'
         run_cycle(env=clean,output=output,cache_path=root/'fresh-cache.json',clock=clock,run=stage,
-                  delivery=lambda *a,**k:{'state':'internal_paper_revalidation_only'},stock_symbols=(symbol,))
+                  delivery=lambda *a,**k:{'state':'internal_paper_revalidation_only'},stock_symbols=('MU',) if symbol in ('XBTEUR','ETHEUR','SOLEUR','XRPEUR') else (symbol,))
         return json.loads((output/'enriched-capture.json').read_text()),json.loads((output/'news.json').read_text())
     def delivery(archive):
         from ..dashboard.paper_final_delivery import deliver

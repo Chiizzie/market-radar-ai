@@ -25,9 +25,12 @@ def select(groups, now, limit=19):
 def technical_priority(result):
     """Free ordering only; all entry, news and risk gates still run downstream."""
     rows=getattr(result,'candles',[])[-20:]
-    if len(rows)<20:return (False,0)
-    baseline=sum(r.volume for r in rows[:-5])/15
-    recent=sum(r.volume for r in rows[-5:])/5
+    if len(rows)<6:return (False,0)
+    from .strategy_window import profile
+    if profile(rows, now=result.retrieved_at) is None:return (False,0)
+    recent_n=5 if len(rows)>=20 else 3
+    baseline=sum(r.volume for r in rows[:-recent_n])/(len(rows)-recent_n)
+    recent=sum(r.volume for r in rows[-recent_n:])/recent_n
     volume=sum(r.volume for r in rows)
     if baseline<=0 or volume<=0 or rows[0].close<=0:return (False,0)
     momentum=(rows[-1].close/rows[0].close-1)*100

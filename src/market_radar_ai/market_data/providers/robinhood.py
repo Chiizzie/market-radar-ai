@@ -50,9 +50,17 @@ class RobinhoodEuropeCatalogue:
         self.session = session or requests.Session()
 
     def fetch(self):
-        response = self.session.get(self.URL, timeout=15, allow_redirects=False)
-        if response.status_code != 200:
-            raise RuntimeError('robinhood_support_page_unavailable')
+        response = self.session.get(self.URL, timeout=(5,15), allow_redirects=False, stream=True)
+        try:
+            if response.status_code != 200:
+                raise RuntimeError('robinhood_support_page_unavailable')
+            body = bytearray()
+            for chunk in response.iter_content(65536):
+                body.extend(chunk)
+                if len(body)>2_000_000:raise ValueError('robinhood_support_page_too_large')
+            html = body.decode('utf-8')
+        finally:
+            response.close()
         return {'source': self.URL, 'retrieved_at': datetime.now(timezone.utc).isoformat(),
                 'scope': 'public_europe_support_list_not_account_verification',
-                'assets': parse_supported_crypto(response.text)}
+                'assets': parse_supported_crypto(html)}

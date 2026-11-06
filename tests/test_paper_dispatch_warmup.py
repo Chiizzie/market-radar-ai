@@ -1,20 +1,16 @@
-from datetime import datetime,timezone
+from datetime import datetime
 import pytest
 from market_radar_ai.agents import paper_dispatch as dispatch
 from test_scheduled_review import ENV
 
-@pytest.mark.parametrize('stamp,expected', [('2026-11-05T16:09:59+00:00','2026-11-05T16:10:00+00:00'),('2026-03-10T15:09:59+00:00','2026-03-10T15:10:00+00:00')])
-def test_warmup_never_qualifies_reserves_or_calls_ai(tmp_path,monkeypatch,stamp,expected):
-    def fail(*a,**k):raise AssertionError('warmup reached paid pipeline')
-    monkeypatch.setattr(dispatch,'build_packets',fail)
+@pytest.mark.parametrize('stamp', ['2026-11-05T08:05:00+00:00','2026-11-05T14:59:59+00:00','2026-11-05T15:00:00+00:00','2026-03-10T14:00:00+00:00'])
+def test_market_specific_free_qualification_precedes_any_cost(tmp_path,monkeypatch,stamp):
+    def fail(*a,**k):raise AssertionError('unqualified candidate reached AI or FX')
+    seen=[]
+    def build(*a,**k):
+        seen.append(k['now']);return {'packets':[],'qualification':{}}
+    monkeypatch.setattr(dispatch,'build_packets',build)
     monkeypatch.setattr(dispatch,'OpenAIPilot',fail)
+    monkeypatch.setattr(dispatch,'YahooFxProvider',fail)
     r=dispatch.execute({},None,tmp_path/'run',env={**ENV,'SCHEDULED_REVIEW_MODE':'paid','PAPER_FINAL_VERDICTS':'true'},clock=lambda:datetime.fromisoformat(stamp))
-    assert r['model_calls']==0 and r['earliest_review_at']==expected
-
-
-def test_at_boundary_still_requires_free_qualification(tmp_path,monkeypatch):
-    def fail(*a,**k):raise AssertionError('unqualified candidate reached AI')
-    monkeypatch.setattr(dispatch,'build_packets',lambda *a,**k:{'packets':[],'qualification':{}})
-    monkeypatch.setattr(dispatch,'OpenAIPilot',fail)
-    r=dispatch.execute({},None,tmp_path/'run',env={**ENV,'SCHEDULED_REVIEW_MODE':'paid','PAPER_FINAL_VERDICTS':'true'},clock=lambda:datetime.fromisoformat('2026-11-05T16:10:00+00:00'))
-    assert r['model_calls']==0 and r['state']=='no_qualified_candidate_zero_cost'
+    assert len(seen)==1 and r['model_calls']==0 and r['state']=='no_qualified_candidate_zero_cost'

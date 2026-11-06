@@ -16,7 +16,8 @@ def draft(bars, fx, *, now):
     if not 300 <= (now-bars.candles[-1].timestamp).total_seconds() < 900:
         return None
     local = now.astimezone(ZoneInfo('Europe/Dublin'))
-    if local.weekday() >= 5 or local.hour >= 22 or len(bars.candles) < 20:
+    from ..market_data.strategy_window import profile
+    if local.weekday() >= 5 or local.hour >= 22 or profile(list(bars.candles), now=now) is None:
         return None
     rows = bars.candles
     if bars.quote_currency == 'EUR':

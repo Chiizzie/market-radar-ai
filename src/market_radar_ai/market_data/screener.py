@@ -19,8 +19,9 @@ def rank_candidates(instruments: Iterable[Instrument], candles_by_symbol: dict[s
         closes, volumes = [float(c.close) for c in candles], [float(c.volume) for c in candles]
         if closes[-min_candles] <= 0: continue
         momentum = (closes[-1] / closes[-min_candles] - 1.0) * 100.0
-        recent = sum(volumes[-5:]) / 5
-        baseline = sum(volumes[-min_candles:-5]) / max(min_candles - 5, 1)
+        recent_n = min(5, min_candles//2)
+        recent = sum(volumes[-recent_n:]) / recent_n
+        baseline = sum(volumes[-min_candles:-recent_n]) / max(min_candles - recent_n, 1)
         relative_volume = recent / baseline if baseline > 0 else 0.0
         score = max(-10.0, min(10.0, momentum)) + min(relative_volume, 5.0)
         reasons = [f"{momentum:.2f}% change across {min_candles} candles"]

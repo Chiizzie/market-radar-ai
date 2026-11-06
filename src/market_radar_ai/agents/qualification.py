@@ -31,7 +31,7 @@ def paid_review_gate(record, *, now):
 def qualify(document, feed, *, now):
     from .early_screening import screen
     early = screen(document, now=now)
-    batch = build_packages(document, feed, now=now, stock_limit=20)
+    batch = build_packages(document, feed, now=now, stock_limit=20, crypto_limit=4)
     fx = None
     checked = document.get('stock_reference_checks')
     if isinstance(checked, dict) and isinstance(checked.get('payload'), dict):
@@ -53,6 +53,8 @@ def qualify(document, feed, *, now):
                 plan["exit_by"] = checks["exit_deadline"]
                 plan["expires_at"] = min(datetime.fromisoformat(plan["expires_at"]),
                                           datetime.fromisoformat(plan["exit_by"])).isoformat()
+            if plan and checks.get('reference_expires_at'):
+                plan['expires_at'] = min(datetime.fromisoformat(plan['expires_at']), datetime.fromisoformat(checks['reference_expires_at'])).isoformat()
             if plan is None:
                 result['blockers'].append('conditional_setup_not_formed')
         except (ValueError, TypeError, KeyError, ArithmeticError):

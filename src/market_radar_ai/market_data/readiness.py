@@ -67,9 +67,9 @@ def readiness(document, feed, *, now):
             'all_original_captures_rejected': stale_rejected,
             'kind': 'DETERMINISTIC_GUARD_TEST_NOT_FUTURE_OBSERVATION'},
         'model_calls': 0, 'trade_authorized': False, 'orders_submitted': 0,
-        'stock_warmup': {'minimum_completed_5m_bars': 20,
-            'current_session_minutes_required': 100,
-            'note': 'For current-session Alpaca bars, 20 complete bars require at least 100 minutes after open; missing bars can delay readiness.'}}
+        'stock_warmup': {'minimum_completed_5m_bars': 6,
+            'current_session_minutes_required': 30,
+            'note': 'Opening paper setup requires six contiguous bars from the regular open (30 minutes); standard momentum requires 20 bars (100 minutes). Missing bars block readiness.'}}
 
 
 def main():

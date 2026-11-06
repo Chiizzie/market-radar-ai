@@ -98,7 +98,7 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
     if env.get('GH_PAPER_TOKEN'):
         from ..agents.github_paper_tracking import update
         prior = update(env['GH_PAPER_TOKEN'], now=started)
-        active = [r['symbol'] for r in prior['trades'] if r['state'] in ('watching', 'open_simulation')]
+        active = [r['symbol'] for r in prior['trades'] if r['symbol'] not in CRYPTO and r['state'] in ('watching', 'open_simulation')]
         # Keep watched symbols in the quote batch even when discovery rotates.
         if len(set(active)) > 20:
             raise RuntimeError('paper_tracking_capacity_exceeded')
@@ -136,6 +136,9 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         payload = {'version': 1, 'stocks': list(stocks), 'collection_started_at': started.isoformat(),
                    'news': feed, 'calendars': doc['earnings_calendars']}
         write_json(cache_path, {'payload': payload, 'sha256': digest(payload)})
+    catalogued = output/'crypto-catalogue-capture.json'
+    stage('crypto_catalogue', 'market_data.crypto_checks', ['--capture', enriched, '--output', catalogued], catalogued)
+    write_json(enriched, json.loads(catalogued.read_text()))
     if env.get('ENABLE_STOCK_CHECKS') == 'true':
         checked = output/'checked-capture.json'
         stage('stock_checks', 'market_data.stock_checks', ['--capture', enriched, '--output', checked], checked)

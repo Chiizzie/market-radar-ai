@@ -42,6 +42,13 @@ def build_packages(document, feed, *, now, stock_limit=3, crypto_limit=2):
             if reference is not None:
                 source['reference_quote'] = reference
             sources = {'market:'+digest(source): source}
+            if market=='crypto':
+                from ..market_data.crypto_checks import catalogue
+                try:
+                    public = catalogue(document['crypto_catalogue'], now=now)
+                    sources['catalogue:'+digest(public)] = public
+                except (KeyError,ValueError,TypeError):
+                    pass
             news_ids = []
             # Crypto uses explicit publisher asset tags in a separate namespace.
             # A requested pair, equity ticker or headline mention is not a link.

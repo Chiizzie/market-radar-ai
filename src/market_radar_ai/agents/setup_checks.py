@@ -12,8 +12,10 @@ def reference_checks(document, *, symbol, market, now):
               'verified_costs': 'UNKNOWN', 'instrument_halt': 'UNKNOWN',
               'catalogue_candidate': 'UNKNOWN', 'market_session': 'UNKNOWN',
               'reference_quote': 'UNKNOWN', 'fx': 'UNKNOWN', 'exit_deadline': None}
+    if market == 'crypto':
+        from ..market_data.crypto_checks import assess
+        return {**result, **assess(document, symbol=symbol, now=now)}
     if market != 'stocks':
-        # An exchange reference quote is not evidence of Robinhood permissions.
         return result
     try:
         assessed = evaluate(document['stock_reference_checks'], now=now)
@@ -42,10 +44,13 @@ def reference_checks(document, *, symbol, market, now):
 def technical_checks(bars):
     """Transparent measurements, not a fitted strategy or success probability."""
     rows = bars.candles[-20:]
-    if len(rows) < 20:
+    from ..market_data.strategy_window import profile
+    strategy = profile(list(bars.candles), now=bars.validated_at)
+    if strategy is None:
         return {'state': 'INSUFFICIENT_HISTORY'}
-    baseline = sum(c.volume for c in rows[:-5])/15
-    recent = sum(c.volume for c in rows[-5:])/5
+    recent_n = 5 if len(rows) >= 20 else 3
+    baseline = sum(c.volume for c in rows[:-recent_n])/(len(rows)-recent_n)
+    recent = sum(c.volume for c in rows[-recent_n:])/recent_n
     total = sum(c.volume for c in rows)
     if baseline <= 0 or total <= 0:
         return {'state': 'INSUFFICIENT_VOLUME'}
@@ -53,12 +58,20 @@ def technical_checks(bars):
     momentum = (rows[-1].close/rows[0].close-1)*100
     trigger = max(c.high for c in rows[-6:-1])*D('1.001')
     stop = min(c.low for c in rows[-3:])
-    return {'state': 'MEASURED', 'currency': bars.quote_currency,
+    measured = {'state': 'MEASURED', 'currency': bars.quote_currency,
             'momentum_20_bars_pct': str(momentum), 'relative_volume_5_vs_15': str(recent/baseline),
             'rolling_20_bar_vwap': str(vwap), 'close_above_rolling_vwap': rows[-1].close>vwap,
             'breakout_trigger_native': str(trigger), 'stop_native': str(stop),
             'trigger_state': 'ALREADY_ABOVE_TRIGGER' if rows[-1].close>=trigger else 'WAITING_FOR_TRIGGER',
             'note': 'Rolling 20-bar VWAP, not full-session VWAP. Measurements are not a buy signal.'}
+    measured['strategy_id'] = strategy
+    if strategy == 'opening_continuation_30m_v1':
+        measured['momentum_window_pct'] = measured.pop('momentum_20_bars_pct')
+        measured['relative_volume_3_vs_prior'] = measured.pop('relative_volume_5_vs_15')
+        measured['opening_session_vwap'] = measured.pop('rolling_20_bar_vwap')
+        measured['completed_bars'] = len(rows)
+        measured['note'] = 'Experimental opening-session paper setup: at least six contiguous completed bars from the regular open; last three bars versus earlier opening bars. Not backtested or a proven edge.'
+    return measured
 
 
 def validate_paper_plan(plan, *, now, exit_deadline=None):

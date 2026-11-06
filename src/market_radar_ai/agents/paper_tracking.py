@@ -89,9 +89,13 @@ class PaperTracker:
 def ingest_capture(tracker, document, *, now):
     """Reuse hash-checked stock/FX observations, without extra API requests."""
     from ..market_data.stock_checks import evaluate
-    checked=evaluate(document['stock_reference_checks'],now=now)
-    if checked['fx_status']!='current_indicative' or checked['market_clock']['status']!='open':
-        return 0
+    checked=evaluate(document['stock_reference_checks'],now=now) if 'stock_reference_checks' in document else None
+    stock_rows = checked['stocks'] if checked and checked['fx_status']=='current_indicative' and checked['market_clock']['status']=='open' else []
+    from ..market_data.reference_quotes import validate_capture
+    crypto_quotes = {}
+    if 'reference_quote_capture' in document:
+        try:crypto_quotes=validate_capture(document['reference_quote_capture'],now=now)
+        except (ValueError,KeyError,TypeError,ArithmeticError):pass
     count=0
     with sqlite3.connect(tracker.path) as db:
         plans=[(key,json.loads(body)) for key,body in db.execute('SELECT id,payload FROM tracked_plans')]
@@ -99,7 +103,15 @@ def ingest_capture(tracker, document, *, now):
               if r['state'] in ('watching', 'open_simulation', 'unresolved')}
     for key,d in plans:
         if key not in active or now > datetime.fromisoformat(d['plan']['exit_by']): continue
-        for row in checked['stocks']:
+        if d['candidate_id'].startswith('crypto:'):
+            q=crypto_quotes.get(d['plan']['symbol'])
+            if q:
+                quote=Quote(observed_at=q['retrieved_at'],bid=q['bid'],ask=q['ask'])
+                if quote.observed_at>=datetime.fromisoformat(d['evaluated_at']):
+                    tracker.observe(key,quote,symbol=q['symbol'],source='kraken:'+q['source_payload_sha256'],now=now)
+                    count+=1
+            continue
+        for row in stock_rows:
             if row['symbol']!=d['plan']['symbol'] or row['quote_status']!='current_reference_only':continue
             quote=Quote(observed_at=row['observed_at'],bid=row['indicative_bid_eur'],ask=row['indicative_ask_eur'])
             if quote.observed_at<datetime.fromisoformat(d['evaluated_at']):continue

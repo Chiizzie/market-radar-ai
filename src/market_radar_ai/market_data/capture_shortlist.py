@@ -2,6 +2,7 @@
 from dataclasses import asdict
 from .models import Candle, Instrument
 from .screener import rank_candidates
+from .strategy_window import profile
 from ..dashboard.export import build_snapshot
 
 
@@ -18,16 +19,17 @@ def shortlist(document, *, now, stock_limit=3, crypto_limit=2):
             symbol = capture['requested_symbol']
             rows = [Candle.model_validate(c) for c in capture['payload']['candles']]
             reason = ('unusable_or_stale' if status[symbol] != 'CURRENT_RESEARCH_DATA'
-                else 'insufficient_history' if len(rows) < 20
+                else 'insufficient_history' if profile(rows, now=now) is None
                 else 'mixed_quote_currency' if len({c.quote_currency for c in rows}) != 1
-                else 'no_baseline_participation' if sum(c.volume for c in rows[-20:-5]) <= 0
+                else 'no_baseline_participation' if sum(c.volume for c in (rows[-20:-5] if len(rows)>=20 else rows[:-3])) <= 0
                 else None)
             if reason:
                 rejected.append({'symbol': symbol, 'reason': reason}); continue
             instruments.append(Instrument(symbol=symbol, asset_class='equity' if market=='stocks' else 'crypto',
                 quote_currency=rows[0].quote_currency, venue=capture['payload']['provider']))
             series[symbol] = rows
-        ranked = rank_candidates(instruments, series)
+        ranked = sorted([score for instrument in instruments for score in rank_candidates(
+            [instrument], series, min_candles=20 if len(series[instrument.symbol])>=20 else len(series[instrument.symbol]))], key=lambda r:r.score, reverse=True)
         candidates = []
         for row in ranked[:limit]:
             candidates.append({**asdict(row), 'decision': 'RESEARCH_SHORTLIST_ONLY',
@@ -42,7 +44,7 @@ def shortlist(document, *, now, stock_limit=3, crypto_limit=2):
             'rejected': rejected, 'candidates': candidates}
     return {'schema_version': 'capture-shortlist-v1', 'evaluated_at': now.isoformat(),
         'expires_at_epoch': snapshot['expires_at_epoch'], 'scope': 'REQUESTED_SYMBOLS_ONLY',
-        'ranking_basis': '20 completed bars: capped momentum plus capped relative volume; not win probability',
+        'ranking_basis': '20-bar momentum or contiguous opening-session bars (minimum six): capped momentum plus capped relative volume; not win probability',
         'model_calls': 0, 'trade_authorized': False, 'markets': output}
 
 

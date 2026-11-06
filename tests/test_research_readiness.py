@@ -14,7 +14,7 @@ def test_current_crypto_research_and_expiry_replays_do_not_authorize():
     assert r['candidates'][0]['expiry_replay']['rejected'] is True
     assert r['capture_expiry_replay']['all_original_captures_rejected'] is True
     assert not r['trade_authorized'] and r['model_calls'] == r['orders_submitted'] == 0
-    assert r['stock_warmup']['current_session_minutes_required'] == 100
+    assert r['stock_warmup']['current_session_minutes_required'] == 30
 
 
 @pytest.mark.parametrize('hour', [22, 23])
