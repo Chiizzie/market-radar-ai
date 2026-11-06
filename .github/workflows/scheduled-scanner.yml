@@ -24,7 +24,7 @@ jobs:
     env:
       SCANNER_COLLECTION_MODE: scheduled
       ENABLE_STOCK_DISCOVERY: 'true'
-      ENABLE_BROAD_DISCOVERY: 'true'
+      ENABLE_BROAD_DISCOVERY: 'false'
       ENABLE_CRYPTO_DISCOVERY: 'true'
       SCREEN_DISCOVERY_DATA: 'true'
       ENABLE_STOCK_CHECKS: 'true'
