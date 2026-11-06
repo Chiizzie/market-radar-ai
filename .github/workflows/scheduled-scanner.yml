@@ -1,4 +1,4 @@
-# Deployment template: replace 1131d0c757ac17a09173a0a5f4fd57d34505f90d with a verified backend SHA.
+# Deployment template: replace c7b3e3773bd9ac4c2bea1b79110e145ed127a6f7 with a verified backend SHA.
 # Install as .github/workflows/scheduled-scanner.yml on this repository's main branch.
 name: Scheduled research collection
 on:
@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 1131d0c757ac17a09173a0a5f4fd57d34505f90d
+          ref: c7b3e3773bd9ac4c2bea1b79110e145ed127a6f7
           persist-credentials: false
       - name: Enforce Dublin operating hours before provider calls
         id: window
@@ -76,6 +76,10 @@ jobs:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
           GH_PAPER_TOKEN: ${{ github.token }}
+      - name: Explain collection coverage and blockers
+        if: always() && steps.window.outputs.run == 'true'
+        continue-on-error: true
+        run: python -m market_radar_ai.dashboard.run_diagnostics --collection artifacts/scheduled --output artifacts/scheduled/run-diagnostics.json --summary "$GITHUB_STEP_SUMMARY"
       - uses: actions/cache/save@v4
         if: always() && steps.window.outputs.run == 'true' && hashFiles('.scanner-cache/evidence.json') != ''
         with:
@@ -118,7 +122,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.review_window.outputs.run == 'true'
         with:
-          ref: 1131d0c757ac17a09173a0a5f4fd57d34505f90d
+          ref: c7b3e3773bd9ac4c2bea1b79110e145ed127a6f7
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.review_window.outputs.run == 'true'
@@ -159,6 +163,12 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
           GH_PAPER_TOKEN: ${{ github.token }}
+      - name: Explain review progress, blockers and recorded spending
+        if: always() && steps.review_window.outputs.run == 'true'
+        continue-on-error: true
+        run: python -m market_radar_ai.dashboard.run_diagnostics --collection artifacts/scheduled --review artifacts/decision --output artifacts/decision/run-diagnostics.json --summary "$GITHUB_STEP_SUMMARY"
+        env:
+          GH_BUDGET_TOKEN: ${{ github.token }}
       - uses: actions/upload-artifact@v4
         if: always() && steps.review_window.outputs.run == 'true'
         with:
