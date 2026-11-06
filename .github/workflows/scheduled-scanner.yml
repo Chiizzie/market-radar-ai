@@ -24,6 +24,8 @@ jobs:
     env:
       SCANNER_COLLECTION_MODE: scheduled
       ENABLE_STOCK_DISCOVERY: 'true'
+      ENABLE_BROAD_DISCOVERY: 'true'
+      ENABLE_CRYPTO_DISCOVERY: 'true'
       SCREEN_DISCOVERY_DATA: 'true'
       ENABLE_STOCK_CHECKS: 'true'
       SCANNER_VERIFY_OUTSIDE_WINDOW: ${{ github.event_name == 'workflow_dispatch' && inputs.verify_outside_hours && 'true' || 'false' }}
@@ -34,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: e1959472288b6dcd0b3dd4ae72a6407ea388c454
+          ref: 48cf1a9cc5ba81ede650760016f521ab30dfdd1a
           persist-credentials: false
       - name: Enforce Dublin operating hours before provider calls
         id: window
@@ -133,7 +135,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.review_window.outputs.run == 'true'
         with:
-          ref: 731bcde80c220ee6a277a5bacccd90d4b89b35fb
+          ref: 48cf1a9cc5ba81ede650760016f521ab30dfdd1a
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.review_window.outputs.run == 'true'
@@ -219,7 +221,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: f26f122b69a3be8cba5393a0a011fc3967e53172
+          ref: 48cf1a9cc5ba81ede650760016f521ab30dfdd1a
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
