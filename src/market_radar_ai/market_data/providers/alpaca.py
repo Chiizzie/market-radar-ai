@@ -69,6 +69,11 @@ class AlpacaIexProvider:
                     issues=[ValidationIssue(code='regular_session_not_started',
                         message='Regular-session capture deliberately not requested before open or on weekends',
                         symbol=symbol)])
+            if end < start + timedelta(minutes=5):
+                return ProviderResult(provider='alpaca_iex', retrieved_at=now, candles=[],
+                    issues=[ValidationIssue(code='regular_session_warmup',
+                        message='Waiting for the first completed five-minute regular-session candle',
+                        symbol=symbol)])
             # Fixed data-only host/path suffix, no redirects, pagination or fallback.
             reason = 'transport_failure'
             with self.session.get(f'https://data.alpaca.markets/v2/stocks/{symbol}/bars',

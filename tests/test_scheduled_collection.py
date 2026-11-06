@@ -122,6 +122,8 @@ def test_two_cycles_refresh_markets_but_reuse_news_and_calendar(tmp_path):
     assert a['evidence_cache'] == 'collected' and b['evidence_cache'] == 'reused_original_timestamps'
     assert calls.count('market_data.capture') == 2
     assert calls.count('evidence.scanner_feed') == calls.count('evidence.earnings_calendar') == 1
+    for doc, _ in deliveries:
+        assert doc.pop('api_budget')['status'] == 'unavailable'
     assert deliveries[0] == deliveries[1]
     assert not any('review' in c or 'openai' in c for c in calls)
     assert b['model_calls'] == 0 and not b['trade_authorized']
@@ -132,6 +134,28 @@ def test_provider_failure_is_reported_even_after_successful_delivery(tmp_path):
         clock=lambda: NOW, run=fake_stages([], fail='market_data.capture'),
         delivery=lambda *a, **k: {'state': 'scanner_snapshot_delivery_confirmed'})
     assert r['state'] == 'delivered_with_failures' and r['failures'] == ['market']
+
+
+def test_usage_summary_reaches_delivery_and_context_gaps_remain_visible(tmp_path, monkeypatch):
+    from market_radar_ai.dashboard.api_budget import summarize
+    from market_radar_ai.agents.github_budget import initial_state
+    usage = summarize(initial_state(), now=NOW)
+    monkeypatch.setattr('market_radar_ai.dashboard.api_budget.read_summary', lambda *a, **kw: usage)
+    def stages(module, args):
+        code = fake_stages([])(module, args)
+        path = args[args.index('--output')+1]
+        body = json.loads(path.read_text())
+        body['stock_context'] = [{'payload': {'symbol': 'UNAVAILABLE',
+            'daily': {'status': 'unavailable'}, 'intraday': {'status': 'unavailable'}}}]
+        write_json(path, body)
+        return code
+    def delivery(doc, **kwargs):
+        assert doc['api_budget'] == usage
+        return {'state': 'scanner_snapshot_delivery_confirmed'}
+    r = run_cycle(env=ENV, output=tmp_path/'out', cache_path=tmp_path/'cache.json',
+        clock=lambda: NOW, run=stages, delivery=delivery)
+    assert r['state'] == 'delivered_with_data_gaps' and r['failures'] == []
+    assert r['context_unavailable_symbols'] == ['UNAVAILABLE']
 
 
 @pytest.mark.parametrize('key', ['OPENAI_API_KEY', 'OPEN_API_KEY', 'GH_BUDGET_TOKEN'])
@@ -193,6 +217,7 @@ def test_short_lived_quotes_follow_slow_checks(tmp_path,cached_evidence):
 
 
 def test_active_paper_symbols_survive_discovery_rotation(tmp_path,monkeypatch):
+    monkeypatch.setattr('market_radar_ai.dashboard.api_budget.read_summary', lambda *a, **kw: None)
     import market_radar_ai.agents.github_paper_tracking as journal
     seen=[]
     def update(token,**kwargs):
@@ -215,6 +240,7 @@ def test_active_paper_symbols_survive_discovery_rotation(tmp_path,monkeypatch):
 
 @pytest.mark.parametrize('fallback_only', [False, True])
 def test_discovery_counts_follow_actual_collection_cap_without_counting_fallback(tmp_path, monkeypatch, fallback_only):
+    monkeypatch.setattr('market_radar_ai.dashboard.api_budget.read_summary', lambda *a, **kw: None)
     from market_radar_ai.dashboard import scheduled_collection as collection
     from market_radar_ai.dashboard.run_diagnostics import discovery_summary
     pool = [] if fallback_only else [f'S{i}' for i in range(50)]

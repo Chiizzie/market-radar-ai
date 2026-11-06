@@ -1,4 +1,15 @@
 from copy import deepcopy
+
+
+def test_symbol_context_gap_does_not_fail_healthy_peers_but_outage_does():
+    from market_radar_ai.market_data.stock_context import connectivity_exit_code
+    def row(daily, intraday):
+        return {'payload': {'daily': {'status': daily}, 'intraday': {'status': intraday}}}
+    missing = row('unavailable', 'unavailable')
+    good = row('received', 'received')
+    assert connectivity_exit_code({'stock_context': [missing, good]}) == 0
+    assert connectivity_exit_code({'stock_context': [missing, missing]}) == 1
+    assert connectivity_exit_code({'stock_context': []}) == 0
 from datetime import datetime, timedelta, timezone
 import json
 import pytest

@@ -102,6 +102,13 @@ def enrich(document, *, fetch=fetch_context):
     return result
 
 
+def connectivity_exit_code(document):
+    # A single unsupported symbol is a visible data gap, not a batch outage.
+    rows = document['stock_context']
+    return int(bool(rows) and all(all(r['payload'][k]['status'] == 'unavailable'
+               for k in ('daily', 'intraday')) for r in rows))
+
+
 def main():
     import argparse
     from pathlib import Path
@@ -120,8 +127,7 @@ def main():
     print(json.dumps({'stock_context':[{'symbol':r['payload']['symbol'],
         'daily':r['payload']['daily']['status'],'intraday':r['payload']['intraday']['status']}
         for r in result['stock_context']], 'model_calls':0,'trade_authorized':False}))
-    return int(any(all(r['payload'][k]['status']=='unavailable' for k in ('daily','intraday'))
-                   for r in result['stock_context']))
+    return connectivity_exit_code(result)
 
 
 if __name__=='__main__':

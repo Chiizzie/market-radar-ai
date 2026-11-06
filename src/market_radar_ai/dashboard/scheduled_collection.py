@@ -171,6 +171,11 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         write_json(output/'paper-tracking.json', report)
         doc['paper_tracking_report'] = report
         write_json(enriched, doc)
+    # Existing repository token reads accounting only; no model credentials or calls.
+    from .api_budget import read_summary
+    doc = json.loads(enriched.read_text())
+    doc['api_budget'] = read_summary(env.get('GH_PAPER_TOKEN'), clock=clock)
+    write_json(enriched, doc)
     for label, module, name in (
         ('context_packages', 'agents.context_packages', 'context-packages.json'),
         ('readiness', 'market_data.readiness', 'readiness.json'),
@@ -190,8 +195,11 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
     if any(r['payload']['status'] in ('error', 'not_configured') for r in doc['earnings_calendars']):
         failed.append('calendar_unavailable')
     gaps = [c['requested_symbol'] for c in doc.get('captures', []) if not c['payload']['quality_passed_at_capture']]
-    report = {'state': 'delivered_with_failures' if failed else 'delivered_with_data_gaps' if gaps else 'delivered',
+    context_gaps = [r['payload']['symbol'] for r in doc.get('stock_context', [])
+                    if any(r['payload'][k]['status'] == 'unavailable' for k in ('daily', 'intraday'))]
+    report = {'state': 'delivered_with_failures' if failed else 'delivered_with_data_gaps' if gaps or context_gaps else 'delivered',
               'unusable_or_stale_symbols': gaps,
+              'context_unavailable_symbols': context_gaps,
               'started_at': started.isoformat(), 'delivery': receipt, 'stages': stages,
               'evidence_cache': 'reused_original_timestamps' if cache else 'collected',
               'evidence_collection_started_at': cache['collection_started_at'] if cache else started.isoformat(),

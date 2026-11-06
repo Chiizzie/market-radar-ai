@@ -97,6 +97,28 @@ def test_preopen_and_weekend_do_not_request_or_reuse_yesterday():
         assert not r.candles and not s.calls
 
 
+@pytest.mark.parametrize('stamp', ['2026-11-06T14:30:01+00:00', '2026-11-06T14:34:59+00:00', '2026-07-01T13:32:00+00:00'])
+def test_first_bar_wait_is_reported_without_failure_or_qualification(stamp):
+    from market_radar_ai.market_data.capture import connectivity_exit_code
+    when = datetime.fromisoformat(stamp)
+    s = Session()
+    doc = capture_markets(['MSFT'], [], stock_fetch=provider(s, now=when).fetch_history,
+        crypto_fetch=None, now=when, stock_provider='alpaca_iex')
+    assert not s.calls and connectivity_exit_code(doc) == 0
+    p = doc['captures'][0]['payload']
+    assert not p['candles'] and not p['quality_passed_at_capture']
+    assert 'regular_session_warmup' in {i['code'] for i in p['quality_issues']}
+
+
+def test_after_first_bar_missing_data_and_http_errors_still_fail():
+    from market_radar_ai.market_data.capture import connectivity_exit_code
+    when = datetime.fromisoformat('2026-11-06T14:35:00+00:00')
+    for s in (Session({'symbol':'MSFT', 'bars':[]}), Session(status=500)):
+        doc = capture_markets(['MSFT'], [], stock_fetch=provider(s, now=when).fetch_history,
+            crypto_fetch=None, now=when, stock_provider='alpaca_iex')
+        assert len(s.calls) == 1 and connectivity_exit_code(doc) == 1
+
+
 def test_unfinished_bar_excluded_and_history_warmup_visible():
     p = payload(count=21)
     r = provider(Session(p), now=NOW+timedelta(minutes=2)).fetch_history('MSFT')
