@@ -72,6 +72,9 @@ def build_snapshot(document, *, now, evidence=None):
         'evidence': export_evidence(evidence, now=now),
         'paper_outcomes': None, 'api_budget': None, 'live_orders_enabled': False}
     from .charts import build_charts
+    if document.get('discovery_coverage') is not None:
+        from .discovery_coverage import validate
+        snapshot['discovery_coverage']=validate(document['discovery_coverage'],now=now,document=document)
     if document.get('api_budget') is not None:
         from .api_budget import validate_summary
         snapshot['api_budget'] = validate_summary(document['api_budget'], now=now)

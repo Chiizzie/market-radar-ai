@@ -1,4 +1,5 @@
 """Bounded Finnhub earnings dates; provider reports, never trade admission."""
+from ..market_data.limits import STOCK_RESEARCH_LIMIT
 from copy import deepcopy
 from datetime import date, datetime, timedelta, timezone
 import hashlib
@@ -116,17 +117,19 @@ def fetch_calendar(symbol, *, env=None, session=None, clock=lambda:datetime.now(
 def enrich(document, *, fetch=fetch_calendar):
     result=deepcopy(document)
     symbols=list(dict.fromkeys(c['requested_symbol'] for c in document['captures'] if c['market']=='stocks'))
-    if len(symbols)>20:raise ValueError('calendar_symbol_limit')
+    if len(symbols)>STOCK_RESEARCH_LIMIT:raise ValueError('calendar_symbol_limit')
     result['earnings_calendars']=[]
-    for symbol in symbols:
-        payload=fetch(symbol).model_dump(mode='json')
-        result['earnings_calendars'].append({'payload':payload,'payload_sha256':digest(payload)})
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        for capture in executor.map(fetch,symbols):
+            payload=capture.model_dump(mode='json')
+            result['earnings_calendars'].append({'payload':payload,'payload_sha256':digest(payload)})
     return result
 
 
 def calendar_source(document, symbol, *, now):
     records=document.get('earnings_calendars',[])
-    if not isinstance(records,list) or len(records)>20:raise ValueError('calendar_record_limit')
+    if not isinstance(records,list) or len(records)>STOCK_RESEARCH_LIMIT:raise ValueError('calendar_record_limit')
     seen=set();selected=None
     allowed={c['requested_symbol'] for c in document['captures'] if c['market']=='stocks'}
     for record in records:

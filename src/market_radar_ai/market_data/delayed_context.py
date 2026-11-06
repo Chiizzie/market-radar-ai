@@ -1,4 +1,5 @@
 """Free delayed consolidated premarket context; never execution evidence."""
+from .limits import STOCK_RESEARCH_LIMIT
 from datetime import datetime,timedelta,timezone
 import json,os
 import requests
@@ -43,6 +44,6 @@ def enrich_delayed(document, *, fetcher=fetch, now=None):
     now=now or datetime.now(timezone.utc);local=now.astimezone(NY)
     if local.weekday()>=5 or local>=local.replace(hour=9,minute=30,second=0,microsecond=0):return document
     symbols=[r['requested_symbol'] for r in document['captures'] if r['market']=='stocks']
-    if len(symbols)>20:raise ValueError('delayed_context_universe_too_large')
+    if len(symbols)>STOCK_RESEARCH_LIMIT:raise ValueError('delayed_context_universe_too_large')
     document['delayed_stock_context']=[fetcher(s) for s in symbols]
     return document

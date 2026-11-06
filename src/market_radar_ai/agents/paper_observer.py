@@ -1,4 +1,5 @@
 """Read-only, fresh reference quotes for already-approved paper simulations."""
+from ..market_data.limits import STOCK_RESEARCH_LIMIT
 from datetime import datetime, timezone
 from .paper_outcomes import Quote
 from ..market_data.stock_checks import get, QUOTES, CLOCK, assess
@@ -24,7 +25,7 @@ class ReferenceObserver:
         if stocks:
             try:
                 symbols=list(dict.fromkeys(d['plan']['symbol'] for d in stocks))
-                if len(symbols)>20: raise ValueError('paper_stock_capacity')
+                if len(symbols)>STOCK_RESEARCH_LIMIT: raise ValueError('paper_stock_capacity')
                 now=self.clock()
                 if (self.fx is None or self.fx_fetched_at is None
                     or not 0 <= (now-self.fx_fetched_at).total_seconds() < 300

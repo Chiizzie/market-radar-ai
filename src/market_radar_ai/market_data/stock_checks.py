@@ -1,4 +1,5 @@
 """Read-only stock reference checks. Never supplies broker execution permission."""
+from .limits import STOCK_RESEARCH_LIMIT
 from datetime import datetime, timezone
 from decimal import Decimal
 import json
@@ -40,7 +41,7 @@ def assess(payload, *, now):
             or not 0 <= (now-timestamp(payload['retrieved_at'])).total_seconds() <= 60):
         raise ValueError('invalid_or_stale_checks')
     symbols=payload['symbols']
-    if not isinstance(symbols,list) or not 1<=len(symbols)<=20 or len(set(symbols))!=len(symbols) or any(not isinstance(s,str) or not SYMBOL.fullmatch(s) for s in symbols):
+    if not isinstance(symbols,list) or not 1<=len(symbols)<=STOCK_RESEARCH_LIMIT or len(set(symbols))!=len(symbols) or any(not isinstance(s,str) or not SYMBOL.fullmatch(s) for s in symbols):
         raise ValueError('invalid_symbols')
     clock={'status':'unavailable','instrument_halts_verified':False}
     try:
@@ -94,7 +95,7 @@ def assess(payload, *, now):
 
 def collect(symbols, *, env, clock=lambda:datetime.now(timezone.utc), session=None, catalogue=None, fx_provider=None):
     symbols=list(dict.fromkeys(symbols))
-    if not 1<=len(symbols)<=20 or any(not isinstance(s,str) or not SYMBOL.fullmatch(s) for s in symbols):raise ValueError('invalid_symbols')
+    if not 1<=len(symbols)<=STOCK_RESEARCH_LIMIT or any(not isinstance(s,str) or not SYMBOL.fullmatch(s) for s in symbols):raise ValueError('invalid_symbols')
     payload={'schema_version':'stock-reference-checks-v1','symbols':symbols,'trade_authorized':False,
              'catalogue_candidates':{},'failures':[]}
     # Slow metadata/FX first; short-lived quotes and clock collected last.

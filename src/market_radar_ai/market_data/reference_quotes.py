@@ -6,8 +6,8 @@ from hashlib import sha256
 import json
 import requests
 
-PAIRS = {'XBTEUR':('XXBT','XBT/EUR'), 'ETHEUR':('XETH','ETH/EUR'),
-         'SOLEUR':('SOL','SOL/EUR'), 'XRPEUR':('XXRP','XRP/EUR')}
+from .crypto_identities import PAIRS, IDENTITIES
+from .limits import REFERENCE_PAIR_LIMIT
 BASE = 'https://api.kraken.com/0/public/'
 
 
@@ -39,7 +39,9 @@ def capture_quotes(pairs, *, session=None, clock=lambda:datetime.now(timezone.ut
                  'tickers':get_json('Ticker',params,transport)}
         result.update(status='ok',retrieved_at=clock().isoformat(),payload=payload,payload_sha256=digest(payload))
         # Reject malformed API envelopes immediately; no stale fallback or retry.
-        validate_capture(result,now=clock())
+        valid=validate_capture(result,now=clock())
+        result['unavailable_pairs']=[p for p in pairs if p not in valid]
+        if result['unavailable_pairs']:result['status']='partial'
     except (requests.RequestException, ValueError, TypeError, KeyError, ArithmeticError, AttributeError):
         result={'schema_version':'kraken-reference-capture-v1','requested_pairs':pairs,
                 'request_started_at':started.isoformat(),'retrieved_at':clock().isoformat(),
@@ -49,7 +51,7 @@ def capture_quotes(pairs, *, session=None, clock=lambda:datetime.now(timezone.ut
 
 def validate_capture(capture, *, now):
     if now.tzinfo is None:raise ValueError('aware_clock_required')
-    if (capture['schema_version']!='kraken-reference-capture-v1' or capture['status']!='ok'
+    if (capture['schema_version']!='kraken-reference-capture-v1' or capture['status'] not in ('ok','partial')
             or capture['trade_authorized'] is not False):raise ValueError('invalid_reference_capture')
     started=datetime.fromisoformat(capture['request_started_at'])
     received=datetime.fromisoformat(capture['retrieved_at'])
@@ -62,36 +64,42 @@ def validate_capture(capture, *, now):
     meta,tickers=payload['asset_pairs'],payload['tickers']
     if meta['error'] or tickers['error']:raise ValueError('reference_provider_error')
     pairs=capture['requested_pairs']
-    if not isinstance(pairs,list) or not 1<=len(pairs)<=4 or len(set(pairs))!=len(pairs):
+    if not isinstance(pairs,list) or not 1<=len(pairs)<=REFERENCE_PAIR_LIMIT or len(set(pairs))!=len(pairs):
         raise ValueError('invalid_reference_pairs')
+    if any(pair not in PAIRS for pair in pairs):raise ValueError('unsupported_reference_pair')
     quotes={}
     for pair in pairs:
-        if pair not in PAIRS:raise ValueError('unsupported_reference_pair')
-        candidates=[(key,row) for key,row in meta['result'].items() if row.get('altname')==pair]
-        if len(candidates)!=1:raise ValueError('reference_identity_ambiguous')
-        key,row=candidates[0]
-        if (row['base']!=PAIRS[pair][0] or row['quote']!='ZEUR'
-                or row['wsname']!=PAIRS[pair][1] or row['status']!='online'):
-            raise ValueError('reference_identity_or_status_invalid')
-        ticker=tickers['result'][key]
-        if any(not isinstance(ticker.get(side),list) or len(ticker[side])!=3 for side in ('a','b')):
-            raise ValueError('invalid_reference_ticker_shape')
-        if any(not isinstance(v,str) for v in (ticker['b'][0],ticker['a'][0],ticker['b'][2],ticker['a'][2])):
-            raise ValueError('decimal_strings_required')
-        bid,ask=Decimal(ticker['b'][0]),Decimal(ticker['a'][0])
-        bid_size,ask_size=Decimal(ticker['b'][2]),Decimal(ticker['a'][2])
-        if not all(v.is_finite() and v>0 for v in (bid,ask,bid_size,ask_size)) or bid>ask:
-            raise ValueError('invalid_reference_prices')
-        quotes[pair]={'schema_version':'reference-quote-v1','symbol':pair,'venue':'kraken',
-            'quote_currency':'EUR','bid':str(bid),'ask':str(ask),
-            'bid_size':str(bid_size),'ask_size':str(ask_size),
-            'spread_bps':str((ask-bid)/((ask+bid)/2)*10000),
-            'retrieved_at':received.isoformat(),'exchange_timestamp':None,
-            'expires_at':(received+timedelta(seconds=30)).isoformat(),
-            'timestamp_basis':'LOCAL_RECEIPT_ONLY','broker_executable':False,
-            'source_payload_sha256':capture['payload_sha256'],
-            'limitations':['Public venue quote, not a Robinhood executable quote',
-                           'No account eligibility, personal fee tier or slippage verification']}
+        try:
+            candidates=[(key,row) for key,row in meta['result'].items() if row.get('altname')==pair]
+            if len(candidates)!=1:raise ValueError('reference_identity_ambiguous')
+            key,row=candidates[0]
+            if key!=IDENTITIES[pair][4]:raise ValueError('reference_internal_identity_invalid')
+            if (row['base']!=PAIRS[pair][0] or row['quote']!='ZEUR'
+                    or row['wsname']!=PAIRS[pair][1] or row['status']!='online'):
+                raise ValueError('reference_identity_or_status_invalid')
+            ticker=tickers['result'][key]
+            if any(not isinstance(ticker.get(side),list) or len(ticker[side])!=3 for side in ('a','b')):
+                raise ValueError('invalid_reference_ticker_shape')
+            if any(not isinstance(v,str) for v in (ticker['b'][0],ticker['a'][0],ticker['b'][2],ticker['a'][2])):
+                raise ValueError('decimal_strings_required')
+            bid,ask=Decimal(ticker['b'][0]),Decimal(ticker['a'][0])
+            bid_size,ask_size=Decimal(ticker['b'][2]),Decimal(ticker['a'][2])
+            if not all(v.is_finite() and v>0 for v in (bid,ask,bid_size,ask_size)) or bid>ask:
+                raise ValueError('invalid_reference_prices')
+            quotes[pair]={'schema_version':'reference-quote-v1','symbol':pair,'venue':'kraken',
+                'quote_currency':'EUR','bid':str(bid),'ask':str(ask),
+                'bid_size':str(bid_size),'ask_size':str(ask_size),
+                'spread_bps':str((ask-bid)/((ask+bid)/2)*10000),
+                'retrieved_at':received.isoformat(),'exchange_timestamp':None,
+                'expires_at':(received+timedelta(seconds=30)).isoformat(),
+                'timestamp_basis':'LOCAL_RECEIPT_ONLY','broker_executable':False,
+                'source_payload_sha256':capture['payload_sha256'],
+                'limitations':['Public venue quote, not a Robinhood executable quote',
+                               'No account eligibility, personal fee tier or slippage verification']}
+        except (ValueError,KeyError,TypeError,ArithmeticError,AttributeError,IndexError):
+            # Fail this asset closed; another valid identity keeps its own quote.
+            continue
+    if not quotes:raise ValueError('no_valid_reference_quotes')
     return quotes
 
 

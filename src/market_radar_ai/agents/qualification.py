@@ -1,4 +1,5 @@
 """Free deterministic qualification diagnostics; never an AI or order dispatcher."""
+from ..market_data.limits import STOCK_RESEARCH_LIMIT, CRYPTO_RESEARCH_LIMIT
 from collections import Counter
 from datetime import datetime, timezone
 from .candidate_packages import build_packages, digest, verify_package
@@ -31,7 +32,7 @@ def paid_review_gate(record, *, now):
 def qualify(document, feed, *, now):
     from .early_screening import screen
     early = screen(document, now=now)
-    batch = build_packages(document, feed, now=now, stock_limit=20, crypto_limit=4)
+    batch = build_packages(document, feed, now=now, stock_limit=STOCK_RESEARCH_LIMIT, crypto_limit=CRYPTO_RESEARCH_LIMIT)
     fx = None
     checked = document.get('stock_reference_checks')
     if isinstance(checked, dict) and isinstance(checked.get('payload'), dict):

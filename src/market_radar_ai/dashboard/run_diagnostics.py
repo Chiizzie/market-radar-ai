@@ -6,6 +6,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 import json
 import re
+from ..market_data.limits import STOCK_SCREEN_LIMIT, STOCK_RESEARCH_LIMIT
 
 CONDITIONS = {'below_rolling_vwap', 'nonpositive_momentum', 'relative_volume_below_1_5',
               'conditional_entry_already_passed', 'entry_trigger_already_reached_rebuild',
@@ -66,8 +67,8 @@ def discovery_summary(discovery, *, now):
             if (all(v is not None for v in counts.values())
                     and counts['catalogue_candidates'] <= 20_000
                     and counts['fresh_activity_leads'] <= 200
-                    and counts['technical_checked'] <= 100
-                    and counts['research_selected'] <= 20
+                    and counts['technical_checked'] <= STOCK_SCREEN_LIMIT
+                    and counts['research_selected'] <= STOCK_RESEARCH_LIMIT
                     and counts['technical_checked'] == counts['technical_usable'] + counts['technical_unavailable']
                     and counts['candidate_pool'] == counts['technical_checked'] + counts['technical_deferred']
                     and counts['candidate_pool'] == counts['research_selected'] + counts['research_deferred']):

@@ -1,4 +1,5 @@
 """Compact factual context for the protected dashboard; no model conclusions."""
+from ..market_data.limits import STOCK_RESEARCH_LIMIT
 from ..agents.context_packages import build_context_packages
 
 
@@ -22,7 +23,7 @@ def build_briefing(document, evidence, *, now):
             'missing_evidence':p['missing_evidence'],
             'review_status':'NOT_RUN','trade_authorized':False})
     attempted=sum(c['market']=='stocks' for c in document['captures'])
-    if len(rows)>20 or len(rows)>attempted:raise ValueError('briefing_coverage_invalid')
+    if len(rows)>STOCK_RESEARCH_LIMIT or len(rows)>attempted:raise ValueError('briefing_coverage_invalid')
     return {'schema_version':'research-briefing-v1','assembled_at':batch['assembled_at'],
         'scope':'REQUESTED_STOCKS_ONLY','stocks_attempted':attempted,
         'stocks_with_context':len(rows),'stocks_without_context':attempted-len(rows),

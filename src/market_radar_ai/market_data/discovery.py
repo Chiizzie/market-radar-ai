@@ -6,6 +6,7 @@ import re
 import requests
 from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
+from .limits import STOCK_SCREEN_LIMIT, STOCK_RESEARCH_LIMIT
 
 BASE = 'https://data.alpaca.markets/v1beta1/screener/stocks/'
 SYMBOL = re.compile(r'[A-Z][A-Z0-9.\-]{0,14}')
@@ -60,6 +61,10 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
         raise ValueError('aware_clock_required')
     transport = session or requests.Session()
     groups, sources, failures = [], [], []
+    broad = env.get('ENABLE_BROAD_DISCOVERY') == 'true'
+    screen_limit = STOCK_SCREEN_LIMIT if broad else 100
+    research_limit = STOCK_RESEARCH_LIMIT-1 if broad else 19
+    snapshots = None
     key, secret = env.get('ALPACA_API_KEY'), env.get('ALPACA_API_SECRET')
     for endpoint, params, fields in [('most-actives', {'top':100,'by':'volume'}, ['most_actives']),
                                     ('movers', {'top':50}, ['gainers','losers'])]:
@@ -108,15 +113,25 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
                    'checked':0,'rejected':[],'not_checked':[],'account_permission_verified':False}
         # Screen a broad bounded pool before selecting the enrichment batch.
         # No early stop at the first eight usable symbols; rotation reaches the tail.
-        ordered = catalogue_selection(ranked, pool, now, limit=100)
+        if broad and pool:
+            from .providers.alpaca_batch import discover_snapshots
+            snapshots = discover_snapshots(pool, env=env, now=now)
+            if snapshots['failed_batches']:
+                failures.append('catalogue_snapshot_batches_unavailable')
+            ranked = list(dict.fromkeys(s for row in zip_longest(ranked,snapshots['ranked_symbols']) for s in row if s))
+        ordered = catalogue_selection(ranked, pool, now, limit=screen_limit)
         candidates=[]
         local=now.astimezone(ZoneInfo('America/New_York'))
         regular=local.weekday()<5 and (9,30)<=(local.hour,local.minute)<(16,0)
         priority={}
         if regular:
+            batch_results = None
+            if broad and ordered:
+                from .providers.alpaca_batch import fetch_histories
+                batch_results = fetch_histories(ordered, env=env)
             def check(symbol):
                 try:
-                    result=AlpacaIexProvider(env=env).fetch_history(symbol)
+                    result=batch_results[symbol] if batch_results is not None else AlpacaIexProvider(env=env).fetch_history(symbol)
                     checked=capture_result(result,now=datetime.now(timezone.utc))['payload']
                     return symbol,checked['quality_passed_at_capture'],technical_priority(result)
                 except Exception:
@@ -136,24 +151,24 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
             candidates=[]
         candidates.sort(key=lambda s:priority.get(s,(False,0)),reverse=True)
         if regular:
-            _,selected=select([candidates],now,limit=19)
+            _,selected=select([candidates],now,limit=research_limit)
         else:
-            selected=catalogue_selection(ranked,pool,now,limit=19)
+            selected=catalogue_selection(ranked,pool,now,limit=research_limit)
         checked_symbols=set(ordered) if regular else set()
         screening['not_checked']=[s for s in pool if s not in checked_symbols]
         screening['usable_count']=len(candidates)
         screening['deferred_after_screen']=[s for s in candidates if s not in selected]
-        screening['technical_screen_limit']=100
-        screening['enrichment_limit']=19
+        screening['technical_screen_limit']=screen_limit
+        screening['enrichment_limit']=research_limit
         screening['regular_session_quality_screen']=regular
 
     fallback_used = not selected
-    if fallback_used: selected=list(dict.fromkeys(fallback))[:19]
+    if fallback_used: selected=list(dict.fromkeys(fallback))[:research_limit]
     selected_members = set(selected) & set(pool)
     checked_count = screening.get('checked', 0)
     usable_count = screening.get('usable_count', 0)
     coverage = {'catalogue_candidates':len(universe['symbols']) if universe else 0,
-                'fresh_activity_leads':len(ranked), 'candidate_pool':len(pool),
+                'fresh_activity_leads':len(set(s for group in groups for s in group)), 'candidate_pool':len(pool),
                 'technical_checked':checked_count, 'technical_usable':usable_count,
                 'technical_unavailable':len(screening.get('rejected', [])),
                 'technical_deferred':len(pool)-checked_count,
@@ -164,7 +179,8 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
             'scope':'catalogue_and_fresh_activity_not_full_exchange_scan' if universe else 'provider_activity_and_movers_not_full_exchange_scan',
             'discovered_count':len(ranked),'selected_symbols':selected,
             'deferred_symbols':[s for s in pool if s not in selected],
-            'selection_policy':'fresh_leaders_and_catalogue_rotation_every_5_minutes_screen_100_enrich_19',
+            'selection_policy':f'fresh_leaders_and_catalogue_rotation_every_5_minutes_screen_{screen_limit}_enrich_{research_limit}',
+            'snapshot_coverage':{k:v for k,v in snapshots.items() if k!='ranked_symbols'} if snapshots else None,
             'universe':universe, 'coverage':coverage,
             'screening':screening,'fallback_used':fallback_used,
             'broker_eligibility':'unknown', 'trade_authorized':False}

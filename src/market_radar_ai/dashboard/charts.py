@@ -1,4 +1,5 @@
 """Bounded chart-only candles from verified captures; no invented trade levels."""
+from ..market_data.limits import STOCK_RESEARCH_LIMIT, CRYPTO_RESEARCH_LIMIT
 from datetime import datetime
 from ..market_data.admission import FxQuote
 from ..market_data.reference_quotes import digest
@@ -27,5 +28,5 @@ def build_charts(document, markets, *, now):
                        'capture_sha256':capture['payload_sha256'],
                        'fx':fx if currency=='USD' else None,
                        'candles':[{k:c[k] for k in ('timestamp','open','high','low','close','volume')} for c in candles]})
-    if len(output)>40:raise ValueError('chart_series_limit')
+    if len(output)>STOCK_RESEARCH_LIMIT+CRYPTO_RESEARCH_LIMIT:raise ValueError('chart_series_limit')
     return {'schema_version':'capture-charts-v1','series':output}

@@ -45,8 +45,11 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
             return subprocess.run([sys.executable,'-m','market_radar_ai.'+module,*map(str,args)],
                                   env=process_env,timeout=240,check=False).returncode
         output=root/'fresh-collector'
+        from ..market_data.crypto_identities import ASSETS
         run_cycle(env=clean,output=output,cache_path=root/'fresh-cache.json',clock=clock,run=stage,
-                  delivery=lambda *a,**k:{'state':'internal_paper_revalidation_only'},stock_symbols=('MU',) if symbol in ('XBTEUR','ETHEUR','SOLEUR','XRPEUR') else (symbol,))
+                  delivery=lambda *a,**k:{'state':'internal_paper_revalidation_only'},
+                  stock_symbols=('MU',) if symbol in ASSETS else (symbol,),
+                  crypto_symbols=(symbol,) if symbol in ASSETS else None)
         return json.loads((output/'enriched-capture.json').read_text()),json.loads((output/'news.json').read_text())
     def delivery(archive):
         from ..dashboard.paper_final_delivery import deliver

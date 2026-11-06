@@ -1,4 +1,5 @@
 """Universe-wide preparation from prior-session/news evidence, without a bar gate."""
+from ..market_data.limits import STOCK_RESEARCH_LIMIT
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from .context_packages import build_context_packages
@@ -28,7 +29,7 @@ def build_briefing(document, feed, *, now):
     if slot is None: return {'packages':[]}
     batch=build_context_packages(document,feed,now=now)
     requested=sorted({r['requested_symbol'] for r in document['captures'] if r['market']=='stocks'})
-    if len(requested)>20: raise ValueError('briefing_universe_limit')
+    if len(requested)>STOCK_RESEARCH_LIMIT: raise ValueError('briefing_universe_limit')
     from ..market_data.stock_checks import briefing_references
     references=briefing_references(document,now=now)
     covered=[]; sources={}; by_symbol={}; news_ids=[]; calendar_ids=[]; macro_ids=[]; expiries=[]

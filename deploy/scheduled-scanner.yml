@@ -24,6 +24,8 @@ jobs:
     env:
       SCANNER_COLLECTION_MODE: scheduled
       ENABLE_STOCK_DISCOVERY: 'true'
+      ENABLE_BROAD_DISCOVERY: 'true'
+      ENABLE_CRYPTO_DISCOVERY: 'true'
       SCREEN_DISCOVERY_DATA: 'true'
       ENABLE_STOCK_CHECKS: 'true'
       SCANNER_VERIFY_OUTSIDE_WINDOW: ${{ github.event_name == 'workflow_dispatch' && inputs.verify_outside_hours && 'true' || 'false' }}

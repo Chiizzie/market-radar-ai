@@ -18,6 +18,9 @@ class KrakenProvider:
             result = payload.get("result", {})
             pair_key = next((key for key in result if key != "last"), None)
             if pair_key is None: raise RuntimeError("Kraken response contained no OHLC pair data")
+            from ..crypto_identities import IDENTITIES
+            if len([k for k in result if k!='last'])!=1 or (pair.upper() in IDENTITIES and pair_key!=IDENTITIES[pair.upper()][4]):
+                raise ValueError('Kraken OHLC pair identity mismatch')
             candles = []
             # Kraken documents the final row as the current, not-yet-committed interval.
             # Exclude it so downstream analysis only sees completed candles.

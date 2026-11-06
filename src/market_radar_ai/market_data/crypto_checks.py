@@ -6,8 +6,7 @@ from .providers.robinhood import RobinhoodEuropeCatalogue
 from .reference_quotes import digest, validate_capture
 
 SCOPE = 'public_europe_support_list_not_account_verification'
-ASSETS = {'XBTEUR': ('BTC', 'Bitcoin'), 'ETHEUR': ('ETH', 'Ethereum'),
-          'SOLEUR': ('SOL', 'Solana'), 'XRPEUR': ('XRP', 'XRP')}
+from .crypto_identities import ASSETS
 
 
 def catalogue(record, *, now):

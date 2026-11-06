@@ -166,7 +166,7 @@ def test_requested_company_news_queries_cover_all_eight_without_inventing_links(
     assert len(seen)==8 and 'AMD' in seen
     with pytest.raises(ValueError):collect(company_symbols=['../orders'])
     from market_radar_ai.evidence.combine import combine_feeds
-    with pytest.raises(ValueError):combine_feeds([{'status':'error','items':[]}]*25,now=NOW)
+    with pytest.raises(ValueError):combine_feeds([{'status':'error','items':[]}]*45,now=NOW)
 
 
 def test_context_paid_adapter_keeps_audit_and_does_not_use_trade_archive(tmp_path,monkeypatch):

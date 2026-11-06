@@ -1,4 +1,5 @@
 """Cheap capture discovery, deliberately separate from broker/trade admission."""
+from .limits import STOCK_RESEARCH_LIMIT, CRYPTO_RESEARCH_LIMIT
 from dataclasses import asdict
 from .models import Candle, Instrument
 from .screener import rank_candidates
@@ -7,8 +8,8 @@ from ..dashboard.export import build_snapshot
 
 
 def shortlist(document, *, now, stock_limit=3, crypto_limit=2):
-    if any(type(n) is not int or not 1 <= n <= 20 for n in (stock_limit, crypto_limit)):
-        raise ValueError('shortlist_limits_must_be_1_to_20')
+    if any(type(n) is not int or not 1 <= n <= bound for n,bound in ((stock_limit,STOCK_RESEARCH_LIMIT),(crypto_limit,CRYPTO_RESEARCH_LIMIT))):
+        raise ValueError('shortlist_limits_exceeded')
     snapshot = build_snapshot(document, now=now)  # verifies hashes and freshness
     output = {}
     for market, limit in (('stocks', stock_limit), ('crypto', crypto_limit)):
