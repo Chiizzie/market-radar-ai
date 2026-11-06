@@ -1120,6 +1120,12 @@
       "reserved": 1,
       "usage": null
     },
+    "paper-final-v1:0af7ba1c160f85770813ef6e80113816e82accc9b60fa70b03bcd3c50d7dec9f:conclusion": {
+      "actual": null,
+      "day": "2026-11-06",
+      "reserved": 14375,
+      "usage": null
+    },
     "paper-final-v1:0af7ba1c160f85770813ef6e80113816e82accc9b60fa70b03bcd3c50d7dec9f:debate": {
       "actual": 11356,
       "day": "2026-11-06",
