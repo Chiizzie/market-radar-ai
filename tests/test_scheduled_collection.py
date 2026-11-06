@@ -267,7 +267,12 @@ def test_discovery_counts_follow_actual_collection_cap_without_counting_fallback
     def stages(module, args):
         if module == 'market_data.capture':
             assert args[args.index('--stocks')+1:args.index('--crypto')] == active
-        return fake_stages([])(module, args)
+        code=fake_stages([])(module, args)
+        path=args[args.index('--output')+1]
+        body=json.loads(path.read_text())
+        body['captures']=[{'market':'stocks','requested_symbol':s,'payload':{'quality_passed_at_capture':False}} for s in active]
+        write_json(path,body)
+        return code
     report = run_cycle(env={**ENV, 'ENABLE_STOCK_DISCOVERY': 'true', 'GH_PAPER_TOKEN': 'fixture'},
                        output=tmp_path/'out', cache_path=tmp_path/'cache.json', clock=lambda: NOW,
                        run=stages, delivery=lambda *a, **kw: {'state': 'fixture'})

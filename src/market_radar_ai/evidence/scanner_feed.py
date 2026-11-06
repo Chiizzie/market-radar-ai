@@ -1,4 +1,5 @@
 """Bounded stock/macro news leads for the manual scanner; never clears trade gates."""
+from ..market_data.limits import STOCK_RESEARCH_LIMIT
 from datetime import datetime, timezone
 from .company_news import fetch_company_news
 from .public_feed import fetch_feed
@@ -12,17 +13,19 @@ def collect(*, company_fetch=fetch_company_news, public_fetch=fetch_feed,
             crypto_fetch=None, company_symbols=COMPANY_SYMBOLS,
             clock=lambda: datetime.now(timezone.utc)):
     import re
-    if not 1 <= len(company_symbols) <= 20 or any(not isinstance(s,str) or not re.fullmatch(r'[A-Z][A-Z0-9.\-]{0,14}',s) for s in company_symbols):
+    if not 1 <= len(company_symbols) <= STOCK_RESEARCH_LIMIT or any(not isinstance(s,str) or not re.fullmatch(r'[A-Z][A-Z0-9.\-]{0,14}',s) for s in company_symbols):
         raise ValueError('invalid_company_symbols')
     feeds = []
-    for kind, names in (('company', tuple(dict.fromkeys(company_symbols))), ('publisher', PUBLIC_SOURCES)):
-        for name in names:
-            try:
-                feed = company_fetch(name) if kind == 'company' else public_fetch(source=name)
-            except Exception:
-                feed = {'status': 'error', 'items': [], 'scope': 'UNAVAILABLE',
-                        'retrieved_at': clock().isoformat()}
-            feeds.append(feed)
+    from concurrent.futures import ThreadPoolExecutor
+    jobs=[('company',s) for s in dict.fromkeys(company_symbols)]+[('publisher',s) for s in PUBLIC_SOURCES]
+    def fetch_one(job):
+        kind,name=job
+        try:
+            return company_fetch(name) if kind=='company' else public_fetch(source=name)
+        except Exception:
+            return {'status':'error','items':[],'scope':'UNAVAILABLE','retrieved_at':clock().isoformat()}
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        feeds.extend(executor.map(fetch_one,jobs))
     if crypto_fetch is not None:
         try:
             feeds.append(crypto_fetch())

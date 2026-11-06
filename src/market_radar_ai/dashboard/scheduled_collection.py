@@ -12,6 +12,8 @@ from .collection_schedule import scheduled_scope, collection_window
 from .evidence import export_evidence
 from .snapshot_delivery import deliver
 from ..evidence.earnings_calendar import CalendarCapture
+from ..market_data.limits import STOCK_RESEARCH_LIMIT, CRYPTO_RESEARCH_LIMIT
+from ..market_data.crypto_identities import ASSETS
 
 STOCKS = ('NVDA', 'MSFT', 'AAPL', 'AMD', 'META', 'AMZN', 'GOOGL', 'TSLA', 'MU')
 CRYPTO = ('XBTEUR', 'ETHEUR', 'SOLEUR', 'XRPEUR')
@@ -73,7 +75,7 @@ def run_stage(module, args):
 
 
 def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.utc),
-              run=run_stage, delivery=deliver, stock_symbols=None):
+              run=run_stage, delivery=deliver, stock_symbols=None, crypto_symbols=None):
     started = clock()
     if not scheduled_scope(env, started):
         raise ValueError('scheduled_collection_scope_or_window_invalid')
@@ -81,12 +83,22 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         raise ValueError('paid_credentials_forbidden_in_scheduled_collection')
     output.mkdir(parents=True, exist_ok=True)
     discovery = None
+    crypto_discovery = None
+    crypto = CRYPTO
+    if crypto_symbols is not None:
+        if (not 1<=len(crypto_symbols)<=CRYPTO_RESEARCH_LIMIT or len(set(crypto_symbols))!=len(crypto_symbols)
+                or any(p not in ASSETS for p in crypto_symbols)):
+            raise ValueError('invalid_targeted_crypto_pairs')
+        crypto=tuple(crypto_symbols)
+    active_crypto = []
+    stock_limit = STOCK_RESEARCH_LIMIT if env.get('ENABLE_BROAD_DISCOVERY')=='true' else 20
     stocks = STOCKS
     if stock_symbols is not None:
         from ..market_data.discovery import SYMBOL
-        if not 1 <= len(stock_symbols) <= 20 or len(set(stock_symbols)) != len(stock_symbols) or any(not isinstance(s,str) or not SYMBOL.fullmatch(s) for s in stock_symbols):
+        if not 1 <= len(stock_symbols) <= STOCK_RESEARCH_LIMIT or len(set(stock_symbols)) != len(stock_symbols) or any(not isinstance(s,str) or not SYMBOL.fullmatch(s) for s in stock_symbols):
             raise ValueError('invalid_targeted_stock_symbols')
         stocks = tuple(stock_symbols)
+        stock_limit = max(stock_limit,len(stocks))
     if stock_symbols is None and env.get('ENABLE_STOCK_DISCOVERY') == 'true':
         from ..market_data.discovery import discover
         discovery = discover(env=env, now=started, fallback=STOCKS,
@@ -98,11 +110,20 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
     if env.get('GH_PAPER_TOKEN'):
         from ..agents.github_paper_tracking import update
         prior = update(env['GH_PAPER_TOKEN'], now=started)
-        active = [r['symbol'] for r in prior['trades'] if r['symbol'] not in CRYPTO and r['state'] in ('watching', 'open_simulation')]
+        active_rows = [r['symbol'] for r in prior['trades'] if r['state'] in ('watching', 'open_simulation')]
+        active = [s for s in active_rows if s not in ASSETS]
+        active_crypto = [s for s in active_rows if s in ASSETS]
         # Keep watched symbols in the quote batch even when discovery rotates.
-        if len(set(active)) > 20:
+        if len(set(active)) > stock_limit or len(set(active_crypto)) > CRYPTO_RESEARCH_LIMIT:
             raise RuntimeError('paper_tracking_capacity_exceeded')
-        stocks = tuple(dict.fromkeys([*active, *stocks]))[:20]
+        stocks = tuple(dict.fromkeys([*active, *stocks]))[:stock_limit]
+    if env.get('ENABLE_CRYPTO_DISCOVERY') == 'true' and stock_symbols is None and crypto_symbols is None:
+        from ..market_data.crypto_discovery import discover as discover_crypto
+        crypto_discovery = discover_crypto(now=clock(),active=active_crypto)
+        crypto = tuple(crypto_discovery['selected_pairs']) or tuple(dict.fromkeys([*active_crypto,*CRYPTO]))
+        write_json(output/'crypto-discovery.json',crypto_discovery)
+    else:
+        crypto = tuple(dict.fromkeys([*active_crypto,*crypto]))
     if discovery is not None:
         # The journal can displace rotating candidates. Report what will really
         # be researched, retaining the original discovery shortlist separately.
@@ -136,7 +157,7 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
               'alpaca', '--symbols', *stocks], news)
     capture = output/'capture.json'
     stage('market', 'market_data.capture', ['--output', capture, '--stock-provider',
-          'alpaca_iex', '--per-market-limit', '20', '--stocks', *stocks, '--crypto', *CRYPTO], capture)
+          'alpaca_iex', '--per-market-limit', str(max(stock_limit,len(crypto))), '--stocks', *stocks, '--crypto', *crypto], capture)
     context = output/'context-capture.json'
     stage('context', 'market_data.stock_context', ['--capture', capture, '--output', context], context)
     quotes = output/'quote-capture.json'
@@ -153,7 +174,12 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
                    'news': feed, 'calendars': doc['earnings_calendars']}
         write_json(cache_path, {'payload': payload, 'sha256': digest(payload)})
     catalogued = output/'crypto-catalogue-capture.json'
-    stage('crypto_catalogue', 'market_data.crypto_checks', ['--capture', enriched, '--output', catalogued], catalogued)
+    if crypto_discovery and crypto_discovery.get('catalogue'):
+        doc=json.loads(enriched.read_text())
+        doc['crypto_catalogue']=crypto_discovery['catalogue']
+        write_json(catalogued,doc)
+    else:
+        stage('crypto_catalogue', 'market_data.crypto_checks', ['--capture', enriched, '--output', catalogued], catalogued)
     write_json(enriched, json.loads(catalogued.read_text()))
     if env.get('ENABLE_STOCK_CHECKS') == 'true':
         checked = output/'checked-capture.json'
@@ -175,6 +201,9 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
     from .api_budget import read_summary
     doc = json.loads(enriched.read_text())
     doc['api_budget'] = read_summary(env.get('GH_PAPER_TOKEN'), clock=clock)
+    if discovery is not None or crypto_discovery is not None:
+        from .discovery_coverage import build_coverage
+        doc['discovery_coverage'] = build_coverage(discovery,crypto_discovery,doc,now=clock())
     write_json(enriched, doc)
     for label, module, name in (
         ('context_packages', 'agents.context_packages', 'context-packages.json'),
@@ -204,7 +233,7 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
               'evidence_cache': 'reused_original_timestamps' if cache else 'collected',
               'evidence_collection_started_at': cache['collection_started_at'] if cache else started.isoformat(),
               'failures': failed, 'target_interval_seconds': 300, 'model_calls': 0,
-              'trade_authorized': False, 'stock_discovery': discovery}
+              'trade_authorized': False, 'stock_discovery': discovery,'crypto_discovery':crypto_discovery}
     write_json(output/'collection-report.json', report)
     return report
 

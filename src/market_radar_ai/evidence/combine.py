@@ -1,10 +1,11 @@
 """Combine validated feeds without hiding source failures or refreshing timestamps."""
 from ..dashboard.evidence import export_evidence
+from ..market_data.limits import STOCK_RESEARCH_LIMIT, EVIDENCE_ITEM_LIMIT
 
 
 def combine_feeds(feeds, *, now):
-    if not 1 <= len(feeds) <= 24:
-        raise ValueError('Supply one to twenty-four feeds')
+    if not 1 <= len(feeds) <= STOCK_RESEARCH_LIMIT+4:
+        raise ValueError('combined_feed_capacity_exceeded')
     sources, items, seen = [], [], set()
     rejected = []
     for index, feed in enumerate(feeds):
@@ -25,7 +26,7 @@ def combine_feeds(feeds, *, now):
             items.append(item)
     from datetime import datetime
     items.sort(key=lambda i:datetime.fromisoformat(i['published_at']),reverse=True)
-    deferred=max(0,len(items)-50)
+    deferred=max(0,len(items)-EVIDENCE_ITEM_LIMIT)
     good=[s for s in sources if s['status'] in ('ok','partial')]
     # Oldest contributing retrieval prevents aggregation from refreshing old data.
     from datetime import datetime
@@ -33,7 +34,7 @@ def combine_feeds(feeds, *, now):
     status=('error' if not good else 'partial' if rejected or deferred or any(s['status']!='ok' for s in sources) else 'ok')
     return {'schema_version':'1.0','provider':'combined_evidence','scope':'MIXED_RESEARCH_LEADS',
         'status':status,'retrieved_at':retrieved.isoformat(),'sources':sources,
-        'items':items[:50],'rejected':rejected,'deferred':deferred,
+        'items':items[:EVIDENCE_ITEM_LIMIT],'rejected':rejected,'deferred':deferred,
         'coverage_complete':False,'trade_authorized':False}
 
 

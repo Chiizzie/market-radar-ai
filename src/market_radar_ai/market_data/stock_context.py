@@ -1,4 +1,5 @@
 """Historical and extended-hours stock context, separate from fresh trade evidence."""
+from .limits import STOCK_RESEARCH_LIMIT
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
@@ -93,12 +94,47 @@ def fetch_context(symbol, *, session=None, env=None, clock=lambda: datetime.now(
     return {'payload':output, 'payload_sha256':digest(output)}
 
 
-def enrich(document, *, fetch=fetch_context):
+def fetch_context_batch(symbols, *, env=None, session=None, clock=lambda:datetime.now(timezone.utc)):
+    from .providers.alpaca_batch import raw_bars, symbols_checked
+    symbols=symbols_checked(symbols,STOCK_RESEARCH_LIMIT)
+    now=clock()
+    if now.tzinfo is None:raise ValueError('aware_clock_required')
+    local=now.astimezone(NY)
+    env=os.environ if env is None else env
+    transport=session or requests.Session()
+    windows={'daily':('1Day',(local-timedelta(days=21)).replace(hour=0,minute=0,second=0,microsecond=0)),
+             'intraday':('5Min',local.replace(hour=4,minute=0,second=0,microsecond=0))}
+    output={s:{'schema_version':'stock-context-capture-v1','symbol':s,'provider':'alpaca_iex',
+        'native_currency':'USD','retrieved_at':None,'status':'partial','trade_authorized':False} for s in symbols}
+    for kind,(frame,start) in windows.items():
+        data=None
+        if now>start:
+            try:data=raw_bars(symbols,start=start,end=now,frame=frame,env=env,session=transport)
+            except Exception:pass
+        for symbol in symbols:
+            section={'status':'unavailable','bars':[],'request_start':start.isoformat(),'request_end':now.isoformat()}
+            output[symbol][kind]=section
+            if now<=start:section['status']='window_not_started';continue
+            try:
+                if data is None:raise ValueError('batch_unavailable')
+                raw={'symbol':symbol,'bars':data.get(symbol,[])}
+                bars=parse_series(raw,symbol=symbol,start=start,end=now,timeframe=frame)
+                section.update(status='received' if bars else 'empty',bars=bars,raw_payload_sha256=digest(raw))
+            except Exception:section['reason']='provider_or_payload_unavailable'
+    records=[]
+    for p in output.values():
+        p['retrieved_at']=clock().isoformat()
+        if all(p[k]['status'] in ('received','empty','window_not_started') for k in windows):p['status']='received'
+        records.append({'payload':p,'payload_sha256':digest(p)})
+    return records
+
+
+def enrich(document, *, fetch=fetch_context, batch_fetch=None):
     result = deepcopy(document)
     symbols = list(dict.fromkeys(c['requested_symbol'] for c in document['captures'] if c['market']=='stocks'))
-    if len(symbols)>20:
+    if len(symbols)>STOCK_RESEARCH_LIMIT:
         raise ValueError('context_universe_too_large')
-    result['stock_context'] = [fetch(symbol) for symbol in symbols]
+    result['stock_context'] = batch_fetch(symbols) if batch_fetch and symbols else [fetch(symbol) for symbol in symbols]
     return result
 
 
@@ -118,7 +154,8 @@ def main():
     args = parser.parse_args()
     if args.capture.stat().st_size>4_000_000:
         raise ValueError('input_too_large')
-    result = enrich(json.loads(args.capture.read_text()))
+    result = enrich(json.loads(args.capture.read_text()),
+                    batch_fetch=fetch_context_batch if os.environ.get('ENABLE_BROAD_DISCOVERY')=='true' else None)
     if os.environ.get('ENABLE_DELAYED_PREMARKET') == 'true':
         from .delayed_context import enrich_delayed
         result = enrich_delayed(result)

@@ -1,0 +1,6 @@
+"""Shared collection bounds. These are research capacity, never AI quotas."""
+STOCK_RESEARCH_LIMIT = 40
+CRYPTO_RESEARCH_LIMIT = 30
+STOCK_SCREEN_LIMIT = 300
+REFERENCE_PAIR_LIMIT = 100
+EVIDENCE_ITEM_LIMIT = 200

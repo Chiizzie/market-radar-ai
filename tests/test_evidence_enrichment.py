@@ -29,7 +29,7 @@ def test_crypto_categories_are_exact_namespace_links_not_headline_guesses():
     f=news()
     assert f['items'][0]['symbols']==['COINDESK:XRP']
     assert not news('')['items'][0]['symbols']
-    assert not news('<category>Bitcoin Cash</category><category>Ripple</category>')['items'][0]['symbols']
+    assert news('<category>Bitcoin Cash</category><category>Ripple</category>')['items'][0]['symbols']==['COINDESK:BCH']
     assert news('<category>Bitcoin</category>')['items'][0]['symbols']==['COINDESK:BTC']
     assert news('<category>Bitcoin News</category><category>Ethereum News</category>')['items'][0]['symbols']==['COINDESK:BTC','COINDESK:ETH']
     assert f['status']=='partial' and not f['coverage_complete']

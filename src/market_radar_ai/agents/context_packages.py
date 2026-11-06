@@ -1,4 +1,5 @@
 """All-session research packages; no minimum intraday bar count or trade plan."""
+from ..market_data.limits import STOCK_RESEARCH_LIMIT
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from urllib.parse import urlsplit
@@ -12,7 +13,7 @@ def build_context_packages(document, feed, *, now):
     if now.tzinfo is None:
         raise ValueError('aware_clock_required')
     records = document.get('stock_context', [])
-    if not isinstance(records, list) or len(records)>20:
+    if not isinstance(records, list) or len(records)>STOCK_RESEARCH_LIMIT:
         raise ValueError('context_capture_limit')
     try:
         news = export_evidence(feed,now=now)

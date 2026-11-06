@@ -9,7 +9,14 @@ URL = 'https://www.coindesk.com/arc/outboundfeeds/rss'
 TAGS = {'bitcoin':'BTC', 'btc':'BTC', 'ethereum':'ETH', 'eth':'ETH',
         'solana':'SOL', 'sol':'SOL', 'xrp':'XRP', 'bitcoin news':'BTC',
         'ethereum news':'ETH', 'solana news':'SOL', 'xrp news':'XRP'}
-PAIR_ASSETS = {'XBTEUR':'BTC', 'ETHEUR':'ETH', 'SOLEUR':'SOL', 'XRPEUR':'XRP'}
+from ..market_data.crypto_identities import ASSETS
+PAIR_ASSETS = {pair:asset[0] for pair,asset in ASSETS.items()}
+# Full exact publisher categories only for additional assets; short/common-word
+# tickers are deliberately not interpreted as asset identity.
+for asset, name in ASSETS.values():
+    if len(name)>3 and name.casefold() not in {'near', 'render', 'sky', 'optimism', 'sandbox', 'quant'}:
+        TAGS.setdefault(name.casefold(), asset)
+        TAGS.setdefault(name.casefold()+' news', asset)
 
 
 def matches(item, pair):
