@@ -52,3 +52,32 @@ def test_crypto_uses_native_eur_and_original_receipt_clock():
 def test_currency_identity_cannot_double_convert(monkeypatch):
     observer,_,_=stock_observer(monkeypatch);d=decision();d['plan']['native_currency']='EUR'
     with pytest.raises(ValueError,match='currency_mismatch'):observer.fetch([d])
+
+@pytest.mark.parametrize('available',[True,False])
+def test_provider_verification_command_validates_current_capture(monkeypatch,capsys,available):
+    import json
+    from market_radar_ai.agents import paper_observer
+    from market_radar_ai.market_data.reference_quotes import digest
+    def capture(pairs,*,clock):
+        assert pairs==['XBTEUR']
+        ref=reference();now=clock()
+        ref['request_started_at']=(now-timedelta(seconds=1)).isoformat()
+        ref['retrieved_at']=now.isoformat()
+        if not available:
+            ref['status']='error';return ref
+        ref['requested_pairs']=['XBTEUR']
+        meta=ref['payload']['asset_pairs']['result'].pop('XXRPZEUR')
+        meta.update(altname='XBTEUR',base='XXBT',wsname='XBT/EUR')
+        ref['payload']['asset_pairs']['result']['XXBTZEUR']=meta
+        tickers=ref['payload']['tickers']['result']
+        tickers['XXBTZEUR']=tickers.pop('XXRPZEUR')
+        ref['payload_sha256']=digest(ref['payload'])
+        return ref
+    monkeypatch.setattr(paper_observer,'capture_quotes',capture)
+    monkeypatch.setattr('sys.argv',['paper_observer','--verify-crypto'])
+    assert paper_observer.main()==(0 if available else 1)
+    result=json.loads(capsys.readouterr().out)
+    assert result['model_calls']==result['plans_created']==0
+    assert result['trade_authorized'] is False
+    assert result['state']==('current_crypto_reference_verified' if available else 'crypto_reference_unavailable')
+    if available:assert result['verified_pairs']==['XBTEUR']

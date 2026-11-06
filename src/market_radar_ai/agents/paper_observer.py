@@ -79,7 +79,7 @@ def main():
     now=lambda:datetime.now(timezone.utc)
     captured=capture_quotes(['XBTEUR'],clock=now)
     try:
-        quotes=validate_capture(captured,now=now)
+        quotes=validate_capture(captured,now=now())
         result={'state':'current_crypto_reference_verified','verified_pairs':list(quotes),
                 'observed_at':captured['retrieved_at'],'timestamp_basis':'LOCAL_RECEIPT_ONLY'}
     except (ValueError,KeyError,TypeError):
