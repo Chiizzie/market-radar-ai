@@ -40,12 +40,12 @@ def test_complete_team_can_produce_paper_watch_without_live_permission(monkeypat
     assert not result['trade_authorized'] and not result['live_orders_enabled']
 
 
-@pytest.mark.parametrize('fault',['reject','concern','missing_role','wrong_packet','changed_plan','expired','bad_cost'])
+@pytest.mark.parametrize('fault',['reject','evidence_gap','missing_role','wrong_packet','changed_plan','expired','bad_cost'])
 def test_final_verdict_cannot_override_checks(monkeypatch,fault):
     row,packet,audit,_=fixture(monkeypatch)
     now=NOW
     if fault=='reject':audit['reviews'][3]['verdict']='REJECT'
-    if fault=='concern':audit['reviews'][3]['concerns']=['Unresolved problem']
+    if fault=='evidence_gap':audit['reviews'][3]['verdict']='MORE_EVIDENCE_REQUIRED'
     if fault=='missing_role':audit['reviews'].pop()
     if fault=='wrong_packet':audit['reviews'][2]['packet_id']='wrong'
     if fault=='changed_plan':row['conditional_paper_plan']['entry_buffer_bps']='11'
@@ -144,3 +144,79 @@ def test_metered_invalid_assessments_fail_closed_and_remain_auditable(tmp_path,m
     assert len(calls)==1 and saved['result'] is None
     assert saved['calls'][0]['assessment']==answer
     assert saved['calls'][0]['state']=='failed_review'
+
+
+def test_unanimous_approval_with_caveats_can_watch_but_any_veto_still_blocks(monkeypatch):
+    _,packet,audit,seen=fixture(monkeypatch)
+    for report in audit['reviews']:
+        report['concerns']=['Reference-price simulation has uncertain fill quality.']
+    assert all('non-blocking caveats only' in p['instruction'] for p in seen)
+    result=finalize(packet,audit,{},None,now=NOW)
+    assert result['verdict']=='PAPER_WATCH_FOR_ENTRY'
+    assert not result['trade_authorized']
+    for index in range(len(STAGES)):
+        for veto in ('REJECT','MORE_EVIDENCE_REQUIRED'):
+            changed=deepcopy(audit);changed['reviews'][index]['verdict']=veto
+            result=finalize(packet,changed,{},None,now=NOW)
+            assert result['verdict']=='NO_ACTION'
+            assert 'team_did_not_clear_setup' in result['blockers']
+
+
+def evidence_fixture(monkeypatch):
+    row,_,_,_=fixture(monkeypatch)
+    row['review_sources'].update({
+        'market:old':{'symbol':'TEST','provider':'test','quote_currency':'EUR',
+                      'candles':[{'timestamp':NOW.isoformat(),'close':'100'}],
+                      'retrieved_at':NOW.isoformat(),'validated_at':NOW.isoformat(),
+                      'original_capture_sha256':'a'*64},
+        'calendar:old':{'symbol':'TEST','events':[],'status':'empty',
+                        'retrieved_at':NOW.isoformat(),'original_calendar_sha256':'b'*64}})
+    packet=build_packets({},None,now=NOW)['packets'][0]
+    def ask(stage,prompt,schema):
+        return dict(stage=stage,packet_id=prompt['packet_id'],verdict='APPROVE_PAPER',
+                    rationale='Synthetic evidence test',source_ids=['news:test'],concerns=[],
+                    reviewed_stages=[r['stage'] for r in prompt['peer_reviews']])
+    audit=review(packet,{},None,ask,clock=lambda:NOW)
+    return row,packet,audit
+
+
+def test_recollection_metadata_and_source_ids_do_not_invalidate_identical_content(monkeypatch):
+    from market_radar_ai.agents.paper_verdict import stable_evidence
+    row,packet,audit=evidence_fixture(monkeypatch)
+    row['review_sources']['news:test'].update(publication_age_seconds=10, published_at=NOW.isoformat(), intraday_recent=True)
+    packet['packet']['sources']=deepcopy(row['review_sources'])
+    packet['packet_id']=digest(packet['packet'])
+    audit['packet_id']=packet['packet_id']
+    for report in audit['reviews']:report['packet_id']=packet['packet_id']
+    old=deepcopy(row['review_sources'])
+    row['review_sources']['news:test']['publication_age_seconds']=11
+    for kind in ('market','calendar'):
+        source=row['review_sources'].pop(kind+':old')
+        source['retrieved_at']=(NOW+timedelta(seconds=1)).isoformat()
+        if kind=='market':
+            source['validated_at']=(NOW+timedelta(seconds=1)).isoformat()
+            source['original_capture_sha256']='c'*64
+        else:source['original_calendar_sha256']='d'*64
+        row['review_sources'][kind+':new']=source
+    assert stable_evidence(old)==stable_evidence(row['review_sources'])
+    result=finalize(packet,audit,{},None,now=NOW+timedelta(seconds=1))
+    assert result['verdict']=='PAPER_WATCH_FOR_ENTRY'
+    # Provenance remains available in the immutable reviewed packet.
+    assert packet['packet']['sources']==old
+
+
+@pytest.mark.parametrize('fault',['candle','news','calendar','provider','unknown_field','missing_source','publication_time','news_freshness'])
+def test_material_evidence_changes_still_invalidate_approval(monkeypatch,fault):
+    row,packet,audit=evidence_fixture(monkeypatch)
+    sources=row['review_sources']
+    if fault=='candle':sources['market:old']['candles'][0]['close']='99'
+    if fault=='news':sources['news:test']['title']='Changed catalyst'
+    if fault=='publication_time':sources['news:test']['published_at']='2026-11-05T12:00:00Z'
+    if fault=='news_freshness':sources['news:test']['intraday_recent']=False
+    if fault=='calendar':sources['calendar:old']['events']=[{'date':'2026-11-06'}]
+    if fault=='provider':sources['market:old']['provider']='different'
+    if fault=='unknown_field':sources['market:old']['new_material_field']=True
+    if fault=='missing_source':sources.pop('calendar:old')
+    result=finalize(packet,audit,{},None,now=NOW)
+    assert result['verdict']=='NO_ACTION'
+    assert 'evidence_changed_since_review' in result['blockers']
