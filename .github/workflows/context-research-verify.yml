@@ -1,0 +1,52 @@
+name: Verify market context research
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/context-research-verify.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 9cbc4b94be12b843aae1621ad6e5efe4a33dacf6
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e .
+      - name: Publish actual current session status without invented stock selection
+        run: python -m market_radar_ai.market_data.market_context --publish
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+      - name: Rehearse the last completed real session without writing forward evidence
+        run: |
+          python -m market_radar_ai.market_data.market_context --rehearse-last-session --symbols ASH,AAPL,MSFT --output artifacts/context-history-check --cache artifacts/context-history-check/cache.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('artifacts/context-history-check/report.json').read_text())
+          assert r['dataset_kind']=='historical_rehearsal' and r['expected_buckets']==78
+          assert sum(x['relative_volume'] is not None for x in r['benchmarks'])>0, 'No complete benchmark volume comparison observed'
+          assert r['model_calls']==0 and r['trade_authorized'] is False and r['strategy_input'] is False
+          print('Real historical provider measurements verified; no forward trades or AI calls created.')
+          PY
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: market-context-verification-${{ github.run_id }}
+          path: |
+            artifacts/market-context/report.json
+            artifacts/context-history-check/
+          retention-days: 30
+          if-no-files-found: warn
