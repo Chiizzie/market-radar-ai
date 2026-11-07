@@ -450,3 +450,70 @@ jobs:
           TRADING212_API_SECRET: ${{ secrets.TRADING212_API_SECRET }}
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
     # Deliberately no artifacts, caches, raw payload files or financial log summaries.
+
+  market-context:
+    needs: collect
+    if: ${{ needs.collect.result == 'success' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.CONTEXT_RESEARCH_ENABLED != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    concurrency:
+      group: market-radar-ai-context-research
+      cancel-in-progress: false
+    steps:
+      - name: Check context collection window
+        id: window
+        run: |
+          python - <<'PY'
+          import os
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          now=datetime.now(ZoneInfo('America/New_York'))
+          allowed=now.weekday()<5 and (9,35)<=(now.hour,now.minute)<=(16,15)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('run='+str(allowed).lower()+'\n')
+          PY
+      - uses: actions/checkout@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          ref: 9cbc4b94be12b843aae1621ad6e5efe4a33dacf6
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        if: steps.window.outputs.run == 'true'
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e .
+        if: steps.window.outputs.run == 'true'
+      - uses: actions/download-artifact@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          name: scheduled-capture-${{ github.run_id }}
+          path: artifacts/scheduled/
+      - uses: actions/cache/restore@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          path: .scanner-cache/market-context.json
+          key: market-context-v1-${{ github.run_id }}
+          restore-keys: market-context-v1-
+      - name: Record market and sector context without changing trade decisions
+        if: steps.window.outputs.run == 'true'
+        run: python -m market_radar_ai.market_data.market_context --capture artifacts/scheduled/enriched-capture.json --publish
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+      - uses: actions/cache/save@v4
+        if: always() && steps.window.outputs.run == 'true' && hashFiles('.scanner-cache/market-context.json') != ''
+        with:
+          path: .scanner-cache/market-context.json
+          key: market-context-v1-${{ github.run_id }}
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.window.outputs.run == 'true'
+        with:
+          name: market-context-${{ github.run_id }}
+          path: |
+            artifacts/market-context/report.json
+            .scanner-cache/market-context.json
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
