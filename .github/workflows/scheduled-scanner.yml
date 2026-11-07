@@ -314,6 +314,97 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
+  method-shadow:
+    needs: collect
+    if: ${{ always() && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.METHOD_SHADOW_ENABLED != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    # Independent of the paid review. Overlapping runs retain first enrolment.
+    steps:
+      - name: Enforce stock session window for the method experiment
+        id: window
+        run: |
+          python - <<'PYCODE'
+          import os
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          now=datetime.now(ZoneInfo('America/New_York'))
+          allowed=now.weekday()<5 and (9,30)<=(now.hour,now.minute)<=(16,15)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write('run='+str(allowed).lower()+'\n')
+          PYCODE
+      - uses: actions/checkout@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          ref: e9c0df738223e08f935228b59238c9fae56eb6cb
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        if: steps.window.outputs.run == 'true'
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install -e '.[market]'
+        if: steps.window.outputs.run == 'true'
+      - uses: actions/download-artifact@v4
+        if: steps.window.outputs.run == 'true'
+        continue-on-error: true
+        with:
+          name: scheduled-capture-${{ github.run_id }}
+          path: artifacts/scheduled/
+      - name: Screen and observe fixed AVWAP method without AI or notifications
+        if: steps.window.outputs.run == 'true'
+        run: |
+          if test -f artifacts/scheduled/enriched-capture.json && test -f artifacts/scheduled/news.json; then
+            python -m market_radar_ai.agents.method_shadow --capture artifacts/scheduled/enriched-capture.json --evidence artifacts/scheduled/news.json --output artifacts/method-shadow --duration 330
+          else
+            python -m market_radar_ai.agents.method_shadow --observe-only --output artifacts/method-shadow --duration 330
+          fi
+        env:
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+          TRADING212_API_KEY: ${{ secrets.TRADING212_API_KEY }}
+          TRADING212_API_SECRET: ${{ secrets.TRADING212_API_SECRET }}
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.window.outputs.run == 'true'
+        with:
+          name: method-shadow-${{ github.run_id }}
+          path: artifacts/method-shadow/*report.json
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Export end-of-session method evidence for recovery
+        id: backup
+        if: always() && steps.window.outputs.run == 'true'
+        run: |
+          python - <<'PYCODE'
+          import gzip,hashlib,json,os
+          from datetime import datetime
+          from pathlib import Path
+          from zoneinfo import ZoneInfo
+          now=datetime.now(ZoneInfo('America/New_York'))
+          source=Path('artifacts/method-shadow/method-events.jsonl')
+          ready=now.hour==16 and source.is_file()
+          if ready:
+              raw=source.read_bytes()
+              root=Path('artifacts/method-recovery');root.mkdir(parents=True,exist_ok=True)
+              (root/'events.jsonl.gz').write_bytes(gzip.compress(raw))
+              (root/'manifest.json').write_text(json.dumps({'day':now.date().isoformat(),
+                  'sha256_uncompressed':hashlib.sha256(raw).hexdigest(),'event_count':len(raw.splitlines()),
+                  'dataset_kind':'forward','trade_authorized':False}))
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write('ready='+str(ready).lower()+'\n')
+          PYCODE
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.backup.outputs.ready == 'true'
+        with:
+          name: method-recovery-${{ github.run_id }}
+          path: artifacts/method-recovery/
+          retention-days: 30
+          if-no-files-found: error
+
   account-sync:
     if: ${{ vars.ACCOUNT_SYNC_ENABLED != 'false' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours }}
     runs-on: ubuntu-latest
