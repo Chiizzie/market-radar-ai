@@ -334,8 +334,13 @@ def run_pipeline(document, feed, *, client, root, refresh, deliver, clock, enabl
     from .paper_comparison import cohort_snapshot
     save('comparison-cohort.json', cohort_snapshot(batch['packets'], now=now))
     if comparison is not None:
-        for qualified_packet in batch['packets']:
-            comparison.enrol(qualified_packet, now=now)
+        if hasattr(comparison, 'enrol_many'):
+            comparison.enrol_many(batch['packets'], now=now)
+        else:
+            for qualified_packet in batch['packets']:
+                comparison.enrol(qualified_packet, now=now)
+        if batch['packets'] and hasattr(comparison, 'start_observing'):
+            comparison.start_observing()
     if not batch['packets']:
         result={'state':'no_qualified_candidate_zero_cost','model_calls':0,'trade_authorized':False}
         save('status.json',result);return result
