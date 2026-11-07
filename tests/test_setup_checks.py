@@ -48,6 +48,8 @@ def test_catalogue_and_reference_quote_do_not_prove_broker_permission():
     p=payload();record={'payload':p,'payload_sha256':digest(p)}
     r=reference_checks({'stock_reference_checks':record},symbol='IBM',market='stocks',now=STOCK_NOW)
     assert r['catalogue_candidate']=='PASS' and r['reference_quote']=='PASS'
+    assert Decimal(r['indicative_bid_eur'])>0
+    assert Decimal(r['indicative_bid_eur'])<=Decimal(r['indicative_ask_eur'])
     assert r['broker_account_permission']==r['broker_quote']==r['verified_costs']=='UNKNOWN'
     assert r['exit_deadline']=='2026-11-04T20:55:00+00:00'
     record['payload_sha256']='bad'

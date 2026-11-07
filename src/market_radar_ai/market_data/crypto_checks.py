@@ -52,7 +52,7 @@ def assess(document, *, symbol, now):
         pass
     try:
         q = validate_capture(document['reference_quote_capture'], now=now)[symbol]
-        result.update(reference_quote='PASS', indicative_ask_eur=q['ask'],
+        result.update(reference_quote='PASS', indicative_ask_eur=q['ask'], indicative_bid_eur=q['bid'],
                       quote_observed_at=q['retrieved_at'], reference_expires_at=q['expires_at'], fx='PASS',
                       reference_venue='kraken', fx_basis='native_EUR_no_conversion')
         local = now.astimezone(ZoneInfo('Europe/Dublin'))
