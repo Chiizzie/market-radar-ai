@@ -1,6 +1,7 @@
 # Published trader methods and disclosures
 
-Requested 7 November 2026. Research design; no trader-call feed is enabled and
+Requested 7 November 2026. The first method experiment is implemented in
+[anchored-vwap-shadow.md](anchored-vwap-shadow.md); no trader-call feed is enabled and
 no subscription or extra paid model use has been introduced.
 
 ## Recommended order
@@ -54,6 +55,6 @@ method-plus-disclosure version under separate protocol IDs. Freeze rules first;
 record all qualifying setups prospectively, costs, missing data, drawdown and
 rejected outcomes. Keep the existing scanner as a useful independent reference.
 
-Next concrete implementation: deterministic anchor selection, higher-timeframe
-data availability checks, and a shadow-only anchored-VWAP experiment. Trader
+Current implementation: deterministic session-open anchor, higher-timeframe
+data availability checks, and a separate shadow-only anchored-VWAP experiment. Trader
 trade-copying is not part of this milestone and no track-record claim is made.
