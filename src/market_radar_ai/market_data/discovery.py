@@ -41,7 +41,10 @@ def technical_priority(result):
     relative=recent/baseline
     vwap=sum(((r.high+r.low+r.close)/3)*r.volume for r in rows)/volume
     qualified=momentum>0 and relative>=Decimal('1.5') and rows[-1].close>vwap
-    return (qualified,float(max(Decimal('-10'),min(Decimal('10'),momentum))+min(relative,Decimal('5'))))
+    from .pullback import detect_pullback
+    pattern = detect_pullback(list(result.candles)[-60:], now=result.retrieved_at)
+    return (qualified,float(max(Decimal('-10'),min(Decimal('10'),momentum))+min(relative,Decimal('5')))
+            + (2 if pattern else 0))
 
 
 def catalogue_selection(activity, universe, now, *, limit):
@@ -68,6 +71,7 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
     screen_limit = STOCK_SCREEN_LIMIT if broad else 100
     research_limit = STOCK_RESEARCH_LIMIT-1 if broad else 19
     snapshots = None
+    manifest = []
     key, secret = env.get('ALPACA_API_KEY'), env.get('ALPACA_API_SECRET')
     for endpoint, params, fields in [('most-actives', {'top':100,'by':'volume'}, ['most_actives']),
                                     ('movers', {'top':50}, ['gainers','losers'])]:
@@ -122,11 +126,21 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
         # No early stop at the first eight usable symbols; rotation reaches the tail.
         if broad and pool:
             from .providers.alpaca_batch import discover_snapshots
-            snapshots = discover_snapshots(pool, env=env, now=now)
+            from .discovery_signals import load_checkpoint, save_checkpoint
+            from pathlib import Path
+            checkpoint_path = Path(universe_cache_path).with_name('discovery-snapshots.json') if universe_cache_path else None
+            prior, cache_status = load_checkpoint(checkpoint_path, now=now)
+            snapshots = discover_snapshots(pool, env=env, now=now, prior_snapshots=prior)
+            snapshots['checkpoint_load'] = cache_status
+            snapshots['checkpoint_save'] = save_checkpoint(checkpoint_path, snapshots.get('checkpoint', {}), now=now)
             if snapshots['failed_batches']:
                 failures.append('catalogue_snapshot_batches_unavailable')
-            ranked = list(dict.fromkeys(s for row in zip_longest(ranked,snapshots['ranked_symbols']) for s in row if s))
+            ranked = list(dict.fromkeys(s for row in zip_longest(snapshots['ranked_symbols'],ranked) for s in row if s))
         ordered = catalogue_selection(ranked, pool, now, limit=screen_limit)
+        members = set(pool)
+        leader_symbols = set(list(dict.fromkeys(s for s in ranked if s in members))[:screen_limit//2])
+        ranked_positions = {s: i+1 for i,s in enumerate(ranked)}
+        technical_reasons = {}
         candidates=[]
         local=now.astimezone(ZoneInfo('America/New_York'))
         regular=local.weekday()<5 and (9,30)<=(local.hour,local.minute)<(16,0)
@@ -140,15 +154,17 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
                 try:
                     result=batch_results[symbol] if batch_results is not None else AlpacaIexProvider(env=env).fetch_history(symbol)
                     checked=capture_result(result,now=datetime.now(timezone.utc))['payload']
-                    return symbol,checked['quality_passed_at_capture'],technical_priority(result)
+                    reasons = sorted({i.get('code', 'quality_check_failed') for i in checked.get('quality_issues', [])})
+                    return symbol,checked['quality_passed_at_capture'],technical_priority(result),reasons
                 except Exception:
                     # A provider failure is an unavailable observation, not a
                     # reason to abort unrelated symbols or expose raw errors.
-                    return symbol, False, (False, 0)
+                    return symbol, False, (False, 0), ['provider_or_validation_unavailable']
             # Independent sessions per worker; four requests in flight at most.
             with ThreadPoolExecutor(max_workers=4) as executor:
-                for symbol,usable,score in executor.map(check,ordered):
+                for symbol,usable,score,reasons in executor.map(check,ordered):
                     screening['checked']+=1
+                    technical_reasons[symbol] = reasons if usable else (reasons or ['unusable_completed_bars'])
                     if usable:
                         candidates.append(symbol);priority[symbol]=score
                     else:screening['rejected'].append(symbol)
@@ -168,9 +184,30 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
         screening['technical_screen_limit']=screen_limit
         screening['enrichment_limit']=research_limit
         screening['regular_session_quality_screen']=regular
+        selected_set, usable_set = set(selected), set(candidates)
+        for symbol in pool:
+            checked = symbol in checked_symbols
+            usable = symbol in usable_set
+            manifest.append({'symbol': symbol,
+                **((snapshots or {}).get('symbol_evidence', {}).get(symbol, {'snapshot_status': 'not_requested'})),
+                'discovery_rank': ranked_positions.get(symbol),
+                'screen_lane': ('priority' if symbol in leader_symbols else 'rotation') if checked else 'not_checked',
+                'technical_status': 'usable' if usable else 'unavailable' if checked else 'not_checked',
+                'technical_reasons': technical_reasons.get(symbol, []),
+                'technical_priority_met': priority[symbol][0] if usable else None,
+                'technical_score': priority[symbol][1] if usable else None,
+                'detail_selected': symbol in selected_set,
+                'selection_reason': ('selected_for_research' if symbol in selected_set else
+                    'outside_technical_budget' if not checked and regular else
+                    'premarket_rotation_deferred' if not regular else
+                    'technical_data_unavailable' if not usable else 'outside_detail_budget')})
 
     fallback_used = not selected
     if fallback_used: selected=list(dict.fromkeys(fallback))[:research_limit]
+    if fallback_used:
+        for row in manifest:
+            if row['symbol'] in selected:
+                row.update(detail_selected=True, selection_reason='fallback_research_selection')
     selected_members = set(selected) & set(pool)
     checked_count = screening.get('checked', 0)
     usable_count = screening.get('usable_count', 0)
@@ -188,8 +225,9 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
             'scope':'catalogue_and_fresh_activity_not_full_exchange_scan' if universe else 'provider_activity_and_movers_not_full_exchange_scan',
             'discovered_count':len(ranked),'selected_symbols':selected,
             'deferred_symbols':[s for s in pool if s not in selected],
-            'selection_policy':f'fresh_leaders_and_catalogue_rotation_every_5_minutes_screen_{screen_limit}_enrich_{research_limit}',
-            'snapshot_coverage':{k:v for k,v in snapshots.items() if k!='ranked_symbols'} if snapshots else None,
+            'selection_policy':f'relative_activity_acceleration_and_catalogue_rotation_screen_{screen_limit}_enrich_{research_limit}' if broad else f'fresh_leaders_and_catalogue_rotation_every_5_minutes_screen_{screen_limit}_enrich_{research_limit}',
+            'snapshot_coverage':{k:v for k,v in snapshots.items() if k not in ('ranked_symbols','symbol_evidence','checkpoint')} if snapshots else None,
+            'selection_manifest': manifest,
             'universe':universe, 'coverage':coverage,
             'candidate_pool_symbols':pool,
             'screening':screening,'fallback_used':fallback_used,

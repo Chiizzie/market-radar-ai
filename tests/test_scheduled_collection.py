@@ -246,6 +246,9 @@ def test_discovery_counts_follow_actual_collection_cap_without_counting_fallback
     pool = [] if fallback_only else [f'S{i}' for i in range(50)]
     chosen = list(STOCKS) if fallback_only else pool[:19]
     discovery = {'selected_symbols': chosen, 'deferred_symbols': pool[19:],
+                 'selection_policy': 'fixture_trace',
+                 'selection_manifest': [{'symbol': s, 'detail_selected': s in chosen,
+                    'selection_reason': 'selected_for_research' if s in chosen else 'outside_detail_budget'} for s in pool],
                  'universe': {'symbols': pool} if pool else None,
                  'fallback_used': fallback_only, 'coverage': {
                      'catalogue_candidates': len(pool), 'fresh_activity_leads': 0,
@@ -283,3 +286,10 @@ def test_discovery_counts_follow_actual_collection_cap_without_counting_fallback
     assert final['coverage']['research_deferred'] == (0 if fallback_only else 49)
     assert discovery_summary(final, now=NOW)['coverage_status'] == 'validated'
     assert json.loads((tmp_path/'out/discovery.json').read_text()) == final
+    if pool:
+        trace=json.loads((tmp_path/'out/discovery-selection.json').read_text())
+        rows={r['symbol']:r for r in trace['symbols']}
+        assert rows['S0']['selection_reason']=='displaced_by_active_paper_watch'
+        assert rows['S49']['selection_reason']=='active_watch_or_user_watchlist'
+        assert sum(r['detail_selected'] for r in rows.values())==1
+        assert sum(final['selection_reason_counts'].values())==len(pool)

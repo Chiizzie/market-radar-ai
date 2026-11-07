@@ -61,10 +61,11 @@ def load_cache(path, now, stocks=STOCKS):
         return None
 
 
-def write_json(path, value):
+def write_json(path, value, *, compact=False):
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_suffix('.tmp')
-    temp.write_text(json.dumps(value, ensure_ascii=False, indent=2)+'\n')
+    temp.write_text(json.dumps(value, ensure_ascii=False, indent=None if compact else 2,
+                              separators=(',', ':') if compact else None)+'\n')
     temp.replace(path)
 
 
@@ -129,6 +130,13 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         # be researched, retaining the original discovery shortlist separately.
         discovery['collection_selected_symbols'] = list(stocks)
         discovery['displaced_symbols'] = [s for s in discovery['selected_symbols'] if s not in stocks]
+        for row in discovery.get('selection_manifest', []):
+            selected = row['symbol'] in stocks
+            if row['detail_selected'] and not selected:
+                row['selection_reason'] = 'displaced_by_active_paper_watch'
+            elif selected and not row['detail_selected']:
+                row['selection_reason'] = 'active_watch_or_user_watchlist'
+            row['detail_selected'] = selected
         if 'coverage' in discovery:
             if 'candidate_pool_symbols' in discovery:
                 pool = set(discovery['candidate_pool_symbols'])
@@ -141,6 +149,16 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
             discovery['coverage']['research_selected'] = len(pool.intersection(stocks))
             discovery['coverage']['research_deferred'] = len(pool.difference(stocks))
             discovery['deferred_symbols'] = sorted(pool.difference(stocks))
+        if discovery.get('selection_manifest'):
+            from collections import Counter
+            manifest = discovery.pop('selection_manifest')
+            discovery['selection_reason_counts'] = dict(Counter(r['selection_reason'] for r in manifest))
+            discovery['selection_manifest_file'] = 'discovery-selection.json'
+            write_json(output/'discovery-selection.json', {
+                'schema_version': 'stock-selection-trace-v1', 'observed_at': started.isoformat(),
+                'selection_policy': discovery['selection_policy'], 'symbols': manifest,
+                'trade_authorized': False,
+                'note': 'Discovery scores are not trade admission. Current daily-bar volume is compared with the previous daily bar, not historical same-time volume. Unavailable acceleration is not zero.'}, compact=True)
         write_json(output/'discovery.json', discovery)
     cache = load_cache(cache_path, started, stocks)
     stages = {}

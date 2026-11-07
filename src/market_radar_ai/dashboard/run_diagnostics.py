@@ -75,6 +75,11 @@ def discovery_summary(discovery, *, now):
                 summary['coverage_status'] = 'validated'
                 summary['coverage'] = counts
     universe = discovery.get('universe')
+    reasons = discovery.get('selection_reason_counts')
+    if (isinstance(reasons, dict) and summary['coverage']
+            and all(type(v) is int and 0 <= v <= 20200 for v in reasons.values())
+            and sum(reasons.values()) == summary['coverage']['candidate_pool']):
+        summary['selection_reason_counts'] = {label(k):v for k,v in reasons.items()}
     if isinstance(universe, dict) and universe.get('source') == 'trading212_metadata':
         metadata = summary['universe']
         metadata['source'] = 'trading212_metadata'
@@ -143,6 +148,7 @@ def build_report(collection, review=None, *, now, budget_loader=None):
         blocks=sorted({label(b) for b in row.get('paper_blockers',[])})
         for reason in blocks:reasons[reason]+=1;groups[category(reason)]+=1
         candidates.append({'candidate_id':label(row.get('candidate_id')),'stage':'qualified_screening',
+                           'strategy_id':label(row.get('technical_checks', {}).get('strategy_id')),
                            'blockers':blocks,'ready_for_review':row.get('eligible_for_paper_review') is True and not blocks})
     calls=audit.get('calls',[])
     from ..agents.paper_verdict import STAGES
@@ -209,9 +215,12 @@ def markdown(report):
                   f"| Selected for detailed research / deferred | {counts['research_selected']} / {counts['research_deferred']} |", '',
                   f"Catalogue: {metadata['cache_status']}; freshness: {metadata['freshness']}; source retrieved at: {metadata['retrieved_at'] or 'unavailable'}.",
                   'These counts describe this run. Selected for research does not mean technically checked, AI reviewed or approved.']
-    lines+=['', 'Blocker groups (overlap per candidate): '+(', '.join(f'{k}: {v}' for k,v in report['blocker_groups'].items()) or 'None recorded'), '', '| Candidate | Screening | Blockers |', '|---|---|---|']
+    if discovery.get('selection_reason_counts'):
+        lines += ['', 'Selection decisions: '+', '.join(f'{k}: {v}' for k,v in discovery['selection_reason_counts'].items()),
+                  'Per-symbol scores, snapshot freshness, selection lanes and skip reasons: `discovery-selection.json` in the capture artifact.']
+    lines+=['', 'Blocker groups (overlap per candidate): '+(', '.join(f'{k}: {v}' for k,v in report['blocker_groups'].items()) or 'None recorded'), '', '| Candidate | Strategy | Screening | Blockers |', '|---|---|---|---|']
     for row in report['candidates']:
-        lines.append(f"| {row['candidate_id']} | {'Ready for review only' if row['ready_for_review'] else row['stage']} | {', '.join(row['blockers']) or 'None at screening'} |")
+        lines.append(f"| {row['candidate_id']} | {row.get('strategy_id', 'unknown')} | {'Ready for review only' if row['ready_for_review'] else row['stage']} | {', '.join(row['blockers']) or 'None at screening'} |")
     for skipped in report['review']['skipped']:
         lines.append(f"Skipped review: {skipped['candidate_id']} — {skipped['reason']}.")
     lines+=['', 'Blockers are grouped in the JSON artifact; conditions and evidence gaps are reported separately.',

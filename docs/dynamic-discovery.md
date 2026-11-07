@@ -1,5 +1,9 @@
 # Dynamic stock discovery
 
+The 7 November relative-activity ranking, persistent acceleration observations,
+per-symbol selection traces and separate pullback paper strategy are documented
+in [the discovery/pullback milestone](discovery-pullback-milestone.md).
+
 Scheduled collection enables `ENABLE_STOCK_DISCOVERY=true` and
 `SCREEN_DISCOVERY_DATA=true`. Discovery combines fresh Alpaca activity/mover leads
 with a persisted Trading 212 catalogue of US stock candidates. It performs no

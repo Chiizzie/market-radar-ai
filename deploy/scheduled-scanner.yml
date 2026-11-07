@@ -71,6 +71,12 @@ jobs:
           path: .scanner-cache/discovery-universe.json
           key: scanner-universe-v1-${{ github.run_id }}
           restore-keys: scanner-universe-v1-
+      - uses: actions/cache/restore@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          path: .scanner-cache/discovery-snapshots.json
+          key: scanner-signals-v1-${{ github.run_id }}
+          restore-keys: scanner-signals-v1-
       - name: Collect and deliver without models or orders
         if: steps.window.outputs.run == 'true'
         run: python -m market_radar_ai.dashboard.scheduled_collection
@@ -98,12 +104,17 @@ jobs:
         with:
           path: .scanner-cache/discovery-universe.json
           key: scanner-universe-v1-${{ github.run_id }}
+      - uses: actions/cache/save@v4
+        if: always() && steps.window.outputs.run == 'true' && hashFiles('.scanner-cache/discovery-snapshots.json') != ''
+        with:
+          path: .scanner-cache/discovery-snapshots.json
+          key: scanner-signals-v1-${{ github.run_id }}
       - uses: actions/upload-artifact@v4
         if: always() && steps.window.outputs.run == 'true'
         with:
           name: scheduled-capture-${{ github.run_id }}
           path: artifacts/scheduled/
-          retention-days: 3
+          retention-days: 7
           if-no-files-found: warn
 
   review:

@@ -15,7 +15,7 @@ from .setup_checks import validate_paper_plan
 
 PROTOCOL = {
     'version': 'paper-comparison-v1',
-    'code_strategy_version': 'opening30m-or-momentum20-v1',
+    'code_strategy_version': 'opening30m-momentum20-pullback-v2',
     'review_policy_version': REVIEW_POLICY_VERSION,
     'baseline_entry_clock': 'enrolment_before_review',
     'ai_entry_clock': 'fresh_final_approval',
@@ -49,6 +49,8 @@ def validate_packet(packet, now):
            'symbol': body['symbol'], 'conditional_paper_plan': body['plan'],
            'reference_checks': body['reference_checks'], 'technical_checks': body['technical_checks'],
            'current_news_source_ids': [s for s in body['source_ids'] if s.startswith('news:')]}
+    news_checks = [v for k,v in body['sources'].items() if k.startswith('news_check:')]
+    row['chart_news_check'] = news_checks[0] if len(news_checks) == 1 else None
     if not paper_gate(row, now=aware(now))['eligible_for_paper_review']:
         raise ValueError('comparison_requires_code_qualified_packet')
     return body
@@ -310,6 +312,7 @@ class ComparisonStore:
                                   (key, now.isoformat())).fetchone()
                 cost = json.loads(cost[0]) if cost else None
                 rows.append({'setup_id': key, 'candidate_id': body['candidate_id'],
+                             'strategy_id': body['technical_checks'].get('strategy_id', 'legacy_unspecified'),
                              'enrolled_at': cohort['enrolled_at'], 'code_only': baseline, 'ai_reviewed': ai,
                              'decision_blockers': review['decision']['blockers'] if review else None,
                              'rejected_counterfactual_only': ai['state'] == 'no_action',
@@ -333,6 +336,11 @@ class ComparisonStore:
                 'dataset_kind': self.dataset_kind, 'protocol': json.loads(canonical(self.protocol)),
                 'protocol_id': digest(self.protocol),
                 'cohort_count': len(rows), 'rows': rows,
+                'by_strategy': {strategy: {
+                    'cohort_count': sum(r['strategy_id'] == strategy for r in rows),
+                    'code_only': metrics([r['code_only'] for r in rows if r['strategy_id'] == strategy]),
+                    'ai_reviewed': metrics([r['ai_reviewed'] for r in rows if r['strategy_id'] == strategy])}
+                    for strategy in sorted({r['strategy_id'] for r in rows})},
                 'code_only': metrics([r['code_only'] for r in rows]),
                 'ai_reviewed': metrics([r['ai_reviewed'] for r in rows]),
                 'matched_observed_pairs': paired,
