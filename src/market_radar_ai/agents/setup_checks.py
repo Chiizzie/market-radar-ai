@@ -26,6 +26,7 @@ def reference_checks(document, *, symbol, market, now):
                                      else 'FAIL' if row['catalogue_status'] in ('not_found','ambiguous') else 'UNKNOWN')
     result['reference_quote'] = 'PASS' if row['quote_status']=='current_reference_only' else 'UNKNOWN'
     result['indicative_ask_eur'] = row.get('indicative_ask_eur')
+    result['indicative_bid_eur'] = row.get('indicative_bid_eur')
     result['quote_observed_at'] = row.get('observed_at')
     result['fx'] = 'PASS' if assessed['fx_status']=='current_indicative' else 'UNKNOWN'
     clock = assessed['market_clock']

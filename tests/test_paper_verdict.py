@@ -9,9 +9,10 @@ from test_setup_checks import plan_and_bars, NOW
 
 def qualified_row():
     plan,_=plan_and_bars();plan['symbol']='TEST'
+    quote=str((Decimal(plan['stop_eur'])+Decimal(plan['entry_eur']))/2)
     return {'candidate_id':'stocks:TEST','symbol':'TEST','market':'stocks',
         'conditional_paper_plan':plan,
-        'reference_checks':dict(catalogue_candidate='PASS',market_session='PASS',reference_quote='PASS',fx='PASS',exit_deadline=plan['exit_by'],indicative_ask_eur=str((Decimal(plan['stop_eur'])+Decimal(plan['entry_eur']))/2)),
+        'reference_checks':dict(catalogue_candidate='PASS',market_session='PASS',reference_quote='PASS',fx='PASS',exit_deadline=plan['exit_by'],indicative_ask_eur=quote,indicative_bid_eur=quote),
         'technical_checks':dict(state='MEASURED',momentum_20_bars_pct='2',relative_volume_5_vs_15='2',close_above_rolling_vwap=True,trigger_state='WAITING_FOR_TRIGGER'),
         'current_news_source_ids':['news:test'], 'review_sources':{'news:test':{'title':'Synthetic fixture','retrieved_at':NOW.isoformat()}}}
 
@@ -131,6 +132,36 @@ def test_no_metered_activation_by_default(tmp_path):
 def test_current_quote_must_still_be_between_stop_and_trigger(field,blocker):
     row=qualified_row();row['reference_checks']['indicative_ask_eur']=row['conditional_paper_plan'][field]
     assert blocker in paper_gate(row,now=NOW)['paper_blockers']
+
+
+def test_bid_below_stop_blocks_even_when_ask_remains_above_stop():
+    row=qualified_row()
+    row['reference_checks']['indicative_bid_eur']=str(Decimal(row['conditional_paper_plan']['stop_eur'])-Decimal('.01'))
+    result=paper_gate(row,now=NOW)
+    assert not result['eligible_for_paper_review']
+    assert 'setup_invalidated_before_entry' in result['paper_blockers']
+
+
+@pytest.mark.parametrize('bid',[None,'NaN','Infinity','0','-1','bad'])
+def test_missing_or_invalid_bid_cannot_pass_paper_gate(bid):
+    row=qualified_row();row['reference_checks']['indicative_bid_eur']=bid
+    assert 'reference_bid_eur_missing' in paper_gate(row,now=NOW)['paper_blockers']
+
+
+def test_crossed_quote_and_bid_at_stop_remain_blocked():
+    row=qualified_row();checks=row['reference_checks']
+    checks['indicative_bid_eur']=str(Decimal(checks['indicative_ask_eur'])+Decimal('.01'))
+    assert 'reference_quote_crossed' in paper_gate(row,now=NOW)['paper_blockers']
+    checks['indicative_bid_eur']=row['conditional_paper_plan']['stop_eur']
+    assert 'setup_invalidated_before_entry' in paper_gate(row,now=NOW)['paper_blockers']
+
+
+def test_unanimous_review_cannot_approve_a_fresh_bid_below_stop(monkeypatch):
+    row,packet,audit,_=fixture(monkeypatch)
+    row['reference_checks']['indicative_bid_eur']=str(Decimal(row['conditional_paper_plan']['stop_eur'])-Decimal('.01'))
+    result=finalize(packet,audit,{},None,now=NOW)
+    assert result['verdict']=='NO_ACTION' and result['plan'] is None
+    assert 'fresh_setup_no_longer_qualified' in result['blockers']
 
 
 @pytest.mark.parametrize('fault',['unknown_source','duplicate_source','forged_metadata'])

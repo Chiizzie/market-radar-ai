@@ -34,12 +34,21 @@ def paper_gate(row, *, now):
     plan=row['conditional_paper_plan']
     if plan is not None and plan.get('symbol')!=row['symbol']:blocks.append('plan_symbol_mismatch')
     if plan is not None:
+        ask = None
         try:
             ask=Decimal(str(checks.get('indicative_ask_eur')))
             if not ask.is_finite() or ask<=0:raise ValueError('invalid_ask')
             if ask>=Decimal(plan['entry_eur']):blocks.append('entry_trigger_already_reached_rebuild')
             if ask<=Decimal(plan['stop_eur']):blocks.append('setup_invalidated_before_entry')
         except (ValueError,ArithmeticError):blocks.append('reference_ask_eur_missing')
+        try:
+            bid=Decimal(str(checks.get('indicative_bid_eur')))
+            if not bid.is_finite() or bid<=0:raise ValueError('invalid_bid')
+            # Stops and the observer use the sell-side reference bid. A spread
+            # straddling the stop must never pass because the ask is higher.
+            if bid<=Decimal(plan['stop_eur']):blocks.append('setup_invalidated_before_entry')
+            if ask is not None and ask.is_finite() and bid>ask:blocks.append('reference_quote_crossed')
+        except (ValueError,ArithmeticError):blocks.append('reference_bid_eur_missing')
     risk=validate_paper_plan(plan,now=now,exit_deadline=checks.get('exit_deadline'))
     if risk['state']!='PASS':blocks.extend(risk['failures'])
     if not checks.get('exit_deadline'): blocks.append('session_exit_missing')
