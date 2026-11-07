@@ -79,6 +79,7 @@ class MethodShadow:
 
     def enrol_many(self, inputs, *, now):
         self.sync()
+        now=max(aware(now),aware(self.clock()))
         # One durable batch avoids spending a short entry window on up to forty
         # serial network writes. All rules are evaluated at the same frozen clock.
         active=sum(r['state'] in ('watching','open_simulation') for r in self.outcomes(now))
@@ -100,6 +101,13 @@ class MethodShadow:
             rows.append({'candidate_id':'stocks:'+source['symbol'],'blockers':blockers})
         self.client.append(self.experiment,events)
         self.sync()
+        for event in events:
+            proposed=json.loads(event['payload_json'])['scenario']
+            saved=self.cohorts[proposed['setup_id']]
+            if {k:v for k,v in saved.items() if k!='enrolled_at'}!=proposed:
+                for row in rows:
+                    if row['candidate_id']==proposed['candidate_id'] and not row['blockers']:
+                        row['blockers']=['concurrent_session_enrolment_preserved']
         return rows
 
     def outcomes(self, now):
