@@ -170,7 +170,9 @@ class MethodShadow:
     def close(self):
         self.sync(); report=self.report()
         (self.root/'method-report.json').write_text(json.dumps(report,indent=2)+'\n')
-        self.client.append(self.experiment,[envelope('method_report',report,self.clock())]); self.sync()
+        from .research_views import append_publication, method_rows
+        append_publication(self.client,self.experiment,report,method_rows(self,now=aware(report['as_of'])),clock=self.clock)
+        self.sync()
         return report
 
 

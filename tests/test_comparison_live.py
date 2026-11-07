@@ -54,7 +54,8 @@ def test_durable_baseline_before_review_rejection_and_restore(tmp_path, monkeypa
     assert restored.report(now=t[0])==s.store.report(now=t[0])
     second=LiveComparison(tmp_path/'two',client=client,clock=lambda:t[0]);second.sync()
     assert second.store.report(now=t[0])==s.store.report(now=t[0])
-    second.sync();assert len(second.seen)==len(client.events)
+    second.sync();assert len(second.seen)==len([e for e in client.events if e['experiment_id']==s.experiment])
+    assert all(e['experiment_id']!=s.experiment for e in client.events if e['kind']=='setup_report')
 
 
 def test_unreviewed_cohort_survives_writer_restart(tmp_path,monkeypatch):

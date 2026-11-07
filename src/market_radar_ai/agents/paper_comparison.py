@@ -316,6 +316,10 @@ class ComparisonStore:
                              'enrolled_at': cohort['enrolled_at'], 'code_only': baseline, 'ai_reviewed': ai,
                              'decision_blockers': review['decision']['blockers'] if review else None,
                              'rejected_counterfactual_only': ai['state'] == 'no_action',
+                             'review_started_at': json.loads(attempt[0])['started_at'] if attempted else None,
+                             'decision_at': review['decision']['evaluated_at'] if review else None,
+                             'plans': {'code_only':body['plan'], 'ai_reviewed':review['decision']['plan']
+                                       if review and review['decision']['verdict']=='PAPER_WATCH_FOR_ENTRY' else None},
                              'ai_cost': cost})
         paired = []
         for row in rows:

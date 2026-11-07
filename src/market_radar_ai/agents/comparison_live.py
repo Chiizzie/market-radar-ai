@@ -274,8 +274,9 @@ class LiveComparison:
             (self.root / 'comparison-health.json').write_text(json.dumps(self.health, indent=2) + '\n')
             # Reports have a bounded summary; detailed immutable events remain the
             # recoverable source. Never truncate a cohort and call it complete.
-            summary = {k: v for k, v in report.items() if k not in ('rows', 'matched_observed_pairs')}
-            self.push('report', summary, self.clock())
+            from .research_views import append_publication, comparison_rows
+            append_publication(self.client,self.experiment,report,comparison_rows(report),clock=self.clock)
+            self.sync()
             return report
 
 

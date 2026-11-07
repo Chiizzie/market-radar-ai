@@ -225,6 +225,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
+      actions: read
       contents: write
     # Overlap successive five-minute dispatches; journal CAS merges and
     # notification reservations make the overlapping processes idempotent.
@@ -307,6 +308,7 @@ jobs:
               f.write('ready='+str(ready).lower()+'\n')
           PY
       - uses: actions/upload-artifact@v4
+        id: recovery_upload
         if: always() && steps.backup.outputs.ready == 'true'
         with:
           name: comparison-recovery-${{ github.run_id }}
@@ -314,12 +316,20 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
+      - name: Confirm comparison recovery upload with durable metadata
+        if: always() && steps.recovery_upload.outcome == 'success' && steps.backup.outputs.ready == 'true'
+        run: python -m market_radar_ai.dashboard.scanner_operations --family comparison --artifact-id "${{ steps.recovery_upload.outputs.artifact-id }}" --manifest artifacts/comparison-recovery/manifest.json --output artifacts/comparison-recovery/receipt.json
+        env:
+          GH_HEALTH_TOKEN: ${{ github.token }}
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+
   method-shadow:
     needs: collect
     if: ${{ always() && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.METHOD_SHADOW_ENABLED != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     permissions:
+      actions: read
       contents: read
     # Independent of the paid review. Overlapping runs retain first enrolment.
     steps:
@@ -398,12 +408,20 @@ jobs:
               f.write('ready='+str(ready).lower()+'\n')
           PYCODE
       - uses: actions/upload-artifact@v4
+        id: recovery_upload
         if: always() && steps.backup.outputs.ready == 'true'
         with:
           name: method-recovery-${{ github.run_id }}
           path: artifacts/method-recovery/
           retention-days: 30
           if-no-files-found: error
+
+      - name: Confirm method recovery upload with durable metadata
+        if: always() && steps.recovery_upload.outcome == 'success' && steps.backup.outputs.ready == 'true'
+        run: python -m market_radar_ai.dashboard.scanner_operations --family method --artifact-id "${{ steps.recovery_upload.outputs.artifact-id }}" --manifest artifacts/method-recovery/manifest.json --output artifacts/method-recovery/receipt.json
+        env:
+          GH_HEALTH_TOKEN: ${{ github.token }}
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
 
   account-sync:
     if: ${{ vars.ACCOUNT_SYNC_ENABLED != 'false' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours }}
