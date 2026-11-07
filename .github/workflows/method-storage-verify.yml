@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
 jobs:
   verify:
     if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main'
@@ -14,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 3910f1b1bf91a6cfe5f81ed7ff846ba75b36afa9
+          ref: 76348883041c5416fdf0fd674b7668f1414239ac
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
@@ -55,3 +56,31 @@ jobs:
           path: artifacts/method-verify/result.json
           retention-days: 30
           if-no-files-found: warn
+
+      - name: Archive the actual stored verification cohort
+        run: |
+          python - <<'PY'
+          import gzip,hashlib,json
+          from datetime import datetime,timezone
+          from pathlib import Path
+          raw=Path('artifacts/method-verify/first/method-events.jsonl').read_bytes()
+          assert raw.strip(), 'No evidence export produced'
+          root=Path('artifacts/method-recovery');root.mkdir(parents=True,exist_ok=True)
+          archive=gzip.compress(raw);(root/'events.jsonl.gz').write_bytes(archive)
+          assert gzip.decompress(archive)==raw
+          (root/'manifest.json').write_text(json.dumps({'day':datetime.now(timezone.utc).date().isoformat(),
+              'sha256_uncompressed':hashlib.sha256(raw).hexdigest(),'event_count':len(raw.splitlines()),
+              'dataset_kind':'forward','trade_authorized':False}))
+          PY
+      - uses: actions/upload-artifact@v4
+        id: recovery_upload
+        with:
+          name: method-recovery-${{ github.run_id }}
+          path: artifacts/method-recovery/
+          retention-days: 30
+          if-no-files-found: error
+      - name: Verify uploaded artifact metadata and record a recovery receipt
+        run: python -m market_radar_ai.dashboard.scanner_operations --family method --artifact-id "${{ steps.recovery_upload.outputs.artifact-id }}" --manifest artifacts/method-recovery/manifest.json --output artifacts/method-recovery/receipt.json
+        env:
+          GH_HEALTH_TOKEN: ${{ github.token }}
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
