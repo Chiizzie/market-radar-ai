@@ -25,7 +25,8 @@ class PaperOutcome(Frozen):
 
 def replay_long(plan: PaperPlan, quotes: list[Quote], *, decision_at: datetime,
                 entry_expires_at: datetime, entry_mode: Literal['limit', 'breakout'] = 'limit',
-                exit_window_seconds: int = 0) -> PaperOutcome:
+                exit_window_seconds: int = 0, maximum_entry_spread_bps: Decimal | None = None,
+                maximum_entry_gap_bps: Decimal | None = None) -> PaperOutcome:
     """Limit-entry long simulation, using asks for entry and bids for exit.
 
     First eligible ask at/below entry fills at the ask. A stop gap exits at the
@@ -39,6 +40,9 @@ def replay_long(plan: PaperPlan, quotes: list[Quote], *, decision_at: datetime,
         raise ValueError('Invalid scheduled exit window')
     if entry_mode not in ('limit', 'breakout'):
         raise ValueError('Unknown entry mode')
+    for limit in (maximum_entry_spread_bps, maximum_entry_gap_bps):
+        if limit is not None and (not limit.is_finite() or limit < 0):
+            raise ValueError('Invalid entry tolerance')
     from zoneinfo import ZoneInfo
     plan = PaperPlan.model_validate(plan.model_dump())
     if decision_at.tzinfo is None or entry_expires_at.tzinfo is None:
@@ -67,11 +71,15 @@ def replay_long(plan: PaperPlan, quotes: list[Quote], *, decision_at: datetime,
                 if q.bid <= plan.stop:
                     return PaperOutcome(status='not_filled', reason='entry_already_invalidated')
                 if q.ask < plan.entry: continue
+                if maximum_entry_gap_bps is not None and (q.ask/plan.entry-1)*10000 > maximum_entry_gap_bps:
+                    return PaperOutcome(status='not_filled', reason='trigger_gap_exceeds_protocol_limit')
                 if (q.ask-plan.stop)*plan.quantity+plan.costs_eur > 20:
                     return PaperOutcome(status='not_filled', reason='trigger_gap_exceeds_risk_budget')
             elif q.ask > plan.entry: continue
             if q.ask <= plan.stop:
                 return PaperOutcome(status='not_filled', reason='entry_already_invalidated')
+            if maximum_entry_spread_bps is not None and (q.ask-q.bid)/((q.ask+q.bid)/2)*10000 > maximum_entry_spread_bps:
+                continue
             entry = q
         reason = ('stop' if q.bid <= plan.stop else 'target' if q.bid >= plan.target
                   else 'deadline' if q.observed_at == plan.exit_by
