@@ -1,0 +1,58 @@
+name: Scanner operational health
+on:
+  workflow_run:
+    workflows: ['Scheduled research collection']
+    types: [completed]
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/scanner-health.yml']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: market-radar-ai-health
+  cancel-in-progress: false
+jobs:
+  health:
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && vars.HEALTH_MONITOR_ENABLED != 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check monitoring window
+        id: window
+        run: |
+          python - <<'PY'
+          import os
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          now=datetime.now(ZoneInfo('Europe/Dublin'))
+          allowed=os.environ['GITHUB_EVENT_NAME']!='schedule' or (now.weekday()<5 and 8<=now.hour<23)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('run='+str(allowed).lower()+'\n')
+          PY
+      - uses: actions/checkout@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          ref: 76348883041c5416fdf0fd674b7668f1414239ac
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        if: steps.window.outputs.run == 'true'
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e .
+        if: steps.window.outputs.run == 'true'
+      - name: Record actual run and job metadata without AI or trading calls
+        if: steps.window.outputs.run == 'true'
+        run: python -m market_radar_ai.dashboard.scanner_operations
+        env:
+          GH_HEALTH_TOKEN: ${{ github.token }}
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.window.outputs.run == 'true'
+        with:
+          name: scanner-health-${{ github.run_id }}
+          path: artifacts/scanner-health/report.json
+          retention-days: 14
+          if-no-files-found: warn
