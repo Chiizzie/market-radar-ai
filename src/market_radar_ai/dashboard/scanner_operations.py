@@ -14,7 +14,7 @@ REPO='Chiizzie/market-radar-ai'
 PROTOCOL={'version':'scanner-operations-v1','repository':REPO,'monitoring_since':'2026-11-07',
           'expected_window':'weekdays_08:00_to_23:00_Europe/Dublin','stale_after_minutes':20}
 EXPERIMENT=digest(PROTOCOL)
-JOBS={'collect','review','paper-watcher','method-shadow','account-sync'}
+JOBS={'collect','review','paper-watcher','method-shadow','account-sync','market-context'}
 STATES={'queued','in_progress','completed','waiting','pending','requested'}
 CONCLUSIONS={'success','failure','neutral','cancelled','skipped','timed_out','action_required','stale','startup_failure'}
 
