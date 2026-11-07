@@ -59,13 +59,21 @@ def paper_gate(row, *, now):
         if Decimal(tech['relative_volume_3_vs_prior'] if early else tech['relative_volume_5_vs_15'])<Decimal('1.5'):blocks.append('relative_volume_below_1_5')
         if tech['close_above_rolling_vwap'] is not True:blocks.append('below_rolling_vwap')
         if tech['trigger_state']!='WAITING_FOR_TRIGGER':blocks.append('conditional_entry_already_passed')
-    if not row.get('current_news_source_ids'):blocks.append('current_symbol_linked_news_missing')
+    from ..market_data.pullback import STRATEGY
+    if tech.get('strategy_id') == STRATEGY:
+        from .chart_news import valid_check
+        if row['market'] != 'stocks' or tech.get('chart_pattern', {}).get('pattern_state') != 'CONFIRMED':
+            blocks.append('stock_pullback_pattern_not_confirmed')
+        if not valid_check(row.get('chart_news_check'), symbol=row['symbol'], now=now):
+            blocks.append('chart_news_check_missing_or_incomplete')
+    elif not row.get('current_news_source_ids'):
+        blocks.append('current_symbol_linked_news_missing')
     return {'eligible_for_paper_review':not blocks,'paper_blockers':sorted(set(blocks)),
             'live_trade_authorized':False,
             'assumptions':['Catalogue match is paper availability evidence, not live account order permission.',
                            'IEX stock or Kraken crypto reference prices, not broker execution quotes.',
                            'Fictional EUR 500 allocation and assumed 40 bps round-trip costs, including FX/slippage allowance.',
-                           'News attribution is evidence for the reviewers; catalyst strength is not pre-approved.']}
+                           ('Separate chart-led pullback strategy: no fresh catalyst required, but a current bounded news check and adverse-evidence review are required.' if tech.get('strategy_id') == STRATEGY else 'News attribution is evidence for the reviewers; catalyst strength is not pre-approved.')]}
 
 
 def build_packets(document, feed, *, now):
@@ -183,6 +191,7 @@ def stable_evidence(sources):
         'calendar': {'retrieved_at', 'original_calendar_sha256'},
         'catalogue': {'retrieved_at'},
         'news': {'retrieved_at', 'publication_age_seconds'},
+        'news_check': {'checked_at'},
     }
     values=[]
     for source_id, source in sources.items():

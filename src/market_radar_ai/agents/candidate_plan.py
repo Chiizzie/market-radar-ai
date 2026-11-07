@@ -7,7 +7,7 @@ from ..market_data.admission import FxQuote
 D = Decimal
 
 
-def draft(bars, fx, *, now):
+def draft(bars, fx, *, now, market=None):
     """Validated MarketEvidence in, explicit fictional assumptions out."""
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError('aware_clock_required')
@@ -30,8 +30,14 @@ def draft(bars, fx, *, now):
         rate, fx_source = quote.eur_per_unit, quote.source
         expiry = min(now+timedelta(seconds=60),quote.observed_at+timedelta(seconds=900))
     # A conditional scenario, not a market order or an optimized strategy.
-    entry = max(r.high for r in rows[-6:-1]) * D('1.001')
-    stop = min(r.low for r in rows[-3:])
+    from .setup_checks import technical_checks
+    from ..market_data.pullback import STRATEGY
+    technical = technical_checks(bars, market=market)
+    if technical.get('state') != 'MEASURED':
+        return None
+    chart = technical.get('strategy_id') == STRATEGY
+    entry = D(technical['breakout_trigger_native'])
+    stop = D(technical['stop_native'])
     if not 0 < stop < entry or rows[-1].close >= entry:
         return None
     entry_eur, stop_eur = entry*rate, stop*rate
@@ -44,15 +50,18 @@ def draft(bars, fx, *, now):
     expiry = min(expiry,exit_by,rows[-1].timestamp+timedelta(seconds=900))
     if expiry <= now:
         return None
+    target_eur = entry_eur+2*risk+costs
+    if chart:
+        target_eur = min(target_eur, D(technical['target_cap_native'])*rate)
     return dict(schema_version='conditional-eur-paper-scenario-v1',symbol=bars.symbol,
                 currency='EUR',native_currency=bars.quote_currency,entry_eur=str(entry_eur),
-                stop_eur=str(stop_eur),target_eur=str(entry_eur+2*risk+costs),
+                stop_eur=str(stop_eur),target_eur=str(target_eur),
                 quantity=str(quantity),planned_loss_eur=str(risk*quantity),
                 assumed_round_trip_cost_eur=str(costs*quantity),paper_capital_eur='500',
                 assumed_round_trip_cost_bps='40',entry_buffer_bps='10',
                 fx_rate=str(rate),fx_source=fx_source,expires_at=expiry.isoformat(),
                 exit_by=exit_by.isoformat(),trade_authorized=False,
                 assumptions='Fictional EUR 500 allocation and assumed 40 bps round-trip costs. Not account funds or verified fees. Tick and quantity increments are unverified.',
-                trigger='Conditional break above prior five-bar high plus 10 bps; never enter after expiry.',
+                trigger=('trend_pullback_reclaim_v1: confirmed chart reclaim; conditional break above pullback high plus 10 bps. Target capped at observed structure; never enter after expiry.' if chart else 'Conditional break above prior five-bar high plus 10 bps; never enter after expiry.'),
                 invalidation='Cancel if stop breaks before entry or any evidence expires. Exchange-session exit still needs verification.',
                 loss_note='EUR 20 is planned loss under fixed stop fill and FX assumptions; gaps and slippage can increase actual loss.')

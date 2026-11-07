@@ -48,8 +48,8 @@ def qualify(document, feed, *, now):
         try:
             bars = build_market_evidence(document, symbol=p['symbol'],
                                          market_name=p['market'], now=now)
-            technical = technical_checks(bars)
-            plan = draft(bars, fx, now=now)
+            technical = technical_checks(bars, market=p['market'])
+            plan = draft(bars, fx, now=now, market=p['market'])
             if plan and checks["exit_deadline"]:
                 plan["exit_by"] = checks["exit_deadline"]
                 plan["expires_at"] = min(datetime.fromisoformat(plan["expires_at"]),
@@ -63,11 +63,22 @@ def qualify(document, feed, *, now):
         if plan is not None:
             result['blockers'] = [x for x in result['blockers'] if x != 'eur_trade_plan_missing']
             result['blockers'].append('paper_costs_and_allocation_are_assumptions')
+        from ..market_data.pullback import STRATEGY
+        from .chart_news import checked_source
+        news_check = checked_source(feed, symbol=p['symbol'], now=now) if technical.get('strategy_id') == STRATEGY else None
+        sources = dict(p['sources'])
+        if news_check:
+            sources['news_check:'+digest(news_check)] = news_check
+            if plan:
+                from datetime import timedelta
+                plan['expires_at'] = min(datetime.fromisoformat(plan['expires_at']),
+                    datetime.fromisoformat(news_check['checked_at'])+timedelta(seconds=900)).isoformat()
         risk = validate_paper_plan(plan, now=now, exit_deadline=checks['exit_deadline'])
         if risk['state'] == 'FAIL':
             result['blockers'].extend(risk['failures'])
         rows.append({'current_news_source_ids': [sid for sid in p['news_source_ids'] if sid not in p['context_only_news_ids']],
-                     'review_sources': p['sources'],
+                     'chart_news_check': news_check,
+                     'review_sources': sources,
                      'technical_checks': technical, 'reference_checks': checks, 'paper_risk_check': risk,
                      'candidate_id': p['candidate_id'], 'symbol': p['symbol'],
                      'market': p['market'], 'selection': p['selection'],

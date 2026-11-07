@@ -42,7 +42,7 @@ def reference_checks(document, *, symbol, market, now):
     return result
 
 
-def technical_checks(bars):
+def technical_checks(bars, *, market=None):
     """Transparent measurements, not a fitted strategy or success probability."""
     rows = bars.candles[-20:]
     from ..market_data.strategy_window import profile
@@ -72,6 +72,16 @@ def technical_checks(bars):
         measured['opening_session_vwap'] = measured.pop('rolling_20_bar_vwap')
         measured['completed_bars'] = len(rows)
         measured['note'] = 'Experimental opening-session paper setup: at least six contiguous completed bars from the regular open; last three bars versus earlier opening bars. Not backtested or a proven edge.'
+    if market == 'stocks' or (market is None and getattr(bars, 'provider', None) == 'alpaca_iex'):
+        from ..market_data.pullback import detect_pullback, STRATEGY
+        pattern = detect_pullback(list(bars.candles), now=bars.validated_at)
+        if pattern:
+            trigger = D(pattern['entry_native'])
+            measured.update(strategy_id=STRATEGY, thesis_basis='chart_led', chart_pattern=pattern,
+                breakout_trigger_native=pattern['entry_native'], stop_native=pattern['stop_native'],
+                target_cap_native=pattern['target_cap_native'],
+                trigger_state='ALREADY_ABOVE_TRIGGER' if rows[-1].close >= trigger else 'WAITING_FOR_TRIGGER',
+                note='Experimental stock pullback/reclaim. Rolling volume and VWAP checks remain required. News is checked for adverse evidence; a fresh catalyst is not required for this separate chart strategy.')
     return measured
 
 

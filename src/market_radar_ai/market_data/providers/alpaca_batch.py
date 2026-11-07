@@ -92,8 +92,9 @@ def fetch_histories(symbols, *, env, session=None, clock=lambda:datetime.now(tim
     return output
 
 
-def discover_snapshots(symbols, *, env, now, session=None, clock=lambda:datetime.now(timezone.utc)):
-    """Inspect the entire catalogue, then rank fresh trades by turnover and move.
+def discover_snapshots(symbols, *, env, now, session=None, prior_snapshots=None,
+                       clock=lambda:datetime.now(timezone.utc)):
+    """Rank fresh catalogue trades by relative activity and recent acceleration.
 
     IEX is a partial exchange feed. Receipt is not exchange freshness, and a
     catalogue listing is not an account permission or a technical check.
@@ -101,7 +102,10 @@ def discover_snapshots(symbols, *, env, now, session=None, clock=lambda:datetime
     if now.tzinfo is None:raise ValueError('aware_clock_required')
     symbols=symbols_checked(symbols,20000)
     transport=session or requests.Session()
+    from ..discovery_signals import measurements
     received,fresh,scores=set(),set(),{}
+    evidence = {s: {'snapshot_status': 'not_received'} for s in symbols}
+    checkpoint = {}
     failures=0
     for offset in range(0,len(symbols),500):
         batch=symbols[offset:offset+500]
@@ -110,30 +114,40 @@ def discover_snapshots(symbols, *, env, now, session=None, clock=lambda:datetime
             if set(data)-set(batch):raise ValueError('unexpected_snapshot_identity')
         except Exception:
             failures+=1
+            for symbol in batch: evidence[symbol]['snapshot_status'] = 'batch_unavailable'
             continue
         evaluated=clock()
         for symbol,row in data.items():
-            if not isinstance(row,dict):continue
+            if not isinstance(row,dict):
+                evidence[symbol]['snapshot_status'] = 'invalid_snapshot'
+                continue
             received.add(symbol)
+            evidence[symbol]['snapshot_status'] = 'invalid_snapshot'
             try:
                 trade,daily,previous=row['latestTrade'],row['dailyBar'],row['prevDailyBar']
                 at=datetime.fromisoformat(trade['t'].replace('Z','+00:00'))
                 day=datetime.fromisoformat(daily['t'].replace('Z','+00:00'))
                 prior=datetime.fromisoformat(previous['t'].replace('Z','+00:00'))
+                evidence[symbol]['observed_at'] = at.isoformat()
                 if (any(t.tzinfo is None for t in (at,day,prior)) or not 0<=(evaluated-at).total_seconds()<900
                         or day.astimezone(NY).date()!=now.astimezone(NY).date()
                         or not timedelta(0)<day-prior<=timedelta(days=5)):
+                    evidence[symbol]['snapshot_status'] = 'stale_or_wrong_session'
                     continue
                 price,volume,close=map(lambda x:Decimal(str(x)),(trade['p'],daily['v'],previous['c']))
                 if not all(v.is_finite() and v>0 for v in (price,volume,close)):continue
+                measured = measurements(price, volume, close, previous.get('v'),
+                    at=at, prior=(prior_snapshots or {}).get(symbol))
                 fresh.add(symbol)
-                scores[symbol]=(float(price*volume),float((price/close-1)*100))
+                scores[symbol] = measured['score']
+                evidence[symbol] = {'snapshot_status': 'fresh', **measured}
+                checkpoint[symbol] = {'observed_at': at.isoformat(), 'price': str(price)}
             except (ValueError,TypeError,KeyError,ArithmeticError,AttributeError):
                 continue
-    turnover=sorted(fresh,key=lambda s:(-scores[s][0],s))
-    movers=sorted(fresh,key=lambda s:(-abs(scores[s][1]),s))
-    from itertools import zip_longest
-    ranked=list(dict.fromkeys(s for pair in zip_longest(turnover,movers) for s in pair if s))
+    ranked=sorted(fresh,key=lambda s:(-scores[s],s))
+    for rank, symbol in enumerate(ranked, 1): evidence[symbol]['snapshot_rank'] = rank
     return {'requested':len(symbols),'received':len(received),'fresh':len(fresh),
             'unavailable_or_stale':len(symbols)-len(fresh),'failed_batches':failures,
-            'ranked_symbols':ranked,'feed':'iex','observed_at':now.isoformat()}
+            'ranked_symbols':ranked,'feed':'iex','observed_at':now.isoformat(),
+            'symbol_evidence':evidence, 'checkpoint':checkpoint,
+            'relative_volume_basis':'current_daily_bar_vs_previous_daily_bar_not_same_time'}

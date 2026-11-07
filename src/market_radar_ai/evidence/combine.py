@@ -17,6 +17,10 @@ def combine_feeds(feeds, *, now):
             'scope':validated['scope'],'retrieved_at':validated.get('retrieved_at'),
             'validated_item_count':len(validated['items']),
             'query_symbol':feed.get('query_symbol') if isinstance(feed,dict) else None})
+        if isinstance(feed, dict) and feed.get('scope') == 'PUBLISHER_TAGGED_STOCK_NEWS_PARTIAL':
+            sources[-1].update(response_item_count=feed.get('response_item_count'),
+                rejected_item_count=len(feed.get('rejected', [])),
+                validated_evidence_ids=[i['evidence_id'] for i in validated['items']])
         if validated['status'] not in ('ok','partial'):
             continue
         for item in validated['items']:
