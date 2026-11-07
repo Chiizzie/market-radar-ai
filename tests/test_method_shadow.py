@@ -137,3 +137,28 @@ def test_entry_spread_guard_does_not_hide_open_position_stop():
     gap=replay_long(p,[q(1,p.entry*Decimal('1.003'),p.entry*Decimal('1.003'))],decision_at=NOW,
         entry_expires_at=expiry,entry_mode='breakout',maximum_entry_gap_bps=Decimal(20))
     assert gap.reason=='trigger_gap_exceeds_protocol_limit'
+
+
+def test_storage_delay_revalidates_source_freshness_before_enrolment(tmp_path):
+    w,t,price,events=environment(tmp_path)
+    read=events.read
+    def delayed(*args):
+        t[0]=NOW+timedelta(seconds=31)
+        return read(*args)
+    events.read=delayed
+    rows=w.enrol_many([fixture()],now=NOW)
+    assert 'current_reference_quote_missing' in rows[0]['blockers']
+    assert not w.cohorts and not events.events
+
+
+def test_concurrent_enrolment_keeps_first_scenario_and_reports_duplicate(tmp_path):
+    w,t,price,events=environment(tmp_path); original_append=events.append
+    def racing(experiment,batch):
+        earlier=scenario(fixture(),now=NOW)
+        original_append(experiment,[envelope('method_enrol',{'setup_id':earlier['setup_id'],
+            'protocol_id':experiment,'shadow_only':True,'scenario':earlier,'inputs':fixture()},NOW)])
+        original_append(experiment,batch)
+    events.append=racing;t[0]=NOW+timedelta(seconds=1)
+    assert w.enrol(fixture(),now=t[0])==['concurrent_session_enrolment_preserved']
+    assert next(iter(w.cohorts.values()))['assembled_at']==NOW.isoformat()
+    assert len(w.cohorts)==1
