@@ -54,11 +54,27 @@ def run(*, env, output, duration=330, interval=5, clock=lambda:datetime.now(time
             'target_interval_seconds':interval,'polls':0,'quotes_received':0,'error_polls':0,
             'notification_unconfirmed':0,'maximum_poll_gap_seconds':0,'model_calls':0,
             'live_orders_enabled':False,'trade_authorized':False}
+    comparison = None
+    if env.get('PAPER_COMPARISON_ENABLED') == 'true':
+        try:
+            from .comparison_live import EventClient, LiveComparison
+            comparison = LiveComparison(output/'comparison',
+                client=EventClient(env.get('REVIEW_INGEST_SECRET'), clock=clock), observer=observer, clock=clock)
+        except (RuntimeError,ValueError,KeyError,TypeError):
+            status['comparison_state'] = 'configuration_unavailable'
     end=monotonic()+duration; previous=None; state=None; refreshed=None; seen=set()
     while monotonic()<end and allowed(env,clock()):
         tick=monotonic()
         if previous is not None: status['maximum_poll_gap_seconds']=max(status['maximum_poll_gap_seconds'],round(tick-previous,3))
         previous=tick
+        if comparison is not None:
+            try:
+                comparison.poll()
+                status['comparison'] = dict(comparison.health)
+            except (RuntimeError,ValueError,KeyError,TypeError):
+                comparison.health['error_polls'] += 1
+                status['comparison'] = dict(comparison.health)
+                status['comparison_state'] = 'storage_or_observation_gap'
         try:
             if state is None or refreshed is None or tick-refreshed>=15:
                 state,_=journal.load(env.get('GH_PAPER_TOKEN'),session=session);refreshed=tick
@@ -82,6 +98,12 @@ def run(*, env, output, duration=330, interval=5, clock=lambda:datetime.now(time
         if remaining>0: sleep(min(remaining,max(0.1,interval-(monotonic()-tick))))
     status['state']='outside_window' if status['polls']==0 and status['error_polls']==0 else 'completed_with_gaps' if status['error_polls'] else 'completed'
     status['completed_at']=clock().isoformat()
+    if comparison is not None:
+        try:
+            comparison.close()
+        except (RuntimeError,ValueError,KeyError,TypeError):
+            status['comparison_state'] = 'report_or_storage_gap'
+        status['comparison'] = dict(comparison.health)
     (output/'watcher-health.json').write_text(json.dumps(status,indent=2)+'\n')
     return status
 
@@ -94,7 +116,8 @@ def main():
     args=p.parse_args()
     result=run(env=os.environ,output=args.output,duration=args.duration)
     print(json.dumps(result))
-    return int(result['error_polls']>0 or result['notification_unconfirmed']>0)
+    return int(result['error_polls']>0 or result['notification_unconfirmed']>0
+               or 'comparison_state' in result or result.get('comparison',{}).get('error_polls',0)>0)
 
 
 if __name__=='__main__': raise SystemExit(main())

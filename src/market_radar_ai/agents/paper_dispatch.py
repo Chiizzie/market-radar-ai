@@ -74,5 +74,18 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
                 # The independent overlapping watcher continues open positions.
                 run(env=watch_env,output=root/'entry-watcher',duration=65,
                     clock=clock,observer=observer)
-    return run_pipeline(document,feed,client=client,root=root,refresh=refresh,deliver=delivery,clock=clock,enabled=True,
-                        parallel_specialists=env.get('PARALLEL_PAPER_SPECIALISTS')=='true')
+    comparison = None
+    if env.get('PAPER_COMPARISON_ENABLED') == 'true':
+        from .comparison_live import EventClient, LiveComparison
+        from .paper_observer import ReferenceObserver
+        comparison_env = {k:v for k,v in env.items() if k in ('ALPACA_API_KEY', 'ALPACA_API_SECRET')}
+        comparison = LiveComparison(root.parent/(root.name+'-comparison'),
+            client=EventClient(env.get('REVIEW_INGEST_SECRET'), clock=clock), clock=clock,
+            observer=ReferenceObserver(comparison_env, clock=clock))
+        comparison.sync()  # A storage outage blocks paid research before spending.
+    try:
+        return run_pipeline(document,feed,client=client,root=root,refresh=refresh,deliver=delivery,clock=clock,enabled=True,
+                            comparison=comparison,parallel_specialists=env.get('PARALLEL_PAPER_SPECIALISTS')=='true')
+    finally:
+        if comparison is not None:
+            comparison.close()

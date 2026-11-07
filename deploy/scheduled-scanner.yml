@@ -90,6 +90,12 @@ jobs:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
           GH_PAPER_TOKEN: ${{ github.token }}
+      - name: Compare original published signals with this AI capture
+        if: always() && steps.window.outputs.run == 'true'
+        continue-on-error: true
+        run: python -m market_radar_ai.dashboard.cross_scanner_audit --collection artifacts/scheduled
+        env:
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
       - name: Explain collection coverage and blockers
         if: always() && steps.window.outputs.run == 'true'
         continue-on-error: true
@@ -171,6 +177,7 @@ jobs:
           SCHEDULED_REVIEW_MODE: paid
           OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
           PAPER_FINAL_VERDICTS: 'true'
+          PAPER_COMPARISON_ENABLED: 'true'
           PARALLEL_PAPER_SPECIALISTS: ${{ vars.PARALLEL_PAPER_SPECIALISTS != 'false' && 'true' || 'false' }}
           PAPER_WATCHER_ENABLED: ${{ vars.PAPER_WATCHER_ENABLED != 'false' && 'true' || 'false' }}
           SEND_PAPER_LIFECYCLE_TELEGRAM: 'true'
@@ -190,6 +197,12 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
           GH_PAPER_TOKEN: ${{ github.token }}
+      - name: Reconcile original signals with the completed AI decision
+        if: always() && steps.review_window.outputs.run == 'true'
+        continue-on-error: true
+        run: python -m market_radar_ai.dashboard.cross_scanner_audit --collection artifacts/scheduled --review artifacts/decision
+        env:
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
       - name: Explain review progress, blockers and recorded spending
         if: always() && steps.review_window.outputs.run == 'true'
         continue-on-error: true
@@ -200,7 +213,10 @@ jobs:
         if: always() && steps.review_window.outputs.run == 'true'
         with:
           name: scheduled-decision-${{ github.run_id }}
-          path: artifacts/decision/
+          path: |
+            artifacts/decision/
+            artifacts/decision-comparison/*report.json
+            artifacts/decision-comparison/*health.json
           retention-days: 7
           if-no-files-found: warn
 
@@ -245,10 +261,12 @@ jobs:
       - name: Verify current crypto reference without creating a plan
         if: steps.window.outputs.run == 'true'
         run: python -m market_radar_ai.agents.paper_observer --verify-crypto
-      - name: Observe approved paper setups every five seconds
+      - name: Observe approved setups and prospective comparison cohorts every five seconds
         if: always() && steps.window.outputs.run == 'true'
         run: python -m market_radar_ai.agents.paper_watcher --duration 330
         env:
+          PAPER_COMPARISON_ENABLED: 'true'
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
           GH_PAPER_TOKEN: ${{ github.token }}
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
@@ -258,9 +276,43 @@ jobs:
         if: always() && steps.window.outputs.run == 'true'
         with:
           name: paper-watcher-${{ github.run_id }}
-          path: artifacts/paper-watcher/
+          path: |
+            artifacts/paper-watcher/*.json
+            artifacts/paper-watcher/comparison/*report.json
+            artifacts/paper-watcher/comparison/*health.json
           retention-days: 7
           if-no-files-found: warn
+
+
+      - name: Prepare end-of-day comparison recovery export
+        if: always() && steps.window.outputs.run == 'true'
+        id: backup
+        run: |
+          python - <<'PY'
+          import gzip, hashlib, json, os
+          from datetime import datetime
+          from pathlib import Path
+          from zoneinfo import ZoneInfo
+          now = datetime.now(ZoneInfo('Europe/Dublin'))
+          source = Path('artifacts/paper-watcher/comparison/comparison-events.jsonl')
+          ready = now.hour == 22 and now.minute < 15 and source.is_file()
+          if ready:
+              raw = source.read_bytes()
+              root = Path('artifacts/comparison-recovery'); root.mkdir(parents=True, exist_ok=True)
+              (root/'events.jsonl.gz').write_bytes(gzip.compress(raw))
+              (root/'manifest.json').write_text(json.dumps({'day':now.date().isoformat(),
+                  'exported_at':now.isoformat(),'sha256_uncompressed':hashlib.sha256(raw).hexdigest(),
+                  'event_count':len(raw.splitlines()),'dataset_kind':'forward'}))
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write('ready='+str(ready).lower()+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.backup.outputs.ready == 'true'
+        with:
+          name: comparison-recovery-${{ github.run_id }}
+          path: artifacts/comparison-recovery/
+          retention-days: 30
+          if-no-files-found: error
 
   account-sync:
     if: ${{ vars.ACCOUNT_SYNC_ENABLED != 'false' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours }}

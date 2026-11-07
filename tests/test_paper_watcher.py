@@ -108,6 +108,12 @@ def test_idle_watcher_reads_only_every_fifteen_seconds(tmp_path):
     assert s.reads==2 and s.writes==0 and status['model_calls']==0
     observer.fetch.assert_not_called()
 
+def test_missing_comparison_secret_preserves_existing_approved_watcher(tmp_path):
+    s=Session();c=Clock();observer=Mock()
+    status=run(env={**ENV,'PAPER_COMPARISON_ENABLED':'true','REVIEW_INGEST_SECRET':''},output=tmp_path,duration=10,
+               clock=c.now,monotonic=lambda:c.elapsed,sleep=c.sleep,observer=observer,session=s)
+    assert status['polls']==2 and status['comparison_state']=='configuration_unavailable'
+
 def test_weekends_and_paid_credentials_never_observe(tmp_path):
     c=Clock();observer=Mock();s=Session()
     result=run(env=ENV,output=tmp_path,clock=lambda:NOW+timedelta(days=5),observer=observer,session=s)

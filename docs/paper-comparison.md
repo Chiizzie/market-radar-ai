@@ -1,5 +1,11 @@
 # Specialist reviews and code-versus-AI comparison
 
+**7 November update:** the durable production integration and current deployment
+contract are documented in [forward-comparison-milestone.md](forward-comparison-milestone.md).
+The deployment limitations below describe the earlier foundation. Current prompt
+version is `paper-specialists-v2-chart-thesis`; the current strategy protocol is
+`opening30m-momentum20-pullback-v2`.
+
 Implemented 6 November 2026. This is an engineering foundation for a prospective
 paper experiment, not evidence of profitable trading or of AI adding value.
 
