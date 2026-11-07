@@ -1,6 +1,25 @@
 # Deployed milestone checkpoint — 7 November 2026
 
-Latest verification at 14:40 Europe/Dublin. EUR, paper-only, EUR20 maximum planned loss and existing intraday rules remain in force.
+Latest verification at 15:21 Europe/Dublin. EUR, paper-only, EUR20 maximum planned loss and existing intraday rules remain in force.
+
+## Research history, exposure and health — verified 15:21 Europe/Dublin
+
+- [Backend PR #15](https://github.com/Chiizzie/market-radar-ai/pull/15) and [dashboard PR #9](https://github.com/Chiizzie/pixel-perfect-replay-32614/pull/9) merged. Exact tested backend source: `76348883041c5416fdf0fd674b7668f1414239ac`; backend merge `5895924a8a4d9400b605965f05f7c9d7d1fe43bd`. Dashboard deployed merge: `210742dc83e6cc77591ca2033787c610d2a4156f`.
+- [Performance dashboard](https://pixel-perfect-replay-32614.lovable.app/performance) now browses 30 historical days per page, separately by protocol, with immutable per-setup entry/exit, review, cost and blocker details. Older records without details remain explicitly incomplete. Current health remains independent of the selected historical day.
+- Paper exposure includes simultaneous entry capital and initial stop risk for each alternative arm, with unresolved positions retained as possible exposure. This is reporting only: no capital gate, correlation model, strategy changes or portfolio-return claim.
+- Migration 0008 applied after rollback checks of date/detail pagination, late-arrival ordering, immutable snapshot isolation and viewer/nonviewer RLS. Raw events remain private; service-role access remains append/read only. All rehearsal records were rolled back.
+- Collector, reviewer, watcher and AVWAP pins now use the exact tested source above. Scheduler activation: `3d073ab34d863fe8291dff485d68d05e346513d5`. Existing account-sync pin remains `afd5a0121bfdea8f5186f261bcca9e79a8d21879`. Original scanner remains `cbfdb401b451bac8efc83d4bbe3104de8d6a25d2`.
+- New independent health workflow activation: `696717f7c4f4df86743aa2a2d87993e70551d96e`. It reads real GitHub run/job metadata, runs after completed scanner workflows and on a weekday monitoring schedule, and makes no model, quote-provider, order or Telegram calls. Missing or old evidence is not labelled a successful scan.
+- Exact source CI [42385473537](https://github.com/Chiizzie/market-radar-ai/actions/runs/42385473537): **1,258 tests passed**, compilation and both offline team scenarios passed. Dashboard: **574 offline tests**, TypeScript and production build passed. Signed partition mismatch and real Python output contracts passed, including AI-approved and AI-rejected outcomes.
+- Live comparison verification [42385778918](https://github.com/Chiizzie/market-radar-ai/actions/runs/42385778918): signed storage, duplicate receipt, independent reconstruction and JSONL restore passed on the actual empty cohort; two source events exported. [Recovery upload](https://github.com/Chiizzie/market-radar-ai/actions/runs/42385778918/artifacts/13579870912) confirmed and recorded.
+- Live AVWAP verification [42385780919](https://github.com/Chiizzie/market-radar-ai/actions/runs/42385780919): equivalent storage/restore checks passed on the actual empty cohort; three source events exported. [Recovery upload](https://github.com/Chiizzie/market-radar-ai/actions/runs/42385780919/artifacts/13579890760) confirmed and recorded.
+- Live health verification [42385782010](https://github.com/Chiizzie/market-radar-ai/actions/runs/42385782010): metadata received and complete job list stored. Latest natural scanner run was Friday, with successful collection, review, watcher and account-sync jobs; this is execution evidence only.
+- Current database: both cohorts **0 enrolled**, closed P/L **null**, exposure **0**, complete zero-row detail references, two genuine recovery-upload receipts and one operational report. No synthetic trade records were inserted. Live unsigned machine read returns **401**; the performance page returns **200** and requires viewer sign-in.
+- Both verification workflows made **0 paid model calls, 0 provider quote calls, 0 trades and 0 Telegram messages**. Archive compression integrity was checked locally in those runs. Receipts confirm upload, not a later download-and-restore test or continuous artifact availability.
+
+Implementation: [research-history-health.md](https://github.com/Chiizzie/market-radar-ai/blob/phase-1/market-data-layer/docs/research-history-health.md).
+
+Still needed: natural-market qualification/entry/exit and sustained quote coverage, scheduled end-of-session backups under load, and enough later unseen outcomes to measure performance. Market/sector context, same-time historical volume, more realistic costs and portfolio constraints remain separate research milestones. Existing comparison and AVWAP protocol hashes are unchanged.
 
 ## AVWAP shadow milestone — verified 14:40 Europe/Dublin
 
