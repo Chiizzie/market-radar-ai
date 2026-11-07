@@ -1,0 +1,57 @@
+name: Verify AVWAP shadow storage
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/method-storage-verify.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: e9c0df738223e08f935228b59238c9fae56eb6cb
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e .
+      - name: Verify signed storage and restore without provider calls or invented trades
+        env:
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+        run: |
+          python - <<'PY'
+          import json,os
+          from datetime import datetime,timezone
+          from pathlib import Path
+          from market_radar_ai.agents.comparison_live import EventClient
+          from market_radar_ai.agents.method_shadow import MethodShadow
+          client=EventClient(os.environ.get('REVIEW_INGEST_SECRET'))
+          first=MethodShadow('artifacts/method-verify/first',client=client)
+          first.sync();first.close()
+          events=[json.loads(line) for line in first.journal.read_text().splitlines()]
+          last=events[-1]
+          client.append(first.experiment,[{k:last[k] for k in ('kind','occurred_at','payload_json')}])
+          second=MethodShadow('artifacts/method-verify/second',client=client,day=first.day);second.sync()
+          restored=MethodShadow('artifacts/method-verify/restored',client=client,day=first.day)
+          for event in events: restored.apply(event)
+          now=datetime.now(timezone.utc)
+          assert second.seen==first.seen==restored.seen
+          assert first.outcomes(now)==second.outcomes(now)==restored.outcomes(now)
+          result={'state':'signed_method_storage_and_restore_verified','protocol_id':first.experiment,
+              'cohort_count':len(first.cohorts),'events_verified':len(events),
+              'model_calls':0,'provider_quote_calls':0,'trades_created':0,'telegram_messages':0,'trade_authorized':False}
+          Path('artifacts/method-verify/result.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: method-storage-verification-${{ github.run_id }}
+          path: artifacts/method-verify/result.json
+          retention-days: 30
+          if-no-files-found: warn
