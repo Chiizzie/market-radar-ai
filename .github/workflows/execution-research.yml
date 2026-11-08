@@ -1,0 +1,74 @@
+# Install on main only after the signed report schema and migration are deployed.
+name: Execution research and readiness
+on:
+  workflow_run:
+    workflows: ['Scheduled research collection']
+    types: [completed]
+  schedule:
+    # UTC candidates; the window step selects 08:12 Dublin and 09:12 New York.
+    - cron: '12 7,8,13,14 * * 1-5'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/execution-research.yml']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: market-radar-ai-execution-research
+  cancel-in-progress: false
+jobs:
+  research:
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && vars.EXECUTION_RESEARCH_ENABLED != 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Respect weekday windows and explicit verification
+        id: window
+        run: |
+          python - <<'PY'
+          import os
+          from datetime import datetime, timezone
+          from zoneinfo import ZoneInfo
+          now=datetime.now(timezone.utc)
+          d=now.astimezone(ZoneInfo('Europe/Dublin'))
+          n=now.astimezone(ZoneInfo('America/New_York'))
+          event=os.environ['GITHUB_EVENT_NAME']
+          allowed=event in ('push','workflow_dispatch') or (d.weekday()<5 and 8<=d.hour<23)
+          if event=='schedule': allowed=allowed and (d.hour==8 or n.hour==9)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('run='+str(allowed).lower()+'\n')
+          PY
+      - uses: actions/checkout@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          ref: 78960c21479ce137dfa7ccbbcae63f837992b200
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        if: steps.window.outputs.run == 'true'
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e .
+        if: steps.window.outputs.run == 'true'
+      - name: Reconstruct cost scenarios and shared portfolios from durable evidence
+        id: portfolios
+        if: steps.window.outputs.run == 'true'
+        run: python -m market_radar_ai.agents.execution_research --publish
+        env:
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+      - name: Check operational readiness without paid AI or orders
+        if: always() && steps.window.outputs.run == 'true'
+        run: python -m market_radar_ai.dashboard.execution_readiness --publish
+        env:
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+          GH_BUDGET_TOKEN: ${{ github.token }}
+          AI_KEY_PRESENT: ${{ secrets.OPEN_API_KEY != '' && 'true' || 'false' }}
+          WATCHER_ENABLED: ${{ vars.PAPER_WATCHER_ENABLED != 'false' && 'true' || 'false' }}
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.window.outputs.run == 'true'
+        with:
+          name: execution-research-${{ github.run_id }}
+          path: artifacts/execution-research/
+          retention-days: 30
+          if-no-files-found: error
