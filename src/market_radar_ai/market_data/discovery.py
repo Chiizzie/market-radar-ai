@@ -73,6 +73,7 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
     snapshots = None
     manifest = []
     detail_lanes = {}; sector_leaders = []
+    catalyst_links = {}; related = []; seed_news = {}
     key, secret = env.get('ALPACA_API_KEY'), env.get('ALPACA_API_SECRET')
     for endpoint, params, fields in [('most-actives', {'top':100,'by':'volume'}, ['most_actives']),
                                     ('movers', {'top':50}, ['gainers','losers'])]:
@@ -126,6 +127,9 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
         # Screen a broad bounded pool before selecting the enrichment batch.
         # No early stop at the first eight usable symbols; rotation reaches the tail.
         if broad and pool:
+            if env.get('ENABLE_CATALYST_LINKS') == 'true':
+                from .catalyst_links import fetch_seeds
+                seed_news = fetch_seeds(env=env)
             from .providers.alpaca_batch import discover_snapshots
             from .discovery_signals import load_checkpoint, save_checkpoint
             from pathlib import Path
@@ -141,7 +145,11 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
         if broad:
             from .coverage_lanes import leaders, reserve_screen
             sector_leaders=leaders((snapshots or {}).get("symbol_evidence", {}))
-            ordered=reserve_screen(ordered,pool,sector_leaders,screen_limit)
+            if env.get('ENABLE_CATALYST_LINKS') == 'true':
+                from .catalyst_links import discover_links
+                catalyst_links = discover_links(seed_news, (snapshots or {}).get('symbol_evidence', {}), pool, now=datetime.now(timezone.utc))
+                related = catalyst_links['priority_symbols']
+            ordered=reserve_screen(ordered,pool,sector_leaders,screen_limit,related)
         members = set(pool)
         leader_symbols = set(list(dict.fromkeys(s for s in ranked if s in members))[:screen_limit//2])
         ranked_positions = {s: i+1 for i,s in enumerate(ranked)}
@@ -181,14 +189,14 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
         if regular:
             if broad:
                 from .coverage_lanes import select_details
-                selected,detail_lanes=select_details(candidates,sector_leaders,now,research_limit)
+                selected,detail_lanes=select_details(candidates,sector_leaders,now,research_limit,related)
             else:
                 _,selected=select([candidates],now,limit=research_limit)
         else:
             if broad:
                 from .coverage_lanes import select_details
                 research_pool=list(dict.fromkeys([s for s in ranked if s in set(pool)]+pool))
-                selected,detail_lanes=select_details(research_pool,sector_leaders,now,research_limit)
+                selected,detail_lanes=select_details(research_pool,sector_leaders,now,research_limit,related)
             else:
                 selected=catalogue_selection(ranked,pool,now,limit=research_limit)
         checked_symbols=set(ordered) if regular else set()
@@ -212,6 +220,7 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
                 'technical_score': priority[symbol][1] if usable else None,
                 'detail_selected': symbol in selected_set,
                 'detail_lane': detail_lanes.get(symbol),
+                'related_company_catalyst': symbol in related,
                 'selection_reason': ('selected_for_research' if symbol in selected_set else
                     'outside_technical_budget' if not checked and regular else
                     'premarket_rotation_deferred' if not regular else
@@ -242,7 +251,7 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
             'deferred_symbols':[s for s in pool if s not in selected],
             'selection_policy':f'liquid_core_sector_movers_technical_and_rotation_v2_screen_{screen_limit}_enrich_{research_limit}' if broad else f'fresh_leaders_and_catalogue_rotation_every_5_minutes_screen_{screen_limit}_enrich_{research_limit}',
             'snapshot_coverage':{k:v for k,v in snapshots.items() if k not in ('ranked_symbols','symbol_evidence','checkpoint')} if snapshots else None,
-            'selection_manifest': manifest,
+            'selection_manifest': manifest, 'catalyst_links': catalyst_links,
             'universe':universe, 'coverage':coverage,
             'candidate_pool_symbols':pool,
             'screening':screening,'fallback_used':fallback_used,

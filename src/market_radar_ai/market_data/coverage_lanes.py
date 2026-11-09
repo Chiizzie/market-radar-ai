@@ -31,12 +31,12 @@ def leaders(evidence):
     return list(dict.fromkeys(out))
 
 
-def reserve_screen(ordered, pool, sector, limit):
+def reserve_screen(ordered, pool, sector, limit, related=()):
     members=set(pool)
-    return list(dict.fromkeys([s for s in (*CORE,*sector) if s in members]+ordered))[:limit]
+    return list(dict.fromkeys([s for s in (*CORE,*related,*sector) if s in members]+ordered))[:limit]
 
 
-def select_details(candidates, sector, now, limit):
+def select_details(candidates, sector, now, limit, related=()):
     from .discovery import select
     usable=set(candidates); chosen=[]; lanes={}
     def add(symbols, lane, cap):
@@ -45,10 +45,11 @@ def select_details(candidates, sector, now, limit):
             if s in usable and s not in lanes and added<cap and len(chosen)<limit:
                 chosen.append(s);lanes[s]=lane;added+=1
     add(CORE,'liquid_core',12)
+    add(related,'related_company_catalyst',4)
     add(sector,'sector_mover',8)
     add(candidates,'technical_leader',10)
     rest=[s for s in candidates if s not in lanes]
-    # Rotation gets at least nine of the normal 39 slots with all lanes full.
+    # Bounded catalyst reservations can use four of the normal rotation slots.
     if rest:
         slots=limit-len(chosen);offset=(int(now.timestamp())//300*max(1,slots))%len(rest)
         add(rest[offset:]+rest[:offset],'rotation',slots)

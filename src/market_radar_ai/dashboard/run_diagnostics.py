@@ -170,11 +170,13 @@ def build_report(collection, review=None, *, now, budget_loader=None):
     discovery=read(collection/'discovery.json',issues) or {}
     money=spending(packet,status,audit,budget_loader=budget_loader,phase=phase)
     from .missed_moves import explain
+    from ..market_data.catalyst_links import routing_report
     missed=explain(read(collection/'discovery-selection.json',issues) or {},q,decision,selection,now=now)
     return {'schema_version':'internal-run-diagnostics-v1','generated_at_dublin':now.astimezone(ZoneInfo('Europe/Dublin')).isoformat(),
             'phase':phase,'qualification_origin':origin,'qualification_available':bool(q),
             'discovery':discovery_summary(discovery, now=now),
             'missed_moves':missed,
+            'catalyst_links':routing_report(discovery.get('catalyst_links',{}),read(collection/'discovery-selection.json',issues) or {},q),
             'coverage':coverage,'candidates':candidates,'blocker_counts':dict(sorted(reasons.items())),
             'blocker_groups':dict(sorted(groups.items())),
             'review':{'state':label(status.get('state','not_confirmed')),
@@ -244,9 +246,15 @@ def main():
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(report,indent=2)+'\n')
     args.output.with_name('missed-moves.json').write_text(json.dumps(report['missed_moves'],indent=2)+'\n')
+    args.output.with_name('competitor-catalysts.json').write_text(json.dumps(report['catalyst_links'],indent=2)+'\n')
     if args.summary:
         with args.summary.open('a') as f:
             f.write(markdown(report))
+            f.write('\n### Related-company catalyst research\n\n')
+            links = report['catalyst_links']
+            f.write('Bounded semiconductor discovery; indirect hypotheses, not trade calls. Full evidence: competitor-catalysts.json.\n')
+            for row in links.get('rows',[])[:12]:
+                f.write('- '+label(row['source_symbol'])+' → '+label(row['symbol'])+': '+label(row['response']['state'])+'; '+label(row['admission_state'])+'; '+', '.join(label(b) for b in row['qualification_blockers'])+'\n')
             f.write('\n### Observed movers and coverage gaps\n\n')
             for row in report['missed_moves']['rows'][:15]:
                 f.write('- '+label(row['symbol'])+': '+', '.join(label(x) for x in row['reasons'])+'\n')
