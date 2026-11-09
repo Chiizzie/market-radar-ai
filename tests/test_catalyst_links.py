@@ -69,3 +69,8 @@ def test_discovery_routes_indirect_news_before_detail_selection(monkeypatch):
     row=next(r for r in out['selection_manifest'] if r['symbol']=='INTC')
     assert row['detail_lane']=='related_company_catalyst' and row['related_company_catalyst']
     assert len(out['catalyst_links']['rows'])==2
+
+def test_publisher_tag_does_not_invent_headline_subject():
+    n,p=fixtures();n['AMD']=deepcopy(n.pop('NVDA'));n['AMD']['items'][0]['symbols']=['AMD','NVDA']
+    r=discover_links(n,p,['NVDA','AMD'],now=NOW)
+    assert not r['rows'] and r['rejected_items']==1

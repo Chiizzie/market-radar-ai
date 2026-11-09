@@ -6,9 +6,15 @@ fresh headline is a research trigger, not a directional event classification.
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from decimal import Decimal
+import re
 
 VERSION = 'competitor-catalyst-discovery-v1'
 RELATIONSHIP_SOURCE = 'https://s201.q4cdn.com/141608511/files/doc_financials/2026/ar/2026-Annual-Report-Web.pdf'
+ALIASES = {'NVDA': r'\b(?:NVDA|NVIDIA|Jensen Huang)\b', 'AMD': r'\b(?:AMD|Advanced Micro Devices)\b', 'INTC': r'\b(?:INTC|Intel)\b'}
+
+def headline_mentions_source(title, source):
+    return isinstance(title,str) and bool(re.search(ALIASES.get(source,r'(?!)'),title,re.IGNORECASE))
+
 RELATIONSHIPS = {'NVDA': ('AMD', 'INTC'), 'AMD': ('NVDA',), 'INTC': ('NVDA',)}
 
 
@@ -85,6 +91,8 @@ def discover_links(news, snapshots, pool, *, now):
         for item in report.get('items', [])[:10]:
             try:
                 published = stamp(item['published_at'])
+                if not headline_mentions_source(item['title'], source):
+                    raise ValueError('publisher_tag_without_headline_subject')
                 if source not in item['symbols'] or not 0 <= (now-published).total_seconds() <= 86400:
                     raise ValueError('unrelated_or_expired')
                 if published > received or not item['evidence_id'] or not item['url'].startswith('https://'):

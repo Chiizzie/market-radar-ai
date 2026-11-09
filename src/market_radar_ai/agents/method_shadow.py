@@ -22,16 +22,20 @@ class MethodShadow:
     Event sequence, protocol, checksums and source inputs are verified on restore.
     Re-running a capture cannot reset expiry, rescue a miss or retry a loss.
     """
-    def __init__(self, directory, *, client, observer=None, clock=lambda:datetime.now(UTC), day=None, early_opening=False):
+    def __init__(self, directory, *, client, observer=None, clock=lambda:datetime.now(UTC), day=None, early_opening=False, competitor=False):
         self.root=Path(directory); self.root.mkdir(parents=True,exist_ok=True)
         self.journal=self.root/'method-events.jsonl'
         if self.journal.exists(): raise ValueError('fresh_method_projection_required')
         self.client,self.observer,self.clock=client,observer,clock
         self.day=day or aware(clock()).date().isoformat()
-        self.protocol=PROTOCOL; self.scenario=scenario; self.early_opening=early_opening
+        self.protocol=PROTOCOL; self.scenario=scenario; self.early_opening=early_opening; self.competitor=competitor
+        if early_opening and competitor: raise ValueError("one_experiment_per_worker")
         if early_opening:
             from .early_opening import PROTOCOL as EARLY_PROTOCOL, scenario as early_scenario
             self.protocol=EARLY_PROTOCOL; self.scenario=early_scenario
+        if competitor:
+            from .competitor_shadow import PROTOCOL as COMPETITOR_PROTOCOL, scenario as competitor_scenario
+            self.protocol=COMPETITOR_PROTOCOL; self.scenario=competitor_scenario
         self.experiment=digest(self.protocol); self.cursor=0; self.seen=set()
         self.cohorts={}; self.quotes={}; self.screen=None
         self.health={'polls':0,'quotes_received':0,'error_polls':0,'maximum_poll_gap_seconds':0,
@@ -174,10 +178,15 @@ class MethodShadow:
 
     def close(self):
         self.sync(); report=self.report()
-        if not self.early_opening:
+        if not self.early_opening and not self.competitor:
             (self.root/'method-report.json').write_text(json.dumps(report,indent=2)+'\n')
         from .research_views import append_publication, method_rows
-        if self.early_opening:
+        if self.competitor:
+            report.update(schema_version="competitor-shadow-report-v1",
+                note="Separate unproven competitor-strength paper experiment. Indirect news hypothesis, not causality or headline sentiment. Projected target; assumed 40bps costs; independent allocations, not portfolio performance.",
+                rows=method_rows(self,now=aware(report["as_of"])))
+            (self.root/"competitor-shadow-report.json").write_text(json.dumps(report,indent=2)+"\n")
+        elif self.early_opening:
             # Durable enrolments/quotes use their own protocol partition. Keep this
             # experimental report out of the established AVWAP dashboard summary.
             report.update(schema_version='early-opening-report-v1',
@@ -190,7 +199,7 @@ class MethodShadow:
         return report
 
 
-def screen_capture(worker, capture, feed, *, env, clock, sibling=None):
+def screen_capture(worker, capture, feed, *, env, clock, sibling=None, competitor=None, discovery=None, manifest=None):
     from .chart_news import checked_source
     from ..market_data.providers.alpaca_batch import fetch_histories
     from ..market_data.stock_checks import collect
@@ -198,9 +207,16 @@ def screen_capture(worker, capture, feed, *, env, clock, sibling=None):
     if len(symbols)>40: raise ValueError('method_capture_capacity')
     contexts={r['payload']['symbol']:r for r in capture.get('stock_context',[])}
     # Independent full-session history: never re-anchor at a truncated 60-bar capture.
-    started=clock(); histories={}
+    started=clock(); histories={}; competitor_prices={}
+    links=(discovery or {}).get("catalyst_links",{}).get("rows",[])
+    prior={r["symbol"]:r for r in (manifest or {}).get("symbols",[]) if r.get("snapshot_status")=="fresh"}
     def history_last():
         histories.update(fetch_histories(symbols,env=env,clock=clock))
+        if competitor is not None and links:
+            from ..market_data.providers.alpaca_batch import discover_snapshots
+            linked=sorted({r["source_symbol"] for r in links}|{r["symbol"] for r in links})
+            if len(linked)>3: raise ValueError("competitor_universe_capacity")
+            competitor_prices.update(discover_snapshots(linked,env=env,now=clock(),clock=clock,prior_snapshots=prior)["symbol_evidence"])
     refs=collect(symbols,env=env,clock=clock,before_quotes=history_last) if symbols else None
     collected=clock()
     rows=[]; inputs_batch=[]
@@ -216,13 +232,15 @@ def screen_capture(worker, capture, feed, *, env, clock, sibling=None):
                 'bars_received_at':bars.retrieved_at.isoformat(),'daily':p['daily']['bars'],'context':p,
                 'news_check':checked_source(feed,symbol=symbol,now=clock()),
                 'reference_checks':{'payload':checks,'payload_sha256':digest(checks)}}
+            if competitor is not None:
+                inputs["competitor_evidence"]={"links":[r for r in links if r["symbol"]==symbol],"snapshots":competitor_prices}
             inputs_batch.append(inputs)
         except (ValueError,KeyError,TypeError,AttributeError,ArithmeticError):
             rows.append({'candidate_id':'stocks:'+symbol,'blockers':['method_source_unavailable_or_invalid']})
     def age(value, at):
         try: return (aware(at)-aware(value)).total_seconds()
         except (ValueError,TypeError,AttributeError): return None
-    for target in [worker]+([sibling] if sibling is not None else []):
+    for target in [worker]+([sibling] if sibling is not None else [])+([competitor] if competitor is not None else []):
         screened=list(rows)+target.enrol_many(inputs_batch,now=clock())
         target.screen={'evaluated_at':target.screen_time,'examined':len(screened),
             'enrolled':sum(not r['blockers'] for r in screened),
@@ -247,6 +265,8 @@ def main():
     p.add_argument('--evidence',type=Path); p.add_argument('--duration',type=int,default=330)
     p.add_argument('--early-opening',action='store_true')
     p.add_argument('--with-early-opening',action='store_true')
+    p.add_argument('--with-competitor',action='store_true')
+    p.add_argument('--discovery',type=Path);p.add_argument('--manifest',type=Path)
     p.add_argument('--storage-only',action='store_true'); p.add_argument('--observe-only',action='store_true'); p.add_argument('--day')
     args=p.parse_args()
     if not 0<=args.duration<=600: p.error('duration must be between 0 and 600')
@@ -254,14 +274,19 @@ def main():
     worker=MethodShadow(args.output,client=EventClient(os.environ.get('REVIEW_INGEST_SECRET')),
                         observer=ReferenceObserver(os.environ),clock=clock,day=args.day,early_opening=args.early_opening)
     worker.sync()
-    sibling=None
+    sibling=None; competitor=None
+    if args.with_competitor:
+        competitor=MethodShadow(args.output/"competitor",client=worker.client,observer=worker.observer,clock=clock,day=args.day,competitor=True)
+        competitor.sync()
     if args.with_early_opening:
         sibling=MethodShadow(args.output/'early-opening',client=worker.client,observer=worker.observer,clock=clock,day=args.day,early_opening=True)
         sibling.sync()
     if not args.storage_only:
         if not args.observe_only:
             if not args.capture or not args.evidence: p.error('capture and evidence required')
-            screen_capture(worker,json.loads(args.capture.read_text()),json.loads(args.evidence.read_text()),env=os.environ,clock=clock,sibling=sibling)
+            screen_capture(worker,json.loads(args.capture.read_text()),json.loads(args.evidence.read_text()),env=os.environ,clock=clock,sibling=sibling,competitor=competitor,
+                discovery=json.loads(args.discovery.read_text()) if args.discovery and args.discovery.exists() else {},
+                manifest=json.loads(args.manifest.read_text()) if args.manifest and args.manifest.exists() else {})
         else:
             worker.health['screen_unavailable']=True
         end=time.monotonic()+args.duration
@@ -271,10 +296,14 @@ def main():
             if sibling is not None:
                 try: sibling.poll()
                 except (RuntimeError,ValueError,KeyError,TypeError): sibling.health['error_polls']+=1
+            if competitor is not None:
+                try: competitor.poll()
+                except (RuntimeError,ValueError,KeyError,TypeError): competitor.health["error_polls"]+=1
             if time.monotonic()>=end: break
             time.sleep(min(5,max(0,end-time.monotonic())))
     report=worker.close()
     if sibling is not None: sibling.close()
+    if competitor is not None: competitor.close()
     print(json.dumps({'state':'method_shadow_recorded','cohort_count':report['cohort_count'],
                       'model_calls':0,'trade_authorized':False}))
 
