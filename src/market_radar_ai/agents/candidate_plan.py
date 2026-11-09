@@ -22,13 +22,13 @@ def draft(bars, fx, *, now, market=None):
     rows = bars.candles
     if bars.quote_currency == 'EUR':
         rate, fx_source = D(1), 'native_EUR_no_conversion'
-        expiry = now + timedelta(seconds=60)
+        expiry = now + timedelta(seconds=180)
     else:
         quote = FxQuote.model_validate(fx)
         if quote.native_currency != bars.quote_currency or not 0 <= (now-quote.observed_at).total_seconds() < 900:
             raise ValueError('paper_plan_fx_invalid_or_stale')
         rate, fx_source = quote.eur_per_unit, quote.source
-        expiry = min(now+timedelta(seconds=60),quote.observed_at+timedelta(seconds=900))
+        expiry = min(now+timedelta(seconds=180),quote.observed_at+timedelta(seconds=900))
     # A conditional scenario, not a market order or an optimized strategy.
     from .setup_checks import technical_checks
     from ..market_data.pullback import STRATEGY

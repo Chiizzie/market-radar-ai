@@ -49,7 +49,7 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
         run_cycle(env=clean,output=output,cache_path=root/'fresh-cache.json',clock=clock,run=stage,
                   delivery=lambda *a,**k:{'state':'internal_paper_revalidation_only'},
                   stock_symbols=('MU',) if symbol in ASSETS else (symbol,),
-                  crypto_symbols=(symbol,) if symbol in ASSETS else None)
+                  crypto_symbols=(symbol,) if symbol in ASSETS else ())
         return json.loads((output/'enriched-capture.json').read_text()),json.loads((output/'news.json').read_text())
     def delivery(archive):
         from ..dashboard.paper_final_delivery import deliver
@@ -72,7 +72,7 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
                 from .paper_watcher import run
                 # Bridge the entire entry window even if the next runner is late.
                 # The independent overlapping watcher continues open positions.
-                run(env=watch_env,output=root/'entry-watcher',duration=65,
+                run(env=watch_env,output=root/'entry-watcher',duration=185,
                     clock=clock,observer=observer)
     comparison = None
     if env.get('PAPER_COMPARISON_ENABLED') == 'true':

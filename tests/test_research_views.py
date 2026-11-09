@@ -60,8 +60,8 @@ def test_publication_is_isolated_and_complete_summary_is_last(tmp_path,monkeypat
     assert not any(k in detail for k in ('sources','packet','inputs','quote','api_key'))
     assert detail['arms']['ai_reviewed']['state']=='not_reviewed'
     assert summary['exposure']['code_only']['watching_positions']==1
-    # Observational reporting must not silently start a new strategy cohort.
-    assert digest(PROTOCOL)=='4a0bfb1b110061c801edae8267223ff64c356f7bc72021638e37b48d918458c2'
+    # Explicit v3 admission/review policy starts an isolated prospective cohort.
+    assert digest(PROTOCOL)=='abfaa5c8b4fd3e76a46dddd142bd4747765b32c0caf2c6122afe9dbff6c7e4e8'
 
 
 def test_failed_detail_write_never_publishes_a_complete_report():

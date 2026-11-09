@@ -56,13 +56,15 @@ def paper_gate(row, *, now):
     else:
         early=tech.get('strategy_id')=='opening_continuation_30m_v1'
         if Decimal(tech['momentum_window_pct'] if early else tech['momentum_20_bars_pct'])<=0: blocks.append('nonpositive_momentum')
-        if Decimal(tech['relative_volume_3_vs_prior'] if early else tech['relative_volume_5_vs_15'])<Decimal('1.5'):blocks.append('relative_volume_below_1_5')
+        minimum_volume=Decimal('1') if tech.get('strategy_id') in ('trend_pullback_reclaim_v1','trend_continuation_20bar_v1') else Decimal('1.5')
+        if Decimal(tech['relative_volume_3_vs_prior'] if early else tech['relative_volume_5_vs_15'])<minimum_volume:
+            blocks.append('relative_volume_below_strategy_minimum' if minimum_volume==1 else 'relative_volume_below_1_5')
         if tech['close_above_rolling_vwap'] is not True:blocks.append('below_rolling_vwap')
         if tech['trigger_state']!='WAITING_FOR_TRIGGER':blocks.append('conditional_entry_already_passed')
     from ..market_data.pullback import STRATEGY
-    if tech.get('strategy_id') == STRATEGY:
+    if tech.get('strategy_id') in (STRATEGY,'trend_continuation_20bar_v1'):
         from .chart_news import valid_check
-        if row['market'] != 'stocks' or tech.get('chart_pattern', {}).get('pattern_state') != 'CONFIRMED':
+        if row['market'] != 'stocks' or (tech.get('strategy_id')==STRATEGY and tech.get('chart_pattern', {}).get('pattern_state') != 'CONFIRMED'):
             blocks.append('stock_pullback_pattern_not_confirmed')
         if not valid_check(row.get('chart_news_check'), symbol=row['symbol'], now=now):
             blocks.append('chart_news_check_missing_or_incomplete')
@@ -73,7 +75,7 @@ def paper_gate(row, *, now):
             'assumptions':['Catalogue match is paper availability evidence, not live account order permission.',
                            'IEX stock or Kraken crypto reference prices, not broker execution quotes.',
                            'Fictional EUR 500 allocation and assumed 40 bps round-trip costs, including FX/slippage allowance.',
-                           ('Separate chart-led pullback strategy: no fresh catalyst required, but a current bounded news check and adverse-evidence review are required.' if tech.get('strategy_id') == STRATEGY else 'News attribution is evidence for the reviewers; catalyst strength is not pre-approved.')]}
+                           ('Separate chart-led stock strategy: no fresh catalyst required, but a current bounded news check and adverse-evidence review are required.' if tech.get('strategy_id') in (STRATEGY,'trend_continuation_20bar_v1') else 'News attribution is evidence for the reviewers; catalyst strength is not pre-approved.')]}
 
 
 def build_packets(document, feed, *, now):
@@ -83,8 +85,8 @@ def build_packets(document, feed, *, now):
     for row in report['candidates']:
         gate=paper_gate(row,now=now)
         if not gate['eligible_for_paper_review']:continue
-        body={'schema_version':'paper-review-packet-v1','assembled_at':now.isoformat(),
-              'review_deadline':(now+timedelta(minutes=10)).isoformat(),
+        body={'schema_version':'paper-review-packet-v1','review_policy_version':REVIEW_POLICY_VERSION,'assembled_at':now.isoformat(),
+              'review_deadline':min(now+timedelta(seconds=180),datetime.fromisoformat(row['conditional_paper_plan']['exit_by'])).isoformat(),
               'candidate_id':row['candidate_id'],'symbol':row['symbol'],
               'plan':row['conditional_paper_plan'],'technical_checks':row['technical_checks'],
               'reference_checks':row['reference_checks'],
@@ -156,8 +158,20 @@ def finalize(packet, audit, fresh_document, fresh_feed, *, now):
         blocks.append('review_expired_or_future')
     # Every specialist retains a veto through REJECT or MORE_EVIDENCE_REQUIRED.
     # APPROVE_PAPER concerns are disclosed caveats, not an implicit second verdict.
-    if any(r.verdict!='APPROVE_PAPER' for r in reports):
+    current_policy=body.get('review_policy_version')==REVIEW_POLICY_VERSION
+    if (any(r.verdict=='REJECT' for r in reports) or reports[-1].verdict!='APPROVE_PAPER'
+            or (not current_policy and any(r.verdict!='APPROVE_PAPER' for r in reports))):
         blocks.append('team_did_not_clear_setup')
+    if current_policy:
+        from .conditional_revalidation import revalidate
+        plan,fresh_blocks=revalidate(body,fresh_document,fresh_feed,now=now)
+        blocks.extend(fresh_blocks)
+        return {'schema_version':'paper-final-decision-v1','review_policy_version':REVIEW_POLICY_VERSION,'candidate_id':body['candidate_id'],
+            'packet_id':packet['packet_id'],'evaluated_at':now.isoformat(),
+            'verdict':'PAPER_WATCH_FOR_ENTRY' if not blocks else 'NO_ACTION',
+            'paper_only':True,'trade_authorized':False,'live_orders_enabled':False,
+            'blockers':sorted(set(blocks)),'plan':plan if not blocks else None,'assumptions':body['assumptions'],
+            'note':'Conditional simulated entry only, at a post-approval quote. No backdated entry, live order or guaranteed fill.'}
     fresh=build_packets(fresh_document,fresh_feed,now=now)['packets']
     matches=[p for p in fresh if p['packet']['candidate_id']==body['candidate_id']]
     plan=None

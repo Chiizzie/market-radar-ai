@@ -15,13 +15,15 @@ from .setup_checks import validate_paper_plan
 
 PROTOCOL = {
     'version': 'paper-comparison-v1',
-    'code_strategy_version': 'opening30m-momentum20-pullback-v2',
+    'code_strategy_version': 'opening30m-continuation20-pullback-v3',
     'review_policy_version': REVIEW_POLICY_VERSION,
     'baseline_entry_clock': 'enrolment_before_review',
     'ai_entry_clock': 'fresh_final_approval',
     'fill_clock': 'local_receipt_not_backdated_exchange_time',
     'entry_mode': 'breakout',
     'exit_window_seconds': 30,
+    'maximum_entry_spread_bps': '20',
+    'maximum_entry_gap_bps': '20',
     'currency': 'EUR',
     'maximum_planned_loss_eur': '20',
     'prices': 'reference_venue_only',
@@ -81,7 +83,8 @@ def _outcome(plan, observations, *, start, now):
               and start <= aware(x['received_at']) <= now]
     result = replay_long(_plan(plan), quotes, decision_at=start,
                          entry_expires_at=aware(plan['expires_at']),
-                         entry_mode='breakout', exit_window_seconds=30)
+                         entry_mode='breakout', exit_window_seconds=30,
+                         maximum_entry_spread_bps=Decimal('20'),maximum_entry_gap_bps=Decimal('20'))
     state = result.status
     if state == 'not_filled' and result.reason == 'no_observed_eligible_fill' and now < aware(plan['expires_at']):
         state = 'watching'

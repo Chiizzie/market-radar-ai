@@ -65,7 +65,7 @@ def qualify(document, feed, *, now):
             result['blockers'].append('paper_costs_and_allocation_are_assumptions')
         from ..market_data.pullback import STRATEGY
         from .chart_news import checked_source
-        news_check = checked_source(feed, symbol=p['symbol'], now=now) if technical.get('strategy_id') == STRATEGY else None
+        news_check = checked_source(feed, symbol=p['symbol'], now=now) if technical.get('strategy_id') in (STRATEGY,'trend_continuation_20bar_v1') else None
         sources = dict(p['sources'])
         if news_check:
             sources['news_check:'+digest(news_check)] = news_check

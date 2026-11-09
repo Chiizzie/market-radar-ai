@@ -87,7 +87,7 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
     crypto_discovery = None
     crypto = CRYPTO
     if crypto_symbols is not None:
-        if (not 1<=len(crypto_symbols)<=CRYPTO_RESEARCH_LIMIT or len(set(crypto_symbols))!=len(crypto_symbols)
+        if (not (0 if stock_symbols else 1)<=len(crypto_symbols)<=CRYPTO_RESEARCH_LIMIT or len(set(crypto_symbols))!=len(crypto_symbols)
                 or any(p not in ASSETS for p in crypto_symbols)):
             raise ValueError('invalid_targeted_crypto_pairs')
         crypto=tuple(crypto_symbols)

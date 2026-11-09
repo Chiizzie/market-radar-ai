@@ -148,7 +148,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--stocks", nargs="+", default=["MSFT", "AAPL", "NVDA"])
-    parser.add_argument("--crypto", nargs="+", default=["XBTEUR", "ETHEUR"])
+    parser.add_argument("--crypto", nargs="*", default=["XBTEUR", "ETHEUR"])
     parser.add_argument('--stock-provider', choices=['yahoo_finance', 'alpaca_iex'], default='yahoo_finance')
     parser.add_argument('--per-market-limit', type=int, default=10)
     parser.add_argument('--universe', type=Path, help='JSON object with stocks and crypto symbol lists')

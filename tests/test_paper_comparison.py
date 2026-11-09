@@ -81,7 +81,7 @@ def test_ai_cannot_use_entries_that_happened_during_review(tmp_path, monkeypatch
     plan = packet['packet']['plan']
     observe(store, packet, 2, plan['entry_eur'])
     observe(store, packet, 3, plan['target_eur'])
-    report = store.report(now=NOW + timedelta(minutes=2))
+    report = store.report(now=NOW + timedelta(minutes=4))
     assert report['code_only']['closed'] == 1
     assert report['ai_reviewed']['states'] == {'not_filled': 1}
     assert report['approved_entries_missed_or_unobserved'] == 1
@@ -129,7 +129,7 @@ def test_enrolment_deduplicates_without_rewriting_initial_window(tmp_path, monke
     assert report['cohort_count'] == 1 and report['rows'][0]['enrolled_at'] == NOW.isoformat()
     assert report['ai_reviewed']['states'] == {'not_reviewed': 1}
     with pytest.raises(ValueError):
-        store.enrol(packet, now=NOW + timedelta(minutes=2))
+        store.enrol(packet, now=NOW + timedelta(minutes=4))
 
 
 @pytest.mark.parametrize('fault', ['crossed', 'stale', 'future', 'before_enrolment', 'other_candidate'])

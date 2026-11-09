@@ -1,6 +1,7 @@
 """Append-only local paper journal for final verdicts and EUR reference quotes."""
 import json
 import sqlite3
+from decimal import Decimal
 from datetime import datetime, timezone
 from .paper_team import PaperPlan
 from .paper_outcomes import Quote, replay_long
@@ -73,7 +74,9 @@ class PaperTracker:
                 quotes=sorted((q for q in quotes if q.observed_at<=now),key=lambda q:q.observed_at)
                 expiry=datetime.fromisoformat(p['expires_at'])
                 result=replay_long(plan,quotes,decision_at=datetime.fromisoformat(d['evaluated_at']),
-                                   entry_expires_at=expiry,entry_mode='breakout',exit_window_seconds=30)
+                                   entry_expires_at=expiry,entry_mode='breakout',exit_window_seconds=30,
+                    maximum_entry_spread_bps=Decimal('20') if d.get('review_policy_version')=='paper-specialists-v3-conditional-chief' else None,
+                    maximum_entry_gap_bps=Decimal('20') if d.get('review_policy_version')=='paper-specialists-v3-conditional-chief' else None)
                 status=result.status
                 if status=='not_filled' and result.reason=='no_observed_eligible_fill' and now<expiry:
                     status='watching'

@@ -18,10 +18,22 @@ def qualified_row():
 
 
 def fixture(monkeypatch):
+    # This minimal legacy packet intentionally lacks real chart evidence. Keep
+    # legacy reconstruction/immutability tests on their original policy; the v3
+    # integration tests use complete captures and test conditional revalidation.
+    import market_radar_ai.agents.paper_verdict as pv
+    original=pv.build_packets
+    def legacy_build(*args,**kwargs):
+        batch=original(*args,**kwargs)
+        for packet in batch['packets']:
+            packet['packet'].pop('review_policy_version',None)
+            packet['packet_id']=digest(packet['packet'])
+        return batch
+    monkeypatch.setattr(pv,'build_packets',legacy_build)
     row=qualified_row()
     import market_radar_ai.agents.qualification as q
     monkeypatch.setattr(q,'qualify',lambda *a,**k:{'candidates':[deepcopy(row)]})
-    packet=build_packets({},None,now=NOW)['packets'][0]
+    packet=pv.build_packets({},None,now=NOW)['packets'][0]
     seen=[]
     def ask(stage,prompt,schema):
         seen.append(prompt)
@@ -206,6 +218,7 @@ def test_unanimous_approval_with_caveats_can_watch_but_any_veto_still_blocks(mon
 
 
 def evidence_fixture(monkeypatch):
+    import market_radar_ai.agents.paper_verdict as pv
     row,_,_,_=fixture(monkeypatch)
     row['review_sources'].update({
         'market:old':{'symbol':'TEST','provider':'test','quote_currency':'EUR',
@@ -214,7 +227,7 @@ def evidence_fixture(monkeypatch):
                       'original_capture_sha256':'a'*64},
         'calendar:old':{'symbol':'TEST','events':[],'status':'empty',
                         'retrieved_at':NOW.isoformat(),'original_calendar_sha256':'b'*64}})
-    packet=build_packets({},None,now=NOW)['packets'][0]
+    packet=pv.build_packets({},None,now=NOW)['packets'][0]
     def ask(stage,prompt,schema):
         return dict(stage=stage,packet_id=prompt['packet_id'],verdict='APPROVE_PAPER',
                     rationale='Synthetic evidence test',source_ids=['news:test'],concerns=[],

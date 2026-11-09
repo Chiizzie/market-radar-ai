@@ -65,7 +65,7 @@ def technical_checks(bars, *, market=None):
             'breakout_trigger_native': str(trigger), 'stop_native': str(stop),
             'trigger_state': 'ALREADY_ABOVE_TRIGGER' if rows[-1].close>=trigger else 'WAITING_FOR_TRIGGER',
             'note': 'Rolling 20-bar VWAP, not full-session VWAP. Measurements are not a buy signal.'}
-    measured['strategy_id'] = strategy
+    measured['strategy_id'] = ('trend_continuation_20bar_v1' if strategy=='momentum_20_bar_v1' and market=='stocks' else strategy)
     if strategy == 'opening_continuation_30m_v1':
         measured['momentum_window_pct'] = measured.pop('momentum_20_bars_pct')
         measured['relative_volume_3_vs_prior'] = measured.pop('relative_volume_5_vs_15')
@@ -82,6 +82,9 @@ def technical_checks(bars, *, market=None):
                 target_cap_native=pattern['target_cap_native'],
                 trigger_state='ALREADY_ABOVE_TRIGGER' if rows[-1].close >= trigger else 'WAITING_FOR_TRIGGER',
                 note='Experimental stock pullback/reclaim. Rolling volume and VWAP checks remain required. News is checked for adverse evidence; a fresh catalyst is not required for this separate chart strategy.')
+    if measured.get('strategy_id')=='trend_continuation_20bar_v1':
+        measured['thesis_basis']='chart_led'
+        measured['note']+=' Separate chart-led continuation: recent volume at least its earlier baseline; a completed news risk check is required, a fresh positive headline is not.'
     return measured
 
 
