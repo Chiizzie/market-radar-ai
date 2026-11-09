@@ -305,3 +305,25 @@ def test_failed_review_retains_durable_cooldown_without_paid_retry(tmp_path,monk
     result=run_pipeline({},None,client=client,root=tmp_path/'second',refresh=None,deliver=None,clock=lambda:NOW,enabled=True)
     assert result['state']=='paper_review_cooldown' and result['model_calls']==0
     assert len(attempts)==1
+
+
+def test_budget_pause_records_spent_remaining_and_reserve_separately(tmp_path,monkeypatch):
+    import json
+    from market_radar_ai.agents.paper_verdict import run_pipeline
+    from market_radar_ai.agents.openai_pilot import OpenAIPilot
+    from market_radar_ai.agents.github_budget import GitHubSpendingLedger
+    from test_github_budget import MemoryStore
+    fixture(monkeypatch)
+    store=MemoryStore()
+    store.state['entries']['earlier']={'day':NOW.date().isoformat(),'reserved':920875,
+                                    'actual':920875,'usage':None}
+    client=OpenAIPilot(api_key='fake',ledger=GitHubSpendingLedger(store),eur_per_usd='.9',enabled=True)
+    def forbidden(**kw):raise AssertionError('Budget pause must precede model call')
+    monkeypatch.setattr(client,'call',forbidden)
+    result=run_pipeline({},None,client=client,root=tmp_path/'paused',refresh=None,deliver=None,
+                        clock=lambda:NOW,enabled=True)
+    assert result['state']=='budget_deferred'
+    b=json.loads((tmp_path/'paused'/'budget-headroom.json').read_text())
+    assert b['blocking_periods']==['daily']
+    assert b['periods']['daily']=={'limit_eur':'1','spent_eur':'0.920875','held_eur':'0','remaining_eur':'0.079125'}
+    assert b['required_headroom_eur']=='0.15'

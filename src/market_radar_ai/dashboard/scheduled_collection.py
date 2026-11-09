@@ -258,6 +258,26 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
     return report
 
 
+def review_can_continue(report):
+    """Route completed partial captures; per-candidate review still revalidates.
+
+    Only a market-data failure may be isolated. Missing stages, failed delivery,
+    calendar/news failures and captures without current evidence block review.
+    """
+    expected={'news','market','context','calendar','stock_checks','quotes',
+              'context_packages','readiness','qualification','paper_packets','dashboard'}
+    stages=report.get('stages',{})
+    delivery=report.get('delivery',{})
+    if set(stages)!=expected or any(v!='ok' for k,v in stages.items() if k!='market'):
+        return False
+    if stages.get('market') not in ('ok','failed') or set(report.get('failures',[]))-{'market'}:
+        return False
+    if delivery.get('state')!='scanner_snapshot_delivery_confirmed':return False
+    coverage=delivery.get('coverage',{})
+    return any(type(coverage.get(m,{}).get('current')) is int and
+               coverage[m]['current']>0 for m in ('stocks','crypto'))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=Path('artifacts/scheduled'))
@@ -278,6 +298,9 @@ def main():
         except Exception:
             print('Collection failure notification unavailable; inspect run logs.')
         raise
+    if os.environ.get('GITHUB_OUTPUT'):
+        with open(os.environ['GITHUB_OUTPUT'],'a') as output:
+            output.write('review_ready='+str(review_can_continue(result)).lower()+'\n')
     receipt = notify(result, env=os.environ, clock=lambda: datetime.now(timezone.utc))
     write_json(args.output/'collection-notification.json', receipt)
     print(json.dumps(result))

@@ -189,7 +189,7 @@ def build_report(collection, review=None, *, now, budget_loader=None):
                       'skipped':[{'candidate_id':label(x.get('candidate_id')),'reason':label(x.get('reason'))} for x in selection.get('skipped',[])],
                       'dashboard_delivery':label(delivery.get('dashboard',delivery.get('state','not_confirmed'))),
                       'telegram_delivery':label(delivery.get('telegram','not_confirmed'))},
-            'spending':money,'unreadable_artifacts':issues,'model_calls_by_diagnostics':0,'trade_authorized':False,
+            'budget_headroom':read(root/'budget-headroom.json',issues),'spending':money,'unreadable_artifacts':issues,'model_calls_by_diagnostics':0,'trade_authorized':False,
             'note':'Internal diagnostics, not trade advice. Blocker counts overlap per candidate. Eligibility is not approval. Unknown costs are not zero; ledger figures are estimates, not an invoice.'}
 
 
@@ -203,6 +203,16 @@ def markdown(report):
     money=report['spending']
     lines.append('AI cost: unavailable; reconciliation required.' if money['settled_estimated_eur'] is None else
                  f"AI cost estimate recorded: EUR {money['settled_estimated_eur']}; unresolved reservation maximum: EUR {money['held_maximum_eur']}.")
+    budget=report.get('budget_headroom')
+    if isinstance(budget,dict):
+        lines.append('AI review reserve required: EUR 0.15. Spending allowance is separate from provider account credit.')
+        for period,row in budget.get('periods',{}).items():
+            if period not in ('daily','monthly','lifetime'):continue
+            try:
+                values=[str(Decimal(row[k])) for k in ('limit_eur','spent_eur','held_eur','remaining_eur')]
+                if not all(Decimal(v).is_finite() for v in values):continue
+            except Exception:continue
+            lines.append(f'{period}: limit EUR {values[0]}; already spent EUR {values[1]}; held EUR {values[2]}; remaining EUR {values[3]}.')
     discovery = report['discovery']
     counts = discovery['coverage']
     if counts is None:

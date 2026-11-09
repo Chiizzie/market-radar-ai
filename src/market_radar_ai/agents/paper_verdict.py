@@ -356,14 +356,23 @@ def run_pipeline(document, feed, *, client, root, refresh, deliver, clock, enabl
     body=packet['packet']
     from zoneinfo import ZoneInfo
     day=now.astimezone(ZoneInfo('Europe/Dublin')).date().isoformat()
-    # Fail before any paid call if the complete review lacks minimum headroom.
+    # Record allowance, settled spending and held reservations separately.
+    budget={'currency':'EUR','required_headroom_eur':'0.15','periods':{},'blocking_periods':[]}
     for period,cap in state['limits_microeur'].items():
         entries=[e for e in state['entries'].values() if period=='lifetime'
                  or period=='daily' and e['day']==day
                  or period=='monthly' and e['day'][:7]==day[:7]]
-        if cap-sum(e['reserved'] if e['actual'] is None else e['actual'] for e in entries)<150000:
-            result={'state':'budget_deferred','model_calls':0,'trade_authorized':False}
-            save('status.json',result);return result
+        spent=sum(e['actual'] for e in entries if e['actual'] is not None)
+        held=sum(e['reserved'] for e in entries if e['actual'] is None)
+        remaining=cap-spent-held
+        budget['periods'][period]={k:str(Decimal(v)/Decimal(1000000)) for k,v in
+            {'limit_eur':cap,'spent_eur':spent,'held_eur':held,'remaining_eur':remaining}.items()}
+        if remaining<150000:budget['blocking_periods'].append(period)
+    save('budget-headroom.json',budget)
+    if budget['blocking_periods']:
+        result={'state':'budget_deferred','model_calls':0,'trade_authorized':False,
+                'budget':budget,'selected_candidate_id':body['candidate_id']}
+        save('status.json',result);return result
     client.ledger.reserve(cooldown,1,now);client.ledger.settle(cooldown,0)
     client.ledger.reserve(attempt,1,now);client.ledger.settle(attempt,0)
     save('packet.json',packet)
