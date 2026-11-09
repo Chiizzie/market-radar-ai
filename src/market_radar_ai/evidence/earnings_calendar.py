@@ -114,16 +114,73 @@ def fetch_calendar(symbol, *, env=None, session=None, clock=lambda:datetime.now(
         if owned:session.close()
 
 
-def enrich(document, *, fetch=fetch_calendar):
+def fetch_calendars(symbols, *, env=None, session=None, clock=lambda:datetime.now(timezone.utc)):
+    """Fetch the date window once, then validate separate symbol-bound records.
+
+    Omitting Finnhub's optional symbol filter avoids one request per candidate.
+    Missing rows remain unconfirmed, never proof that no earnings event exists.
+    """
+    symbols=list(dict.fromkeys(symbols))
+    if len(symbols)>STOCK_RESEARCH_LIMIT or any(
+            not isinstance(s,str) or not re.fullmatch(r'[A-Z][A-Z0-9.\-]{0,14}',s) for s in symbols):
+        raise ValueError('calendar_symbol_limit_or_identity')
+    if not symbols:return []
+    now=clock()
+    if now.tzinfo is None:raise ValueError('aware_clock_required')
+    day=now.astimezone(ZoneInfo('America/New_York')).date()
+    start,end=day-timedelta(days=1),day+timedelta(days=14)
+    def failures(reason, status='error'):
+        return [CalendarCapture(symbol=s,retrieved_at=now,request_from=start,
+            request_to=end,status=status,reason=reason) for s in symbols]
+    key=(os.environ if env is None else env).get('FINNHUB_API_KEY')
+    if not key:return failures('credentials_required','not_configured')
+    owned=session is None;session=session or requests.Session()
+    try:
+        with session.get('https://api.finnhub.io/api/v1/calendar/earnings',
+                params={'token':key,'from':start.isoformat(),'to':end.isoformat(),
+                        'international':'false'},timeout=(5,15),allow_redirects=False,stream=True) as response:
+            if response.status_code!=200:
+                return failures({401:'authentication_failed',403:'access_denied',429:'rate_limited'}
+                    .get(response.status_code,'provider_http_error'))
+            body=bytearray()
+            for chunk in response.iter_content(65536):
+                body.extend(chunk)
+                if len(body)>4_000_000:raise ValueError('calendar_response_too_large')
+        data=json.loads(body)
+        if not isinstance(data,dict) or not isinstance(data.get('earningsCalendar'),list):
+            raise ValueError('invalid_calendar_response')
+        rows=data['earningsCalendar']
+        if len(rows)>10_000:raise ValueError('calendar_row_limit')
+        grouped={s:[] for s in symbols}
+        for row in rows:
+            if not isinstance(row,dict) or not isinstance(row.get('symbol'),str):
+                raise ValueError('calendar_row_identity_missing')
+            if row['symbol'] in grouped:grouped[row['symbol']].append(row)
+        raw_digest=hashlib.sha256(body).hexdigest()
+        captures=[]
+        for symbol in symbols:
+            try:
+                captures.append(parse_calendar({'earningsCalendar':grouped[symbol]},symbol=symbol,
+                    now=now,start=start,end=end,raw_digest=raw_digest))
+            except (ValueError,TypeError,KeyError):
+                captures.append(CalendarCapture(symbol=symbol,retrieved_at=now,request_from=start,
+                    request_to=end,status='error',reason='provider_unavailable'))
+        return captures
+    except (requests.RequestException,ValueError,TypeError,KeyError):
+        return failures('provider_unavailable')
+    finally:
+        if owned:session.close()
+
+
+def enrich(document, *, fetch=None):
     result=deepcopy(document)
     symbols=list(dict.fromkeys(c['requested_symbol'] for c in document['captures'] if c['market']=='stocks'))
     if len(symbols)>STOCK_RESEARCH_LIMIT:raise ValueError('calendar_symbol_limit')
     result['earnings_calendars']=[]
-    from concurrent.futures import ThreadPoolExecutor
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        for capture in executor.map(fetch,symbols):
-            payload=capture.model_dump(mode='json')
-            result['earnings_calendars'].append({'payload':payload,'payload_sha256':digest(payload)})
+    captures=fetch_calendars(symbols) if fetch is None else map(fetch,symbols)
+    for capture in captures:
+        payload=capture.model_dump(mode='json')
+        result['earnings_calendars'].append({'payload':payload,'payload_sha256':digest(payload)})
     return result
 
 

@@ -123,3 +123,35 @@ def test_momentum_stock_package_receives_calendar_without_clearing_risk_gates():
     p=r['package'];assert len(p['calendar_source_ids'])==1
     assert 'broker_account_eligibility_unverified' in p['missing_evidence'] and p['plan'] is None
     assert reproduce(r,d,None,now=STOCK_NOW)['symbol']=='AMD'
+
+
+def test_market_calendar_serves_80_symbols_with_one_request():
+    from market_radar_ai.evidence.earnings_calendar import fetch_calendars
+    symbols=['MSFT','AAPL']+['S'+chr(65+i//26)+chr(65+i%26) for i in range(78)]
+    data=response()
+    data['earningsCalendar'].append({'symbol':'AAPL','date':NOW.date().isoformat(),'hour':'bmo'})
+    data['earningsCalendar'].append({'symbol':'OTHER','date':NOW.date().isoformat(),'hour':'amc'})
+    session=Session(data)
+    records=fetch_calendars(symbols,session=session,env={'FINNHUB_API_KEY':'private-test'},clock=lambda:NOW)
+    assert len(session.calls)==1 and 'symbol' not in session.calls[0][1]['params']
+    assert len(records)==80 and [r.symbol for r in records]==symbols
+    assert records[0].events[0].symbol=='MSFT' and records[1].events[0].symbol=='AAPL'
+    assert all(r.status=='empty' and not r.coverage_complete for r in records[2:])
+    assert len({r.raw_payload_sha256 for r in records})==1
+    assert all(r.retrieved_at==NOW and not r.trade_authorized for r in records)
+
+
+@pytest.mark.parametrize('status,body',[(429,None),(403,None),(200,b'{}'),
+    (200,b'x'*4_000_001),(200,b'{"earningsCalendar":[{}]}')])
+def test_market_calendar_failure_never_becomes_empty_success(status,body):
+    from market_radar_ai.evidence.earnings_calendar import fetch_calendars
+    s=Session(status=status,body=body)
+    rows=fetch_calendars(['MSFT','AAPL'],session=s,env={'FINNHUB_API_KEY':'private-test'},clock=lambda:NOW)
+    assert len(s.calls)==1 and all(r.status=='error' and not r.events for r in rows)
+
+
+def test_market_calendar_isolates_malformed_symbol_records():
+    from market_radar_ai.evidence.earnings_calendar import fetch_calendars
+    data=response();data['earningsCalendar'].append({'symbol':'AAPL','date':'invalid'})
+    rows=fetch_calendars(['MSFT','AAPL'],session=Session(data),env={'FINNHUB_API_KEY':'private-test'},clock=lambda:NOW)
+    assert rows[0].status=='received' and rows[1].status=='partial'
