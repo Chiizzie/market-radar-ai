@@ -2147,10 +2147,19 @@
       }
     },
     "paper-final-v1:41ad647bf4ecacd91e3abf652c3ff8a85bca12acbd6ca1dab3d248431911e5f2:risk_manager": {
-      "actual": null,
+      "actual": 9264,
       "day": "2026-11-09",
       "reserved": 11041,
-      "usage": null
+      "usage": {
+        "cached_input_tokens": 0,
+        "cost_usd": "0.01038375",
+        "eur_per_usd": "0.8920999892058195082955135386",
+        "input_tokens": 9333,
+        "model": "gpt-5.4-mini-2026-03-17",
+        "output_tokens": 752,
+        "pricing_checked": "2026-11-02",
+        "response_id": "resp_0eec5c216745be55016af21dd9aac487d09af3c04d0ff4716d"
+      }
     },
     "paper-final-v1:41ad647bf4ecacd91e3abf652c3ff8a85bca12acbd6ca1dab3d248431911e5f2:technical_analyst": {
       "actual": 8371,
