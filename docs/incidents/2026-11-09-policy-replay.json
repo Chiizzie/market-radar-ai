@@ -1,0 +1,1637 @@
+{
+  "schema_version": "offline-admission-replay-v1",
+  "policy": "paper-specialists-v3-conditional-chief",
+  "dataset_kind": "historical_diagnostic_not_forward_performance",
+  "runs_requested": 77,
+  "runs_replayed": 76,
+  "runs_unavailable": 1,
+  "old_ready_observations": 40,
+  "new_ready_observations": 119,
+  "old_unique_symbols": [
+    "AAPL",
+    "AMD",
+    "AMZN",
+    "APLD",
+    "AVGO",
+    "BEN",
+    "CRM",
+    "CSCO",
+    "KMB",
+    "LFST",
+    "NU",
+    "NVDA",
+    "ONDS",
+    "ONON",
+    "PLTR",
+    "SPCX",
+    "TSLA",
+    "TTD",
+    "WMT"
+  ],
+  "new_unique_symbols": [
+    "AAPL",
+    "AMD",
+    "AMZN",
+    "APLD",
+    "AS",
+    "AVGO",
+    "BDX",
+    "C",
+    "CHWY",
+    "CNX",
+    "CPB",
+    "CSCO",
+    "CSX",
+    "CTRE",
+    "FLNC",
+    "GS",
+    "GSK",
+    "GTX",
+    "HAYW",
+    "INTC",
+    "IREN",
+    "JHX",
+    "JPM",
+    "KNX",
+    "LLY",
+    "MAGS",
+    "MBLY",
+    "METC",
+    "MNST",
+    "MSFT",
+    "MU",
+    "NFLX",
+    "NU",
+    "NVDA",
+    "OCUL",
+    "ON",
+    "ONON",
+    "PG",
+    "PLTR",
+    "RDDT",
+    "RIVN",
+    "SKHY",
+    "SU",
+    "TRGP",
+    "TSLA",
+    "TTD",
+    "TXN",
+    "UBER",
+    "UMC",
+    "WMT"
+  ],
+  "old_blocker_observations": {
+    "below_rolling_vwap": 828,
+    "current_symbol_linked_news_missing": 1930,
+    "entry_trigger_already_reached_rebuild": 717,
+    "reference_ask_eur_missing": 81,
+    "reference_bid_eur_missing": 81,
+    "reference_quote_not_confirmed": 102,
+    "relative_volume_below_1_5": 1910,
+    "setup_invalidated_before_entry": 897,
+    "conditional_entry_already_passed": 389,
+    "paper_plan_missing": 389,
+    "nonpositive_momentum": 731,
+    "chart_news_check_missing_or_incomplete": 96,
+    "net_reward_below_2r": 64
+  },
+  "new_blocker_observations": {
+    "below_rolling_vwap": 828,
+    "current_symbol_linked_news_missing": 400,
+    "entry_trigger_already_reached_rebuild": 717,
+    "reference_ask_eur_missing": 81,
+    "reference_bid_eur_missing": 81,
+    "reference_quote_not_confirmed": 102,
+    "relative_volume_below_1_5": 388,
+    "setup_invalidated_before_entry": 897,
+    "conditional_entry_already_passed": 389,
+    "paper_plan_missing": 389,
+    "nonpositive_momentum": 731,
+    "chart_news_check_missing_or_incomplete": 1334,
+    "relative_volume_below_strategy_minimum": 1028,
+    "net_reward_below_2r": 64
+  },
+  "runs": [
+    {
+      "run": 42635359212,
+      "evaluated_at": "2026-11-09T14:31:27.147153+00:00",
+      "state": "replayed",
+      "stock_rows": 0,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 0,
+      "remove_volume_gate_only_upper_bound": 0,
+      "input_sha256": {
+        "enriched-capture.json": "bab3c1e80b21f5ad649766bda0b80eadd27e353642f501f2fe42b60b131349d2",
+        "news.json": "255a52327d75398f4b1fef6db5d019f4d101247b90bb1a587f7f84d35525b84a",
+        "qualification.json": "03bfe1f5e617468498068294525731ae0877ad067bce72da7eda20d3b1aa9751"
+      }
+    },
+    {
+      "run": 42636118283,
+      "evaluated_at": "2026-11-09T14:36:16.624190+00:00",
+      "state": "replayed",
+      "stock_rows": 0,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 0,
+      "remove_volume_gate_only_upper_bound": 0,
+      "input_sha256": {
+        "enriched-capture.json": "286dc58408f225029c576bd7470cfbe66cfcecf87d9c4e23d5539a103b5e8dcc",
+        "news.json": "45e64da6e9aca3fa57346d859f89df29e58109eae3615a70ef34a5211653abbe",
+        "qualification.json": "d63d39330c14d222b4e8124ee4a69c8f78cd3b86977097925217e6305b6440bd"
+      }
+    },
+    {
+      "run": 42636947945,
+      "evaluated_at": "2026-11-09T14:41:20.230103+00:00",
+      "state": "replayed",
+      "stock_rows": 0,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 0,
+      "remove_volume_gate_only_upper_bound": 0,
+      "input_sha256": {
+        "enriched-capture.json": "b8f0fd9b619be4012ed527329734068f9e4b2edb1a2c71fe80e06eb2c642b250",
+        "news.json": "8eae9b35b277f3b8a71eebad963096ef4b2c15377d5b07263b1d37d4d2ef6590",
+        "qualification.json": "385473682e3151eb6ffb1bcdee397b4c42139cd181e14c0306355a6844c15a55"
+      }
+    },
+    {
+      "run": 42637759415,
+      "evaluated_at": "2026-11-09T14:46:30.279957+00:00",
+      "state": "replayed",
+      "stock_rows": 0,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 0,
+      "remove_volume_gate_only_upper_bound": 0,
+      "input_sha256": {
+        "enriched-capture.json": "d4160ad5b85a6eeee74de5b596342ac2e2bedd12ed177456595cef2fc0a9ccaf",
+        "news.json": "3ccc931e90fe470c881e9aa2b2c97040672982b21506daa1206447e3c98f5b5a",
+        "qualification.json": "90962596456d2f39325003d7134cf8093b42fd0c961a6d16f89737ec507ccbdb"
+      }
+    },
+    {
+      "run": 42638574610,
+      "evaluated_at": "2026-11-09T14:51:20.055029+00:00",
+      "state": "replayed",
+      "stock_rows": 0,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 0,
+      "remove_volume_gate_only_upper_bound": 0,
+      "input_sha256": {
+        "enriched-capture.json": "1a79f9af21dc96d904f8509b09fb1c9625ad638c902f41988fa0d0606f7af05c",
+        "news.json": "07944ce3beacefb159b8f771ef63fb1b57ff19a536510952568bf227896388e8",
+        "qualification.json": "f9d80391675b19227fb5651a4d400d822907350b9e76db6ec607f0ee518a189f"
+      }
+    },
+    {
+      "run": 42639366997,
+      "evaluated_at": "2026-11-09T14:55:59.775548+00:00",
+      "state": "replayed",
+      "stock_rows": 0,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 0,
+      "remove_volume_gate_only_upper_bound": 0,
+      "input_sha256": {
+        "enriched-capture.json": "5c7d2af7f07afec24aef2133b86b0917a0821493824a1e64e4aba4096abf4d1b",
+        "news.json": "a973e2a5bf310c9a6f035b4ce0fc8c975027aff66d6bb7da08f5ad90c71ed3b4",
+        "qualification.json": "1c44f8d9092dcad54b834be26d2af48dfa3a62327d075d6601537359424b3541"
+      }
+    },
+    {
+      "run": 42640294941,
+      "evaluated_at": "2026-11-09T15:01:59.850523+00:00",
+      "state": "replayed",
+      "stock_rows": 40,
+      "old_ready": [
+        "APLD"
+      ],
+      "new_ready": [
+        "APLD"
+      ],
+      "new_strategies": {
+        "opening_continuation_30m_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 5,
+      "input_sha256": {
+        "enriched-capture.json": "9388c96077571687e13b8962bc4f917fcf1d2ce58f4df8076188fd10bb445191",
+        "news.json": "9d9e3cb3e8c450e7ac077804a0bfbcf73be378d001b5157c851954d98b93c4e0",
+        "qualification.json": "e2b4a5581a12c77ca6a6264b3bb46e2c873e523d72f35a8832a7fb50f9898ed8"
+      }
+    },
+    {
+      "run": 42641034777,
+      "evaluated_at": "2026-11-09T15:07:02.182157+00:00",
+      "state": "replayed",
+      "stock_rows": 40,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 5,
+      "remove_volume_gate_only_upper_bound": 5,
+      "input_sha256": {
+        "enriched-capture.json": "cb37861a5d57acfca5a6d21980c86fc9d29c088992ad15a9002d7140a6596057",
+        "news.json": "510071658b6ac17f8abb88ccc6c9ef19fb4e5eba1085a5401cbee9b322d86349",
+        "qualification.json": "d4144847f726d6a8d9bb3308a77456e4826071b7dbbab86cf4d2b9bd02b8e4e0"
+      }
+    },
+    {
+      "run": 42641912988,
+      "evaluated_at": "2026-11-09T15:11:20.965726+00:00",
+      "state": "replayed",
+      "stock_rows": 40,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 3,
+      "remove_volume_gate_only_upper_bound": 5,
+      "input_sha256": {
+        "enriched-capture.json": "c06a6c8311fba528aa333e83e623dc7f21966bf8f41a6181548566598e094488",
+        "news.json": "fa434e8919f956aa25ba511ffd2226317eb51c62f3246fca089de39cd915f685",
+        "qualification.json": "44861e04ae8613efcb8e8a1694a99fcd876dcebea33e29d42242ceeac231a9da"
+      }
+    },
+    {
+      "run": 42642791118,
+      "evaluated_at": "2026-11-09T15:16:21.537903+00:00",
+      "state": "replayed",
+      "stock_rows": 40,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "d40ddce386007728dac9f8ec89c7d5b2061d0c5a9e5339f5389eba99f77d66fb",
+        "news.json": "cda43d912389fa68340f3c4b02ac7aabcfaae7ac3dd95db9dbda5dd1c2c8013f",
+        "qualification.json": "de4f02d10df641c96ee33b10b304c5bba9f16b9f1c6084bfd3d60189ede43515"
+      }
+    },
+    {
+      "run": 42643632412,
+      "evaluated_at": "2026-11-09T15:21:05.199076+00:00",
+      "state": "replayed",
+      "stock_rows": 31,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 4,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "115df8ed3f5ae87a32eed55ad65d2209c8bf7b1a6e4ffe228d889787f30dfefb",
+        "news.json": "f76180a6b69ee3754e73fc35d19355106231d7c29c9bb96ed6e370fa2dc3a71f",
+        "qualification.json": "a817c965e0ad3059a46efc70a736461cca130c1ae25024ba965c75632debc241"
+      }
+    },
+    {
+      "run": 42644467589,
+      "evaluated_at": "2026-11-09T15:26:00.193429+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 5,
+      "input_sha256": {
+        "enriched-capture.json": "29b13a506d49bf70ed57216ea2b5341e3206a4985ec87ea5db0b2f5da78291f1",
+        "news.json": "aac66ca9b8d6017139f4cb57462a37a6839f3666c1356b691c78d9a4ea8efb3b",
+        "qualification.json": "7a2747928cb3a1c58f4699ca6377bd3f4a7f78e97c9ad569654576a63312a37f"
+      }
+    },
+    {
+      "run": 42645359678,
+      "evaluated_at": "2026-11-09T15:31:29.417137+00:00",
+      "state": "replayed",
+      "stock_rows": 40,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 3,
+      "input_sha256": {
+        "enriched-capture.json": "af8c93b130439fb69530865a5bd060e9907c1e42d4a8db8e7a9d2e850c5a3feb",
+        "news.json": "ab46655395b32297378172cff1471a4d319ace2faec7609691a1eb30bd97f332",
+        "qualification.json": "d05f5c24db6c4593945cccbafd96813eb5b405fbc7857dd716be110a5976014f"
+      }
+    },
+    {
+      "run": 42646142458,
+      "evaluated_at": "2026-11-09T15:36:09.889990+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [
+        "TTD"
+      ],
+      "new_ready": [
+        "TTD"
+      ],
+      "new_strategies": {
+        "opening_continuation_30m_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 3,
+      "input_sha256": {
+        "enriched-capture.json": "2b4202854df2a6bb59333bb7d169178c08a897cfd8802c023950b06c9d6ee652",
+        "news.json": "3ff40fd6618a79744efea4a9dd77ad642a69a3977f2f990ea286ea64c08daa83",
+        "qualification.json": "c5594b05d5ad264749c847decdee7952e868326f867c15515f0660f284a20176"
+      }
+    },
+    {
+      "run": 42646994803,
+      "evaluated_at": "2026-11-09T15:41:14.843620+00:00",
+      "state": "replayed",
+      "stock_rows": 37,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 3,
+      "remove_volume_gate_only_upper_bound": 1,
+      "input_sha256": {
+        "enriched-capture.json": "659950b38a1056936a7d1b95c182a2a80f82a2a0e8e832d5f8e16e04c411ac5c",
+        "news.json": "746c6c0d26e03a0eaa8b93507b0e7cbb767cc802a379cc3000b011e91caeaab0",
+        "qualification.json": "abfe3f64766f1e2cc4313049a277bc61efffd22fa5ea8e0c7f5485ffcd20807e"
+      }
+    },
+    {
+      "run": 42647827631,
+      "evaluated_at": "2026-11-09T15:46:17.253283+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "6216bc9c32858b41014f7d6e308b256b4ce689571a4ec11acce47eb6ca8cbed7",
+        "news.json": "a908687a7bd126af4481de030a88fd2d8586e832c3b2f74fbf9c7ee7f4b1e045",
+        "qualification.json": "e3f9e09a3c877b87872bb02221d2e3ca073882aa92cdeef7549851ee81816427"
+      }
+    },
+    {
+      "run": 42648650161,
+      "evaluated_at": "2026-11-09T15:51:04.269530+00:00",
+      "state": "replayed",
+      "stock_rows": 37,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 0,
+      "input_sha256": {
+        "enriched-capture.json": "ad42607de8d0c2e5b2d49fbf79410898217fc7475fa0d6d7401891b6e14be50c",
+        "news.json": "79dd83654a428813d365dddc814de28b7868fb5ca4ddd28c88d348cb1cbf843a",
+        "qualification.json": "8e977123f858fbc29bf577a4b0516a5bfc95072be58efcb0306e3abea0e6e861"
+      }
+    },
+    {
+      "run": 42649468167,
+      "evaluated_at": "2026-11-09T15:55:58.316787+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 1,
+      "input_sha256": {
+        "enriched-capture.json": "47411943ccfc181ffb88c541e3a1224a3d0a61c84f698ad0fa4f0e3c483351d4",
+        "news.json": "c3161b3635f7c69bbd9ab93876c97911fb9503fa302cf06b222ce6a17c86a3f4",
+        "qualification.json": "ddbbe0658c465bfe3776e61508387f7538c23d110a28bbecabb3fc90dc63fb4b"
+      }
+    },
+    {
+      "run": 42650383240,
+      "evaluated_at": "2026-11-09T16:01:50.301752+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 1,
+      "input_sha256": {
+        "enriched-capture.json": "6459589d27170956bf88086ff7c133c3ac7c89834d5b1813e65ca9a33720148d",
+        "news.json": "d7225f6fd94e28b5ce5d2d8969b625d9759e33162abdd8176f7d4a7ce4a7a5cb",
+        "qualification.json": "78ee3b055411ed6f490e2b4fa02c7cf7ef3287613f748c0e570c115fb6c15c75"
+      }
+    },
+    {
+      "run": 42651143812,
+      "evaluated_at": "2026-11-09T16:06:15.832239+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 0,
+      "input_sha256": {
+        "enriched-capture.json": "ab3a54a508836ff81985e70ad22a36767230320a434e98d9ce46078c70cb2057",
+        "news.json": "b0333033bb1584ed113ce8be037132fddf3503adef2a0adc749a4426f65cc817",
+        "qualification.json": "82d50d24bc85be4f8bfde8349935bc9566740146bfb4ee4c86c4211ae4ac822f"
+      }
+    },
+    {
+      "run": 42652014984,
+      "evaluated_at": "2026-11-09T16:11:23.171318+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "IREN"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 3,
+      "input_sha256": {
+        "enriched-capture.json": "c6f6c74093a277087603b4a054f27de81e435a648700e9d221a86bb05865e51b",
+        "news.json": "6e9bad79b2326848c0b918d797efde25cec657e9182895585bb543f1abb7db19",
+        "qualification.json": "0262672e2d622aae65fdbeda95d48d890efd6b31e86f5594357dfd9867bfddc4"
+      }
+    },
+    {
+      "run": 42652880014,
+      "evaluated_at": "2026-11-09T16:16:17.420259+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 3,
+      "input_sha256": {
+        "enriched-capture.json": "4ef7c2d454133e260151823f89d3a0e7846557dc74ba732966607ec5ba2bf90b",
+        "news.json": "e63f3e9011043d2bb65b712dee3e097041f56292b95dc6013bcf42060ead1b0e",
+        "qualification.json": "b507ef73ef6f7ffffabb2fe1994bafd25739d9f13cece423f1a979efafb79aa7"
+      }
+    },
+    {
+      "run": 42653706091,
+      "evaluated_at": "2026-11-09T16:21:17.054859+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 0,
+      "remove_volume_gate_only_upper_bound": 5,
+      "input_sha256": {
+        "enriched-capture.json": "09f2c8a63f387d176666fd711db9464afbaf7ff08deb2d21b9f5b0dbf70ce07b",
+        "news.json": "a7330d123873118dcda9c09496653f3e586313f10d809d6b4ea43b11d21e49bf",
+        "qualification.json": "5f3baa0449d687d9ea5807abcd367661cf02836dccb372757d5f25b9f65b75a7"
+      }
+    },
+    {
+      "run": 42654561808,
+      "evaluated_at": "2026-11-09T16:26:10.256108+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "bed12b80baf60fe2ea30110d884d81d64813b1b090c7b2e6bd3475b59208f101",
+        "news.json": "7eb0fc01b86b20eeecc0de299f5264d80199d4bedd73e1fcb22f7eb492e17253",
+        "qualification.json": "1dc43820e1109a9cee2167b35ecee83ac57bea4522eef74c97a65409c89767e9"
+      }
+    },
+    {
+      "run": 42655471350,
+      "evaluated_at": "2026-11-09T16:31:37.591096+00:00",
+      "state": "replayed",
+      "stock_rows": 38,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "d2b2ca9850c3664049decbbd88d006e6811897e4ebc41dd35a9faa960a47348f",
+        "news.json": "bab168644682017565446cef52f1c8a0ed691883a7f9a769df712a289519f133",
+        "qualification.json": "b323a90031147383920c605495420783f481a9dc5a56f9aca54e74fac5282584"
+      }
+    },
+    {
+      "run": 42656260283,
+      "evaluated_at": "2026-11-09T16:36:04.708586+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "AAPL"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 3,
+      "input_sha256": {
+        "enriched-capture.json": "ca1caa85e66f9f2f0f10e4b2922ca533d6d3878271994ef77f738bbe4ab35a5d",
+        "news.json": "ae4ff4460fc22d0d390a07c45007ee037ff62dec7488975c1cd20b41a249d4a7",
+        "qualification.json": "3eeb6a8d2cef9f4cfa419ff03bb34f5f50efc213420bcabe8e7fc5ac1b38cf54"
+      }
+    },
+    {
+      "run": 42657111412,
+      "evaluated_at": "2026-11-09T16:41:10.935887+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 0,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "1a151fd332383d0978f6b3184378472a19218e9b21199c939c4e2933060be9f7",
+        "news.json": "71e8edacac3d7dffe80c622442ce9cbf3fd9f5aed0043611f7c5ac3c58f280e3",
+        "qualification.json": "09a3341d77ad65d0c53e7e6918e33a47b5ecf2d07c51dd4230b451c6820cd32d"
+      }
+    },
+    {
+      "run": 42657946802,
+      "evaluated_at": "2026-11-09T16:46:25.394567+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "8734a7a4a20e8ea304e8e76efd2d0681c1fd8a9039d847d35956537ce32e94bf",
+        "news.json": "0d682f05e4688b9ca1ad37e1529b7e45b8914901ec41bea1c13e842504313c33",
+        "qualification.json": "5fd9212dbd4421b24b4853527d70df6f249c87460f8cb3a8b761dde8b80c763e"
+      }
+    },
+    {
+      "run": 42658758132,
+      "evaluated_at": "2026-11-09T16:51:19.207375+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "LLY"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 5,
+      "input_sha256": {
+        "enriched-capture.json": "7acbf19c4652a4ff2264a911de537078819f53ab4d4dcdadf8d60abffe6447e2",
+        "news.json": "e3868f6c44f953f0b76c5c2e562e8c9c6d5f7272418941777cfd1d8d86d7b579",
+        "qualification.json": "d9b452203026cead17c9fc46bd18929536b8cd7e0e072419bae09bc103838e4b"
+      }
+    },
+    {
+      "run": 42659538131,
+      "evaluated_at": "2026-11-09T16:56:02.313754+00:00",
+      "state": "replayed",
+      "stock_rows": 36,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 3,
+      "input_sha256": {
+        "enriched-capture.json": "a20b8c4cae9ed68cea37c71f4ad4beebce615460bd27fa9a0b3d2cdb866e3753",
+        "news.json": "3338bf197dd6d040322d517bca8401af409290fe91fc52071759cab1cf1da7c9",
+        "qualification.json": "d725f9802e34e47d95df65613d539db3f4f45ee4696379ab6a7165e47b6cc1e0"
+      }
+    },
+    {
+      "run": 42660431347,
+      "evaluated_at": "2026-11-09T17:01:42.998262+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "ea72fe708fc4cd60f2d4da0423921ded3225065c46e4d658ee0c7a7cda7d68c6",
+        "news.json": "68c6ea1635d8225a13406f7ffa4d504cf6cac057c6cd8535beb0102611100d95",
+        "qualification.json": "a8a668c4e49cdd1296d382effcd0037bb8a1a0571c98cfb91ca3696847c6bfa1"
+      }
+    },
+    {
+      "run": 42661142225,
+      "evaluated_at": "2026-11-09T17:06:10.139005+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 0,
+      "remove_volume_gate_only_upper_bound": 1,
+      "input_sha256": {
+        "enriched-capture.json": "d584ee212a463eed445fe238c3b583e9997ef34aed3b99ac6511b3f3c1c78dbf",
+        "news.json": "273b54aa6c20ac7fd7f967db39ee5bbd9b56348ebaae490565cfa2bbe48dbae9",
+        "qualification.json": "5d63863bf6a8fb69281903f3d8ee902a7236e8723099aaad17b712db379b4f56"
+      }
+    },
+    {
+      "run": 42661969090,
+      "evaluated_at": "2026-11-09T17:11:04.305431+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 0,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "d23bd1018376794cd510a006dfaf83e5f4965519827be9336725fde1cd09e250",
+        "news.json": "d096c0711ba3f7c76818de10aa33984d01dfc3e5f24dd939791395b17228ff4c",
+        "qualification.json": "242c46df9b1673835bf208479ac3e5b9c1816ca92bbb970901096b2b49af9a41"
+      }
+    },
+    {
+      "run": 42662815426,
+      "evaluated_at": "2026-11-09T17:16:20.279487+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 0,
+      "remove_volume_gate_only_upper_bound": 0,
+      "input_sha256": {
+        "enriched-capture.json": "eb6cc175eedea78491c55cd225ecca30a56a668f6e2a19f82426d3b096cf39e7",
+        "news.json": "aaf0f627099e5f0eeca2f0fcb5a5daa7095520d5a1135ad3e699bd7097dfcc4d",
+        "qualification.json": "60c2c4b4cff60d56de9792276e12ab47ce57d653bae9e71f69c5e7ce7965ad5a"
+      }
+    },
+    {
+      "run": 42663610962,
+      "evaluated_at": "2026-11-09T17:21:20.292639+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "IREN"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 0,
+      "remove_volume_gate_only_upper_bound": 1,
+      "input_sha256": {
+        "enriched-capture.json": "2eb619aa32c176414174481374caae12c1d0f1bac8470658fd8f28b7a26ae247",
+        "news.json": "89dbba5a8a02e1c6cc37cbd0c17d8e864bfaa9caffbf6a418398f1eeb6fcd42c",
+        "qualification.json": "e4e625453532586e0cffd9921203d1e301dff9afb0e8f12c309460c1a06dfb39"
+      }
+    },
+    {
+      "run": 42664419297,
+      "evaluated_at": "2026-11-09T17:25:58.909383+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 3,
+      "input_sha256": {
+        "enriched-capture.json": "c4810cb66cfdfda70e163c62693c3cd19a44975c53989884f3536720a283b278",
+        "news.json": "8bb58152abbacd174f5943e5b82f45a0f93f4e98b9dcbb67fee441f6a3ca4a40",
+        "qualification.json": "a609945d98fb214fcfd2fa32218865b0fb08c455d171787e165a43a518d79e9b"
+      }
+    },
+    {
+      "run": 42665285245,
+      "evaluated_at": "2026-11-09T17:31:42.843885+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "MSFT"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 4,
+      "input_sha256": {
+        "enriched-capture.json": "b5b62ae681ed50f623e8263aa52c1bd8462e9cfbace64592b5001269cc6717c0",
+        "news.json": "11675cad2398b03007c32c519197c61aa7af0923fe79f8ff8e80b4155423e016",
+        "qualification.json": "5eab0380bfde01ba462cc79ff41719d54098b0d1378552303629e060b7d6184d"
+      }
+    },
+    {
+      "run": 42666053643,
+      "evaluated_at": "2026-11-09T17:35:59.027009+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "JHX"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 0,
+      "remove_volume_gate_only_upper_bound": 3,
+      "input_sha256": {
+        "enriched-capture.json": "f088d636f22130a3690a5682b3b15bc08462fc9a003cacc92a0d8bcd9317b8f8",
+        "news.json": "c030594bbeacb65526b1e7a7d3cc483fffb6074914a120c8c5fd1ccc699ea3d7",
+        "qualification.json": "ac2b189f7d3a94abb7849b05b1bebbc0ef37bf336337f86763ae40615dda77d9"
+      }
+    },
+    {
+      "run": 42666878441,
+      "evaluated_at": "2026-11-09T17:41:05.085234+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 0,
+      "remove_volume_gate_only_upper_bound": 3,
+      "input_sha256": {
+        "enriched-capture.json": "c5f457867529ebce7d3caf6e4708572479aa943028c1ecd4c0fa89a978aac011",
+        "news.json": "c21bacea1aa7f6bc6323193e9185ba8e16304859dac088acc2f1c16a579a48db",
+        "qualification.json": "cd5546ebdd71408034bc2c9714818de41a3ad92be7e1a1b027ec93e805f1e9ad"
+      }
+    },
+    {
+      "run": 42667683885,
+      "evaluated_at": "2026-11-09T17:46:18.815390+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 0,
+      "remove_volume_gate_only_upper_bound": 1,
+      "input_sha256": {
+        "enriched-capture.json": "67aa749f6c0a9e2420a3294a2693b3becb8156786a0e277150029c19155b0e20",
+        "news.json": "4f4b4d3e6335df0bc28110283628917bd0740cd5e9162ec99cfd6ef66e905ca7",
+        "qualification.json": "54f25a6816c13d2954e3319ca313caa7925e49c3d85726661ba2cac38378976f"
+      }
+    },
+    {
+      "run": 42668475561,
+      "evaluated_at": "2026-11-09T17:51:19.399399+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "JPM"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 3,
+      "remove_volume_gate_only_upper_bound": 3,
+      "input_sha256": {
+        "enriched-capture.json": "78f7c4ff43899fe50230ae33838c32f2e3ede4b7465e2a3e503aa25b84d31240",
+        "news.json": "e8af8d603903c5eb666057160e8f46bd13b090e4dfa0009a11e5e49fa76f2ffc",
+        "qualification.json": "08758a5f1ff4f4eb6e98677694df7fed9c621aa669846fa162ba9ec77f5f9636"
+      }
+    },
+    {
+      "run": 42669254535,
+      "evaluated_at": "2026-11-09T17:56:16.381945+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [
+        "CRM"
+      ],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 3,
+      "input_sha256": {
+        "enriched-capture.json": "24de2e7b1df7c2bafd37cee2b61f820f55c94e75a676cbf03ab503cad6a913b8",
+        "news.json": "54fd6cd1fb882466eed4e92108cf2ab00e6c67186f7c2131b9d7c875e5a97b85",
+        "qualification.json": "1393fabda1e6f4b77c162430c960e3d0e132ee97a905a807914441b832fa640e"
+      }
+    },
+    {
+      "run": 42670122036,
+      "evaluated_at": "2026-11-09T18:01:45.144473+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 3,
+      "input_sha256": {
+        "enriched-capture.json": "e41a3fbed5d7815e4c6213421dd810f7bcd7ff44467ecf01c2910b36b6471d40",
+        "news.json": "20cedfd90eb2af7049c9e51e7ff2870306589d4f70eeed7f1d09e50a3a984556",
+        "qualification.json": "cb8c90ad46352160dd114df6d8c25717504be88727573d7ab4fc94422322bdbc"
+      }
+    },
+    {
+      "run": 42670825710,
+      "evaluated_at": "2026-11-09T18:06:59.292325+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "AMD",
+        "AS"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 2
+      },
+      "remove_news_gate_only_upper_bound": 3,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "a3b450baa7aeae88edfd75e24a38fc2a7b451a6e280d32bb9e90dc358824eee4",
+        "news.json": "05b12f7e4378b5696e074822c73ba49b575ff6ce93e8ce1e334362e63cfabd1a",
+        "qualification.json": "786516f21240fc216f90ea5d18f39c7827de25062cbe4c0924fcae8053749e2d"
+      }
+    },
+    {
+      "run": 42671623036,
+      "evaluated_at": "2026-11-09T18:11:53.811026+00:00",
+      "state": "replayed",
+      "stock_rows": 38,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 3,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "3b8a1dd3fb9403c3f76d93f53c9cebb4eb427ef28b2f65e7d6f6ffeddb59203b",
+        "news.json": "52a1e351bda5c42965308d240cde4d917fc3205fc8a8cf452622a0087eca7fb1",
+        "qualification.json": "5e9da42a6295d27d4a2818912e57f8492a82272137edd503d04156598c722f3e"
+      }
+    },
+    {
+      "run": 42672410193,
+      "evaluated_at": "2026-11-09T18:17:01.085443+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [
+        "BEN"
+      ],
+      "new_ready": [
+        "AMD"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 4,
+      "input_sha256": {
+        "enriched-capture.json": "9e07f58aaf619cc378036a37b0d24ae819b0e01077b72e133243e3608c4484a8",
+        "news.json": "aaf4f444cab80dd7db0e76f388d4c9cb1768da9a8219bfc72efe641b1880ebdf",
+        "qualification.json": "5ac249c4a9376a6da9868b8954f6615705ddbf2b07a930f6c22263d5e41d6b43"
+      }
+    },
+    {
+      "run": 42673858896,
+      "evaluated_at": "2026-11-09T18:26:49.893560+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [
+        "AMD"
+      ],
+      "new_ready": [
+        "AMD"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 1,
+      "input_sha256": {
+        "enriched-capture.json": "03dc7db784486e6a0f421fb8e211d483c5393411d3bd31d6321d6f608710347a",
+        "news.json": "1364bb81198d848cd352919f90d526c0742a052e157f723a50f772496dfe2008",
+        "qualification.json": "20b02021076846c4b4789088f39b294e3bb012f630814f563cb410f7141e7f47"
+      }
+    },
+    {
+      "run": 42674622011,
+      "evaluated_at": "2026-11-09T18:31:29.871735+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [
+        "KMB"
+      ],
+      "new_ready": [
+        "AMD"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 4,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "0276162e75556dd6af9ad6072ef787ce978e4771d8583279c054b2d276a8626d",
+        "news.json": "72bbbc170c731efd4e79c9012a9ea34861a8df439db2f24f128efc57a81ad167",
+        "qualification.json": "3ba1826146db47cdb0d3cf5363eaff8b14fc21f07d96b16e7bc95d4400a13c6d"
+      }
+    },
+    {
+      "run": 42675303019,
+      "evaluated_at": "2026-11-09T18:36:04.129918+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "CPB"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 0,
+      "input_sha256": {
+        "enriched-capture.json": "a75fca4f24194f047e635c477ada9e9aa6c8fb3535b1d277c4a549ccef9e57d4",
+        "news.json": "a0ec5c2a6264883e4dfc742d920ba80b763e755b6e3fa2afff7b8f008219d8e1",
+        "qualification.json": "e4ce2be031f4daed6644cf527ff81ee62ac5f6830032c22d3dacd7f0162e1bae"
+      }
+    },
+    {
+      "run": 42676052488,
+      "evaluated_at": "2026-11-09T18:41:04.326627+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [
+        "KMB"
+      ],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 6,
+      "remove_volume_gate_only_upper_bound": 1,
+      "input_sha256": {
+        "enriched-capture.json": "2d1736dc09e0ce61b1441d155bb17ea11c9503b325b94a4a5c415fab6872a538",
+        "news.json": "d6e1bc7d80fbd98f74b9da4ef277deb8c602f70b39f6dc2cf42cdfe092e4e723",
+        "qualification.json": "916944a98ccad44ee22f7117897791c325a6a6a2762de50e95d64d0f727e7b8f"
+      }
+    },
+    {
+      "run": 42676812345,
+      "evaluated_at": "2026-11-09T18:46:17.381506+00:00",
+      "state": "replayed",
+      "stock_rows": 37,
+      "old_ready": [],
+      "new_ready": [
+        "LLY"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 1,
+      "input_sha256": {
+        "enriched-capture.json": "ac3d76abf4dcc2d9312b47a53377781e264400852bfd7147a44d56b5a6f31a8a",
+        "news.json": "ce4311e14294f81a6257934992db7e9d63bd9aa4112a6e246865a821c3893f6e",
+        "qualification.json": "7a8dfba95881b5b63d530f44d36792f4ca20691a719ee3c0b4aea044de2d5210"
+      }
+    },
+    {
+      "run": 42677587917,
+      "evaluated_at": "2026-11-09T18:51:23.174851+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 4,
+      "remove_volume_gate_only_upper_bound": 0,
+      "input_sha256": {
+        "enriched-capture.json": "00540001eada72e854e99d64e0debe48d58cef6416fa748d9d0f32a4dcd22d63",
+        "news.json": "6a4a2361ac74a207e36562f6ddb96cef00dc6151f86548d2310eef1318d100e4",
+        "qualification.json": "2651675c32cb58383988c3720b383a58fdbb5a2f48c2d6ad221cb5fc14743080"
+      }
+    },
+    {
+      "run": 42678348582,
+      "evaluated_at": "2026-11-09T18:56:09.839540+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "TSLA"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 3,
+      "remove_volume_gate_only_upper_bound": 1,
+      "input_sha256": {
+        "enriched-capture.json": "36b2b1b4a18d08cde70c369f99cdc83c10e9fe4d513190cd79444e049d525cdd",
+        "news.json": "57919e5c5ceda2254a365f84545c3a8b0db2b74ad5f88a54810b233878be4389",
+        "qualification.json": "dc5219fb67f7faf8cfc7a16b8f590ab4b8bde74f27ea214d1e79384b8cc2a318"
+      }
+    },
+    {
+      "run": 42679214292,
+      "evaluated_at": "2026-11-09T19:01:54.725503+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "AMD"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 1,
+      "input_sha256": {
+        "enriched-capture.json": "e60916549911f6b796687266e517f40d825508ce7c9d82945e073b0c76fc8c27",
+        "news.json": "3f3172cb577441a1d8ffdd610a436f6f0e06b3b3fd97e9cb05f01d4fd2c95199",
+        "qualification.json": "496de0fb0e0493f30447e3d7dc05c834177b428295706e2beb28ca3ff0c1e277"
+      }
+    },
+    {
+      "run": 42679934528,
+      "evaluated_at": "2026-11-09T19:06:08.258500+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [
+        "LFST"
+      ],
+      "new_ready": [
+        "AMD",
+        "GTX"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 2
+      },
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "778600c69413d52f79ff16e17797636d7e574a5406c4177800de7309c1b812ef",
+        "news.json": "de06cd8c06ac53ed71a8e702fab3ab8b1d5b89d23d839a09e5ec5f165dcdc6c0",
+        "qualification.json": "eecf501f1be102e42dee3082e67daba237c4d10cfc06723589a2406c22b6ab4b"
+      }
+    },
+    {
+      "run": 42680761125,
+      "evaluated_at": "2026-11-09T19:11:10.636142+00:00",
+      "state": "replayed",
+      "stock_rows": 36,
+      "old_ready": [
+        "AAPL",
+        "LFST"
+      ],
+      "new_ready": [
+        "AAPL",
+        "AMD",
+        "HAYW"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 3
+      },
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 3,
+      "input_sha256": {
+        "enriched-capture.json": "9f57635ab65af1dcf09de8955ed6f52c83ea895704cce8844141c164de40f902",
+        "news.json": "e89f2011ca06d2be3f0eb37731b7882a1f108fd1141d40f3bab4872d7599076d",
+        "qualification.json": "0c2edad73666f90c5900b1e06139b62927fb88a4beaac881afd8683a54858052"
+      }
+    },
+    {
+      "run": 42681571844,
+      "evaluated_at": "2026-11-09T19:16:33.679142+00:00",
+      "state": "replayed",
+      "stock_rows": 38,
+      "old_ready": [
+        "LFST"
+      ],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 3,
+      "remove_volume_gate_only_upper_bound": 1,
+      "input_sha256": {
+        "enriched-capture.json": "942e8ba7075fa59d22b4e14a89e830e4c1140b20bd341cfa5799f56ba479a99c",
+        "news.json": "8a97f54f280aabf224da0357e08ca999fa6bcf48d72884d9a838edc210edd87a",
+        "qualification.json": "8b9c5de011ae39f0ed310998ab3d567c5d8b87ec6b36ef5c979187ba20aac6e5"
+      }
+    },
+    {
+      "run": 42682362226,
+      "evaluated_at": "2026-11-09T19:21:18.130287+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [
+        "AAPL"
+      ],
+      "new_ready": [
+        "AAPL"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "eeedec3bd15887c1bb8cc52d06a6f613990139d9777d9534fa214e3a7dcf59b8",
+        "news.json": "eb4a084ae5c76947a7de3ff26647fbe68f4d666a084176773779639377050993",
+        "qualification.json": "1422b039eb71467cd41eee20b95040d733b4bc812ca17aa302e3bacb8a2de218"
+      }
+    },
+    {
+      "run": 42683140857,
+      "evaluated_at": "2026-11-09T19:26:04.758869+00:00",
+      "state": "replayed",
+      "stock_rows": 38,
+      "old_ready": [
+        "AAPL"
+      ],
+      "new_ready": [
+        "AAPL"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 3,
+      "input_sha256": {
+        "enriched-capture.json": "a6cea3fdde6b7488cf6d6439209bddaa6df84fbe54601bc73f96d22f75d341ef",
+        "news.json": "2075ab17acc8501adba51ef48c90bb98c39e1e80d252402a32c65e90ed2ef4a7",
+        "qualification.json": "9c49732fd0345ab140f7f959c851477f33faa406253c0d299a62c5de46e2d0a3"
+      }
+    },
+    {
+      "run": 42683998574,
+      "evaluated_at": "2026-11-09T19:31:35.092420+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [
+        "AAPL"
+      ],
+      "new_ready": [
+        "AAPL",
+        "MSFT"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 2
+      },
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "2a39becb790c0317c2686c1b588970fe4de30420dcfe616fbb239eb69dcdfd55",
+        "news.json": "08861b5e1adb60f69584b243bf47f06f0a6da04dba120e0671c222d7cb32a199",
+        "qualification.json": "822c02b8c743619a611b08a6fc6d74b56c852f6b2c46c05997dadb8b6984fd9d"
+      }
+    },
+    {
+      "run": 42684751669,
+      "evaluated_at": "2026-11-09T19:36:10.887229+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "MSFT"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 1
+      },
+      "remove_news_gate_only_upper_bound": 2,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "057352e9ec596efb62cab2b8b714841b9e356bd848e93ccb2c1e9d240f9828a5",
+        "news.json": "612cf057d563debfbe207ff547a9158e666ddb81094717c8ff049ef61ef96fe6",
+        "qualification.json": "620fcc60ad2bb8c7291a731ebe9270724377a7d3814ab8b1cd74868e211baa84"
+      }
+    },
+    {
+      "run": 42685566841,
+      "evaluated_at": "2026-11-09T19:41:15.616127+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [],
+      "new_strategies": {},
+      "remove_news_gate_only_upper_bound": 0,
+      "remove_volume_gate_only_upper_bound": 0,
+      "input_sha256": {
+        "enriched-capture.json": "0b8297a3515e3c82884e3a95c9513375243e6b8ee9fabacbbc518e2c76f02d89",
+        "news.json": "b8f2242f6887a84deacca9e3f5e58e4d3f4ccee323c8396ccc9b90e146321608",
+        "qualification.json": "c957f536ed92d814cfb7591c03793a019655ff2a63e4334fd5367b034416a861"
+      }
+    },
+    {
+      "run": 42686360543,
+      "evaluated_at": "2026-11-09T19:46:33.211332+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "MSFT",
+        "MU",
+        "NVDA"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 3
+      },
+      "remove_news_gate_only_upper_bound": 1,
+      "remove_volume_gate_only_upper_bound": 3,
+      "input_sha256": {
+        "enriched-capture.json": "8a66b552eb80dfa3d0d63d0b7d8d95f2e41af9ef0c21cc94e550d62ec141d3c5",
+        "news.json": "7fc770a0623bb34c1a0f2540c28bca2d8d24582ab3d856e3510b4aaccc2b3095",
+        "qualification.json": "cc59deae8e6da775b0836bed46c32338e3513e04f6cdbc90b3bce39534a8bf1c"
+      }
+    },
+    {
+      "run": 42687151078,
+      "evaluated_at": "2026-11-09T19:51:20.030460+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [
+        "AAPL"
+      ],
+      "new_ready": [
+        "AAPL",
+        "AMZN",
+        "MSFT",
+        "NU",
+        "OCUL",
+        "UBER"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 6
+      },
+      "remove_news_gate_only_upper_bound": 10,
+      "remove_volume_gate_only_upper_bound": 4,
+      "input_sha256": {
+        "enriched-capture.json": "fbf59a7ad570deca82c22b474822ad2b0a02572ad9ce1924f73a94885490fd83",
+        "news.json": "fb7d053abf26ffaf96b59c7adefe709e5a201bb4bf378a6b12849efcadbd9bd6",
+        "qualification.json": "a14001951bf7aadb9cbc9b7e642d730684dd95e146acd9234a49e6660c93ece8"
+      }
+    },
+    {
+      "run": 42687928513,
+      "evaluated_at": "2026-11-09T19:56:03.571020+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [
+        "AAPL",
+        "CSCO",
+        "ONDS",
+        "SPCX",
+        "TSLA"
+      ],
+      "new_ready": [
+        "AAPL",
+        "AMD",
+        "NVDA",
+        "TSLA"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 4
+      },
+      "remove_news_gate_only_upper_bound": 16,
+      "remove_volume_gate_only_upper_bound": 8,
+      "input_sha256": {
+        "enriched-capture.json": "ecfbedae117756b73fcdb1e11740b7c3fa05c4b50e1710276fec086ab361f3b5",
+        "news.json": "650420c82c29709c3a47d0568fe4acc843400688a28c0ec59a955b2afc8c6cef",
+        "qualification.json": "e0ef381abbee9a24cf398ea04b3304ce6c0b4258597460972f6324516c379879"
+      }
+    },
+    {
+      "run": 42688798404,
+      "evaluated_at": "2026-11-09T20:01:52.029951+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "AAPL",
+        "AMD",
+        "AMZN",
+        "MSFT",
+        "MU",
+        "NVDA"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 6
+      },
+      "remove_news_gate_only_upper_bound": 7,
+      "remove_volume_gate_only_upper_bound": 4,
+      "input_sha256": {
+        "enriched-capture.json": "022f10c017a58ed686f37a0fcdedcc56eeb7c8664c7bc1d75e6da00a661ab9d4",
+        "news.json": "5192232313316757d48eaedca5ebe68e3945c5127e9fc186333cd48d7190f7d1",
+        "qualification.json": "343192abbbc8b10e6606acf641397ac7cb6d826fb48d7808de51131f6450a459"
+      }
+    },
+    {
+      "run": 42689525921,
+      "evaluated_at": "2026-11-09T20:06:10.710752+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "AAPL",
+        "AMD",
+        "IREN",
+        "LLY",
+        "MSFT",
+        "MU",
+        "NVDA",
+        "TSLA"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 8
+      },
+      "remove_news_gate_only_upper_bound": 9,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "cf2675e69a1eceefc5148550e2792564045f4610fe0f1224956ce208c71d3b23",
+        "news.json": "9063e771ea5c97aa4e7e13906a55e83846a9ac9c5b3b034eb54a4ef2ebbe2bca",
+        "qualification.json": "d0f4c730b5726d609daf04aeb3f2940e983608e5f273759cf172b33dd005b2b2"
+      }
+    },
+    {
+      "run": 42690348130,
+      "evaluated_at": "2026-11-09T20:11:14.939785+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "AMD",
+        "CSCO",
+        "IREN",
+        "MSFT",
+        "NVDA"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 5
+      },
+      "remove_news_gate_only_upper_bound": 6,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "cb3c5dd79f7a2c4788dd6010741538da3c6ec5232e33c1b418424a2b1e9dd7db",
+        "news.json": "104fbaf4797d31fa9fa02a2477d35e335d90ddb9bded0e1fd4bc0e8a10314b40",
+        "qualification.json": "c8a5776704402d438720c96afcf400c51ca7a3b436be9ca80a0cfd83792aefbb"
+      }
+    },
+    {
+      "run": 42691183096,
+      "evaluated_at": "2026-11-09T20:16:18.150039+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "AAPL",
+        "IREN"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 2
+      },
+      "remove_news_gate_only_upper_bound": 5,
+      "remove_volume_gate_only_upper_bound": 0,
+      "input_sha256": {
+        "enriched-capture.json": "73e28ea43fbe4c64f4fff36a46c28f85a9e1ac32a2b8dc1a4f4eada2269b9ebb",
+        "news.json": "2a38307809021703252d371bfc2fc92ca3758ec5f6462cc0c8a2565ca52088b8",
+        "qualification.json": "67cdfb300a19eb80b60aaeb9e3fe44c7237ee2386d0a26e29e2d5facc5ca36cd"
+      }
+    },
+    {
+      "run": 42691987580,
+      "evaluated_at": "2026-11-09T20:21:23.893778+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [
+        "NVDA"
+      ],
+      "new_ready": [
+        "MSFT",
+        "NVDA"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 2
+      },
+      "remove_news_gate_only_upper_bound": 7,
+      "remove_volume_gate_only_upper_bound": 1,
+      "input_sha256": {
+        "enriched-capture.json": "b4fb799e88a58995ac0526f9e09717718a41d99945cc11d45c754d80e3287907",
+        "news.json": "7907eeec32c0d78694d21fa4382153cc27556b70de31d16f95b8b727ae2c595a",
+        "qualification.json": "cbaafcc928d6748d1c281ab9b4fe20c756d8230546ae10e4b383e9097eccd3f9"
+      }
+    },
+    {
+      "run": 42692763811,
+      "evaluated_at": "2026-11-09T20:26:02.668454+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "AMD",
+        "AMZN",
+        "AVGO",
+        "MSFT",
+        "TSLA"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 5
+      },
+      "remove_news_gate_only_upper_bound": 7,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "78bd845ef3c94f506438e52bad3e4c4ea33a1d3cfb45bb2850a145dc52465bb5",
+        "news.json": "98ab03739389ec16c51df588a9174292c91030310f255c837d560309372aec1c",
+        "qualification.json": "6dbeb71d4053e078af7a2ffddb7b4a405aaf4d81a11b38890fbf285fdcc99d77"
+      }
+    },
+    {
+      "run": 42693613607,
+      "evaluated_at": "2026-11-09T20:31:37.969350+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [],
+      "new_ready": [
+        "IREN",
+        "MU",
+        "TSLA"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 3
+      },
+      "remove_news_gate_only_upper_bound": 4,
+      "remove_volume_gate_only_upper_bound": 1,
+      "input_sha256": {
+        "enriched-capture.json": "5c2dc7fd95d509f2b25254ac21d08a1e41f666d8fac533e802ea8e3ba1750d8b",
+        "news.json": "b9e3d2590a5faab26438853753b1319b0433c0c5d817d5afa2544174ed7042ea",
+        "qualification.json": "a3cf780137bf02670884a871223a2ef1765522d627875a577d3edbbe9021160d"
+      }
+    },
+    {
+      "run": 42694364865,
+      "evaluated_at": "2026-11-09T20:36:12.198878+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [
+        "AMD",
+        "AMZN",
+        "AVGO",
+        "NVDA",
+        "ONON",
+        "PLTR"
+      ],
+      "new_ready": [
+        "AMD",
+        "AMZN",
+        "AVGO",
+        "MU",
+        "NVDA"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 5
+      },
+      "remove_news_gate_only_upper_bound": 7,
+      "remove_volume_gate_only_upper_bound": 6,
+      "input_sha256": {
+        "enriched-capture.json": "65fe0e35f413eb2f8d28fa3dc92788c9be9eb316ab5ed689fe30b40bcbe64474",
+        "news.json": "1c926b761a52f4982ec5de11c9c45e99189496412d7400de11b6a0a5b8c4dc67",
+        "qualification.json": "5a88950b1b98d1a4c4c6cfa1aeab03712860cabdd7409abee92924d6e8f5d8c7"
+      }
+    },
+    {
+      "run": 42695168949,
+      "evaluated_at": "2026-11-09T20:41:14.861378+00:00",
+      "state": "replayed",
+      "stock_rows": 39,
+      "old_ready": [
+        "AMD",
+        "AMZN",
+        "AVGO",
+        "NVDA",
+        "ONON"
+      ],
+      "new_ready": [
+        "AMD",
+        "AMZN",
+        "AVGO",
+        "CNX",
+        "GS",
+        "MSFT",
+        "NVDA"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 7
+      },
+      "remove_news_gate_only_upper_bound": 12,
+      "remove_volume_gate_only_upper_bound": 6,
+      "input_sha256": {
+        "enriched-capture.json": "199ebb4915216239504f7a9c376fa60ea95fad9c8b7ec4580a7901c7daa77fff",
+        "news.json": "67baae9c3c4ea25fcb545ef22c5917af9d42de32d73b93fa5cfb54bb22c698ca",
+        "qualification.json": "114ff9901236ec713a3e172b3a76a4b88b3e7d164b54de31652a830559f64897"
+      }
+    },
+    {
+      "run": 42695956738,
+      "evaluated_at": "2026-11-09T20:46:27.808048+00:00",
+      "state": "replayed",
+      "stock_rows": 79,
+      "old_ready": [
+        "AMD",
+        "AVGO",
+        "NU",
+        "NVDA",
+        "ONON",
+        "WMT"
+      ],
+      "new_ready": [
+        "AMD",
+        "AVGO",
+        "BDX",
+        "C",
+        "CHWY",
+        "CSX",
+        "CTRE",
+        "GSK",
+        "INTC",
+        "MBLY",
+        "METC",
+        "MNST",
+        "MSFT",
+        "NFLX",
+        "NU",
+        "NVDA",
+        "OCUL",
+        "ON",
+        "ONON",
+        "PG",
+        "RDDT",
+        "RIVN",
+        "SKHY",
+        "SU",
+        "TRGP",
+        "TXN",
+        "UBER",
+        "UMC",
+        "WMT"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 29
+      },
+      "remove_news_gate_only_upper_bound": 32,
+      "remove_volume_gate_only_upper_bound": 6,
+      "input_sha256": {
+        "enriched-capture.json": "d6f504130e06f5bc44bbb37c86e44a7fbe0b530d4125e0881b7033d775f1e882",
+        "news.json": "6e3e25b663165d1d4502e03828feb6d0801bcfc2afe2246461cb990faeaa4bcc",
+        "qualification.json": "7e4dd69c220e7b8bc1ee7c99d614c2950320ea07facd6a0deb42384ef25471e4"
+      }
+    },
+    {
+      "run": 42696736563,
+      "evaluated_at": "2026-11-09T20:51:17.492829+00:00",
+      "state": "replayed",
+      "stock_rows": 79,
+      "old_ready": [
+        "NVDA",
+        "PLTR"
+      ],
+      "new_ready": [
+        "FLNC",
+        "KNX",
+        "MAGS",
+        "NVDA",
+        "PLTR",
+        "UBER"
+      ],
+      "new_strategies": {
+        "trend_continuation_20bar_v1": 6
+      },
+      "remove_news_gate_only_upper_bound": 5,
+      "remove_volume_gate_only_upper_bound": 2,
+      "input_sha256": {
+        "enriched-capture.json": "25c63ece65ab6bbaea06077d969a55f73ac00ccb7554f6a4c00ea2897c17c418",
+        "news.json": "3076dd858062c5d041e4434f9f7a8045bd91441fed7582f8adae28f8ce7606f3",
+        "qualification.json": "ff04eff96117adfef1869c8217806641c121c4b23db8b74e2a39d36686fe31bb"
+      }
+    },
+    {
+      "run": 42697506679,
+      "state": "missing_capture_or_qualification",
+      "files": 2
+    }
+  ],
+  "model_calls": 0,
+  "orders": 0,
+  "profitability_established": false,
+  "limitations": [
+    "Repeated symbol/run observations are not independent trades.",
+    "No unseen symbols or prices reconstructed.",
+    "Ablations are upper bounds, not proposed removal of all news or volume checks.",
+    "No AI approvals or entry/exit fills inferred; no P/L attributed to the new policy.",
+    "Rules were informed by this day; future sessions are the holdout."
+  ]
+}
