@@ -2797,6 +2797,12 @@
         "response_id": "resp_09b0ae02e0a25900016aee360c4aac87d1b44dcd9d82724ea7"
       }
     },
+    "paper-final-v1:fc3d6dfec8defab8189e5eec6ed0bd89e9492491e977079c95875b7c21e24bec:debate": {
+      "actual": null,
+      "day": "2026-11-09",
+      "reserved": 12187,
+      "usage": null
+    },
     "paper-final-v1:fc3d6dfec8defab8189e5eec6ed0bd89e9492491e977079c95875b7c21e24bec:devils_advocate": {
       "actual": 7034,
       "day": "2026-11-09",
