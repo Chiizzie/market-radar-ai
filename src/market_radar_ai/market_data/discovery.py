@@ -47,7 +47,7 @@ def technical_priority(result):
             + (2 if pattern else 0))
 
 
-def catalogue_selection(activity, universe, now, *, limit):
+def catalogue_selection(activity, universe, now, *, limit, evidence=None):
     """Reserve half the batch for fresh leaders, rotate every other catalogue name.
 
     With no fresh activity, the entire batch rotates. Catalogue order is stable
@@ -59,7 +59,15 @@ def catalogue_selection(activity, universe, now, *, limit):
     tail = [s for s in pool if s not in leaders]
     slots = limit - len(leaders)
     offset = (int(now.timestamp()) // 300 * slots) % max(1, len(tail))
-    return leaders + (tail[offset:] + tail[:offset])[:slots]
+    rotated=tail[offset:]+tail[:offset]
+    if evidence:
+        fresh=[s for s in tail if evidence.get(s,{}).get('snapshot_status')=='fresh']
+        fresh_slots=slots*3//4
+        fresh_offset=(int(now.timestamp())//300*max(1,fresh_slots))%max(1,len(fresh))
+        reserved=(fresh[fresh_offset:]+fresh[:fresh_offset])[:fresh_slots]
+        chosen=set(reserved)
+        rotated=reserved+[s for s in rotated if s not in chosen]
+    return leaders + rotated[:slots]
 
 
 def discover(*, env, now, fallback, session=None, universe_cache_path=None):
@@ -141,7 +149,7 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
             if snapshots['failed_batches']:
                 failures.append('catalogue_snapshot_batches_unavailable')
             ranked = list(dict.fromkeys(s for row in zip_longest(snapshots['ranked_symbols'],ranked) for s in row if s))
-        ordered = catalogue_selection(ranked, pool, now, limit=screen_limit)
+        ordered = catalogue_selection(ranked, pool, now, limit=screen_limit, evidence=(snapshots or {}).get('symbol_evidence'))
         if broad:
             from .coverage_lanes import leaders, reserve_screen
             sector_leaders=leaders((snapshots or {}).get("symbol_evidence", {}))
@@ -153,7 +161,7 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
         members = set(pool)
         leader_symbols = set(list(dict.fromkeys(s for s in ranked if s in members))[:screen_limit//2])
         ranked_positions = {s: i+1 for i,s in enumerate(ranked)}
-        technical_reasons = {}
+        technical_reasons = {}; chart_diagnostics = {}
         candidates=[]
         local=now.astimezone(ZoneInfo('America/New_York'))
         regular=local.weekday()<5 and (9,30)<=(local.hour,local.minute)<(16,0)
@@ -168,14 +176,16 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
                     result=batch_results[symbol] if batch_results is not None else AlpacaIexProvider(env=env).fetch_history(symbol)
                     checked=capture_result(result,now=datetime.now(timezone.utc))['payload']
                     reasons = sorted({i.get('code', 'quality_check_failed') for i in checked.get('quality_issues', [])})
-                    return symbol,checked['quality_passed_at_capture'],technical_priority(result),reasons
+                    from .chart_diagnostics import describe
+                    return symbol,checked['quality_passed_at_capture'],technical_priority(result),reasons,describe(result,checked,now=datetime.now(timezone.utc))
                 except Exception:
                     # A provider failure is an unavailable observation, not a
                     # reason to abort unrelated symbols or expose raw errors.
-                    return symbol, False, (False, 0), ['provider_or_validation_unavailable']
+                    return symbol, False, (False, 0), ['provider_or_validation_unavailable'], {'category':'provider_or_validation_exception'}
             # Independent sessions per worker; four requests in flight at most.
             with ThreadPoolExecutor(max_workers=4) as executor:
-                for symbol,usable,score,reasons in executor.map(check,ordered):
+                for symbol,usable,score,reasons,diagnostic in executor.map(check,ordered):
+                    chart_diagnostics[symbol]=diagnostic
                     screening['checked']+=1
                     technical_reasons[symbol] = reasons if usable else (reasons or ['unusable_completed_bars'])
                     if usable:
@@ -216,6 +226,7 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
                 'screen_lane': ('priority' if symbol in leader_symbols else 'rotation') if checked else 'not_checked',
                 'technical_status': 'usable' if usable else 'unavailable' if checked else 'not_checked',
                 'technical_reasons': technical_reasons.get(symbol, []),
+                'chart_diagnostics': chart_diagnostics.get(symbol),
                 'technical_priority_met': priority[symbol][0] if usable else None,
                 'technical_score': priority[symbol][1] if usable else None,
                 'detail_selected': symbol in selected_set,
@@ -244,7 +255,8 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
                 'research_deferred':len(pool)-len(selected_members)}
     if broad:
         coverage['provider_unmapped'] = len(provider_unmapped) if universe else 0
-    return {'schema_version':'stock-discovery-v2','retrieved_at':now.isoformat(),
+    from .chart_diagnostics import summarize
+    return {'chart_quality_summary':summarize(manifest),'schema_version':'stock-discovery-v2','retrieved_at':now.isoformat(),
             'status':'partial' if failures else 'ok','sources':sources,'failures':failures,
             'scope':'catalogue_and_fresh_activity_not_full_exchange_scan' if universe else 'provider_activity_and_movers_not_full_exchange_scan',
             'discovered_count':len(ranked),'selected_symbols':selected,

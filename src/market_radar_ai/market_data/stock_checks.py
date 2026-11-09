@@ -64,6 +64,8 @@ def assess(payload, *, now):
         row={'symbol':symbol,'quote_status':'unavailable','broker_executable':False,
              'eligibility_verified':False,'catalogue_status':'unavailable','trade_authorized':False}
         try:
+            if 'catalogue_observed_at' in payload and not 0 <= (now-timestamp(payload['catalogue_observed_at'])).total_seconds() <= 600:
+                raise ValueError('catalogue_expired')
             candidates=payload['catalogue_candidates'][symbol]
             if not isinstance(candidates,list):raise ValueError('candidate_shape')
             row['catalogue_status']='single_candidate_unverified' if len(candidates)==1 else 'ambiguous' if candidates else 'not_found'
@@ -93,18 +95,51 @@ def assess(payload, *, now):
             'fx_status':'current_indicative' if fx else 'unavailable_or_stale','stocks':rows,'trade_authorized':False}
 
 
-def collect(symbols, *, env, clock=lambda:datetime.now(timezone.utc), session=None, catalogue=None, fx_provider=None, before_quotes=None):
+def reuse_catalogue(record, symbols, *, now):
+    """Reuse only checked metadata, never the enclosing stale quote/FX capture."""
+    try:
+        p=record['payload']
+        if digest(p)!=record['payload_sha256'] or p['schema_version']!='stock-reference-checks-v1' or p['trade_authorized'] is not False:
+            return None
+        # Original timestamp survives repeated reuse; no sliding expiry.
+        at=p.get('catalogue_observed_at',p['retrieved_at'])
+        if not 0 <= (now-timestamp(at)).total_seconds() <= 600 or 'catalogue_unavailable' in p.get('failures',[]):
+            return None
+        candidates={}
+        for symbol in symbols:
+            if symbol not in p['symbols']: return None
+            rows=p['catalogue_candidates'][symbol]
+            if not isinstance(rows,list) or len(rows)>10: return None
+            for r in rows:
+                if (r['ticker']!=symbol+'_US_EQ' or r['currency']!='USD' or r['type'] not in ('STOCK','ETF')
+                        or not isinstance(r['isin'],str) or not r['isin'] or not isinstance(r['name'],str)):
+                    return None
+            candidates[symbol]=rows
+        from copy import deepcopy
+        return deepcopy(candidates),at
+    except (KeyError,TypeError,ValueError,AttributeError):
+        return None
+
+
+def collect(symbols, *, env, clock=lambda:datetime.now(timezone.utc), session=None, catalogue=None, fx_provider=None, before_quotes=None, catalogue_record=None):
     symbols=list(dict.fromkeys(symbols))
     if not 1<=len(symbols)<=STOCK_RESEARCH_LIMIT or any(not isinstance(s,str) or not SYMBOL.fullmatch(s) for s in symbols):raise ValueError('invalid_symbols')
     payload={'schema_version':'stock-reference-checks-v1','symbols':symbols,'trade_authorized':False,
              'catalogue_candidates':{},'failures':[]}
     # Slow metadata/FX first; short-lived quotes and clock collected last.
-    try:
-        rows=(catalogue or Trading212Catalogue()).fetch()
-        for symbol in symbols:
-            matches=[r for r in rows if r.ticker==symbol+'_US_EQ' and r.currencyCode=='USD' and r.type in ('STOCK','ETF')]
-            payload['catalogue_candidates'][symbol]=[{'ticker':r.ticker,'isin':r.isin,'name':r.name,'currency':r.currencyCode,'type':r.type} for r in matches]
-    except Exception:payload['failures'].append('catalogue_unavailable')
+    cached=reuse_catalogue(catalogue_record,symbols,now=clock()) if catalogue_record else None
+    if cached is not None:
+        payload['catalogue_candidates'],payload['catalogue_observed_at']=cached
+        payload['catalogue_source']='same_capture_validated_metadata'
+    else:
+        try:
+            rows=(catalogue or Trading212Catalogue()).fetch()
+            for symbol in symbols:
+                matches=[r for r in rows if r.ticker==symbol+'_US_EQ' and r.currencyCode=='USD' and r.type in ('STOCK','ETF')]
+                payload['catalogue_candidates'][symbol]=[{'ticker':r.ticker,'isin':r.isin,'name':r.name,'currency':r.currencyCode,'type':r.type} for r in matches]
+            payload['catalogue_observed_at']=clock().isoformat()
+            payload['catalogue_source']='fresh_broker_metadata_request'
+        except Exception:payload['failures'].append('catalogue_unavailable')
     try:payload['fx']=(fx_provider or YahooFxProvider()).fetch('USD',now=clock()).model_dump(mode='json')
     except Exception:payload['failures'].append('fx_unavailable')
     # Optional time-sensitive history read after slow catalogue/FX, before quotes.

@@ -217,7 +217,7 @@ def screen_capture(worker, capture, feed, *, env, clock, sibling=None, competito
             linked=sorted({r["source_symbol"] for r in links}|{r["symbol"] for r in links})
             if len(linked)>3: raise ValueError("competitor_universe_capacity")
             competitor_prices.update(discover_snapshots(linked,env=env,now=clock(),clock=clock,prior_snapshots=prior)["symbol_evidence"])
-    refs=collect(symbols,env=env,clock=clock,before_quotes=history_last) if symbols else None
+    refs=collect(symbols,env=env,clock=clock,before_quotes=history_last,catalogue_record=capture.get('stock_reference_checks')) if symbols else None
     collected=clock()
     rows=[]; inputs_batch=[]
     for symbol in symbols:
@@ -247,6 +247,10 @@ def screen_capture(worker, capture, feed, *, env, clock, sibling=None, competito
             'blocked':sum(bool(r['blockers']) for r in screened),
             'reasons':dict(Counter(b for r in screened for b in r['blockers'])),'rows':screened,
             'collection_seconds':(collected-started).total_seconds(),
+            'reference_failures':refs['payload'].get('failures',[]) if refs else [],
+            'catalogue_source':refs['payload'].get('catalogue_source','unavailable') if refs else 'unavailable',
+            'catalogue_observed_at':refs['payload'].get('catalogue_observed_at') if refs else None,
+            'catalogue_candidate_counts':{s:len(v) for s,v in refs['payload'].get('catalogue_candidates',{}).items()} if refs else {},
             'source_ages_seconds':{i['symbol']:{
                 'history':age(i['bars_received_at'],target.screen_time),
                 'context':age(i['context']['retrieved_at'],target.screen_time),
