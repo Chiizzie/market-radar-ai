@@ -1,4 +1,4 @@
-# Deployment template: replace 2b3811b9a823243a7825fe6371ad29688e6ff46e with a verified backend SHA.
+# Deployment template: replace 305aefa1cfc8925e760fd87c112b698ff6cdbf0c with a verified backend SHA.
 # Install as .github/workflows/scheduled-scanner.yml on this repository's main branch.
 name: Scheduled research collection
 on:
@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 2b3811b9a823243a7825fe6371ad29688e6ff46e
+          ref: 305aefa1cfc8925e760fd87c112b698ff6cdbf0c
           persist-credentials: false
       - name: Enforce Dublin operating hours before provider calls
         id: window
@@ -153,7 +153,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.review_window.outputs.run == 'true'
         with:
-          ref: 2b3811b9a823243a7825fe6371ad29688e6ff46e
+          ref: 305aefa1cfc8925e760fd87c112b698ff6cdbf0c
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.review_window.outputs.run == 'true'
@@ -250,7 +250,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 2b3811b9a823243a7825fe6371ad29688e6ff46e
+          ref: 305aefa1cfc8925e760fd87c112b698ff6cdbf0c
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -349,7 +349,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 2b3811b9a823243a7825fe6371ad29688e6ff46e
+          ref: 305aefa1cfc8925e760fd87c112b698ff6cdbf0c
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -369,9 +369,9 @@ jobs:
         if: steps.window.outputs.run == 'true'
         run: |
           if test -f artifacts/scheduled/enriched-capture.json && test -f artifacts/scheduled/news.json; then
-            python -m market_radar_ai.agents.method_shadow --capture artifacts/scheduled/enriched-capture.json --evidence artifacts/scheduled/news.json --output artifacts/method-shadow --duration 330 --with-early-opening
+            python -m market_radar_ai.agents.method_shadow --capture artifacts/scheduled/enriched-capture.json --evidence artifacts/scheduled/news.json --output artifacts/method-shadow --duration 330 --with-early-opening --with-competitor --discovery artifacts/scheduled/discovery.json --manifest artifacts/scheduled/discovery-selection.json
           else
-            python -m market_radar_ai.agents.method_shadow --observe-only --output artifacts/method-shadow --duration 330 --with-early-opening
+            python -m market_radar_ai.agents.method_shadow --observe-only --output artifacts/method-shadow --duration 330 --with-early-opening --with-competitor --discovery artifacts/scheduled/discovery.json --manifest artifacts/scheduled/discovery-selection.json
           fi
         env:
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
@@ -387,6 +387,8 @@ jobs:
             artifacts/method-shadow/*report.json
             artifacts/method-shadow/early-opening/early-opening-report.json
             artifacts/method-shadow/early-opening/method-events.jsonl
+            artifacts/method-shadow/competitor/competitor-shadow-report.json
+            artifacts/method-shadow/competitor/method-events.jsonl
           retention-days: 7
           if-no-files-found: warn
       - name: Export end-of-session method evidence for recovery

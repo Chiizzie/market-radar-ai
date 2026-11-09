@@ -45,3 +45,44 @@ an earlier move. First observation requires a post-publication price baseline.
 
 Deployment flag: ENABLE_CATALYST_LINKS=true on the scheduled collection job.
 Rollback: disable the flag or restore the prior pinned source SHA.
+
+## Follow-on: independently tracked paper entry arm
+
+Added `competitor_strength_breakout_shadow_v1`, protocol
+`c490e29db9222f695a6a84ef5ef5f8b4a86c6e6033d1ed23d713752ac7d943dd`.
+This supersedes the earlier “entry arm still required” status above.
+
+A live 17:05 discovery capture revealed publisher-tag-only false connections
+(e.g. AMD tagged on a headline about another chipmaker). Both discovery and paper
+admission now require the headline to name the source company (or Jensen Huang
+for NVIDIA). This is a relevance filter, not semantic sentiment analysis.
+
+The separate paper arm recomputes competitor outperformance using fresh snapshots
+and the prior collection's prices, requiring aligned post-publication windows.
+It requires six contiguous completed regular-session bars, latest completed-bar
+age <=360 seconds, close above six-bar HLC3 VWAP and the last-three-bar opening
+price, >=USD1m last-three-bar turnover, and a positive three-bar range <=5%.
+Entry is three-bar high +10bps; stop is three-bar low. Target is cost-inclusive
+2R capped at a disclosed projection three range-widths above entry. It does not
+use the original 1.5x volume acceleration gate or require direct positive news.
+It still requires the target's fresh bounded news check, reference quotes, FX,
+unique Invest catalogue candidate, <=20bps spread, EUR500 maximum independent
+allocation, EUR20 maximum planned loss, 60-second entry expiry and intraday exit.
+
+First durable enrolment per stock/day wins. No backdating, retry after a missed
+entry, or reinterpretation of earlier gains. Polls use the existing quote worker,
+with a separate protocol partition. Restore recomputes admission from frozen
+inputs and replays observations. No paid AI, Telegram trade call, or live order.
+The event endpoint allowlists only this exact protocol for the new strategy.
+
+Scheduled artifact `method-shadow-<run>/competitor/competitor-shadow-report.json`
+contains screen blockers, observation health, entries and resolved/unresolved
+outcomes. The accompanying method-events.jsonl preserves the event backup.
+These results are deliberately separate from the established performance totals;
+there is no new dashboard UI panel in this release. Independent EUR500 paper
+allocations are not a portfolio return; assumed costs and IEX coverage apply.
+
+Validation: 1,323 Python tests passed, plus the subsequent worker-integration
+check (four focused competitor tests); 15 endpoint tests and production frontend
+build passed. Synthetic lifecycle exercised durable entry, exit, restart, daily
+no-retry and protocol isolation. Live performance remains unproven.
