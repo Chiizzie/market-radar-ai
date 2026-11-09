@@ -83,3 +83,39 @@ Existing account-sync, market-context and scanner-health pins remain unchanged.
 Final focused verification: 64 passed. Earlier full suite: 1,313 passed.
 No production data deletion, history rewriting, AI budget increase or original
 scanner modification. Early experiment shares collection and runner with AVWAP.
+
+Dashboard storage contract commit: `50ac906ad11012788813431c11f53a15bfcea401`.
+The signed event endpoint accepts the early strategy only with fixed protocol ID
+`a445697fa1aefc21647529520dc6e1bd965073e2ff9068b3fa99592146e2af25`;
+existing authentication, no-live-authorization and partition checks remain.
+20 dashboard contract tests and the production build passed. Lovable publication
+confirmed: live HTTP 200 and x-deployment-id header matches deployment
+`076e241f-7519-4ca6-b3dd-6177fe7ced59`.
+
+Live verification after deployment:
+- Execution/readiness run 42653076797: success; readiness event 981 at
+  16:16:54 Dublin reports SPY quote probe PASS using receipt-time evaluation.
+- Comparison storage verification 42653076863: success.
+- AVWAP storage verification 42653077166: success.
+- Saved 15:00 capture replay retained all ten technically usable core names
+  inside the 39-slot discovery budget. This is an offline routing comparison,
+  not a claim of trades or realized profits.
+
+First updated scheduled run: 42653706091 (16:20 Dublin). Collection, account sync,
+market context and review succeeded. Captured 39 stocks and 30 crypto with current
+charts for every selected symbol. Eleven core names included; META lacked usable
+technical evidence and was not forced through. Core, sector, technical and rotation
+lanes are present in discovery-selection.json. missed-moves.json was downloaded
+and verified in the live artifact. Review: no qualifying candidate, zero model calls.
+All six jobs subsequently completed successfully. Paper watcher: 66 polls,
+zero errors, no active plans. Method report event 1009 at 16:29:16 Dublin:
+preparation 103.642663 seconds, maximum history age at screening 1.16999 seconds,
+maximum context age 158.809031 seconds. All 39 source-context checks passed;
+zero stale-context blockers, versus all candidates blocked in the earlier run.
+Method observer: 56 polls, zero errors, maximum gap 6.528024 seconds, no admitted
+cohorts. Remaining rejections are strategy/evidence checks, not the repaired
+preparation latency. This proves live freshness handling, not trade performance.
+
+Early-opening artifact also verified: correct separate protocol and report schema,
+zero cohorts, all 39 candidates explicitly outside its admission window, 56 polls
+and zero errors. No synthetic trades, model calls or early strategy alerts.
