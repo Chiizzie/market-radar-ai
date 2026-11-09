@@ -1900,6 +1900,12 @@
         "response_id": "resp_06743c208b283c70016af1c59fdf0087d1b8ddb24fe17f7fb6"
       }
     },
+    "paper-final-v1:568e2d896fea244f17d908df315206ba7a8a5d04d8a574045aa7a8f81e8a240b:news_analyst": {
+      "actual": null,
+      "day": "2026-11-09",
+      "reserved": 10066,
+      "usage": null
+    },
     "paper-final-v1:568e2d896fea244f17d908df315206ba7a8a5d04d8a574045aa7a8f81e8a240b:opportunity_hunter": {
       "actual": null,
       "day": "2026-11-09",
