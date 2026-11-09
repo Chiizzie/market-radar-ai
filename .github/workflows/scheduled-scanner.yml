@@ -1,4 +1,4 @@
-# Deployment template: replace 44a9968f06921b9bbb90429156434ca506be059d with a verified backend SHA.
+# Deployment template: replace 1a4c9773827ae9605a5a1d8d862649715144bf43 with a verified backend SHA.
 # Install as .github/workflows/scheduled-scanner.yml on this repository's main branch.
 name: Scheduled research collection
 on:
@@ -13,6 +13,8 @@ permissions:
   contents: read
 jobs:
   collect:
+    outputs:
+      review_ready: ${{ steps.collection.outputs.review_ready }}
     permissions:
       contents: write
     concurrency:
@@ -37,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 44a9968f06921b9bbb90429156434ca506be059d
+          ref: 1a4c9773827ae9605a5a1d8d862649715144bf43
           persist-credentials: false
       - name: Enforce Dublin operating hours before provider calls
         id: window
@@ -79,6 +81,7 @@ jobs:
           key: scanner-signals-v1-${{ github.run_id }}
           restore-keys: scanner-signals-v1-
       - name: Collect and deliver without models or orders
+        id: collection
         if: steps.window.outputs.run == 'true'
         run: python -m market_radar_ai.dashboard.scheduled_collection
         env:
@@ -126,7 +129,7 @@ jobs:
 
   review:
     needs: collect
-    if: ${{ needs.collect.result == 'success' && github.run_attempt == 1 && !inputs.verify_outside_hours }}
+    if: ${{ always() && needs.collect.outputs.review_ready == 'true' && github.run_attempt == 1 && !inputs.verify_outside_hours }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     permissions:
@@ -153,7 +156,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.review_window.outputs.run == 'true'
         with:
-          ref: 44a9968f06921b9bbb90429156434ca506be059d
+          ref: 1a4c9773827ae9605a5a1d8d862649715144bf43
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.review_window.outputs.run == 'true'
@@ -250,7 +253,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 44a9968f06921b9bbb90429156434ca506be059d
+          ref: 1a4c9773827ae9605a5a1d8d862649715144bf43
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -349,7 +352,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 44a9968f06921b9bbb90429156434ca506be059d
+          ref: 1a4c9773827ae9605a5a1d8d862649715144bf43
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -459,7 +462,7 @@ jobs:
 
   market-context:
     needs: collect
-    if: ${{ needs.collect.result == 'success' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.CONTEXT_RESEARCH_ENABLED != 'false' }}
+    if: ${{ always() && needs.collect.outputs.review_ready == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.CONTEXT_RESEARCH_ENABLED != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 8
     permissions:
