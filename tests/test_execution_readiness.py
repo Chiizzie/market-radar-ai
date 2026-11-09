@@ -109,3 +109,15 @@ def test_due_backups_and_expired_cost_schedule_are_explicit():
     r=result(now=now,session=Session(now),github=GitHub(now))
     assert states(r)['comparison_recovery']==states(r)['method_recovery']=='unavailable'
     assert states(r)['cost_schedule']=='blocked'
+
+
+def test_quote_arriving_after_started_at_is_checked_at_receipt():
+    now=datetime(2026,11,9,15,tzinfo=UTC)
+    r=result(now=now,session=Session(now,True,-2),github=GitHub(now),
+             receipt_clock=lambda:now+timedelta(seconds=3))
+    assert states(r)['reference_quote_probe']=='pass'
+    assert '1.0 seconds' in next(c['detail'] for c in r['checks'] if c['id']=='reference_quote_probe')
+    future=result(now=now,session=Session(now,True,-40),github=GitHub(now),receipt_clock=lambda:now+timedelta(seconds=3))
+    assert states(future)['reference_quote_probe']=='unavailable'
+    stale=result(now=now,session=Session(now,True,89),github=GitHub(now),receipt_clock=lambda:now+timedelta(seconds=3))
+    assert states(stale)['reference_quote_probe']=='unavailable'

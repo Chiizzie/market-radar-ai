@@ -93,7 +93,7 @@ def assess(payload, *, now):
             'fx_status':'current_indicative' if fx else 'unavailable_or_stale','stocks':rows,'trade_authorized':False}
 
 
-def collect(symbols, *, env, clock=lambda:datetime.now(timezone.utc), session=None, catalogue=None, fx_provider=None):
+def collect(symbols, *, env, clock=lambda:datetime.now(timezone.utc), session=None, catalogue=None, fx_provider=None, before_quotes=None):
     symbols=list(dict.fromkeys(symbols))
     if not 1<=len(symbols)<=STOCK_RESEARCH_LIMIT or any(not isinstance(s,str) or not SYMBOL.fullmatch(s) for s in symbols):raise ValueError('invalid_symbols')
     payload={'schema_version':'stock-reference-checks-v1','symbols':symbols,'trade_authorized':False,
@@ -107,6 +107,8 @@ def collect(symbols, *, env, clock=lambda:datetime.now(timezone.utc), session=No
     except Exception:payload['failures'].append('catalogue_unavailable')
     try:payload['fx']=(fx_provider or YahooFxProvider()).fetch('USD',now=clock()).model_dump(mode='json')
     except Exception:payload['failures'].append('fx_unavailable')
+    # Optional time-sensitive history read after slow catalogue/FX, before quotes.
+    if before_quotes is not None: before_quotes()
     transport=session or requests.Session()
     for name,url,params in [('market_clock',CLOCK,{}),('quotes',QUOTES,{'symbols':','.join(symbols),'feed':'iex','currency':'USD'})]:
         try:payload[name]=get(url,params,env,transport)

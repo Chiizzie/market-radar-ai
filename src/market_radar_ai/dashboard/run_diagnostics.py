@@ -169,9 +169,12 @@ def build_report(collection, review=None, *, now, budget_loader=None):
     delivery=read(root/'delivery.json',issues) or {}
     discovery=read(collection/'discovery.json',issues) or {}
     money=spending(packet,status,audit,budget_loader=budget_loader,phase=phase)
+    from .missed_moves import explain
+    missed=explain(read(collection/'discovery-selection.json',issues) or {},q,decision,selection,now=now)
     return {'schema_version':'internal-run-diagnostics-v1','generated_at_dublin':now.astimezone(ZoneInfo('Europe/Dublin')).isoformat(),
             'phase':phase,'qualification_origin':origin,'qualification_available':bool(q),
             'discovery':discovery_summary(discovery, now=now),
+            'missed_moves':missed,
             'coverage':coverage,'candidates':candidates,'blocker_counts':dict(sorted(reasons.items())),
             'blocker_groups':dict(sorted(groups.items())),
             'review':{'state':label(status.get('state','not_confirmed')),
@@ -240,8 +243,14 @@ def main():
     report=build_report(args.collection,args.review,now=datetime.now(timezone.utc),budget_loader=loader)
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(report,indent=2)+'\n')
+    args.output.with_name('missed-moves.json').write_text(json.dumps(report['missed_moves'],indent=2)+'\n')
     if args.summary:
-        with args.summary.open('a') as f:f.write(markdown(report))
+        with args.summary.open('a') as f:
+            f.write(markdown(report))
+            f.write('\n### Observed movers and coverage gaps\n\n')
+            for row in report['missed_moves']['rows'][:15]:
+                f.write('- '+label(row['symbol'])+': '+', '.join(label(x) for x in row['reasons'])+'\n')
+            f.write('\nThese are routing explanations, not proven missed profits. Full details: missed-moves.json.\n')
     print(json.dumps({'diagnostics_written':True,'model_calls':0,'qualification_available':report['qualification_available']}))
 
 

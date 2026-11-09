@@ -22,13 +22,17 @@ class MethodShadow:
     Event sequence, protocol, checksums and source inputs are verified on restore.
     Re-running a capture cannot reset expiry, rescue a miss or retry a loss.
     """
-    def __init__(self, directory, *, client, observer=None, clock=lambda:datetime.now(UTC), day=None):
+    def __init__(self, directory, *, client, observer=None, clock=lambda:datetime.now(UTC), day=None, early_opening=False):
         self.root=Path(directory); self.root.mkdir(parents=True,exist_ok=True)
         self.journal=self.root/'method-events.jsonl'
         if self.journal.exists(): raise ValueError('fresh_method_projection_required')
         self.client,self.observer,self.clock=client,observer,clock
         self.day=day or aware(clock()).date().isoformat()
-        self.experiment=PROTOCOL_ID; self.cursor=0; self.seen=set()
+        self.protocol=PROTOCOL; self.scenario=scenario; self.early_opening=early_opening
+        if early_opening:
+            from .early_opening import PROTOCOL as EARLY_PROTOCOL, scenario as early_scenario
+            self.protocol=EARLY_PROTOCOL; self.scenario=early_scenario
+        self.experiment=digest(self.protocol); self.cursor=0; self.seen=set()
         self.cohorts={}; self.quotes={}; self.screen=None
         self.health={'polls':0,'quotes_received':0,'error_polls':0,'maximum_poll_gap_seconds':0,
                      'capacity_deferred':0,'target_interval_seconds':5,'model_calls':0}
@@ -43,7 +47,7 @@ class MethodShadow:
         if p['dataset_kind']!='forward' or p['trade_authorized'] is not False:
             raise ValueError('forward_method_only')
         if event['kind']=='method_enrol':
-            s=scenario(p['inputs'],now=now)
+            s=self.scenario(p['inputs'],now=now)
             if s!=p['scenario'] or s['blockers'] or s['plan'] is None or p['setup_id']!=s['setup_id']:
                 raise ValueError('method_scenario_not_reproducible')
             # Database receipt is also an admission boundary, never retroactive.
@@ -80,13 +84,14 @@ class MethodShadow:
     def enrol_many(self, inputs, *, now):
         self.sync()
         now=max(aware(now),aware(self.clock()))
+        self.screen_time=now.isoformat()
         # One durable batch avoids spending a short entry window on up to forty
         # serial network writes. All rules are evaluated at the same frozen clock.
         active=sum(r['state'] in ('watching','open_simulation') for r in self.outcomes(now))
         known=set(self.cohorts); rows=[]; events=[]; size=0
         for source in inputs:
             try:
-                s=scenario(source,now=now); blockers=s['blockers']
+                s=self.scenario(source,now=now); blockers=s['blockers']
                 if s['setup_id'] in known: blockers=['already_enrolled_this_session']
                 elif not blockers and active>=40: blockers=['observer_capacity_deferred']
                 if not blockers:
@@ -157,7 +162,7 @@ class MethodShadow:
     def report(self):
         now=self.clock(); rows=self.outcomes(now)
         return {'schema_version':'method-shadow-report-v1','protocol_id':self.experiment,
-            'protocol':PROTOCOL,'strategy_id':PROTOCOL['rules']['strategy_id'],
+            'protocol':self.protocol,'strategy_id':self.protocol['rules']['strategy_id'],
             'as_of':aware(now).isoformat(),'evaluation_day':self.day,'dataset_kind':'forward',
             'shadow_only':True,'trade_authorized':False,'model_calls':0,'ai_cost_eur':'0',
             'cohort_count':len(rows),'results':metrics(rows),'screen':self.screen,
@@ -169,14 +174,23 @@ class MethodShadow:
 
     def close(self):
         self.sync(); report=self.report()
-        (self.root/'method-report.json').write_text(json.dumps(report,indent=2)+'\n')
+        if not self.early_opening:
+            (self.root/'method-report.json').write_text(json.dumps(report,indent=2)+'\n')
         from .research_views import append_publication, method_rows
-        append_publication(self.client,self.experiment,report,method_rows(self,now=aware(report['as_of'])),clock=self.clock)
+        if self.early_opening:
+            # Durable enrolments/quotes use their own protocol partition. Keep this
+            # experimental report out of the established AVWAP dashboard summary.
+            report.update(schema_version='early-opening-report-v1',
+                note='Separate unproven 15-minute opening-range paper experiment. No AI, alerts or orders. Projected target, assumed 40bps costs; no demonstrated edge.',
+                rows=method_rows(self,now=aware(report['as_of'])))
+            (self.root/'early-opening-report.json').write_text(json.dumps(report,indent=2)+'\n')
+        else:
+            append_publication(self.client,self.experiment,report,method_rows(self,now=aware(report['as_of'])),clock=self.clock)
         self.sync()
         return report
 
 
-def screen_capture(worker, capture, feed, *, env, clock):
+def screen_capture(worker, capture, feed, *, env, clock, sibling=None):
     from .chart_news import checked_source
     from ..market_data.providers.alpaca_batch import fetch_histories
     from ..market_data.stock_checks import collect
@@ -184,8 +198,11 @@ def screen_capture(worker, capture, feed, *, env, clock):
     if len(symbols)>40: raise ValueError('method_capture_capacity')
     contexts={r['payload']['symbol']:r for r in capture.get('stock_context',[])}
     # Independent full-session history: never re-anchor at a truncated 60-bar capture.
-    histories=fetch_histories(symbols,env=env,clock=clock) if symbols else {}
-    refs=collect(symbols,env=env,clock=clock) if symbols else None
+    started=clock(); histories={}
+    def history_last():
+        histories.update(fetch_histories(symbols,env=env,clock=clock))
+    refs=collect(symbols,env=env,clock=clock,before_quotes=history_last) if symbols else None
+    collected=clock()
     rows=[]; inputs_batch=[]
     for symbol in symbols:
         try:
@@ -202,11 +219,24 @@ def screen_capture(worker, capture, feed, *, env, clock):
             inputs_batch.append(inputs)
         except (ValueError,KeyError,TypeError,AttributeError,ArithmeticError):
             rows.append({'candidate_id':'stocks:'+symbol,'blockers':['method_source_unavailable_or_invalid']})
-    rows.extend(worker.enrol_many(inputs_batch,now=clock()))
-    worker.screen={'evaluated_at':aware(clock()).isoformat(),'examined':len(rows),
-        'enrolled':sum(not r['blockers'] for r in rows),
-        'blocked':sum(bool(r['blockers']) for r in rows),
-        'reasons':dict(Counter(b for r in rows for b in r['blockers'])),'rows':rows}
+    def age(value, at):
+        try: return (aware(at)-aware(value)).total_seconds()
+        except (ValueError,TypeError,AttributeError): return None
+    for target in [worker]+([sibling] if sibling is not None else []):
+        screened=list(rows)+target.enrol_many(inputs_batch,now=clock())
+        target.screen={'evaluated_at':target.screen_time,'examined':len(screened),
+            'enrolled':sum(not r['blockers'] for r in screened),
+            'blocked':sum(bool(r['blockers']) for r in screened),
+            'reasons':dict(Counter(b for r in screened for b in r['blockers'])),'rows':screened,
+            'collection_seconds':(collected-started).total_seconds(),
+            'source_ages_seconds':{i['symbol']:{
+                'history':age(i['bars_received_at'],target.screen_time),
+                'context':age(i['context']['retrieved_at'],target.screen_time),
+                'reference_capture':age(i['reference_checks']['payload']['retrieved_at'],target.screen_time),
+                'quote':age(i['reference_checks']['payload']['quotes']['quotes'].get(i['symbol'],{}).get('t'),target.screen_time),
+                'news_check':age(i['news_check'].get('checked_at') if i['news_check'] else None,target.screen_time)
+            } for i in inputs_batch}}
+
 
 
 def main():
@@ -215,26 +245,36 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output',type=Path,required=True); p.add_argument('--capture',type=Path)
     p.add_argument('--evidence',type=Path); p.add_argument('--duration',type=int,default=330)
+    p.add_argument('--early-opening',action='store_true')
+    p.add_argument('--with-early-opening',action='store_true')
     p.add_argument('--storage-only',action='store_true'); p.add_argument('--observe-only',action='store_true'); p.add_argument('--day')
     args=p.parse_args()
     if not 0<=args.duration<=600: p.error('duration must be between 0 and 600')
     clock=lambda:datetime.now(UTC)
     worker=MethodShadow(args.output,client=EventClient(os.environ.get('REVIEW_INGEST_SECRET')),
-                        observer=ReferenceObserver(os.environ),clock=clock,day=args.day)
+                        observer=ReferenceObserver(os.environ),clock=clock,day=args.day,early_opening=args.early_opening)
     worker.sync()
+    sibling=None
+    if args.with_early_opening:
+        sibling=MethodShadow(args.output/'early-opening',client=worker.client,observer=worker.observer,clock=clock,day=args.day,early_opening=True)
+        sibling.sync()
     if not args.storage_only:
         if not args.observe_only:
             if not args.capture or not args.evidence: p.error('capture and evidence required')
-            screen_capture(worker,json.loads(args.capture.read_text()),json.loads(args.evidence.read_text()),env=os.environ,clock=clock)
+            screen_capture(worker,json.loads(args.capture.read_text()),json.loads(args.evidence.read_text()),env=os.environ,clock=clock,sibling=sibling)
         else:
             worker.health['screen_unavailable']=True
         end=time.monotonic()+args.duration
         while True:
             try: worker.poll()
             except (RuntimeError,ValueError,KeyError,TypeError): worker.health['error_polls']+=1
+            if sibling is not None:
+                try: sibling.poll()
+                except (RuntimeError,ValueError,KeyError,TypeError): sibling.health['error_polls']+=1
             if time.monotonic()>=end: break
             time.sleep(min(5,max(0,end-time.monotonic())))
     report=worker.close()
+    if sibling is not None: sibling.close()
     print(json.dumps({'state':'method_shadow_recorded','cohort_count':report['cohort_count'],
                       'model_calls':0,'trade_authorized':False}))
 

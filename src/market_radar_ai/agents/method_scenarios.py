@@ -18,11 +18,12 @@ PROTOCOL = {'version': 'method-shadow-v1', 'rules': RULES,
 PROTOCOL_ID = digest(PROTOCOL)
 
 
-def scenario(inputs, *, now):
+def scenario(inputs, *, now, measurement_fn=measure, protocol=PROTOCOL):
     """Recomputed from frozen source inputs on enrolment and every event restore."""
     now = aware(now)
     symbol = inputs['symbol']
-    measurement = measure(inputs['candles'], inputs['daily'], symbol=symbol, now=now)
+    protocol_id=digest(protocol)
+    measurement = measurement_fn(inputs['candles'], inputs['daily'], symbol=symbol, now=now)
     blockers = list(measurement['blockers'])
     context = inputs['context']
     if (context['symbol'] != symbol or context['provider'] != 'alpaca_iex'
@@ -43,9 +44,9 @@ def scenario(inputs, *, now):
     if checks['fx_status'] != 'current_indicative': blockers.append('fresh_fx_unavailable')
     if ref.get('catalogue_status') != 'single_candidate_unverified': blockers.append('unique_invest_catalogue_candidate_missing')
     if ref.get('quote_status') != 'current_reference_only': blockers.append('current_reference_quote_missing')
-    result = {'schema_version':'method-shadow-scenario-v1', 'protocol_id':PROTOCOL_ID,
-        'strategy_id':STRATEGY, 'candidate_id':'stocks:'+symbol,
-        'setup_id':digest({'protocol':PROTOCOL_ID,'symbol':symbol,'day':now.date().isoformat()}),
+    result = {'schema_version':'method-shadow-scenario-v1', 'protocol_id':protocol_id,
+        'strategy_id':protocol['rules']['strategy_id'], 'candidate_id':'stocks:'+symbol,
+        'setup_id':digest({'protocol':protocol_id,'symbol':symbol,'day':now.date().isoformat()}),
         'assembled_at':now.isoformat(), 'shadow_only':True, 'trade_authorized':False,
         'model_calls':0, 'features':measurement['features'], 'blockers':blockers, 'plan':None}
     if blockers: return result

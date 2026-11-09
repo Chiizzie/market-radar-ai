@@ -72,6 +72,7 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
     research_limit = STOCK_RESEARCH_LIMIT-1 if broad else 19
     snapshots = None
     manifest = []
+    detail_lanes = {}; sector_leaders = []
     key, secret = env.get('ALPACA_API_KEY'), env.get('ALPACA_API_SECRET')
     for endpoint, params, fields in [('most-actives', {'top':100,'by':'volume'}, ['most_actives']),
                                     ('movers', {'top':50}, ['gainers','losers'])]:
@@ -137,6 +138,10 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
                 failures.append('catalogue_snapshot_batches_unavailable')
             ranked = list(dict.fromkeys(s for row in zip_longest(snapshots['ranked_symbols'],ranked) for s in row if s))
         ordered = catalogue_selection(ranked, pool, now, limit=screen_limit)
+        if broad:
+            from .coverage_lanes import leaders, reserve_screen
+            sector_leaders=leaders((snapshots or {}).get("symbol_evidence", {}))
+            ordered=reserve_screen(ordered,pool,sector_leaders,screen_limit)
         members = set(pool)
         leader_symbols = set(list(dict.fromkeys(s for s in ranked if s in members))[:screen_limit//2])
         ranked_positions = {s: i+1 for i,s in enumerate(ranked)}
@@ -174,9 +179,18 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
             candidates=[]
         candidates.sort(key=lambda s:priority.get(s,(False,0)),reverse=True)
         if regular:
-            _,selected=select([candidates],now,limit=research_limit)
+            if broad:
+                from .coverage_lanes import select_details
+                selected,detail_lanes=select_details(candidates,sector_leaders,now,research_limit)
+            else:
+                _,selected=select([candidates],now,limit=research_limit)
         else:
-            selected=catalogue_selection(ranked,pool,now,limit=research_limit)
+            if broad:
+                from .coverage_lanes import select_details
+                research_pool=list(dict.fromkeys([s for s in ranked if s in set(pool)]+pool))
+                selected,detail_lanes=select_details(research_pool,sector_leaders,now,research_limit)
+            else:
+                selected=catalogue_selection(ranked,pool,now,limit=research_limit)
         checked_symbols=set(ordered) if regular else set()
         screening['not_checked']=[s for s in pool if s not in checked_symbols]
         screening['usable_count']=len(candidates)
@@ -197,6 +211,7 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
                 'technical_priority_met': priority[symbol][0] if usable else None,
                 'technical_score': priority[symbol][1] if usable else None,
                 'detail_selected': symbol in selected_set,
+                'detail_lane': detail_lanes.get(symbol),
                 'selection_reason': ('selected_for_research' if symbol in selected_set else
                     'outside_technical_budget' if not checked and regular else
                     'premarket_rotation_deferred' if not regular else
@@ -225,7 +240,7 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
             'scope':'catalogue_and_fresh_activity_not_full_exchange_scan' if universe else 'provider_activity_and_movers_not_full_exchange_scan',
             'discovered_count':len(ranked),'selected_symbols':selected,
             'deferred_symbols':[s for s in pool if s not in selected],
-            'selection_policy':f'relative_activity_acceleration_and_catalogue_rotation_screen_{screen_limit}_enrich_{research_limit}' if broad else f'fresh_leaders_and_catalogue_rotation_every_5_minutes_screen_{screen_limit}_enrich_{research_limit}',
+            'selection_policy':f'liquid_core_sector_movers_technical_and_rotation_v2_screen_{screen_limit}_enrich_{research_limit}' if broad else f'fresh_leaders_and_catalogue_rotation_every_5_minutes_screen_{screen_limit}_enrich_{research_limit}',
             'snapshot_coverage':{k:v for k,v in snapshots.items() if k not in ('ranked_symbols','symbol_evidence','checkpoint')} if snapshots else None,
             'selection_manifest': manifest,
             'universe':universe, 'coverage':coverage,

@@ -30,8 +30,9 @@ def get_json(session, url, *, headers):
     return json.loads(raw)
 
 
-def build(*, now, env, client, session=None, budget_store=None, github=None, source_events=()):
+def build(*, now, env, client, session=None, budget_store=None, github=None, source_events=(), receipt_clock=None):
     session = session or requests.Session()
+    receipt_clock = receipt_clock or (lambda: now)
     local = now.astimezone(ZoneInfo('Europe/Dublin'))
     expected = local.weekday() < 5 and 8 <= local.hour < 23
     checks = []
@@ -71,12 +72,13 @@ def build(*, now, env, client, session=None, budget_store=None, github=None, sou
         q = get_json(session, 'https://data.alpaca.markets/v2/stocks/SPY/quotes/latest?feed=iex', headers=headers)['quote']
         from ..agents.execution_research import dec
         if not 0 < dec(q['bp']) <= dec(q['ap']): raise ValueError('invalid_probe_quote')
-        age = (now - aware(q['t'])).total_seconds()
+        received=aware(receipt_clock())
+        age = (received - aware(q['t'])).total_seconds()
         if age < -30: raise ValueError('future_quote')
         current = 0 <= age <= 90
         status = 'pass' if current else 'paused' if clock and not clock['is_open'] else 'unavailable'
         add('reference_quote_probe', status,
-            f'SPY IEX reference quote age: {max(0, age):.0f} seconds. One-symbol provider check; not broker execution or broad coverage.', q['t'])
+            f'SPY IEX reference quote age: {age:.1f} seconds. One-symbol provider check; not broker execution or broad coverage.', q['t'])
     except (ValueError, KeyError, TypeError, ArithmeticError, requests.RequestException):
         add('reference_quote_probe', 'unavailable', 'Reference quote probe unavailable; no synthetic quote substituted.')
     ops = health(github or GitHubRead(env.get('GH_BUDGET_TOKEN')), now=now)
@@ -151,7 +153,7 @@ def main():
     client = EventClient(os.environ.get('REVIEW_INGEST_SECRET'))
     from tempfile import TemporaryDirectory
     with TemporaryDirectory() as scratch: events = collect(client, now=now, root=scratch)
-    report = build(now=now, env=os.environ, client=client, source_events=events)
+    report = build(now=now, env=os.environ, client=client, source_events=events, receipt_clock=lambda: datetime.now(UTC))
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + '\n')
     if args.publish: client.append(EXPERIMENT, [envelope('readiness_report', report, now)])
