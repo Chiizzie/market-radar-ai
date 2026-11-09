@@ -8,8 +8,8 @@ from ..models import Candle, ProviderResult, ValidationIssue
 class KrakenProvider:
     """Public Kraken OHLC endpoint. The API caps recent history at 720 candles."""
     BASE_URL = "https://api.kraken.com/0/public"
-    def __init__(self, session: requests.Session | None = None, timeout: int = 15):
-        self.client = ReadOnlyJsonClient(session=session, timeout=timeout)
+    def __init__(self, session: requests.Session | None = None, timeout: int = 15, attempts: int = 3):
+        self.client = ReadOnlyJsonClient(session=session, timeout=timeout, attempts=attempts)
     def fetch_ohlc(self, pair: str, interval_minutes: int = 5) -> ProviderResult:
         retrieved = datetime.now(timezone.utc)
         try:

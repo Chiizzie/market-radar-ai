@@ -120,6 +120,30 @@ def connectivity_exit_code(document):
     return 0
 
 
+def capture_crypto_bounded(pairs, *, fetch):
+    """Two requests at a time; stop after a fully failed pair of requests.
+
+    Unattempted pairs are explicit errors, never cached or fabricated prices.
+    The production fetch uses one attempt with a five-second request timeout.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+    from .models import ValidationIssue
+    results={}
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        for offset in range(0,len(pairs),2):
+            batch=pairs[offset:offset+2]
+            values=list(executor.map(fetch,batch))
+            results.update(zip(batch,values))
+            if all(r.status!='ok' for r in values):
+                for pair in pairs[offset+len(batch):]:
+                    results[pair]=ProviderResult(provider='kraken',
+                        retrieved_at=datetime.now(timezone.utc),status='error',
+                        issues=[ValidationIssue(code='provider_circuit_open',symbol=pair,
+                            message='Not requested after consecutive provider failures; no price available')])
+                break
+    return results
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
@@ -161,12 +185,10 @@ def main() -> None:
             stock_fetch = AlpacaIexProvider().fetch_history
     else:
         stock_fetch = lambda symbol: YahooFinanceProvider().fetch_history(symbol, period="1d", interval="5m")
-    from concurrent.futures import ThreadPoolExecutor
     pairs=list(dict.fromkeys(args.crypto))[:min(args.per_market_limit,CRYPTO_RESEARCH_LIMIT)]
     def fetch_pair(pair):
-        return KrakenProvider().fetch_ohlc(pair,interval_minutes=5)
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        crypto_results=dict(zip(pairs,executor.map(fetch_pair,pairs)))
+        return KrakenProvider(timeout=5,attempts=1).fetch_ohlc(pair,interval_minutes=5)
+    crypto_results=capture_crypto_bounded(pairs,fetch=fetch_pair)
     document = capture_markets(args.stocks, args.crypto,
         stock_fetch=stock_fetch, stock_provider=args.stock_provider, per_market_limit=args.per_market_limit,
         crypto_fetch=crypto_results.__getitem__)
