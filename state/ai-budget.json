@@ -3091,6 +3091,12 @@
       "reserved": 7333,
       "usage": null
     },
+    "paper-final-v1:fdb7cf72e74567602b91276c7f9a4fe98840c16764bb83889eef5c0cb485ef79:technical_analyst": {
+      "actual": null,
+      "day": "2026-11-09",
+      "reserved": 7336,
+      "usage": null
+    },
     "paper-plan-review-v1:02b032bf21c3c1dc937b01b79bd685cdeb06576848482622729c842d749c1fbb:conclusion": {
       "actual": 8814,
       "day": "2026-11-03",
