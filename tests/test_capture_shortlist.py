@@ -42,6 +42,6 @@ def test_insufficient_history_is_explained():
     assert r['markets']['crypto']['rejected'][0]['reason']=='insufficient_history'
 
 
-@pytest.mark.parametrize('limit',[0,41,True])
+@pytest.mark.parametrize('limit',[0,81,True])
 def test_invalid_limits(limit):
     with pytest.raises(ValueError):shortlist(capture(),now=NOW,stock_limit=limit)

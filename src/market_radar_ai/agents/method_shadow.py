@@ -204,7 +204,8 @@ def screen_capture(worker, capture, feed, *, env, clock, sibling=None, competito
     from ..market_data.providers.alpaca_batch import fetch_histories
     from ..market_data.stock_checks import collect
     symbols=list(dict.fromkeys(r['requested_symbol'] for r in capture['captures'] if r['market']=='stocks'))
-    if len(symbols)>40: raise ValueError('method_capture_capacity')
+    from ..market_data.limits import STOCK_RESEARCH_LIMIT
+    if len(symbols)>STOCK_RESEARCH_LIMIT: raise ValueError('method_capture_capacity')
     contexts={r['payload']['symbol']:r for r in capture.get('stock_context',[])}
     # Independent full-session history: never re-anchor at a truncated 60-bar capture.
     started=clock(); histories={}; competitor_prices={}

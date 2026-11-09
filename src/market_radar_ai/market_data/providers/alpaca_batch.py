@@ -60,7 +60,8 @@ def raw_bars(symbols, *, start, end, frame, env, session):
 
 
 def fetch_histories(symbols, *, env, session=None, clock=lambda:datetime.now(timezone.utc)):
-    symbols=symbols_checked(symbols,300)
+    from ..limits import STOCK_SCREEN_LIMIT
+    symbols=symbols_checked(symbols,STOCK_SCREEN_LIMIT)
     now=clock()
     if now.tzinfo is None:raise ValueError('aware_clock_required')
     local=now.astimezone(NY)
@@ -73,23 +74,29 @@ def fetch_histories(symbols, *, env, session=None, clock=lambda:datetime.now(tim
         return {s:unavailable(s,'regular_session_not_started','ok') for s in symbols}
     if end<start+timedelta(minutes=5):
         return {s:unavailable(s,'regular_session_warmup','ok') for s in symbols}
-    transport=session or requests.Session()
-    output={}
-    for offset in range(0,len(symbols),100):
-        batch=symbols[offset:offset+100]
+    from concurrent.futures import ThreadPoolExecutor
+    def fetch_batch(batch):
+        # One session per concurrent batch; injected transports remain serial.
+        transport=session or requests.Session()
+        output={}
         try:
-            rows=raw_bars(batch,start=start,end=end,frame='5Min',env=env,session=transport)
-        except Exception:
-            output.update({s:unavailable(s,'batch_unavailable_or_incomplete') for s in batch})
-            continue
-        received=clock()
-        for symbol in batch:
             try:
-                output[symbol]=parse_bars({'symbol':symbol,'bars':rows.get(symbol,[])},
-                    symbol=symbol,start=start,end=end,received=received)
+                rows=raw_bars(batch,start=start,end=end,frame='5Min',env=env,session=transport)
             except Exception:
-                output[symbol]=unavailable(symbol,'invalid_batch_symbol_payload')
-    return output
+                return {s:unavailable(s,'batch_unavailable_or_incomplete') for s in batch}
+            received=clock()
+            for symbol in batch:
+                try:
+                    output[symbol]=parse_bars({'symbol':symbol,'bars':rows.get(symbol,[])},
+                        symbol=symbol,start=start,end=end,received=received)
+                except Exception:
+                    output[symbol]=unavailable(symbol,'invalid_batch_symbol_payload')
+            return output
+        finally:
+            if session is None: transport.close()
+    batches=[symbols[i:i+100] for i in range(0,len(symbols),100)]
+    with ThreadPoolExecutor(max_workers=1 if session is not None else 4) as executor:
+        return {s:r for batch in executor.map(fetch_batch,batches) for s,r in batch.items()}
 
 
 def discover_snapshots(symbols, *, env, now, session=None, prior_snapshots=None,

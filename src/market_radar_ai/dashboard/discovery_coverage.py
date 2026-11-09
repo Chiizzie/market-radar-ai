@@ -1,5 +1,6 @@
 """Aggregate discovery stages, distinct from the selected-symbol capture contract."""
 from datetime import datetime
+from ..market_data.limits import STOCK_RESEARCH_LIMIT, STOCK_SCREEN_LIMIT
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -13,12 +14,12 @@ class Counts(BaseModel):
     quote_requested: int = Field(ge=0,le=20200)
     quote_usable: int = Field(ge=0,le=20200)
     quote_unavailable: int = Field(ge=0,le=20200)
-    technical_checked: int = Field(ge=0,le=300)
-    technical_usable: int = Field(ge=0,le=300)
-    technical_unavailable: int = Field(ge=0,le=300)
+    technical_checked: int = Field(ge=0,le=STOCK_SCREEN_LIMIT)
+    technical_usable: int = Field(ge=0,le=STOCK_SCREEN_LIMIT)
+    technical_unavailable: int = Field(ge=0,le=STOCK_SCREEN_LIMIT)
     technical_deferred: int = Field(ge=0,le=20200)
-    detail_selected: int = Field(ge=0,le=40)
-    detail_from_pool: int = Field(ge=0,le=40)
+    detail_selected: int = Field(ge=0,le=STOCK_RESEARCH_LIMIT)
+    detail_from_pool: int = Field(ge=0,le=STOCK_RESEARCH_LIMIT)
     detail_deferred: int = Field(ge=0,le=20200)
     fallback: bool
 

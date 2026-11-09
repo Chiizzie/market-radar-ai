@@ -88,10 +88,10 @@ def test_relative_lead_reaches_research_and_every_deferred_symbol_is_traceable(m
                  universe_cache_path=tmp_path/'universe.json')
     manifest = {s['symbol']:s for s in r['selection_manifest']}
     assert set(manifest) == set(pool)
-    assert r['screening']['checked'] == 300 and len(r['selected_symbols']) == 39
+    assert r['screening']['checked'] == 1001 and len(r['selected_symbols']) == 79
     assert manifest['SMALL']['screen_lane'] == 'priority'
     assert manifest['SMALL']['detail_selected'] and 'SMALL' in r['selected_symbols']
-    assert sum(s['selection_reason']=='outside_technical_budget' for s in manifest.values()) == 701
-    assert sum(s['selection_reason']=='outside_detail_budget' for s in manifest.values()) == 261
+    assert sum(s['selection_reason']=='outside_technical_budget' for s in manifest.values()) == 0
+    assert sum(s['selection_reason']=='outside_detail_budget' for s in manifest.values()) == 922
     assert r['snapshot_coverage']['checkpoint_save'] == 'saved'
     assert 'checkpoint' not in r['snapshot_coverage']

@@ -109,10 +109,10 @@ def test_broad_stock_discovery_uses_batch_capacity_and_honest_pool_counts(monkey
         lambda r,**kw:{'payload':{'quality_passed_at_capture':True}})
     r=discover(env={**ENV,'ENABLE_BROAD_DISCOVERY':'true','SCREEN_DISCOVERY_DATA':'true'},
         now=NOW,session=ActivitySession(stamp=NOW.isoformat()),fallback=['MU'])
-    assert len(attempted)==len(set(attempted))==300
+    assert len(attempted)==len(set(attempted))==1200
     assert any(s in pool[200:350] for s in attempted)
-    assert len(r['selected_symbols'])==39  # MU/watch positions fill the 40th slot later
-    assert r['coverage']['technical_checked']==300 and r['coverage']['technical_deferred']==5508
+    assert len(r['selected_symbols'])==79  # MU/watch positions fill the 40th slot later
+    assert r['coverage']['technical_checked']==1200 and r['coverage']['technical_deferred']==4608
     assert r['coverage']['fresh_activity_leads']==50 and r['snapshot_coverage']['requested']==5808
 
 
@@ -190,7 +190,7 @@ def expanded_capture():
     from market_radar_ai.market_data.capture import capture_markets
     from market_radar_ai.evidence.earnings_calendar import CalendarCapture,enrich as calendar_enrich
     from market_radar_ai.market_data.stock_context import fetch_context_batch,enrich as context_enrich
-    stocks=[f'S{i}' for i in range(40)]
+    stocks=[f'S{i}' for i in range(80)]
     pairs=[p for p,a in ASSETS.items() if a[0] not in STABLE_ASSETS][:30]
     def fetch(symbol,market):
         source='alpaca_iex' if market=='stocks' else 'kraken'
@@ -198,7 +198,7 @@ def expanded_capture():
             timestamp=r['t'],interval='5m',quote_currency='USD' if market=='stocks' else 'EUR',source=source,
             open=str(r['o']),high=str(r['h']),low=str(r['l']),close=str(r['c']),volume=str(r['v'])) for r in bars()])
     doc=capture_markets(stocks,pairs,stock_fetch=lambda s:fetch(s,'stocks'),crypto_fetch=lambda s:fetch(s,'crypto'),
-                        now=NOW,stock_provider='alpaca_iex',per_market_limit=40)
+                        now=NOW,stock_provider='alpaca_iex',per_market_limit=80)
     def context_reply(url,params):
         rows=bars() if params['timeframe']=='5Min' else [dict(t=(NOW-timedelta(days=1)).replace(hour=5).isoformat(),o=100,h=102,l=99,c=101,v=100)]
         return {'bars':{s:rows for s in params['symbols'].split(',')},'next_page_token':None}
@@ -207,7 +207,7 @@ def expanded_capture():
         request_from=NOW.date(),request_to=NOW.date(),status='empty',raw_payload_sha256='a'*64))
     feed={'status':'ok','scope':'SYNTHETIC_REHEARSAL','retrieved_at':NOW.isoformat(),'items':[]}
     from market_radar_ai.evidence.news import EvidenceItem
-    for i in range(200):
+    for i in range(1000):
         item=EvidenceItem(kind='news',title=f'Synthetic capacity fixture {i}',source='Fixture',
             url=f'https://example.org/fixture/{i}',published_at=NOW,retrieved_at=NOW,symbols=[])
         feed['items'].append(item.model_dump(mode='json'))
@@ -216,8 +216,8 @@ def expanded_capture():
     doc['api_budget']=summarize(initial_state(),now=NOW)
     from market_radar_ai.dashboard.discovery_coverage import build_coverage
     stock_discovery={'coverage':dict(catalogue_candidates=5808,candidate_pool=5808,
-        technical_checked=300,technical_usable=280,technical_unavailable=20,technical_deferred=5508,
-        research_selected=40,research_deferred=5768),'fallback_used':False,
+        technical_checked=1200,technical_usable=1180,technical_unavailable=20,technical_deferred=4608,
+        research_selected=80,research_deferred=5728),'fallback_used':False,
         'snapshot_coverage':dict(requested=5808,fresh=5000,unavailable_or_stale=808)}
     crypto=discover_crypto(now=NOW,fetch_catalogue=crypto_catalogue,session=crypto_session(),clock=lambda:NOW)
     doc['discovery_coverage']=build_coverage(stock_discovery,crypto,doc,now=NOW)
@@ -232,13 +232,13 @@ def test_maximum_collection_passes_full_offline_pipeline_under_ingest_limit():
     from market_radar_ai.agents.context_packages import build_context_packages
     doc,feed=expanded_capture()
     snapshot=build_snapshot(doc,now=NOW,evidence=feed)
-    assert len(snapshot['charts']['series'])==70
-    assert len(snapshot['research_briefing']['rows'])==40 and len(snapshot['evidence']['items'])==200
+    assert len(snapshot['charts']['series'])==110
+    assert len(snapshot['research_briefing']['rows'])==80 and len(snapshot['evidence']['items'])==1000
     assert len(json.dumps(snapshot).encode())<2_000_000 and len(json.dumps(doc,indent=2).encode())<4_000_000
     assert readiness(doc,feed,now=NOW)['capture_expiry_replay']['all_original_captures_rejected']
-    assert len(build_context_packages(doc,feed,now=NOW)['packages'])==40
+    assert len(build_context_packages(doc,feed,now=NOW)['packages'])==80
     result=qualify(doc,feed,now=NOW)
-    assert len(result['candidates'])==70
+    assert len(result['candidates'])==110
     assert not build_packets(doc,feed,now=NOW)['packets']  # missing broker/news evidence still blocks
     assert not snapshot['live_orders_enabled']
 

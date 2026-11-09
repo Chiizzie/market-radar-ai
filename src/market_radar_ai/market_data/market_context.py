@@ -145,7 +145,8 @@ def row(symbol,current,history,prior,n):
 
 
 def collect(symbols, *, client, cache=None, clock=lambda:datetime.now(UTC), capture_sha=None, rehearsal=False):
-    symbols=symbols_checked(symbols,40) if symbols else []
+    from .limits import STOCK_RESEARCH_LIMIT
+    symbols=symbols_checked(symbols,STOCK_RESEARCH_LIMIT) if symbols else []
     now=clock()
     if now.tzinfo is None:raise ValueError('aware_context_clock_required')
     local=now.astimezone(NY); calendar=[];cal_hash=None;failure=None
