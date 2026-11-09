@@ -41,7 +41,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 78960c21479ce137dfa7ccbbcae63f837992b200
+          ref: 3a5a137f9909f22895bd67b080afde789581d44c
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
