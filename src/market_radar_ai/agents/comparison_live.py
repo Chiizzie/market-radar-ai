@@ -27,6 +27,23 @@ def event_id(experiment, event):
     return hashlib.sha256(f"{experiment}.{event['kind']}.{event['occurred_at']}.{event['payload_json']}".encode()).hexdigest()
 
 
+def restore_event_timestamp(experiment, event):
+    """Recover Python's original UTC timestamp after TIMESTAMPTZ serialization.
+
+    PostgreSQL may omit trailing fractional zeros. Never replace the saved hash:
+    accept a recovered representation only when it reproduces that exact hash.
+    Payload, partition, kind and ordering checks remain the consumer's responsibility.
+    """
+    if event_id(experiment, event) == event['event_id']:
+        return event
+    at = aware(event['occurred_at'])
+    for stamp in (at.isoformat(), at.isoformat(timespec='microseconds')):
+        candidate = {**event, 'occurred_at': stamp}
+        if event_id(experiment, candidate) == event['event_id']:
+            return candidate
+    raise ValueError('invalid_comparison_event')
+
+
 class EventClient:
     def __init__(self, secret, *, clock=lambda: datetime.now(UTC), session=None):
         if not isinstance(secret, str) or len(secret) < 32:
@@ -66,7 +83,8 @@ class EventClient:
             raise ValueError('comparison_receipt_mismatch')
 
     def read(self, experiment, day, after):
-        return self.request({'action': 'read', 'experiment_id': experiment, 'day': day, 'after': after})
+        page = self.request({'action': 'read', 'experiment_id': experiment, 'day': day, 'after': after})
+        return {**page, 'events': [restore_event_timestamp(experiment, event) for event in page['events']]}
 
 
 def envelope(kind, payload, now):
