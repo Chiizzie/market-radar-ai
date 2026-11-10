@@ -112,9 +112,10 @@ def assess(row, result, now):
         row['bar_closed_at'] = (last.timestamp + timedelta(minutes=5)).isoformat()
         # Exclude any candle containing time before the actual purchase.
         post = [c for c in bars if c.timestamp >= dt(row['opened_at'])]
-        if post and last.close <= Decimal(plan['stop_native']):
+        # A later recovery cannot erase an observed stop/target close in this holding.
+        if any(c.close <= Decimal(plan['stop_native']) for c in post):
             reasons.append('stop_breached')
-        if post and last.close >= Decimal(plan['target_native']):
+        if any(c.close >= Decimal(plan['target_native']) for c in post):
             reasons.append('target_reached')
         if len(post) >= 2 and all(c.close < Decimal(plan['trigger_native']) for c in post[-2:]):
             reasons.append('failed_breakout')

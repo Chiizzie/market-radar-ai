@@ -61,6 +61,12 @@ def test_time_cutoff_still_alerts_when_prices_unavailable():
     row=run(now=now-timedelta(minutes=6))['rows'][0]
     assert 'exit_soon' in row['reasons']
 
+def test_recovery_does_not_erase_an_observed_post_entry_stop_close():
+    values=[Decimal('10.2')]*21
+    values[-3]=Decimal('8.9')
+    row=run(result=bars(values))['rows'][0]
+    assert row['state']=='invalidated' and 'stop_breached' in row['reasons']
+
 def test_closed_and_unreconciled_positions_never_generate_holding_advice():
     a=account();a['positions']=[];assert run(a)['rows']==[]
     a=account();a['history_complete']=False
