@@ -34,3 +34,15 @@ def test_watch_and_unfilled_are_not_entry_notifications(tmp_path,monkeypatch):
     t,k,d=tracker(tmp_path,monkeypatch);session=Mock()
     assert notify(t.report(now=NOW),env=ENV,now=NOW,ledger=Mock(),session=session)['sent']==0
     session.post.assert_not_called()
+
+
+def test_usd_entry_is_labelled_as_plan_fx_equivalent_without_altering_record(tmp_path,monkeypatch):
+    report=opened(tmp_path,monkeypatch);row=report['trades'][0]
+    row['outcome']['entry_fill']='9'
+    original=deepcopy(row)
+    text=render(row,{'symbol':'TEST','native_currency':'USD','fx_rate':'0.9'})
+    assert '≈ $10.000000 USD (recorded €9.000000)' in text
+    assert 'original observation FX may differ' in text
+    assert 'not a fresh instruction to buy' in text
+    assert row==original
+    assert '$' not in render(row)

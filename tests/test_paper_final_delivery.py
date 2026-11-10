@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime,timedelta
 from unittest.mock import Mock
 import hashlib,json
 from test_paper_verdict import fixture,NOW
@@ -17,7 +17,7 @@ def test_signed_dashboard_and_durable_telegram_delivery(monkeypatch):
     ledger.reserve.side_effect=lambda _:events.append('reserve')
     def post(url,**kw):
         if 'telegram.org' in url:
-            events.append('telegram');assert kw['json']['text'].startswith('🧪 PAPER WATCH')
+            events.append('telegram');assert kw['json']['text'].startswith('🧪 WAIT FOR BREAKOUT')
             assert 'Not a live trade instruction' in kw['json']['text']
             return Mock(status_code=200,json=lambda:{'ok':True,'result':{'chat':{'id':123},'message_id':1}})
         events.append('dashboard')
@@ -30,3 +30,28 @@ def test_signed_dashboard_and_durable_telegram_delivery(monkeypatch):
     assert events==['dashboard','reserve','telegram']
     assert r['telegram']=='paper_notification_confirmed';ledger.confirm.assert_called_once()
     assert render(archive,NOW+timedelta(minutes=5)).startswith('ℹ️ NO PAPER ENTRY')
+
+
+def test_stock_alert_requires_breakout_and_uses_plan_fx_without_rewriting_archive(monkeypatch):
+    from copy import deepcopy
+    _,packet,audit,_=fixture(monkeypatch)
+    archive=export_archive(packet,audit,finalize(packet,audit,{},None,now=NOW))
+    p=archive['decision']['plan']
+    p.update(native_currency='USD',fx_rate='0.9',entry_eur='5.0495445',stop_eur='4.986',target_eur='5.237228034')
+    original=deepcopy(archive)
+    text=render(archive,NOW)
+    assert 'WATCH ONLY' in text and 'do not enter just because' in text
+    assert 'BREAKOUT TRIGGER: reference ask reaches $5.610605 USD or above.' in text
+    assert 'Stop $5.54 USD | target $5.819142 USD' in text
+    assert 'No qualifying trigger by then = SKIP' in text and 'Dublin' in text
+    assert '€20 limit' in text and 'manual purchases appear under Account' in text
+    assert archive==original
+    assert '$5.610605' not in render(archive,datetime.fromisoformat(p['expires_at']))
+
+
+def test_native_eur_watch_is_never_relabelled_usd(monkeypatch):
+    _,packet,audit,_=fixture(monkeypatch)
+    archive=export_archive(packet,audit,finalize(packet,audit,{},None,now=NOW))
+    archive['decision']['plan']['native_currency']='EUR'
+    text=render(archive,NOW)
+    assert 'BREAKOUT TRIGGER' in text and 'EUR or above' in text and '$' not in text

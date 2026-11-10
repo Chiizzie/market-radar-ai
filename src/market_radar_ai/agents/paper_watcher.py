@@ -38,7 +38,7 @@ def poll_once(*, env, observer, clock, session=None, notifications=True, state=N
         journal.update(token,now=clock(),observations=observations,session=session)
         updated,_=journal.load(token,session=session)
         report=journal.inspect(updated,now=clock())
-    receipt=notify(report,env=env,now=clock(),seen=seen) if notifications else {'sent':0,'unconfirmed':0}
+    receipt=notify(report,env=env,now=clock(),seen=seen,decisions=updated['decisions']) if notifications else {'sent':0,'unconfirmed':0}
     return {'active_plans':len(active),'quotes_received':len(observations),'failures':failures,
             'notifications':receipt,'report':report,'state':updated}
 

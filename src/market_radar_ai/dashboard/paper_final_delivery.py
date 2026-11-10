@@ -1,5 +1,6 @@
 """Signed paper-verdict delivery; no execution buttons or order operations."""
 from datetime import datetime
+from decimal import Decimal
 from zoneinfo import ZoneInfo
 import hashlib,hmac
 import requests
@@ -12,13 +13,32 @@ from .scheduled_notification import DASHBOARD
 def render(archive, now):
     d=archive['decision'];p=d['plan']
     current=p is not None and now<datetime.fromisoformat(p['expires_at'])
-    heading='🧪 PAPER WATCH — ' if current and d['verdict']=='PAPER_WATCH_FOR_ENTRY' else 'ℹ️ NO PAPER ENTRY — '
+    current=current and d['verdict']=='PAPER_WATCH_FOR_ENTRY'
+    heading='🧪 WAIT FOR BREAKOUT — ' if current else 'ℹ️ NO PAPER ENTRY — '
     lines=[heading+d['candidate_id'], 'Simulation only • Not a live trade instruction',
            now.astimezone(ZoneInfo('Europe/Dublin')).strftime('%d %b %H:%M Dublin')]
     if current:
-        lines += [f"EUR entry {p['entry_eur']} | stop {p['stop_eur']} | target {p['target_eur']}",
-                  f"Planned paper loss €{p['planned_loss_eur']} | quantity {p['quantity']}",
-                  'Expires '+p['expires_at']+' | exit by '+p['exit_by'],p['trigger']]
+        usd=p['native_currency']=='USD'
+        rate=Decimal(p['fx_rate']) if usd else Decimal(1)
+        if not rate.is_finite() or rate<=0:raise ValueError('invalid_display_fx')
+        currency='USD' if usd else 'EUR';symbol='$' if usd else '€'
+        def price(key):
+            # Decimal conversion uses this plan's original FX, never today's FX.
+            value=Decimal(p[key])/rate
+            return symbol+format(value.quantize(Decimal('0.000001')),'f').rstrip('0').rstrip('.')+' '+currency
+        def clock(at):
+            return datetime.fromisoformat(at).astimezone(ZoneInfo('Europe/Dublin')).strftime('%d %b %H:%M:%S Dublin')
+        lines += ['WATCH ONLY — this message does not record an entry.',
+                  'Wait for the breakout; do not enter just because this watch arrived.',
+                  f"BREAKOUT TRIGGER: reference ask reaches {price('entry_eur')} or above.",
+                  f"Stop {price('stop_eur')} | target {price('target_eur')}",
+                  'TRIGGER EXPIRES: '+clock(p['expires_at'])+'. No qualifying trigger by then = SKIP.',
+                  'The watcher must also pass fresh spread, price-gap and risk checks before recording a paper entry.',
+                  'A separate PAPER ENTRY RECORDED message confirms a simulated entry; manual purchases appear under Account.',
+                  f"Planned paper loss €{Decimal(p['planned_loss_eur']):.2f} / €20 limit | quantity {p['quantity']}",
+                  f"Assumed round-trip costs {price('assumed_round_trip_cost_eur')} | fictional allocation {price('paper_capital_eur')}",
+                  'Paper exit by '+clock(p['exit_by'])]
+        if usd:lines.append('Stock levels are USD; converted from the recorded EUR plan using its original FX. Risk and P/L accounting remain EUR.')
     else:lines.append('No current approved paper entry. '+', '.join(d['blockers']))
     lines += ['Assumed costs and fictional allocation; broker execution permission is not verified.',DASHBOARD]
     return '\n'.join(lines)
