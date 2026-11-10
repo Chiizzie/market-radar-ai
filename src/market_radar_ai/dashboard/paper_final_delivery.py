@@ -7,7 +7,7 @@ import requests
 from ..agents.candidate_packages import canonical
 from .candidate_delivery import ENDPOINT, MAX_BYTES
 from .delivery_ledger import DeliveryLedger, GitHubDeliveryStore
-from .scheduled_notification import DASHBOARD
+DASHBOARD='https://pixel-perfect-replay-32614.lovable.app/opportunity'
 
 
 def render(archive, now):

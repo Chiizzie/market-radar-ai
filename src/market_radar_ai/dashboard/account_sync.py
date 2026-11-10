@@ -98,6 +98,14 @@ def main():
         key=os.environ['TRADING212_API_KEY'];secret=os.environ['TRADING212_API_SECRET'];ingest=os.environ['REVIEW_INGEST_SECRET']
         if len(ingest)<32:raise ValueError('ingest_not_configured')
         payload=collect(Reader(key,secret),datetime.now(timezone.utc))
+        if os.environ.get('ENABLE_POSITION_MONITOR')=='true':
+            from .position_monitor import collect_monitor, notify
+            monitor=collect_monitor(payload,env=os.environ,now=datetime.now(timezone.utc))
+            payload['position_monitor']=monitor
+            try:
+                monitor['notification_status']=notify(monitor,payload,env=os.environ)
+            except Exception:
+                monitor['notification_status']='unconfirmed'
         deliver(payload,ingest,datetime.now(timezone.utc))
         print('Private account sync delivered; no AI or order operations.')
     except Exception as e:
