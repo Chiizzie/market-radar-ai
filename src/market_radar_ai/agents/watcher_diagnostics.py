@@ -1,4 +1,9 @@
 """Bounded diagnostics: never copy provider bodies, URLs or credentials."""
+import re
+
+QUOTE_REASONS = {'missing_quote','stale_quote','future_quote','crossed_quote',
+                 'nonpositive_or_nonfinite_quote','wrong_currency','malformed_quote'}
+
 CODES = {'paper_journal_rate_limited', 'paper_journal_unavailable',
          'stock_quote_unavailable', 'stock_reference_observation_unavailable',
          'crypto_reference_observation_unavailable', 'stale_comparison_quote',
@@ -18,3 +23,11 @@ def record_failure(health, failure, now):
     if hasattr(failure, 'attempts'): health['last_failure']['attempts'] = failure.attempts
     if getattr(failure, 'http_status', None) is not None:
         health['last_failure']['http_status'] = failure.http_status
+    if code == 'stock_quote_unavailable':
+        parts = str(failure).split(':')
+        if len(parts)==3 and re.fullmatch(r'[A-Z][A-Z0-9.\-]{0,14}',parts[1]) and parts[2] in QUOTE_REASONS:
+            detail={'symbol':parts[1],'reason':parts[2],'at':now.isoformat()}
+            health['last_failure'].update(detail)
+            recent=health.setdefault('recent_quote_failures',[])
+            recent.append(detail)
+            del recent[:-20]

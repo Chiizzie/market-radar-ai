@@ -72,19 +72,29 @@ def assess(payload, *, now):
             row['catalogue_candidates']=candidates
         except (KeyError,TypeError,ValueError): pass
         try:
+            reason='malformed_quote'
             envelope=payload['quotes']
-            if envelope.get('currency','USD')!='USD':raise ValueError('currency')
+            if envelope.get('currency','USD')!='USD':
+                reason='wrong_currency'; raise ValueError('currency')
+            if symbol not in envelope.get('quotes',{}):
+                reason='missing_quote'; raise ValueError('missing_quote')
             q=envelope['quotes'][symbol]
             at=timestamp(q['t'])
-            if not 0 <= (now-at).total_seconds()<=30:raise ValueError('quote_stale')
+            age=(now-at).total_seconds()
+            if not 0 <= age <=30:
+                reason='future_quote' if age<0 else 'stale_quote'; raise ValueError('quote_stale')
             bid,ask,bs,asz=[Decimal(str(q[k])) for k in ('bp','ap','bs','as')]
-            if not all(v.is_finite() and v>0 for v in (bid,ask,bs,asz)) or bid>ask:raise ValueError('quote_invalid')
+            if not all(v.is_finite() and v>0 for v in (bid,ask,bs,asz)):
+                reason='nonpositive_or_nonfinite_quote'; raise ValueError('quote_invalid')
+            if bid>ask:
+                reason='crossed_quote'; raise ValueError('quote_invalid')
             row.update(quote_status='current_reference_only',feed='iex',native_currency='USD',
                        bid=str(bid),ask=str(ask),observed_at=q['t'],spread_bps=str((ask-bid)/((ask+bid)/2)*10000))
             if fx:
                 row.update(indicative_bid_eur=str(bid*fx.eur_per_unit),indicative_ask_eur=str(ask*fx.eur_per_unit),
                            fx_observed_at=fx.observed_at.isoformat(),fx_source=fx.source)
-        except (KeyError,TypeError,ValueError,ArithmeticError,AttributeError): pass
+        except (KeyError,TypeError,ValueError,ArithmeticError,AttributeError):
+            row['quote_failure_reason']=reason
         row['remaining_blockers']=['broker_account_permission_unverified','broker_executable_quote_missing',
             'broker_fees_and_slippage_missing','instrument_halt_status_unknown','eur_trade_plan_missing']
         if row['quote_status']!='current_reference_only':row['remaining_blockers'].append('stock_reference_quote_unavailable_or_stale')

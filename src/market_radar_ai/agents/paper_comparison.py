@@ -1,6 +1,7 @@
 """Prospective code/AI comparison journal. No providers, models, alerts or orders."""
 import json
 import sqlite3
+from contextlib import contextmanager
 from collections import Counter, defaultdict
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -127,6 +128,7 @@ class ComparisonStore:
     def __init__(self, path, *, dataset_kind='forward', protocol=None):
         if dataset_kind not in ('forward', 'synthetic'):
             raise ValueError('invalid_comparison_dataset_kind')
+        self._batch_db = None
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.protocol = json.loads(canonical(protocol or PROTOCOL))
@@ -134,7 +136,7 @@ class ComparisonStore:
             raise ValueError('unsupported_comparison_protocol')
         self.dataset_kind = dataset_kind
         meta = canonical({'protocol': self.protocol, 'dataset_kind': dataset_kind})
-        with sqlite3.connect(self.path) as db:
+        with self.connection() as db:
             db.execute('CREATE TABLE IF NOT EXISTS comparison_meta (id INTEGER PRIMARY KEY, payload TEXT NOT NULL)')
             db.execute('CREATE TABLE IF NOT EXISTS comparison_cohort (id TEXT PRIMARY KEY, payload TEXT NOT NULL)')
             db.execute('CREATE TABLE IF NOT EXISTS comparison_reviews (id TEXT PRIMARY KEY, payload TEXT NOT NULL)')
@@ -146,13 +148,38 @@ class ComparisonStore:
                 raise ValueError('comparison_protocol_or_dataset_changed')
             db.execute('INSERT OR IGNORE INTO comparison_meta VALUES (1,?)', (meta,))
 
+    @contextmanager
+    def connection(self):
+        if self._batch_db is not None:
+            yield self._batch_db
+            return
+        db = sqlite3.connect(self.path)
+        try:
+            with db:
+                yield db
+        finally:
+            db.close()
+
+    @contextmanager
+    def replay_batch(self):
+        """One atomic transaction per authenticated page, retaining all checks."""
+        if self._batch_db is not None:
+            raise ValueError('nested_comparison_replay')
+        with self.connection() as db:
+            db.execute('BEGIN IMMEDIATE')
+            self._batch_db = db
+            try:
+                yield
+            finally:
+                self._batch_db = None
+
     def enrol(self, packet, *, now):
         now = aware(now)
         body = validate_packet(packet, now)
         key = paper_attempt_id(packet, now=aware(body['assembled_at']))
         value = {'packet': packet, 'enrolled_at': now.isoformat()}
-        with sqlite3.connect(self.path) as db:
-            db.execute('BEGIN IMMEDIATE')
+        with self.connection() as db:
+            if not db.in_transaction: db.execute('BEGIN IMMEDIATE')
             prior = db.execute('SELECT payload FROM comparison_cohort WHERE id=?', (key,)).fetchone()
             if prior:
                 if aware(json.loads(prior[0])['enrolled_at']) > now:
@@ -172,8 +199,8 @@ class ComparisonStore:
         now = aware(now)
         body = validate_packet(packet, now)
         key = paper_attempt_id(packet, now=aware(body['assembled_at']))
-        with sqlite3.connect(self.path) as db:
-            db.execute('BEGIN IMMEDIATE')
+        with self.connection() as db:
+            if not db.in_transaction: db.execute('BEGIN IMMEDIATE')
             cohort = self._cohort(db, key)
             if aware(cohort['enrolled_at']) > now:
                 raise ValueError('review_precedes_comparison_enrolment')
@@ -193,8 +220,8 @@ class ComparisonStore:
         value = {'quote': quote.model_dump(mode='json'), 'received_at': received_at.isoformat(),
                  'source': source, 'currency': 'EUR'}
         payload = canonical(value)
-        with sqlite3.connect(self.path) as db:
-            db.execute('BEGIN IMMEDIATE')
+        with self.connection() as db:
+            if not db.in_transaction: db.execute('BEGIN IMMEDIATE')
             enrolled = [json.loads(r[0]) for r in db.execute('SELECT payload FROM comparison_cohort')]
             matches = [r for r in enrolled if r['packet']['packet']['candidate_id'] == candidate_id
                        and aware(r['enrolled_at']) <= quote.observed_at]
@@ -236,8 +263,8 @@ class ComparisonStore:
             raise ValueError('invalid_comparison_rejection')
         value = canonical({'packet': packet, 'audit': audit, 'decision': decision,
                            'received_at': now.isoformat()})
-        with sqlite3.connect(self.path) as db:
-            db.execute('BEGIN IMMEDIATE')
+        with self.connection() as db:
+            if not db.in_transaction: db.execute('BEGIN IMMEDIATE')
             cohort = self._cohort(db, key)
             attempted = db.execute('SELECT payload FROM comparison_attempts WHERE id=?', (key,)).fetchone()
             if attempted is None:
@@ -262,8 +289,8 @@ class ComparisonStore:
             raise ValueError('invalid_comparison_cost_record')
         value = {'settled_microeur': settled_microeur, 'held_microeur': held_microeur,
                  'complete': complete, 'recorded_at': aware(now).isoformat()}
-        with sqlite3.connect(self.path) as db:
-            db.execute('BEGIN IMMEDIATE')
+        with self.connection() as db:
+            if not db.in_transaction: db.execute('BEGIN IMMEDIATE')
             self._cohort(db, key)
             row = db.execute('SELECT payload FROM comparison_costs WHERE id=? ORDER BY at DESC LIMIT 1', (key,)).fetchone()
             if row:
@@ -290,7 +317,7 @@ class ComparisonStore:
     def report(self, *, now):
         now = aware(now)
         rows = []
-        with sqlite3.connect(self.path) as db:
+        with self.connection() as db:
             for key, payload in db.execute('SELECT id,payload FROM comparison_cohort ORDER BY id'):
                 cohort = json.loads(payload)
                 if aware(cohort['enrolled_at']) > now:

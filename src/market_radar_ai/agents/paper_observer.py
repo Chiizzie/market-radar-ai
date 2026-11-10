@@ -48,7 +48,7 @@ class ReferenceObserver:
                     raise ValueError('stock_reference_session_or_fx')
                 for row in checked['stocks']:
                     if row['quote_status']!='current_reference_only':
-                        failures.append('stock_quote_unavailable:'+row['symbol']); continue
+                        failures.append('stock_quote_unavailable:'+row['symbol']+':'+row.get('quote_failure_reason','malformed_quote')); continue
                     q=Quote(observed_at=row['observed_at'],bid=row['indicative_bid_eur'],ask=row['indicative_ask_eur'])
                     source='alpaca_iex:'+digest({'symbol':row['symbol'],'quote':payload['quotes']['quotes'][row['symbol']],
                                                'fx':str(self.fx.eur_per_unit)})

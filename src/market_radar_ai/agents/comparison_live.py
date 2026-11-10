@@ -171,18 +171,42 @@ class LiveComparison:
 
     def sync(self):
         with self.lock:
-            for _ in range(2000):
-                page = self.client.read(self.experiment, self.day, self.cursor)
-                if not page['events']:
-                    return
-                for event in page['events']:
-                    if type(event['seq']) is not int or event['seq'] <= self.cursor:
-                        raise ValueError('comparison_event_order')
-                    self.apply(event)
-                    self.cursor = event['seq']
-                if page['next'] != self.cursor:
-                    raise ValueError('comparison_cursor_mismatch')
-            raise ValueError('comparison_sync_capacity')
+            started = time.monotonic(); pages = events = 0; read_seconds = apply_seconds = 0
+            try:
+                for _ in range(2000):
+                    tick = time.monotonic()
+                    page = self.client.read(self.experiment, self.day, self.cursor)
+                    read_seconds += time.monotonic() - tick
+                    pages += 1
+                    if not page['events']: return
+                    cursor = self.cursor
+                    for event in page['events']:
+                        if type(event['seq']) is not int or event['seq'] <= cursor:
+                            raise ValueError('comparison_event_order')
+                        if (event['experiment_id'] != self.experiment or event['day'] != self.day
+                                or event['kind'] not in KINDS or event_id(self.experiment,event) != event['event_id']):
+                            raise ValueError('invalid_comparison_event')
+                        cursor = event['seq']
+                    if page['next'] != cursor: raise ValueError('comparison_cursor_mismatch')
+                    pending = [event for event in page['events'] if event['event_id'] not in self.seen]
+                    tick = time.monotonic()
+                    with self.store.replay_batch():
+                        for event in pending: self.apply_payload(self.store,event)
+                    # Cursor advances only after validated projection and lossless export.
+                    with (self.root/'comparison-events.jsonl').open('a') as out:
+                        out.write(''.join(canonical(event)+'\n' for event in pending))
+                    self.seen.update(event['event_id'] for event in pending)
+                    self.cursor = cursor
+                    events += len(pending)
+                    apply_seconds += time.monotonic() - tick
+                raise ValueError('comparison_sync_capacity')
+            finally:
+                elapsed = time.monotonic() - started
+                self.health['last_sync'] = {'pages':pages,'events':events,'seconds':round(elapsed,3),
+                    'storage_read_seconds':round(read_seconds,3),'projection_seconds':round(apply_seconds,3)}
+                self.health['maximum_sync_seconds'] = max(self.health.get('maximum_sync_seconds',0),round(elapsed,3))
+                if 'initial_sync' not in self.health:
+                    self.health['initial_sync'] = dict(self.health['last_sync'])
 
     def push(self, kind, payload, now):
         with self.lock:
