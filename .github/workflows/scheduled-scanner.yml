@@ -1,4 +1,4 @@
-# Deployment template: replace 4b4fc934b4d7e62148a2eaf340e8ebb9184f4d05 with a verified backend SHA.
+# Each job is pinned to its verified runtime commit.
 # Install as .github/workflows/scheduled-scanner.yml on this repository's main branch.
 name: Scheduled research collection
 on:
@@ -156,7 +156,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.review_window.outputs.run == 'true'
         with:
-          ref: 4b4fc934b4d7e62148a2eaf340e8ebb9184f4d05
+          ref: 48d65b8983bb05a78fd4f7f1bb677e823e64dc79
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.review_window.outputs.run == 'true'
@@ -253,7 +253,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 4b4fc934b4d7e62148a2eaf340e8ebb9184f4d05
+          ref: 48d65b8983bb05a78fd4f7f1bb677e823e64dc79
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
