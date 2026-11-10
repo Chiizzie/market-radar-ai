@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 from pathlib import Path
 import json,os,subprocess,sys
 from .paper_verdict import build_packets,run_pipeline
+from .qualification_refresh import refresh_current_inputs
 from .github_budget import GitHubBudgetStore,GitHubSpendingLedger
 from .openai_pilot import OpenAIPilot
 from ..market_data.providers.fx import YahooFxProvider
@@ -17,17 +18,21 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
     if root.exists():raise ValueError('preserve_existing_paper_attempt')
     # Qualification chooses the appropriate per-market strategy. Crypto is not
     # held behind a US-stock timer; stock opening bars are independently checked.
-    batch=build_packets(document,feed,now=clock())
     if env.get('PAPER_WATCHER_ENABLED')=='false':
         root.mkdir(parents=True)
         status={'state':'paper_watcher_disabled_zero_cost','model_calls':0,'trade_authorized':False}
         (root/'status.json').write_text(json.dumps(status)+'\n')
         return status
+    document,initial_refresh=refresh_current_inputs(document,env=env,clock=clock)
+    batch=build_packets(document,feed,now=clock())
     if not batch['packets']:
         root.mkdir(parents=True)
         status={'state':'no_qualified_candidate_zero_cost','model_calls':0,'trade_authorized':False}
         (root/'status.json').write_text(json.dumps(status)+'\n')
         (root/'qualification.json').write_text(json.dumps(batch['qualification'],indent=2)+'\n')
+        (root/'qualification-inputs.json').write_text(json.dumps(document,indent=2)+'\n')
+        (root/'qualification-refresh.json').write_text(json.dumps({'initial':initial_refresh,'post_replay':None,
+            'model_calls':0,'trade_authorized':False},indent=2)+'\n')
         from .paper_comparison import cohort_snapshot
         (root/'comparison-cohort.json').write_text(json.dumps(cohort_snapshot([],now=clock()),indent=2)+'\n')
         return status
@@ -82,10 +87,19 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
         comparison = LiveComparison(root.parent/(root.name+'-comparison'),
             client=EventClient(env.get('REVIEW_INGEST_SECRET'), clock=clock), clock=clock,
             observer=ReferenceObserver(comparison_env, clock=clock))
-        comparison.sync()  # A storage outage blocks paid research before spending.
     try:
+        if comparison is not None:
+            comparison.sync()  # Storage must be available before paid research.
+            document,post_replay_refresh=refresh_current_inputs(document,env=env,clock=clock,force=True)
+        else:
+            document,post_replay_refresh=refresh_current_inputs(document,env=env,clock=clock)
         return run_pipeline(document,feed,client=client,root=root,refresh=refresh,deliver=delivery,clock=clock,enabled=True,
                             comparison=comparison,parallel_specialists=env.get('PARALLEL_PAPER_SPECIALISTS')=='true')
     finally:
+        if root.exists():
+            (root/'qualification-inputs.json').write_text(json.dumps(document,indent=2)+'\n')
+            (root/'qualification-refresh.json').write_text(json.dumps({
+                'initial':initial_refresh,'post_replay':locals().get('post_replay_refresh'),
+                'model_calls':0,'trade_authorized':False},indent=2)+'\n')
         if comparison is not None:
             comparison.close()

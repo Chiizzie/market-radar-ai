@@ -9,6 +9,7 @@ from .roles import AgentRole
 from .candidate_packages import digest, canonical
 from .setup_checks import validate_paper_plan
 from .paper_review_prompts import instruction, VERSION as REVIEW_POLICY_VERSION
+from .review_policy import team_approval_allowed
 
 STAGES = [r.value for r in AgentRole]+['debate','conclusion']
 
@@ -156,11 +157,11 @@ def finalize(packet, audit, fresh_document, fresh_feed, *, now):
     completed=datetime.fromisoformat(audit['completed_at'])
     if not datetime.fromisoformat(body['assembled_at'])<=completed<=now<datetime.fromisoformat(body['review_deadline']):
         blocks.append('review_expired_or_future')
-    # Every specialist retains a veto through REJECT or MORE_EVIDENCE_REQUIRED.
-    # APPROVE_PAPER concerns are disclosed caveats, not an implicit second verdict.
+    # Versioned verdict rules are also enforced when the approved decision is
+    # recorded durably. Fresh evidence and deterministic gates still run below.
     current_policy=body.get('review_policy_version')==REVIEW_POLICY_VERSION
-    if (any(r.verdict=='REJECT' for r in reports) or reports[-1].verdict!='APPROVE_PAPER'
-            or (not current_policy and any(r.verdict!='APPROVE_PAPER' for r in reports))):
+    if not team_approval_allowed((r.verdict for r in reports),
+                                 policy_version=body.get('review_policy_version')):
         blocks.append('team_did_not_clear_setup')
     if current_policy:
         from .conditional_revalidation import revalidate

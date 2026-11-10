@@ -17,6 +17,14 @@ from .comparison_live import EventClient, LiveComparison, envelope
 from .paper_comparison import PROTOCOL as SOURCE_PROTOCOL, aware
 from .paper_verdict import paper_attempt_id
 
+# Deliberate source binding: changing review policy requires a new experiment,
+# never silently repoint an existing portfolio series to another cohort.
+SOURCE_PROTOCOL_ID = 'abfaa5c8b4fd3e76a46dddd142bd4747765b32c0caf2c6122afe9dbff6c7e4e8'
+
+def validate_source_protocol():
+    if digest(SOURCE_PROTOCOL) != SOURCE_PROTOCOL_ID:
+        raise ValueError('execution_source_protocol_mismatch')
+
 D = Decimal
 PROFILES = {
     'eur_conversion': {'label': 'EUR conversion on both legs', 'fx_bps': '15', 'slippage_bps': '5'},
@@ -24,7 +32,7 @@ PROFILES = {
     'stressed': {'label': 'EUR conversion, stressed slippage', 'fx_bps': '15', 'slippage_bps': '20'},
 }
 PROTOCOL = {
-    'version': 'execution-research-v1', 'source_protocol_id': digest(SOURCE_PROTOCOL),
+    'version': 'execution-research-v1', 'source_protocol_id': SOURCE_PROTOCOL_ID,
     'since': '2026-11-08', 'initial_balance_eur': '1000', 'maximum_allocation_eur': '500',
     'maximum_trade_risk_eur': '20', 'maximum_combined_risk_eur': '40', 'maximum_positions': 3,
     'minimum_net_rr': '2', 'maximum_entry_gap_bps': '20', 'maximum_spread_bps': '20',
@@ -206,6 +214,7 @@ class Book:
 
 def replay(events, *, now, dataset_kind='forward'):
     """Events must first pass LiveComparison's existing identity/chain validator."""
+    validate_source_protocol()
     now = aware(now)
     if dataset_kind not in ('forward', 'synthetic'): raise ValueError('invalid_dataset')
     books = [Book(p, a) for p in PROFILES for a in ('code_only', 'ai_reviewed')]
@@ -237,7 +246,7 @@ def replay(events, *, now, dataset_kind='forward'):
     for book in books: book.advance(now)
     incomplete = sum(k not in costs or not costs[k]['complete'] for k in cohorts)
     result = {'schema_version': 'execution-research-report-v1', 'protocol_id': EXPERIMENT,
-        'source_protocol_id': digest(SOURCE_PROTOCOL), 'as_of': now.isoformat(),
+        'source_protocol_id': SOURCE_PROTOCOL_ID, 'as_of': now.isoformat(),
         'evaluation_day': now.date().isoformat(), 'since': PROTOCOL['since'], 'dataset_kind': dataset_kind,
         'trade_authorized': False, 'strategy_input': False, 'model_calls': 0,
         'source_events': len(events), 'source_sha256': digest(events), 'source_cohorts': len(cohorts),
@@ -263,6 +272,7 @@ def replay(events, *, now, dataset_kind='forward'):
 
 
 def collect(client, *, now, root):
+    validate_source_protocol()
     first = aware(PROTOCOL['since'] + 'T00:00:00+00:00').date()
     days = (now.date() - first).days + 1
     if not 1 <= days <= 366: raise ValueError('execution_history_capacity_or_clock')
@@ -270,6 +280,8 @@ def collect(client, *, now, root):
     for n in range(days):
         day = (first + timedelta(days=n)).isoformat()
         worker = LiveComparison(Path(root) / day, client=client, day=day, clock=lambda: now)
+        if worker.experiment != SOURCE_PROTOCOL_ID:
+            raise ValueError('execution_source_protocol_mismatch')
         worker.sync()  # Existing signed receipt, immutable identity and review validation.
         path = worker.root / 'comparison-events.jsonl'
         if path.exists():
