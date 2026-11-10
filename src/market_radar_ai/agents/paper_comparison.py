@@ -13,6 +13,7 @@ from .paper_review_prompts import VERSION as REVIEW_POLICY_VERSION
 from .paper_team import PaperPlan
 from .paper_verdict import STAGES, VerdictReview, paper_attempt_id, paper_gate
 from .setup_checks import validate_paper_plan
+from .review_policy import team_approval_allowed
 
 PROTOCOL = {
     'version': 'paper-comparison-v1',
@@ -248,12 +249,14 @@ class ComparisonStore:
                        for i, r in enumerate(reports))
                 or decision['packet_id'] != packet['packet_id'] or decision['candidate_id'] != body['candidate_id']
                 or decision['schema_version'] != 'paper-final-decision-v1'
+                or decision.get('review_policy_version') != body.get('review_policy_version')
                 or decision['paper_only'] is not True or decision['trade_authorized'] is not False
                 or decision['live_orders_enabled'] is not False
                 or not aware(body['assembled_at']) <= aware(audit['completed_at']) <= aware(decision['evaluated_at']) <= now):
             raise ValueError('invalid_comparison_review_chain')
         if decision['verdict'] == 'PAPER_WATCH_FOR_ENTRY':
-            if (decision['blockers'] or any(r.verdict != 'APPROVE_PAPER' for r in reports)
+            if (decision['blockers'] or not team_approval_allowed((r.verdict for r in reports),
+                    policy_version=body.get('review_policy_version'))
                     or validate_paper_plan(decision['plan'], now=aware(decision['evaluated_at']))['state'] != 'PASS'
                     or aware(decision['evaluated_at']) >= aware(body['review_deadline'])
                     or {k: v for k, v in decision['plan'].items() if k != 'expires_at'}

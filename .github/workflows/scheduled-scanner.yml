@@ -156,7 +156,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.review_window.outputs.run == 'true'
         with:
-          ref: 86b622c04391eaac4473d2fbc88c973b111f8e3c
+          ref: 931a3fddf0a17cbdc63163d1e998ed39bba32622
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.review_window.outputs.run == 'true'
@@ -253,7 +253,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 86b622c04391eaac4473d2fbc88c973b111f8e3c
+          ref: 931a3fddf0a17cbdc63163d1e998ed39bba32622
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -312,7 +312,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 86b622c04391eaac4473d2fbc88c973b111f8e3c
+          ref: 931a3fddf0a17cbdc63163d1e998ed39bba32622
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -494,7 +494,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 86b622c04391eaac4473d2fbc88c973b111f8e3c
+          ref: 931a3fddf0a17cbdc63163d1e998ed39bba32622
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
