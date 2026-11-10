@@ -34,3 +34,11 @@ One explicit 15-minute stall-exit diagnostic remains retrospective research only
 ## Validation
 
 181 focused tests passed across comparison integrity/startup, execution source binding and portfolios, chart diagnostics/discovery, qualification freshness, watcher reliability, stock checks and the new evidence evaluator. Both workflow YAML files parsed. The archive benchmark additionally verified exact complete-report and lossless-event-export equivalence.
+
+## Deployed verification
+
+Runtime `ac29968ae9f07721bc50fa485a35e136a202b367` was deployed by main commit `02afd3f7f3507576b324d4ea387ca472095c5529`. Collection, review, approved/comparison watchers, account sync and execution research use this runtime; the existing separate market-context capacity pin and method-shadow pin are preserved.
+
+[Execution verification run 42926230245](https://github.com/Chiizzie/market-radar-ai/actions/runs/42926230245) completed successfully at 23:48 Dublin. All 23,848 source events and 50 cohorts were reconstructed with restore verification, zero model calls and no trade authorization. Source replay took 25.259 seconds in total, including database reads; projection processing took 1.949 seconds. The Nov10 partition alone used 20.566 seconds for database reads and 1.948 seconds for projection, versus the prior approximately 119-second projection measurement. Network/storage time remains a separate startup cost.
+
+The new offline evaluator succeeded and its artifact's arm outcomes and exit-shadow analysis exactly matched the saved local performance review. Artifact `13812969406` includes `source-replay-health.json` and the JSON/Markdown performance review. Collection's new chart-window assessment is deployed for the next scheduled capture; a fresh regular-session shadow count remains unverified until new market data arrives.
