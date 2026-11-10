@@ -9,3 +9,9 @@ The fix aligns the context job with the current runtime and fixes a second adapt
 The dashboard and database accept up to 256,000 bytes for a validated context report only; other research events retain the 180,000-byte limit. Full-width reports could otherwise exceed the old cap. No historical rows, trading rules, budgets or live-order permissions are changed.
 
 Validation: 18 focused backend tests passed, including full-width cold/warm caches through the real adapter with a mocked network boundary; 34 dashboard tests passed, including signed 80-stock report ingestion, oversized-context refusal and preservation of other event limits. Dashboard production build checked before publication. New workflow pin and live run must be checked after deployment.
+
+## Production verification
+
+Dashboard commit 04316578 and deployment 3d9fe80a-5116-45b1-a918-bda249253956 were confirmed live before the workflow pin switch. The database constraint was read back with the context-only 256,000-byte allowance. Main deployment 2236b63 pins the independent context job to f9a1ed0750; core decision jobs remain on 4b4fc934.
+
+The first corrected scheduled run, 42839931481 (15:00:43 Europe/Dublin), completed its market-context job successfully. Its authenticated report was observed in the database at 15:03:21.848039 with 79 stocks and 181,490 payload bytes. This also confirms the old 180,000-byte storage limit would have caused a second failure after only correcting the pin. Collection and account sync also passed; at this check the other long-running jobs had not all completed. No claim of an overall completed green run or trading performance is made.
