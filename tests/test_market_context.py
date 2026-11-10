@@ -90,11 +90,12 @@ def test_cache_corruption_or_wrong_date_does_not_supply_history(change):
     assert r['history_cache_hits']==0 and len(p.calls)==11
 
 
-def test_all_forty_captured_stocks_have_explicit_rows():
-    symbols=['T'+chr(65+i//26)+chr(65+i%26) for i in range(40)]
+@pytest.mark.parametrize("size", [40, 79, 80])
+def test_all_captured_stocks_have_explicit_rows(size):
+    symbols=['T'+chr(65+i//26)+chr(65+i%26) for i in range(size)]
     r,_=collect(symbols,client=Provider(),clock=lambda:NOW)
-    assert len(r['stocks'])==40 and len(r['benchmarks'])==12
-    assert len(json.dumps(r).encode())<175000
+    assert len(r['stocks'])==size and len(r['benchmarks'])==12
+    assert len(json.dumps(r).encode())<256000
     assert r['trade_authorized'] is False and r['strategy_input'] is False and r['model_calls']==0
 
 
@@ -128,3 +129,33 @@ def test_historical_rehearsal_is_distinct_and_cannot_be_published(monkeypatch):
     monkeypatch.setattr('sys.argv',['context','--publish','--rehearse-last-session'])
     from market_radar_ai.market_data.market_context import main
     with pytest.raises(SystemExit):main()
+
+
+def test_full_width_context_uses_real_adapter_and_retains_all_bars(monkeypatch):
+    from market_radar_ai.market_data.market_context import BENCHMARKS
+    from market_radar_ai.market_data.limits import STOCK_RESEARCH_LIMIT
+    symbols=['T'+chr(65+i//26)+chr(65+i%26) for i in range(STOCK_RESEARCH_LIMIT)]
+    provider=Provider();requests=[]
+    def read(path,params,**kwargs):
+        requested=params['symbols'].split(',');requests.append(requested)
+        start=datetime.fromisoformat(params['start'])
+        end=datetime.fromisoformat(params['end'])+timedelta(microseconds=1)
+        return {'bars':provider.bars(requested,start,end)}
+    monkeypatch.setattr('market_radar_ai.market_data.market_context.read',read)
+    client=AlpacaContext({});client.calendar=provider.calendar
+    report,cache=collect(symbols,client=client,clock=lambda:NOW)
+    assert len(requests)==11 and all(len(x)==92 for x in requests)
+    assert len(report['stocks'])==80 and len(report['benchmarks'])==12
+    assert all(row['relative_volume']=='2' for row in report['stocks']+report['benchmarks'])
+    assert len(json.dumps(report).encode())<256000
+    requests.clear()
+    warm,_=collect(symbols,client=client,cache=cache,clock=lambda:NOW)
+    assert warm['history_cache_hits']==920 and len(requests)==1
+    with pytest.raises(ValueError,match='invalid_batch_symbols'):
+        collect(symbols+['EXTRA'],client=client,clock=lambda:NOW)
+    with pytest.raises(ValueError,match='invalid_batch_symbols'):
+        client.bars(list(BENCHMARKS)+symbols+['EXTRA'],NOW-timedelta(minutes=5),NOW)
+    monkeypatch.setattr('market_radar_ai.market_data.market_context.read',
+                        lambda *a,**k:{'bars':{'SPY':[{}]*79}})
+    with pytest.raises(ValueError,match='context_bar_capacity'):
+        client.bars(['SPY'],NOW-timedelta(minutes=5),NOW)

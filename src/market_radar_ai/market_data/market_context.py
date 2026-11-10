@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 import requests
 from .providers.alpaca_batch import read, symbols_checked
 from .stock_checks import get
+from .limits import STOCK_RESEARCH_LIMIT
 from ..agents.candidate_packages import canonical, digest
 
 NY=ZoneInfo('America/New_York'); D=Decimal
@@ -58,7 +59,7 @@ class AlpacaContext:
     def calendar(self,start,end):
         return get(CALENDAR,{'start':start.isoformat(),'end':end.isoformat()},self.env,self.session)
     def bars(self,symbols,start,end):
-        symbols=symbols_checked(symbols,52)
+        symbols=symbols_checked(symbols,STOCK_RESEARCH_LIMIT+len(BENCHMARKS))
         params={'symbols':','.join(symbols),'timeframe':'5Min','start':start.isoformat(),
           'end':(end-timedelta(microseconds=1)).isoformat(),'feed':'iex','adjustment':'split',
           'asof':'-','currency':'USD','sort':'asc','limit':10000}
@@ -69,7 +70,7 @@ class AlpacaContext:
             if not isinstance(bars,dict) or set(bars)-set(symbols) or any(not isinstance(v,list) for v in bars.values()):
                 raise ValueError('context_bar_identity')
             for symbol,items in bars.items():output.setdefault(symbol,[]).extend(items)
-            if sum(map(len,output.values()))>52*78:raise ValueError('context_bar_capacity')
+            if sum(map(len,output.values()))>len(symbols)*78:raise ValueError('context_bar_capacity')
             token=data.get('next_page_token')
             if not token:return output
             if not isinstance(token,str) or len(token)>1000 or token in tokens:raise ValueError('context_pagination')
@@ -145,7 +146,6 @@ def row(symbol,current,history,prior,n):
 
 
 def collect(symbols, *, client, cache=None, clock=lambda:datetime.now(UTC), capture_sha=None, rehearsal=False):
-    from .limits import STOCK_RESEARCH_LIMIT
     symbols=symbols_checked(symbols,STOCK_RESEARCH_LIMIT) if symbols else []
     now=clock()
     if now.tzinfo is None:raise ValueError('aware_context_clock_required')
