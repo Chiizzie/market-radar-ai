@@ -156,7 +156,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.review_window.outputs.run == 'true'
         with:
-          ref: 48d65b8983bb05a78fd4f7f1bb677e823e64dc79
+          ref: cadfdc80a1d5e0f7c6559192acb9d439d607266f
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.review_window.outputs.run == 'true'
@@ -437,14 +437,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     permissions:
-      contents: read
+      contents: write
     concurrency:
       group: market-radar-ai-private-account
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: afd5a0121bfdea8f5186f261bcca9e79a8d21879
+          ref: cadfdc80a1d5e0f7c6559192acb9d439d607266f
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
@@ -455,6 +455,13 @@ jobs:
         env:
           SCANNER_COLLECTION_MODE: scheduled
           ENABLE_ACCOUNT_SYNC: 'true'
+          ENABLE_POSITION_MONITOR: 'true'
+          SEND_POSITION_MONITOR_TELEGRAM: 'true'
+          GH_PAPER_TOKEN: ${{ github.token }}
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TRADING212_API_KEY: ${{ secrets.TRADING212_API_KEY }}
           TRADING212_API_SECRET: ${{ secrets.TRADING212_API_SECRET }}
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
@@ -526,3 +533,4 @@ jobs:
           include-hidden-files: true
           retention-days: 30
           if-no-files-found: warn
+
