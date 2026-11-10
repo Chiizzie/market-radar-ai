@@ -42,7 +42,7 @@ jobs:
         if: steps.window.outputs.run == 'true'
         with:
           # Publish the current conditional-chief experiment; historical events stay unchanged.
-          ref: 931a3fddf0a17cbdc63163d1e998ed39bba32622
+          ref: ac29968ae9f07721bc50fa485a35e136a202b367
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -66,6 +66,11 @@ jobs:
           WATCHER_ENABLED: ${{ vars.PAPER_WATCHER_ENABLED != 'false' && 'true' || 'false' }}
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+      - name: Evaluate observed entries, exits and costs without changing strategy
+        if: always() && steps.portfolios.outcome == 'success'
+        run: |
+          python -m market_radar_ai.agents.trade_evaluation --events artifacts/execution-research/source-events.jsonl.gz --execution artifacts/execution-research/report.json --output artifacts/execution-research/trade-evaluation
+          cat artifacts/execution-research/trade-evaluation/trade-evaluation.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always() && steps.window.outputs.run == 'true'
         with:

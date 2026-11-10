@@ -35,3 +35,14 @@ def test_report_keeps_original_source_time_separate_from_generation():
     assert report['as_of']!=report['source_last_at']
     assert report['source_last_at']==events[0]['occurred_at']
     assert report['source_protocol_id']==execution.SOURCE_PROTOCOL_ID
+
+
+def test_replay_diagnostics_separate_storage_and_projection(tmp_path):
+    from datetime import datetime,timezone
+    class Client:
+        def read(self,experiment,day,after):return {'events':[],'next':after}
+    diagnostics=[]
+    execution.collect(Client(),now=datetime(2026,11,10,tzinfo=timezone.utc),root=tmp_path,diagnostics=diagnostics)
+    assert len(diagnostics)==3
+    assert all(d['events']==0 and d['pages']==1 for d in diagnostics)
+    assert all(d['seconds']>=0 and d['storage_read_seconds']>=0 and d['projection_seconds']==0 for d in diagnostics)

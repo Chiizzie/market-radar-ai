@@ -1,0 +1,719 @@
+{
+  "schema_version": "trade-evaluation-v1",
+  "evaluation_day": "2026-11-10",
+  "as_of": "2026-11-10T23:33:21.860802+00:00",
+  "dataset_kind": "historical_analysis",
+  "source_protocol_id": "abfaa5c8b4fd3e76a46dddd142bd4747765b32c0caf2c6122afe9dbff6c7e4e8",
+  "source_export_sha256": "aa146e8687d6adf29f8e7cdbcae59b942142dfe01a8106925b3bec379c22efee",
+  "execution_report_sha256": "7855c2d7074f43172a7dca380fac1a5175bf228c78fb32f5d64d73cc6b6beaeb",
+  "cohort_count": 50,
+  "distinct_symbols": 37,
+  "duplicate_symbol_setups": {
+    "stocks:BRBR": 2,
+    "stocks:ENB": 5,
+    "stocks:FMC": 3,
+    "stocks:INVH": 3,
+    "stocks:MARA": 3,
+    "stocks:MGM": 2,
+    "stocks:TTEC": 2
+  },
+  "arms": {
+    "code_only": {
+      "states": {
+        "closed": 11,
+        "not_filled": 39
+      },
+      "outcome_reasons": {
+        "entry_already_invalidated": 10,
+        "no_observed_eligible_fill": 25,
+        "scheduled_exit": 7,
+        "stop": 4,
+        "trigger_gap_exceeds_protocol_limit": 4
+      },
+      "closed": 11,
+      "wins": 2,
+      "losses": 9,
+      "closed_net_eur": "-20.95368549369157469472520328",
+      "closed_flat_cost_eur": "21.91234982292643599292077559",
+      "closed_before_flat_cost_eur": "0.95866432923486129819557231",
+      "distinct_closed_symbols": 8,
+      "entry_quality": {
+        "observed_fills": 11,
+        "median_seconds_to_observed_fill": 63.707394,
+        "median_fill_above_trigger_bps": "0.850180667263290112460780000",
+        "maximum_fill_above_trigger_bps": "13.76744539645847612553915000",
+        "note": "Receipt-time wait from enrolment or AI approval; observed ask versus planned trigger, not broker latency or slippage."
+      }
+    },
+    "ai_reviewed": {
+      "states": {
+        "closed": 1,
+        "no_action": 7,
+        "not_filled": 1,
+        "not_reviewed": 39,
+        "review_incomplete": 2
+      },
+      "outcome_reasons": {
+        "no_action": 7,
+        "no_observed_eligible_fill": 1,
+        "not_reviewed": 39,
+        "review_incomplete": 2,
+        "scheduled_exit": 1
+      },
+      "closed": 1,
+      "wins": 0,
+      "losses": 1,
+      "closed_net_eur": "-4.664404515177977950567944619",
+      "closed_flat_cost_eur": "1.992031860254724864647600155",
+      "closed_before_flat_cost_eur": "-2.672372654923253085920344464",
+      "distinct_closed_symbols": 1,
+      "entry_quality": {
+        "observed_fills": 1,
+        "median_seconds_to_observed_fill": 148.107294,
+        "median_fill_above_trigger_bps": "0.928622745290869090889300000",
+        "maximum_fill_above_trigger_bps": "0.928622745290869090889300000",
+        "note": "Receipt-time wait from enrolment or AI approval; observed ask versus planned trigger, not broker latency or slippage."
+      }
+    }
+  },
+  "by_strategy": {
+    "opening_continuation_30m_v1": {
+      "setups": 3,
+      "code_only": {
+        "states": {
+          "not_filled": 3
+        },
+        "outcome_reasons": {
+          "entry_already_invalidated": 1,
+          "no_observed_eligible_fill": 2
+        },
+        "closed": 0,
+        "wins": 0,
+        "losses": 0,
+        "closed_net_eur": null,
+        "closed_flat_cost_eur": null,
+        "closed_before_flat_cost_eur": null,
+        "distinct_closed_symbols": 0,
+        "entry_quality": {
+          "observed_fills": 0,
+          "median_seconds_to_observed_fill": null,
+          "median_fill_above_trigger_bps": null,
+          "maximum_fill_above_trigger_bps": null,
+          "note": "Receipt-time wait from enrolment or AI approval; observed ask versus planned trigger, not broker latency or slippage."
+        }
+      },
+      "ai_reviewed": {
+        "states": {
+          "no_action": 1,
+          "not_reviewed": 2
+        },
+        "outcome_reasons": {
+          "no_action": 1,
+          "not_reviewed": 2
+        },
+        "closed": 0,
+        "wins": 0,
+        "losses": 0,
+        "closed_net_eur": null,
+        "closed_flat_cost_eur": null,
+        "closed_before_flat_cost_eur": null,
+        "distinct_closed_symbols": 0,
+        "entry_quality": {
+          "observed_fills": 0,
+          "median_seconds_to_observed_fill": null,
+          "median_fill_above_trigger_bps": null,
+          "maximum_fill_above_trigger_bps": null,
+          "note": "Receipt-time wait from enrolment or AI approval; observed ask versus planned trigger, not broker latency or slippage."
+        }
+      }
+    },
+    "trend_continuation_20bar_v1": {
+      "setups": 47,
+      "code_only": {
+        "states": {
+          "closed": 11,
+          "not_filled": 36
+        },
+        "outcome_reasons": {
+          "entry_already_invalidated": 9,
+          "no_observed_eligible_fill": 23,
+          "scheduled_exit": 7,
+          "stop": 4,
+          "trigger_gap_exceeds_protocol_limit": 4
+        },
+        "closed": 11,
+        "wins": 2,
+        "losses": 9,
+        "closed_net_eur": "-20.95368549369157469472520328",
+        "closed_flat_cost_eur": "21.91234982292643599292077559",
+        "closed_before_flat_cost_eur": "0.95866432923486129819557231",
+        "distinct_closed_symbols": 8,
+        "entry_quality": {
+          "observed_fills": 11,
+          "median_seconds_to_observed_fill": 63.707394,
+          "median_fill_above_trigger_bps": "0.850180667263290112460780000",
+          "maximum_fill_above_trigger_bps": "13.76744539645847612553915000",
+          "note": "Receipt-time wait from enrolment or AI approval; observed ask versus planned trigger, not broker latency or slippage."
+        }
+      },
+      "ai_reviewed": {
+        "states": {
+          "closed": 1,
+          "no_action": 6,
+          "not_filled": 1,
+          "not_reviewed": 37,
+          "review_incomplete": 2
+        },
+        "outcome_reasons": {
+          "no_action": 6,
+          "no_observed_eligible_fill": 1,
+          "not_reviewed": 37,
+          "review_incomplete": 2,
+          "scheduled_exit": 1
+        },
+        "closed": 1,
+        "wins": 0,
+        "losses": 1,
+        "closed_net_eur": "-4.664404515177977950567944619",
+        "closed_flat_cost_eur": "1.992031860254724864647600155",
+        "closed_before_flat_cost_eur": "-2.672372654923253085920344464",
+        "distinct_closed_symbols": 1,
+        "entry_quality": {
+          "observed_fills": 1,
+          "median_seconds_to_observed_fill": 148.107294,
+          "median_fill_above_trigger_bps": "0.928622745290869090889300000",
+          "maximum_fill_above_trigger_bps": "0.928622745290869090889300000",
+          "note": "Receipt-time wait from enrolment or AI approval; observed ask versus planned trigger, not broker latency or slippage."
+        }
+      }
+    }
+  },
+  "closed_trades": {
+    "code_only": [
+      {
+        "setup_id": "paper-final-attempt-v1:01dcf7a4d3fe97ac8fc27de94d298a716c2b6b496e0993af1b283686f8e35ab5",
+        "candidate_id": "stocks:ENB",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "outcome": {
+          "status": "closed",
+          "reason": "scheduled_exit",
+          "entry_at": "2026-11-10T16:19:16.786786Z",
+          "exit_at": "2026-11-10T20:54:32.500440Z",
+          "entry_fill": "42.93755994267217346487950337",
+          "exit_fill": "42.74639738299134511152794414",
+          "net_pnl_eur": "-4.209315458093152158322782534",
+          "simulated": true
+        },
+        "assumed_round_trip_cost_eur": "1.992031824621125895014188064"
+      },
+      {
+        "setup_id": "paper-final-attempt-v1:1b232cb41c3ecfa9f0a20190d9640c49e8e27d258c4e7a440ae5e2051bfa32c8",
+        "candidate_id": "stocks:INVH",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "outcome": {
+          "status": "closed",
+          "reason": "stop",
+          "entry_at": "2026-11-10T17:10:18.418102Z",
+          "exit_at": "2026-11-10T20:23:56.682302Z",
+          "entry_fill": "24.22072796766183981254789522",
+          "exit_fill": "24.14268031226644723690660930",
+          "net_pnl_eur": "-3.596966458509119327179043155",
+          "simulated": true
+        },
+        "assumed_round_trip_cost_eur": "1.992031857785200794735371672"
+      },
+      {
+        "setup_id": "paper-final-attempt-v1:1d1cecd09a8e292c3c4210d88682ee01e3a7e15e9d89b2e0ca032eb54bef6cc5",
+        "candidate_id": "stocks:MAC",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "outcome": {
+          "status": "closed",
+          "reason": "scheduled_exit",
+          "entry_at": "2026-11-10T16:30:34.388688Z",
+          "exit_at": "2026-11-10T20:54:32.500440Z",
+          "entry_fill": "22.67501526503791122900167374",
+          "exit_fill": "22.87747074016398968578841585",
+          "net_pnl_eur": "2.460589063196885231893431977",
+          "simulated": true
+        },
+        "assumed_round_trip_cost_eur": "1.992031814877294237043127695"
+      },
+      {
+        "setup_id": "paper-final-attempt-v1:57186477918d9096c5287a53d3e6789824d086d159ad15eac0db0f012353c885",
+        "candidate_id": "stocks:BP",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "outcome": {
+          "status": "closed",
+          "reason": "scheduled_exit",
+          "entry_at": "2026-11-10T16:49:20.371994Z",
+          "exit_at": "2026-11-10T20:54:32.500440Z",
+          "entry_fill": "39.74163929420325744176276230",
+          "exit_fill": "39.84530128913101921790937399",
+          "net_pnl_eur": "-0.691979604210160371291690186",
+          "simulated": true
+        },
+        "assumed_round_trip_cost_eur": "1.992031842041891879531697803"
+      },
+      {
+        "setup_id": "paper-final-attempt-v1:a9f169ff859a8a0551d068dd393c28b1d4bc55ee659e190d11f40d93402aa8f8",
+        "candidate_id": "stocks:CPRT",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "outcome": {
+          "status": "closed",
+          "reason": "scheduled_exit",
+          "entry_at": "2026-11-10T16:49:20.371994Z",
+          "exit_at": "2026-11-10T20:54:32.500440Z",
+          "entry_fill": "28.96090121439456517252357469",
+          "exit_fill": "28.88560493454756584201699786",
+          "net_pnl_eur": "-3.286927079293125111785104818",
+          "simulated": true
+        },
+        "assumed_round_trip_cost_eur": "1.992031805806808727287113876"
+      },
+      {
+        "setup_id": "paper-final-attempt-v1:b40a4019b2c41246688628d371a11a2a0f43a0fd976fdae027c3973bac29ccc5",
+        "candidate_id": "stocks:ENB",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "outcome": {
+          "status": "closed",
+          "reason": "stop",
+          "entry_at": "2026-11-10T16:34:58.314801Z",
+          "exit_at": "2026-11-10T20:10:02.579009Z",
+          "entry_fill": "43.01887040002052118495453958",
+          "exit_fill": "42.85446079081899299304134448",
+          "net_pnl_eur": "-3.895401613839484302752334201",
+          "simulated": true
+        },
+        "assumed_round_trip_cost_eur": "1.992031732523001626501466441"
+      },
+      {
+        "setup_id": "paper-final-attempt-v1:bf1716a8e2913467b220c8969b6956ccb7ce37b7c0b9c86bf9072af83d6b3371",
+        "candidate_id": "stocks:LVS",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "outcome": {
+          "status": "closed",
+          "reason": "scheduled_exit",
+          "entry_at": "2026-11-10T16:41:28.936734Z",
+          "exit_at": "2026-11-10T20:54:32.500440Z",
+          "entry_fill": "36.15494453487164933598669159",
+          "exit_fill": "36.42487317846853621987760301",
+          "net_pnl_eur": "1.726935504903367827411810108",
+          "simulated": true
+        },
+        "assumed_round_trip_cost_eur": "1.992031755545239322762307727"
+      },
+      {
+        "setup_id": "paper-final-attempt-v1:d4c50f75f956565c03bd18efd443082d18e37521da30aa1111cf9e7846baf76c",
+        "candidate_id": "stocks:KO",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "outcome": {
+          "status": "closed",
+          "reason": "stop",
+          "entry_at": "2026-11-10T17:09:08.582380Z",
+          "exit_at": "2026-11-10T19:17:43.859075Z",
+          "entry_fill": "86.83426788406374621175109585",
+          "exit_fill": "86.56727480074577388735906241",
+          "net_pnl_eur": "-3.523408479361275078657345709",
+          "simulated": true
+        },
+        "assumed_round_trip_cost_eur": "1.992031736973213660036774245"
+      },
+      {
+        "setup_id": "paper-final-attempt-v1:e6c3519bea7ccc895f0f1b4b80ddc52914c1ef8eda65cb6cbfc1ee7cd77814c4",
+        "candidate_id": "stocks:PENN",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "outcome": {
+          "status": "closed",
+          "reason": "scheduled_exit",
+          "entry_at": "2026-11-10T17:10:43.396798Z",
+          "exit_at": "2026-11-10T20:54:32.500440Z",
+          "entry_fill": "16.44893997803829609771479931",
+          "exit_fill": "16.44849853216487242770775731",
+          "net_pnl_eur": "-2.005405538011702637716376113",
+          "simulated": true
+        },
+        "assumed_round_trip_cost_eur": "1.992031814320163236767456793"
+      },
+      {
+        "setup_id": "paper-final-attempt-v1:ee5ef0c0a4a7447b2b626993cdb1cdabb637d3fe48ba716b96257585221281fa",
+        "candidate_id": "stocks:INVH",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "outcome": {
+          "status": "closed",
+          "reason": "scheduled_exit",
+          "entry_at": "2026-11-10T16:50:21.385859Z",
+          "exit_at": "2026-11-10T20:54:32.500440Z",
+          "entry_fill": "24.17772796771924968440466862",
+          "exit_fill": "24.26534078506630608551334910",
+          "net_pnl_eur": "-0.187396440295500287672994823",
+          "simulated": true
+        },
+        "assumed_round_trip_cost_eur": "1.992031847249113938080225722"
+      },
+      {
+        "setup_id": "paper-final-attempt-v1:fd3d60e06f6881cc2f96eab19a66e695de4c78250fae01b47ad315a59f4c1aae",
+        "candidate_id": "stocks:ENB",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "outcome": {
+          "status": "closed",
+          "reason": "stop",
+          "entry_at": "2026-11-10T16:28:09.696432Z",
+          "exit_at": "2026-11-10T20:27:05.623821Z",
+          "entry_fill": "42.98300639801967039613840407",
+          "exit_fill": "42.83176555399496184500159950",
+          "net_pnl_eur": "-3.744409390178308478652773826",
+          "simulated": true
+        },
+        "assumed_round_trip_cost_eur": "1.992031791183382675161045556"
+      }
+    ],
+    "ai_reviewed": [
+      {
+        "setup_id": "paper-final-attempt-v1:2ee178b7dc5755292ab0a81a6bfbf45df985f0d4c074c470c4ae93fa8de0658b",
+        "candidate_id": "stocks:BRBR",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "outcome": {
+          "status": "closed",
+          "reason": "scheduled_exit",
+          "entry_at": "2026-11-10T16:37:46.142938Z",
+          "exit_at": "2026-11-10T20:54:32.500440Z",
+          "entry_fill": "9.146340135309792242734728527",
+          "exit_fill": "9.097264294327441691100207634",
+          "net_pnl_eur": "-4.664404515177977950567944619",
+          "simulated": true
+        },
+        "assumed_round_trip_cost_eur": "1.992031860254724864647600155"
+      }
+    ]
+  },
+  "exposure": {
+    "code_only": {
+      "open_positions": 0,
+      "open_entry_capital_eur": "0",
+      "open_initial_risk_eur": "0",
+      "unresolved_positions": 0,
+      "unresolved_possible_capital_eur": "0",
+      "unresolved_possible_initial_risk_eur": "0",
+      "watching_positions": 0,
+      "watching_planned_capital_eur": "0",
+      "peak_assumed_concurrent_positions": 11,
+      "peak_assumed_concurrent_capital_eur": "5501.732286929616862372571219",
+      "peak_assumed_concurrent_initial_risk_eur": "44.88940119696889588759688019",
+      "largest_open_symbol_capital_eur": "0",
+      "capital_limit_enforced": false,
+      "portfolio_return_established": false
+    },
+    "ai_reviewed": {
+      "open_positions": 0,
+      "open_entry_capital_eur": "0",
+      "open_initial_risk_eur": "0",
+      "unresolved_positions": 0,
+      "unresolved_possible_capital_eur": "0",
+      "unresolved_possible_initial_risk_eur": "0",
+      "watching_positions": 0,
+      "watching_planned_capital_eur": "0",
+      "peak_assumed_concurrent_positions": 1,
+      "peak_assumed_concurrent_capital_eur": "500.0462430763053565140287297",
+      "peak_assumed_concurrent_initial_risk_eur": "6.929894543270159793654854920",
+      "largest_open_symbol_capital_eur": "0",
+      "capital_limit_enforced": false,
+      "portfolio_return_established": false
+    }
+  },
+  "ai_costs": {
+    "settled_estimated_eur": "0.62571",
+    "held_maximum_eur": "0",
+    "unreconciled_candidates": 39,
+    "complete_total_eur": null
+  },
+  "matched_pair_count": 1,
+  "execution": {
+    "since": "2026-11-08",
+    "source_cohorts": 50,
+    "source_last_at": "2026-11-10T23:00:01.743237+00:00",
+    "report_as_of": "2026-11-10T23:33:21.860802+00:00",
+    "costs_verified": false,
+    "books": [
+      {
+        "profile": "eur_conversion",
+        "arm": "code_only",
+        "considered": 50,
+        "states": {
+          "blocked": 50
+        },
+        "closed": 0,
+        "balance_eur": "1000",
+        "reserved_capital_eur": "0",
+        "available_capital_eur": "1000",
+        "reserved_risk_eur": "0",
+        "peak_reserved_capital_eur": "0",
+        "peak_reserved_risk_eur": "0",
+        "closed_net_pnl_eur": null,
+        "blocked_reasons": {
+          "scenario_net_reward_below_2r": 50
+        },
+        "details_omitted": 30
+      },
+      {
+        "profile": "eur_conversion",
+        "arm": "ai_reviewed",
+        "considered": 2,
+        "states": {
+          "blocked": 2
+        },
+        "closed": 0,
+        "balance_eur": "1000",
+        "reserved_capital_eur": "0",
+        "available_capital_eur": "1000",
+        "reserved_risk_eur": "0",
+        "peak_reserved_capital_eur": "0",
+        "peak_reserved_risk_eur": "0",
+        "closed_net_pnl_eur": null,
+        "blocked_reasons": {
+          "scenario_net_reward_below_2r": 2
+        },
+        "details_omitted": 0
+      },
+      {
+        "profile": "usd_balance",
+        "arm": "code_only",
+        "considered": 50,
+        "states": {
+          "blocked": 39,
+          "closed": 2,
+          "expired": 6,
+          "invalidated": 3
+        },
+        "closed": 2,
+        "balance_eur": "998.0467865990252894517731010",
+        "reserved_capital_eur": "0",
+        "available_capital_eur": "998.0467865990252894517731010",
+        "reserved_risk_eur": "0",
+        "peak_reserved_capital_eur": "998.5569595257159802219004220",
+        "peak_reserved_risk_eur": "16.06380779256149119022393155",
+        "closed_net_pnl_eur": "-1.953213400974710548226898945",
+        "blocked_reasons": {
+          "insufficient_shared_capital": 35,
+          "symbol_already_reserved": 4
+        },
+        "details_omitted": 30
+      },
+      {
+        "profile": "usd_balance",
+        "arm": "ai_reviewed",
+        "considered": 2,
+        "states": {
+          "closed": 1,
+          "expired": 1
+        },
+        "closed": 1,
+        "balance_eur": "996.8109093201881579089732346",
+        "reserved_capital_eur": "0",
+        "available_capital_eur": "996.8109093201881579089732346",
+        "reserved_risk_eur": "0",
+        "peak_reserved_capital_eur": "998.5669646063902879776412901",
+        "peak_reserved_risk_eur": "14.19211500437491094935716738",
+        "closed_net_pnl_eur": "-3.189090679811842091026765416",
+        "blocked_reasons": {},
+        "details_omitted": 0
+      },
+      {
+        "profile": "stressed",
+        "arm": "code_only",
+        "considered": 50,
+        "states": {
+          "blocked": 50
+        },
+        "closed": 0,
+        "balance_eur": "1000",
+        "reserved_capital_eur": "0",
+        "available_capital_eur": "1000",
+        "reserved_risk_eur": "0",
+        "peak_reserved_capital_eur": "0",
+        "peak_reserved_risk_eur": "0",
+        "closed_net_pnl_eur": null,
+        "blocked_reasons": {
+          "scenario_net_reward_below_2r": 50
+        },
+        "details_omitted": 30
+      },
+      {
+        "profile": "stressed",
+        "arm": "ai_reviewed",
+        "considered": 2,
+        "states": {
+          "blocked": 2
+        },
+        "closed": 0,
+        "balance_eur": "1000",
+        "reserved_capital_eur": "0",
+        "available_capital_eur": "1000",
+        "reserved_risk_eur": "0",
+        "peak_reserved_capital_eur": "0",
+        "peak_reserved_risk_eur": "0",
+        "closed_net_pnl_eur": null,
+        "blocked_reasons": {
+          "scenario_net_reward_below_2r": 2
+        },
+        "details_omitted": 0
+      }
+    ],
+    "note": "Alternative fictional EUR1000 portfolios; do not add them. This cumulative execution scope may span more than the selected evaluation day. Assumed USD/EUR routes, slippage and levies are not verified broker costs."
+  },
+  "exit_shadow": {
+    "code_only": {
+      "protocol": {
+        "version": "observed-stall-exit-15m-v1",
+        "entry": "unchanged_observed_baseline_fill",
+        "original_stop_and_target": "retained",
+        "evaluate_after_seconds": 900,
+        "exit_observation_window_seconds": 30,
+        "required_observed_progress_r": "0.5",
+        "maximum_observation_gap_seconds": 15,
+        "quote_max_age_seconds": 60,
+        "evaluation_quote_observed_at_or_after_deadline": true,
+        "costs": "same_original_flat_round_trip_assumption",
+        "application": "retrospective_diagnostic_only_not_active"
+      },
+      "protocol_id": "ee6d4fd08265a292cd71a058ba6772df2da1d4ce785d5784493c06ab95d9a2b2",
+      "status": "retrospective_diagnostic_not_a_strategy_result",
+      "states": {
+        "hypothetical_early_exit": 3,
+        "observation_gap": 7,
+        "progress_threshold_reached": 1
+      },
+      "paired_count": 3,
+      "paired_distinct_symbols": 1,
+      "paired_delta_eur": "6.463005074601657651056154725",
+      "rows": [
+        {
+          "setup_id": "paper-final-attempt-v1:01dcf7a4d3fe97ac8fc27de94d298a716c2b6b496e0993af1b283686f8e35ab5",
+          "candidate_id": "stocks:ENB",
+          "state": "hypothetical_early_exit",
+          "maximum_observation_gap_seconds": 10.310374,
+          "maximum_observed_progress_r": "0.3586913428763215432347425741",
+          "exit_at": "2026-11-10T16:34:21.017387+00:00",
+          "exit_bid_eur": "42.98300639801967039613840407",
+          "shadow_net_eur": "-1.464900979493463796667280602",
+          "baseline_net_eur": "-4.209315458093152158322782534",
+          "paired_delta_eur": "2.744414478599688361655501932"
+        },
+        {
+          "setup_id": "paper-final-attempt-v1:1b232cb41c3ecfa9f0a20190d9640c49e8e27d258c4e7a440ae5e2051bfa32c8",
+          "candidate_id": "stocks:INVH",
+          "state": "observation_gap",
+          "maximum_observation_gap_seconds": 18.332221
+        },
+        {
+          "setup_id": "paper-final-attempt-v1:1d1cecd09a8e292c3c4210d88682ee01e3a7e15e9d89b2e0ca032eb54bef6cc5",
+          "candidate_id": "stocks:MAC",
+          "state": "observation_gap",
+          "maximum_observation_gap_seconds": 27.221856
+        },
+        {
+          "setup_id": "paper-final-attempt-v1:57186477918d9096c5287a53d3e6789824d086d159ad15eac0db0f012353c885",
+          "candidate_id": "stocks:BP",
+          "state": "observation_gap",
+          "maximum_observation_gap_seconds": 37.516196
+        },
+        {
+          "setup_id": "paper-final-attempt-v1:a9f169ff859a8a0551d068dd393c28b1d4bc55ee659e190d11f40d93402aa8f8",
+          "candidate_id": "stocks:CPRT",
+          "state": "observation_gap",
+          "maximum_observation_gap_seconds": 37.874225
+        },
+        {
+          "setup_id": "paper-final-attempt-v1:b40a4019b2c41246688628d371a11a2a0f43a0fd976fdae027c3973bac29ccc5",
+          "candidate_id": "stocks:ENB",
+          "state": "hypothetical_early_exit",
+          "maximum_observation_gap_seconds": 7.04873,
+          "maximum_observed_progress_r": "0.1408421658569633202410408368",
+          "exit_at": "2026-11-10T16:50:01.576631+00:00",
+          "exit_bid_eur": "43.01052794257474832581780070",
+          "shadow_net_eur": "-2.088612354030256570954633318",
+          "baseline_net_eur": "-3.895401613839484302752334201",
+          "paired_delta_eur": "1.806789259809227731797700883"
+        },
+        {
+          "setup_id": "paper-final-attempt-v1:bf1716a8e2913467b220c8969b6956ccb7ce37b7c0b9c86bf9072af83d6b3371",
+          "candidate_id": "stocks:LVS",
+          "state": "progress_threshold_reached",
+          "maximum_observation_gap_seconds": 13.995109,
+          "maximum_observed_progress_r": "0.6300391471652546874341396828"
+        },
+        {
+          "setup_id": "paper-final-attempt-v1:d4c50f75f956565c03bd18efd443082d18e37521da30aa1111cf9e7846baf76c",
+          "candidate_id": "stocks:KO",
+          "state": "observation_gap",
+          "maximum_observation_gap_seconds": 18.332221
+        },
+        {
+          "setup_id": "paper-final-attempt-v1:e6c3519bea7ccc895f0f1b4b80ddc52914c1ef8eda65cb6cbfc1ee7cd77814c4",
+          "candidate_id": "stocks:PENN",
+          "state": "observation_gap",
+          "maximum_observation_gap_seconds": 18.332221
+        },
+        {
+          "setup_id": "paper-final-attempt-v1:ee5ef0c0a4a7447b2b626993cdb1cdabb637d3fe48ba716b96257585221281fa",
+          "candidate_id": "stocks:INVH",
+          "state": "observation_gap",
+          "maximum_observation_gap_seconds": 39.130643
+        },
+        {
+          "setup_id": "paper-final-attempt-v1:fd3d60e06f6881cc2f96eab19a66e695de4c78250fae01b47ad315a59f4c1aae",
+          "candidate_id": "stocks:ENB",
+          "state": "hypothetical_early_exit",
+          "maximum_observation_gap_seconds": 9.716462,
+          "maximum_observed_progress_r": "0.3960702415409296826871961004",
+          "exit_at": "2026-11-10T16:43:13.702712+00:00",
+          "exit_bid_eur": "42.99676563608868019991472871",
+          "shadow_net_eur": "-1.832608053985566921049821916",
+          "baseline_net_eur": "-3.744409390178308478652773826",
+          "paired_delta_eur": "1.911801336192741557602951910"
+        }
+      ],
+      "note": "Selected after observing this day, so any improvement is hindsight-biased. Sparse paths are excluded, not treated as no progress. The paired subset is coverage-selected and its delta is not a full-cohort or portfolio result. Observed quotes cannot prove an intrapoll high/low. Validate a frozen rule on later unseen sessions before any adoption."
+    },
+    "ai_reviewed": {
+      "protocol": {
+        "version": "observed-stall-exit-15m-v1",
+        "entry": "unchanged_observed_baseline_fill",
+        "original_stop_and_target": "retained",
+        "evaluate_after_seconds": 900,
+        "exit_observation_window_seconds": 30,
+        "required_observed_progress_r": "0.5",
+        "maximum_observation_gap_seconds": 15,
+        "quote_max_age_seconds": 60,
+        "evaluation_quote_observed_at_or_after_deadline": true,
+        "costs": "same_original_flat_round_trip_assumption",
+        "application": "retrospective_diagnostic_only_not_active"
+      },
+      "protocol_id": "ee6d4fd08265a292cd71a058ba6772df2da1d4ce785d5784493c06ab95d9a2b2",
+      "status": "retrospective_diagnostic_not_a_strategy_result",
+      "states": {
+        "observation_gap": 1
+      },
+      "paired_count": 0,
+      "paired_distinct_symbols": 0,
+      "paired_delta_eur": null,
+      "rows": [
+        {
+          "setup_id": "paper-final-attempt-v1:2ee178b7dc5755292ab0a81a6bfbf45df985f0d4c074c470c4ae93fa8de0658b",
+          "candidate_id": "stocks:BRBR",
+          "state": "observation_gap",
+          "maximum_observation_gap_seconds": 27.703203
+        }
+      ],
+      "note": "Selected after observing this day, so any improvement is hindsight-biased. Sparse paths are excluded, not treated as no progress. The paired subset is coverage-selected and its delta is not a full-cohort or portfolio result. Observed quotes cannot prove an intrapoll high/low. Validate a frozen rule on later unseen sessions before any adoption."
+    }
+  },
+  "limitations": [
+    "One day cannot establish profitability or AI value.",
+    "Independent setups can duplicate symbols and assume more capital than the user has.",
+    "Flat costs are assumptions; pre-cost P/L still embeds observed bid/ask spread.",
+    "No-fill is not zero-profit execution and missing observations can hide triggers.",
+    "No live or paper strategy rule, original decision, alert or outcome was changed."
+  ],
+  "model_calls": 0,
+  "trade_authorized": false
+}
