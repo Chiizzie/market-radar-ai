@@ -4507,6 +4507,12 @@
       "reserved": 9705,
       "usage": null
     },
+    "paper-final-v1:da0a5f2d529535834ec69c0fc2913e73a17e5be1d3727dfcd0cd388c4b013a9e:risk_manager": {
+      "actual": null,
+      "day": "2026-11-10",
+      "reserved": 9713,
+      "usage": null
+    },
     "paper-final-v1:e3f5bd5d764ca4a7b9cc7c9659ca4270804603b2325be47079a67aabe51144d1:conclusion": {
       "actual": 9713,
       "day": "2026-11-10",
