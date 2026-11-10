@@ -23,6 +23,7 @@ class ReferenceObserver:
             raise ValueError('paper_observer_currency_mismatch')
         quotes={}; failures=[]
         if stocks:
+            stage='validation'
             try:
                 symbols=list(dict.fromkeys(d['plan']['symbol'] for d in stocks))
                 if len(symbols)>STOCK_RESEARCH_LIMIT: raise ValueError('paper_stock_capacity')
@@ -30,14 +31,18 @@ class ReferenceObserver:
                 if (self.fx is None or self.fx_fetched_at is None
                     or not 0 <= (now-self.fx_fetched_at).total_seconds() < 300
                     or not 0 <= (now-self.fx.observed_at).total_seconds() <= 900):
+                    stage='fx'
                     self.fx=self.fx_provider.fetch('USD',now=now)
                     self.fx_fetched_at=self.clock()
                 payload={'schema_version':'stock-reference-checks-v1','symbols':symbols,
                          'catalogue_candidates':{},'trade_authorized':False,
                          'fx':self.fx.model_dump(mode='json')}
+                stage='clock'
                 payload['market_clock']=get(CLOCK,{},self.env,self.session)
+                stage='quotes'
                 payload['quotes']=get(QUOTES,{'symbols':','.join(symbols),'feed':'iex','currency':'USD'},self.env,self.session)
                 payload['retrieved_at']=self.clock().isoformat()
+                stage='validation'
                 checked=assess(payload,now=self.clock())
                 if checked['market_clock']['status']!='open' or checked['fx_status']!='current_indicative':
                     raise ValueError('stock_reference_session_or_fx')
@@ -49,7 +54,7 @@ class ReferenceObserver:
                                                'fx':str(self.fx.eur_per_unit)})
                     quotes['stocks:'+row['symbol']]=(q,source)
             except (requests.RequestException,RuntimeError,ValueError,KeyError,TypeError,ArithmeticError):
-                failures.append('stock_reference_observation_unavailable')
+                failures.append('stock_'+stage+'_unavailable')
         if crypto:
             try:
                 pairs=list(dict.fromkeys(d['plan']['symbol'] for d in crypto))

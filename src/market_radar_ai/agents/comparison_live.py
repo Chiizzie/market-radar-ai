@@ -8,6 +8,8 @@ import hmac
 import json
 import sqlite3
 import threading
+import time
+from .watcher_diagnostics import record_failure
 from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -44,10 +46,17 @@ def restore_event_timestamp(experiment, event):
     raise ValueError('invalid_comparison_event')
 
 
+class StorageUnavailable(RuntimeError):
+    def __init__(self, code, attempts, http_status=None):
+        self.diagnostic_code, self.attempts, self.http_status = code, attempts, http_status
+        super().__init__(f'comparison_storage_unavailable:{code}:attempts={attempts}:http={http_status}')
+
+
 class EventClient:
-    def __init__(self, secret, *, clock=lambda: datetime.now(UTC), session=None):
+    def __init__(self, secret, *, clock=lambda: datetime.now(UTC), session=None, sleep=time.sleep):
         if not isinstance(secret, str) or len(secret) < 32:
             raise ValueError('comparison_storage_not_configured')
+        self.sleep = sleep
         self.secret = secret
         self.clock = clock
         self.session = session or requests.Session()
@@ -56,20 +65,36 @@ class EventClient:
         raw = canonical({'version': 'research-events-v1', **body})
         if len(raw.encode()) > 2 * 1024 * 1024:
             raise ValueError('comparison_transport_capacity')
-        timestamp = str(int(self.clock().timestamp()))
-        signature = hmac.new(self.secret.encode(), f'{timestamp}.{raw}'.encode(), hashlib.sha256).hexdigest()
-        try:
-            response = self.session.post(ENDPOINT, data=raw.encode(), timeout=(5, 12),
-                headers={'Content-Type': 'application/json', 'X-Timestamp': timestamp,
-                         'X-Signature': 'sha256=' + signature}, allow_redirects=False)
-            if response.status_code != 200 or len(response.content) > 2 * 1024 * 1024:
-                raise ValueError('comparison_storage_unavailable')
-            result = response.json()
-            if result.get('ok') is not True:
-                raise ValueError('comparison_storage_unavailable')
-            return result
-        except (requests.RequestException, ValueError, KeyError, TypeError):
-            raise RuntimeError('comparison_storage_unavailable') from None
+        attempts = 3 if body.get('action') == 'read' else 1
+        for attempt in range(1, attempts + 1):
+            timestamp = str(int(self.clock().timestamp()))
+            signature = hmac.new(self.secret.encode(), f'{timestamp}.{raw}'.encode(), hashlib.sha256).hexdigest()
+            retry = False; status = None
+            try:
+                response = self.session.post(ENDPOINT, data=raw.encode(), timeout=(5, 12),
+                    headers={'Content-Type': 'application/json', 'X-Timestamp': timestamp,
+                             'X-Signature': 'sha256=' + signature}, allow_redirects=False)
+                status = response.status_code
+                if status != 200:
+                    code = 'storage_http'
+                    retry = status in (429, 500, 502, 503, 504)
+                elif len(response.content) > 2 * 1024 * 1024:
+                    code = 'storage_response'
+                else:
+                    result = response.json()
+                    if not isinstance(result, dict) or result.get('ok') is not True:
+                        code = 'storage_response'
+                    else:
+                        return result
+            except requests.Timeout:
+                code = 'storage_timeout'; retry = True
+            except requests.RequestException:
+                code = 'storage_transport'; retry = True
+            except (ValueError, KeyError, TypeError):
+                code = 'storage_response'
+            if not retry or attempt == attempts:
+                raise StorageUnavailable(code, attempt, status) from None
+            self.sleep(0.5 * attempt)
 
     def append(self, experiment, events):
         if not events:
@@ -263,6 +288,7 @@ class LiveComparison:
             self.health['polls'] += 1
             self.health['quotes_received'] += len(events)
             self.health['error_polls'] += bool(failures)
+            for failure in failures: record_failure(self.health, failure, received)
             self.health['last_success_at'] = received.isoformat()
             return self.health
 
@@ -273,7 +299,8 @@ class LiveComparison:
         def work():
             while not self.stop.wait(5):
                 try: self.poll()
-                except (RuntimeError, ValueError, KeyError, TypeError):
+                except (RuntimeError, ValueError, KeyError, TypeError) as exc:
+                    record_failure(self.health, exc, self.clock())
                     self.health['error_polls'] += 1
         self.thread = threading.Thread(target=work, name='paper-comparison-observer', daemon=True)
         self.thread.start()
