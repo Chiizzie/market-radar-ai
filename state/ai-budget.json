@@ -3235,6 +3235,12 @@
         "response_id": "resp_06e4c68790a3fb71016af34c349aac87d1838cb2ed4710be7a"
       }
     },
+    "paper-final-v1:5499dc467df3a4913d5951db845f409c917488c2110838fdffb72106925f0794:technical_analyst": {
+      "actual": null,
+      "day": "2026-11-10",
+      "reserved": 9427,
+      "usage": null
+    },
     "paper-final-v1:568e2d896fea244f17d908df315206ba7a8a5d04d8a574045aa7a8f81e8a240b:conclusion": {
       "actual": 9651,
       "day": "2026-11-09",
