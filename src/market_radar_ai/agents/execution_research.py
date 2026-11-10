@@ -271,7 +271,7 @@ def replay(events, *, now, dataset_kind='forward'):
     return result
 
 
-def collect(client, *, now, root):
+def collect(client, *, now, root, diagnostics=None):
     validate_source_protocol()
     first = aware(PROTOCOL['since'] + 'T00:00:00+00:00').date()
     days = (now.date() - first).days + 1
@@ -283,6 +283,8 @@ def collect(client, *, now, root):
         if worker.experiment != SOURCE_PROTOCOL_ID:
             raise ValueError('execution_source_protocol_mismatch')
         worker.sync()  # Existing signed receipt, immutable identity and review validation.
+        if diagnostics is not None:
+            diagnostics.append({'day':day,**worker.health['initial_sync']})
         path = worker.root / 'comparison-events.jsonl'
         if path.exists():
             size_bytes += path.stat().st_size
@@ -297,11 +299,14 @@ def main():
     p.add_argument('--publish', action='store_true')
     args = p.parse_args(); now = datetime.now(UTC)
     client = EventClient(os.environ.get('REVIEW_INGEST_SECRET'))
+    source_health=[]
     with TemporaryDirectory() as scratch:
-        events = collect(client, now=now, root=scratch)
+        events = collect(client, now=now, root=scratch, diagnostics=source_health)
     now = datetime.now(UTC)  # Include evidence that arrived during the signed reads.
     report = replay(events, now=now)
     args.output.mkdir(parents=True, exist_ok=True)
+    (args.output / 'source-replay-health.json').write_text(json.dumps({'days':source_health,
+        'model_calls':0,'trade_authorized':False},indent=2)+'\n')
     (args.output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     # A lossless replay artifact accompanies each report. It contains private
     # research evidence, is never included in the viewer report, and expires.
@@ -314,6 +319,8 @@ def main():
     if args.publish: client.append(EXPERIMENT, [envelope('execution_report', report, now)])
     print(json.dumps({'state': 'execution_report_recorded' if args.publish else 'execution_report_created',
         'cohorts': report['source_cohorts'], 'source_events': len(events), 'restore_verified': True,
+        'source_replay_seconds':round(sum(d['seconds'] for d in source_health),3),
+        'source_projection_seconds':round(sum(d['projection_seconds'] for d in source_health),3),
         'model_calls': 0, 'trade_authorized': False}))
 
 

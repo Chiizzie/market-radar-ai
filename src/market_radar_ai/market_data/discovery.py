@@ -177,7 +177,7 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
                     checked=capture_result(result,now=datetime.now(timezone.utc))['payload']
                     reasons = sorted({i.get('code', 'quality_check_failed') for i in checked.get('quality_issues', [])})
                     from .chart_diagnostics import describe
-                    return symbol,checked['quality_passed_at_capture'],technical_priority(result),reasons,describe(result,checked,now=datetime.now(timezone.utc))
+                    return symbol,checked['quality_passed_at_capture'],technical_priority(result),reasons,describe(result,checked,now=datetime.now(timezone.utc),expected_symbol=symbol)
                 except Exception:
                     # A provider failure is an unavailable observation, not a
                     # reason to abort unrelated symbols or expose raw errors.

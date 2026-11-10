@@ -140,6 +140,10 @@ class ComparisonStore:
         with self.connection() as db:
             db.execute('CREATE TABLE IF NOT EXISTS comparison_meta (id INTEGER PRIMARY KEY, payload TEXT NOT NULL)')
             db.execute('CREATE TABLE IF NOT EXISTS comparison_cohort (id TEXT PRIMARY KEY, payload TEXT NOT NULL)')
+            # Derived from immutable payloads, not an independently writable cache.
+            # SQLite maintains/rebuilds it across transactions, rollback and reopen.
+            db.execute("CREATE INDEX IF NOT EXISTS comparison_candidate_enrolment ON comparison_cohort "
+                       "(json_extract(payload,'$.packet.packet.candidate_id'),json_extract(payload,'$.enrolled_at'))")
             db.execute('CREATE TABLE IF NOT EXISTS comparison_reviews (id TEXT PRIMARY KEY, payload TEXT NOT NULL)')
             db.execute('CREATE TABLE IF NOT EXISTS comparison_attempts (id TEXT PRIMARY KEY, payload TEXT NOT NULL)')
             db.execute('CREATE TABLE IF NOT EXISTS comparison_costs (id TEXT, at TEXT, payload TEXT NOT NULL, PRIMARY KEY(id,at))')
@@ -223,10 +227,13 @@ class ComparisonStore:
         payload = canonical(value)
         with self.connection() as db:
             if not db.in_transaction: db.execute('BEGIN IMMEDIATE')
-            enrolled = [json.loads(r[0]) for r in db.execute('SELECT payload FROM comparison_cohort')]
-            matches = [r for r in enrolled if r['packet']['packet']['candidate_id'] == candidate_id
-                       and aware(r['enrolled_at']) <= quote.observed_at]
-            if not matches:
+            # Read only the indexed candidate's enrolment timestamps. Decoding
+            # every full evidence packet here made replay scale as quotes × cohorts.
+            enrolled = db.execute("SELECT json_extract(payload,'$.enrolled_at') FROM comparison_cohort "
+                                  "WHERE json_extract(payload,'$.packet.packet.candidate_id')=?", (candidate_id,))
+            # Compare aware datetimes in Python: ISO strings can differ in fractional
+            # precision, so SQL string ordering is not a safe time gate.
+            if not any(aware(row[0]) <= quote.observed_at for row in enrolled):
                 raise ValueError('observe_only_after_comparison_enrolment')
             old = db.execute('SELECT payload FROM comparison_quotes WHERE candidate=? AND at=?',
                              (candidate_id, received_at.isoformat())).fetchone()

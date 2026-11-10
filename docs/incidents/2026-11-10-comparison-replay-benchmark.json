@@ -1,0 +1,66 @@
+{
+  "baseline": {
+    "events_replayed": 23848,
+    "export_sha256_by_day": {
+      "2026-11-09": "728659bc48e2dfcce6b50d5bd0a08ffe170d7bc511e3c638138e7900ad65588e",
+      "2026-11-10": "560bf8f2660177ad50fe22c1517c8f97077be28b8a890fed0e45c8e24705a1da"
+    },
+    "replay_seconds": 136.260874,
+    "report_sha256": "c193880b5cedc80eb2e783d080d3915df38d3f2b6c73f1bc1783443f751e2a73",
+    "sync_by_day": {
+      "2026-11-09": {
+        "events": 11,
+        "pages": 2,
+        "projection_seconds": 0.001,
+        "seconds": 0.001,
+        "storage_read_seconds": 0.0
+      },
+      "2026-11-10": {
+        "events": 23837,
+        "pages": 25,
+        "projection_seconds": 136.213,
+        "seconds": 136.26,
+        "storage_read_seconds": 0.001
+      }
+    }
+  },
+  "current": {
+    "events_replayed": 23848,
+    "export_sha256_by_day": {
+      "2026-11-09": "728659bc48e2dfcce6b50d5bd0a08ffe170d7bc511e3c638138e7900ad65588e",
+      "2026-11-10": "560bf8f2660177ad50fe22c1517c8f97077be28b8a890fed0e45c8e24705a1da"
+    },
+    "replay_seconds": 1.213438,
+    "report_sha256": "c193880b5cedc80eb2e783d080d3915df38d3f2b6c73f1bc1783443f751e2a73",
+    "sync_by_day": {
+      "2026-11-09": {
+        "events": 11,
+        "pages": 2,
+        "projection_seconds": 0.001,
+        "seconds": 0.001,
+        "storage_read_seconds": 0.0
+      },
+      "2026-11-10": {
+        "events": 23837,
+        "pages": 25,
+        "projection_seconds": 1.168,
+        "seconds": 1.213,
+        "storage_read_seconds": 0.001
+      }
+    }
+  },
+  "event_counts": {
+    "begin": 11,
+    "cost": 11,
+    "enrol": 50,
+    "quote": 23516,
+    "report": 251,
+    "review": 9
+  },
+  "exports_identical": true,
+  "page_size": 1000,
+  "reports_identical": true,
+  "scope": "local_replay_only_excludes_network_and_report_generation",
+  "source_file_sha256": "dbfe4a65c5e7d04463ad6b9d1df6e1e1c2b014d77755e4db70338b668e75997f",
+  "speedup": 112.29
+}
