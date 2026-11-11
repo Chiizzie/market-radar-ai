@@ -4138,6 +4138,12 @@
       "reserved": 8151,
       "usage": null
     },
+    "paper-final-v1:8c3903a1ecff3e022bef14f3e8a4a75e9856fc72b2dcebc20342dbd8ef9bb5bb:opportunity_hunter": {
+      "actual": null,
+      "day": "2026-11-11",
+      "reserved": 8130,
+      "usage": null
+    },
     "paper-final-v1:915ff37b9d310ef6fa7988b06bcdaa7db25b92b155fd086e8837272a6d42356c:opportunity_hunter": {
       "actual": 5465,
       "day": "2026-11-05",
