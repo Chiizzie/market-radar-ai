@@ -20,13 +20,13 @@ class MemoryStore:
 
 def test_restarts_keep_holds_and_duplicate_ids():
     store=MemoryStore()
-    GitHubSpendingLedger(store).reserve('one',300000,NOW)
+    GitHubSpendingLedger(store).reserve('one',600000,NOW)
     fresh=GitHubSpendingLedger(store)
-    with pytest.raises(RuntimeError): fresh.reserve('two',300000,NOW)
+    with pytest.raises(RuntimeError): fresh.reserve('two',600000,NOW)
     with pytest.raises(ValueError): fresh.reserve('one',1,NOW)
     fresh.settle('one',100)
-    fresh.reserve('two',300000,NOW)
-    assert fresh.summary()['held_microeur']==300000
+    fresh.reserve('two',600000,NOW)
+    assert fresh.summary()['held_microeur']==600000
     assert fresh.summary()['settled_microeur']==100
 
 
@@ -41,9 +41,11 @@ def test_conflict_cannot_overwrite_reservation():
 def test_lifetime_survives_month_boundary():
     store=MemoryStore()
     ledger=GitHubSpendingLedger(store)
+    store.state['entries']['older']={'day':'2026-10-01','reserved':99000000,'actual':99000000,'usage':None}
     ledger.reserve('one',400000,NOW)
+    ledger.reserve('two',400000,NOW.replace(month=12))
     with pytest.raises(RuntimeError,match='lifetime'):
-        ledger.reserve('two',100001,NOW.replace(month=12))
+        ledger.reserve('three',200001,NOW.replace(year=2027,month=1))
 
 
 def test_unknown_write_blocks_pilot_before_network(tmp_path,monkeypatch):
@@ -57,15 +59,15 @@ def test_unknown_write_blocks_pilot_before_network(tmp_path,monkeypatch):
 
 
 def test_corrupt_limits_are_not_silently_reset():
-    state=initial_state();state['limits_microeur']['lifetime']=100000000
+    state=initial_state();state['limits_microeur']['lifetime']=101000000
     with pytest.raises(ValueError): validate_state(state)
 
 
 def test_overrun_and_idempotent_settlement():
     store=MemoryStore();ledger=GitHubSpendingLedger(store)
     ledger.reserve('one',1,NOW)
-    with pytest.raises(RuntimeError,match='actual_charge_recorded'): ledger.settle('one',500001)
-    ledger.settle('one',500001)
+    with pytest.raises(RuntimeError,match='actual_charge_recorded'): ledger.settle('one',1000001)
+    ledger.settle('one',1000001)
     with pytest.raises(ValueError): ledger.settle('one',1)
     with pytest.raises(RuntimeError): ledger.reserve('two',1,NOW)
 
@@ -83,6 +85,7 @@ def test_remote_write_uses_only_designated_state_branch(monkeypatch):
 
 @pytest.mark.parametrize('code',[403,404,409,500])
 def test_remote_read_failure_does_not_initialize(monkeypatch,code):
+    monkeypatch.setattr('market_radar_ai.agents.github_budget.time.sleep',lambda _:None)
     class Response: status_code=code
     monkeypatch.setattr('market_radar_ai.agents.github_budget.requests.get',lambda *a,**k:Response())
     with pytest.raises(RuntimeError,match='read failed'): GitHubBudgetStore('test').load()
@@ -160,3 +163,47 @@ def test_remote_record_round_trip(monkeypatch):
     monkeypatch.setattr('market_radar_ai.agents.github_budget.requests.get',lambda *a,**k:Response())
     state,sha=GitHubBudgetStore('test').load()
     assert state==initial_state() and sha=='a'*40
+
+
+@pytest.mark.parametrize('first', ['timeout', 429, 500, 502, 503, 504])
+def test_transient_read_retries_without_writes_and_preserves_existing_holds(monkeypatch,first):
+    import base64,json,requests
+    from types import SimpleNamespace
+    state=initial_state();state['entries']['held']={'day':'2026-11-06','reserved':100,'actual':None,'usage':None}
+    good=SimpleNamespace(status_code=200,json=lambda:{'sha':'b'*40,'size':400,'encoding':'base64',
+        'content':base64.b64encode(json.dumps(state).encode()).decode()})
+    calls=[];waits=[]
+    def get(*a,**k):
+        calls.append(k)
+        if len(calls)==1:
+            if first=='timeout':raise requests.Timeout('secret provider details')
+            return SimpleNamespace(status_code=first,headers={})
+        return good
+    monkeypatch.setattr('market_radar_ai.agents.github_budget.requests.get',get)
+    monkeypatch.setattr('market_radar_ai.agents.github_budget.time.sleep',waits.append)
+    def forbidden(*a,**k):raise AssertionError('read recovery must never write')
+    monkeypatch.setattr('market_radar_ai.agents.github_budget.requests.put',forbidden)
+    loaded,sha=GitHubBudgetStore('secret').load()
+    assert loaded==state and sha=='b'*40 and len(calls)==2 and waits==[1]
+    assert all(c['allow_redirects'] is False and c['params']=={'ref':BRANCH} for c in calls)
+
+
+@pytest.mark.parametrize('code,headers,expected', [(401,{},1),(403,{},1),(404,{},1),(302,{},1),
+    (429,{'Retry-After':'60'},1),(403,{'Retry-After':'1'},3),(503,{},3)])
+def test_read_retry_bound_and_permanent_errors_are_fail_closed(monkeypatch,code,headers,expected):
+    from types import SimpleNamespace
+    calls=[]
+    def get(*a,**k):calls.append(1);return SimpleNamespace(status_code=code,headers=headers)
+    monkeypatch.setattr('market_radar_ai.agents.github_budget.requests.get',get)
+    monkeypatch.setattr('market_radar_ai.agents.github_budget.time.sleep',lambda _:None)
+    with pytest.raises(RuntimeError,match=f'http_{code}') as e:GitHubBudgetStore('SECRET').load()
+    assert len(calls)==expected and 'SECRET' not in str(e.value)
+
+
+def test_corrupt_successful_response_is_not_retried(monkeypatch):
+    from types import SimpleNamespace
+    calls=[]
+    def get(*a,**k):calls.append(1);return SimpleNamespace(status_code=200,json=lambda:{'encoding':'wrong'})
+    monkeypatch.setattr('market_radar_ai.agents.github_budget.requests.get',get)
+    with pytest.raises(RuntimeError,match='invalid_payload'):GitHubBudgetStore('secret').load()
+    assert len(calls)==1
