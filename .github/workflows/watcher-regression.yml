@@ -19,6 +19,15 @@ jobs:
         with:
           ref: 5f8619397e8f3ee7bd1ec74f793e844144f2d1c1
           persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: release-contract
+          persist-credentials: false
+          sparse-checkout: .github/workflows/scheduled-scanner.yml
+          sparse-checkout-cone-mode: false
+      - name: Verify the deployed scheduler contract beside the pinned runtime
+        run: cp release-contract/.github/workflows/scheduled-scanner.yml .github/workflows/scheduled-scanner.yml
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
