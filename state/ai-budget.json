@@ -4564,6 +4564,12 @@
         "response_id": "resp_007ba153ab3af704016af49b78de4c87d19400c958465f1f3f"
       }
     },
+    "paper-final-v1:8eb3c91d0ddfbebe72c0db0e1c7db42f18e4f1ec190cf941253158603e4c0b34:devils_advocate": {
+      "actual": null,
+      "day": "2026-11-11",
+      "reserved": 8447,
+      "usage": null
+    },
     "paper-final-v1:915ff37b9d310ef6fa7988b06bcdaa7db25b92b155fd086e8837272a6d42356c:opportunity_hunter": {
       "actual": 5465,
       "day": "2026-11-05",
