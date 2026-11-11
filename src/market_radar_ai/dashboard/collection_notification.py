@@ -7,6 +7,12 @@ from .collection_schedule import scheduled_scope
 from .delivery_ledger import DeliveryLedger, GitHubDeliveryStore
 
 
+class CollectionNoticeError(RuntimeError):
+    def __init__(self, code):
+        self.diagnostic_code = code
+        super().__init__('Collection Telegram delivery unconfirmed; do not retry ['+code+']')
+
+
 def notify(report, *, env, clock, ledger=None, session=None):
     if env.get('SEND_COLLECTION_TELEGRAM')!='true':return {'state':'disabled'}
     now=clock()
@@ -33,12 +39,37 @@ def notify(report, *, env, clock, ledger=None, session=None):
             lines.append(f"{market.title()}: {counts['current']}/{counts['attempted']} current; {counts['unusable_or_stale']} unavailable/stale.")
     lines+=['Status updates: at most one success and one failure notice per hour.',
             'https://pixel-perfect-replay-32614.lovable.app/scanner']
+    reason='telegram_transport_unconfirmed'
     try:
         response=(session or requests).post('https://api.telegram.org/bot'+token+'/sendMessage',
             json={'chat_id':chat,'text':'\n'.join(lines),'protect_content':True,'link_preview_options':{'is_disabled':True}},
             timeout=(10,20),allow_redirects=False)
+        reason='telegram_http_'+str(int(response.status_code))
         body=response.json()
         if response.status_code!=200 or body.get('ok') is not True or str(body['result']['chat']['id'])!=chat or type(body['result']['message_id']) is not int:raise ValueError()
+    except Exception:raise CollectionNoticeError(reason) from None
+    try:
         ledger.confirm(key)
-    except Exception:raise RuntimeError('Collection Telegram delivery unconfirmed; do not retry') from None
+    except (RuntimeError, ValueError, KeyError):
+        # Telegram acknowledged the message. Preserve the reservation and disclose
+        # the accounting gap; a failed acknowledgement write must never resend it.
+        return {'state':'telegram_collection_sent_confirmation_pending','category':category,
+                'diagnostic_code':'notification_ledger_confirmation_unavailable','model_calls':0}
     return {'state':'telegram_collection_status_confirmed','category':category,'model_calls':0}
+
+
+def operational_notice(report, *, env, clock):
+    """An optional status-message failure does not erase collection success."""
+    try:
+        receipt = notify(report, env=env, clock=clock)
+    except (RuntimeError, ValueError, KeyError) as exc:
+        code = getattr(exc, 'diagnostic_code', 'notification_ledger_or_configuration_unavailable')
+        receipt = {'state':'collection_notice_unconfirmed','diagnostic_code':code,
+                   'retry_allowed':False,'model_calls':0}
+    if receipt['state'] in ('collection_notice_unconfirmed','telegram_collection_sent_confirmation_pending'):
+        from pathlib import Path
+        message='Optional collection status message needs attention: '+receipt['diagnostic_code']+'. No automatic resend.'
+        print('::warning::'+message)
+        if env.get('GITHUB_STEP_SUMMARY'):
+            with Path(env['GITHUB_STEP_SUMMARY']).open('a') as f:f.write('\n- '+message+'\n')
+    return receipt

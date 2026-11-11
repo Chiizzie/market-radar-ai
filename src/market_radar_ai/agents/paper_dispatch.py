@@ -38,7 +38,8 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
         return status
     fx=YahooFxProvider().fetch('USD',now=clock())
     client=OpenAIPilot(api_key=env.get('OPENAI_API_KEY'),ledger=GitHubSpendingLedger(GitHubBudgetStore(env.get('GH_BUDGET_TOKEN'))),
-                      eur_per_usd=fx.eur_per_unit,enabled=True,count_input_tokens=True)
+                      eur_per_usd=fx.eur_per_unit,enabled=True,count_input_tokens=True,
+                      receipt_directory=root/'provider-receipts')
     def refresh(symbol):
         from ..dashboard.scheduled_collection import run_cycle
         clean={**env,'SCANNER_COLLECTION_MODE':'scheduled','ENABLE_STOCK_DISCOVERY':'true',
@@ -97,6 +98,9 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
                             comparison=comparison,parallel_specialists=env.get('PARALLEL_PAPER_SPECIALISTS')=='true')
     finally:
         if root.exists():
+            from .settlement_receipts import reconcile_receipts
+            recovery=reconcile_receipts(root/'provider-receipts',client.ledger)
+            (root/'settlement-recovery.json').write_text(json.dumps(recovery,indent=2)+'\n')
             (root/'qualification-inputs.json').write_text(json.dumps(document,indent=2)+'\n')
             (root/'qualification-refresh.json').write_text(json.dumps({
                 'initial':initial_refresh,'post_replay':locals().get('post_replay_refresh'),

@@ -288,7 +288,7 @@ def main():
     if not collection_window(now) and os.environ.get('GITHUB_EVENT_NAME') == 'schedule':
         print(json.dumps({'state': 'outside_collection_window', 'model_calls': 0}))
         return 0
-    from .collection_notification import notify
+    from .collection_notification import operational_notice as notify
     try:
         result = run_cycle(env=os.environ, output=args.output, cache_path=args.cache)
     except Exception:

@@ -9,7 +9,7 @@ import json
 import sqlite3
 import threading
 import time
-from .watcher_diagnostics import record_failure
+from .watcher_diagnostics import record_failure, record_quote_recovery
 from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -313,6 +313,10 @@ class LiveComparison:
             self.health['quotes_received'] += len(events)
             self.health['error_polls'] += bool(failures)
             for failure in failures: record_failure(self.health, failure, received)
+            for event in events:
+                candidate=json.loads(event['payload_json'])['candidate_id']
+                symbol=candidate.split(':',1)[1]
+                record_quote_recovery(self.health,symbol,received)
             self.health['last_success_at'] = received.isoformat()
             return self.health
 

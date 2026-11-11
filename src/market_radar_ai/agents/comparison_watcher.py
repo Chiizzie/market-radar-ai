@@ -6,7 +6,7 @@ from pathlib import Path
 from .comparison_live import EventClient, LiveComparison
 from .paper_observer import ReferenceObserver
 from .paper_watcher import allowed
-from .watcher_diagnostics import record_failure
+from .watcher_diagnostics import record_failure, recovered_quote_gaps
 
 
 def run(*, env, output, duration=330, interval=5, clock=lambda: datetime.now(timezone.utc),
@@ -49,6 +49,11 @@ def run(*, env, output, duration=330, interval=5, clock=lambda: datetime.now(tim
         health['error_polls']+=1; record_failure(health,exc,clock())
     health['completed_at']=clock().isoformat()
     health['state']='completed_with_gaps' if health['error_polls'] else 'completed' if comparison else 'outside_window'
+    health['critical_failure']=bool(health['error_polls'])
+    if recovered_quote_gaps(health):
+        health['state']='completed_with_recovered_quote_gaps'
+        health['critical_failure']=False
+        health['requires_attention']=True
     (output/'worker-health.json').write_text(json.dumps(health,indent=2)+'\n')
     return health
 
@@ -59,6 +64,12 @@ def main():
     p.add_argument('--output',type=Path,default=Path('artifacts/paper-watcher/comparison'))
     p.add_argument('--duration',type=int,default=330)
     args=p.parse_args(); result=run(env=os.environ,output=args.output,duration=args.duration)
-    print(json.dumps(result)); return int(result['error_polls']>0)
+    print(json.dumps(result))
+    if result.get('requires_attention'):
+        print('::warning::Comparison completed with recovered quote gaps; gaps remain recorded in worker-health.json.')
+        if os.environ.get('GITHUB_STEP_SUMMARY'):
+            with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+                f.write('\n- Comparison had recovered quote gaps: '+json.dumps(result['comparison']['quote_gap_counts'])+'. Historical gaps remain recorded.\n')
+    return int(result['critical_failure'])
 
 if __name__=='__main__': raise SystemExit(main())

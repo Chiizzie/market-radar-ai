@@ -8,7 +8,7 @@ from .paper_team import Frozen
 from .roles import AgentRole
 from .candidate_packages import digest, canonical
 from .setup_checks import validate_paper_plan
-from .paper_review_prompts import instruction, VERSION as REVIEW_POLICY_VERSION
+from .paper_review_prompts import instruction, VERSION as REVIEW_POLICY_VERSION, PROMPT_REVISION
 from .review_policy import team_approval_allowed
 
 STAGES = [r.value for r in AgentRole]+['debate','conclusion']
@@ -86,7 +86,8 @@ def build_packets(document, feed, *, now):
     for row in report['candidates']:
         gate=paper_gate(row,now=now)
         if not gate['eligible_for_paper_review']:continue
-        body={'schema_version':'paper-review-packet-v1','review_policy_version':REVIEW_POLICY_VERSION,'assembled_at':now.isoformat(),
+        body={'schema_version':'paper-review-packet-v1','review_policy_version':REVIEW_POLICY_VERSION,
+              'prompt_revision':PROMPT_REVISION,'assembled_at':now.isoformat(),
               'review_deadline':min(now+timedelta(seconds=180),datetime.fromisoformat(row['conditional_paper_plan']['exit_by'])).isoformat(),
               'candidate_id':row['candidate_id'],'symbol':row['symbol'],
               'plan':row['conditional_paper_plan'],'technical_checks':row['technical_checks'],
@@ -305,6 +306,17 @@ def choose_unreviewed_packet(packets, entries, *, now):
     skipped=[]
     for packet in packets:
         body=packet['packet'];candidate=body['candidate_id']
+        # Spending selection only: the existing baseline enrolment and historical
+        # packet validation are unchanged. The entry watcher already enforces20bps.
+        try:
+            q=body['reference_checks'];bid=Decimal(q['indicative_bid_eur']);ask=Decimal(q['indicative_ask_eur'])
+            if not (bid.is_finite() and ask.is_finite() and 0<bid<=ask):raise ValueError()
+            if (ask-bid)/((ask+bid)/2)*10000>20:
+                skipped.append({'candidate_id':candidate,'reason':'reference_spread_exceeds_20bps_before_paid_review'})
+                continue
+        except (ValueError, KeyError, TypeError, ArithmeticError):
+            skipped.append({'candidate_id':candidate,'reason':'reference_quote_invalid_before_paid_review'})
+            continue
         attempt=paper_attempt_id(packet,now=now)
         if attempt in entries:
             skipped.append({'candidate_id':candidate,'reason':'paper_setup_already_attempted'})
@@ -363,9 +375,11 @@ def run_pipeline(document, feed, *, client, root, refresh, deliver, clock, enabl
     packet,attempt,cooldown,skipped=choose_unreviewed_packet(batch['packets'],state['entries'],now=now)
     save('review-selection.json',{'skipped':skipped,
          'selected_candidate_id':packet['packet']['candidate_id'] if packet else None,
+         'spending_selection_version':'pre-review-spread-v1','prompt_revision':PROMPT_REVISION,
          'cooldown_seconds':PAPER_REVIEW_COOLDOWN_SECONDS,'model_calls':0})
     if packet is None:
-        reason='paper_review_cooldown' if any(s['reason']=='paper_review_cooldown' for s in skipped) else 'paper_setup_already_attempted'
+        reason=('pre_review_quote_deferred' if any('before_paid_review' in s['reason'] for s in skipped)
+                else 'paper_review_cooldown' if any(s['reason']=='paper_review_cooldown' for s in skipped) else 'paper_setup_already_attempted')
         result={'state':reason,'model_calls':0,'trade_authorized':False,'skipped':skipped}
         save('status.json',result);return result
     body=packet['packet']

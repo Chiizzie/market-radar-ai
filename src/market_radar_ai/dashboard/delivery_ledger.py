@@ -6,7 +6,9 @@ because its acknowledgement or settlement was lost.
 import base64
 import json
 import re
+import time
 import requests
+from ..github_state import ConfirmedWrites, LedgerConflict, StaleLedgerRead, fresh_params
 
 BRANCH = 'state/research-notifications'
 PATH = 'state/research-notifications.json'
@@ -37,11 +39,23 @@ class GitHubDeliveryStore:
         self.session = session or requests
         self.headers = {'Authorization': 'Bearer ' + token,
                         'Accept': 'application/vnd.github+json',
-                        'X-GitHub-Api-Version': '2022-11-28'}
+                        'X-GitHub-Api-Version': '2022-11-28', 'Cache-Control':'no-cache'}
+        self._confirmed = ConfirmedWrites()
 
     def load(self):
+        cached = self._confirmed.take()
+        if cached is not None: return cached
+        for attempt in range(3):
+            try:
+                return self._load()
+            except StaleLedgerRead:
+                if attempt == 2:
+                    raise RuntimeError('Delivery ledger stale read; sending disabled') from None
+                time.sleep(.2 * (attempt + 1))
+
+    def _load(self):
         try:
-            response = self.session.get(URL, params={'ref': BRANCH},
+            response = self.session.get(URL, params=fresh_params(BRANCH),
                 headers=self.headers, timeout=(10, 30), allow_redirects=False)
             if response.status_code != 200:
                 raise ValueError()
@@ -51,7 +65,11 @@ class GitHubDeliveryStore:
             sha = data['sha']
             if not re.fullmatch(r'[a-f0-9]{40}', sha):
                 raise ValueError()
-            return validate(json.loads(base64.b64decode(data['content']))), sha
+            state = validate(json.loads(base64.b64decode(data['content'])))
+            self._confirmed.accept(state)
+            return state, sha
+        except StaleLedgerRead:
+            raise
         except Exception:
             raise RuntimeError('Delivery ledger unavailable; sending disabled') from None
 
@@ -65,10 +83,13 @@ class GitHubDeliveryStore:
                 json={'branch': BRANCH, 'sha': expected_sha,
                       'message': 'Record research notification delivery state',
                       'content': base64.b64encode(raw).decode()})
-            if response.status_code != 200:
-                raise ValueError()
         except Exception:
             raise RuntimeError('Delivery ledger write unconfirmed; do not send or retry') from None
+        if response.status_code == 409:
+            raise LedgerConflict('Delivery ledger conflict [http_409]; do not send or retry without fresh state')
+        if response.status_code != 200:
+            raise RuntimeError(f'Delivery ledger write unconfirmed [http_{int(response.status_code)}]; do not send or retry')
+        self._confirmed.remember(state, raw)
 
 
 class DeliveryLedger:
@@ -76,6 +97,13 @@ class DeliveryLedger:
         self.store = store
 
     def reserve(self, key):
+        for attempt in range(3):
+            try: return self._reserve(key)
+            except LedgerConflict:
+                if attempt == 2: raise
+                time.sleep(.2 * (attempt + 1))
+
+    def _reserve(self, key):
         validate({'version': 1, 'entries': {key: {'state': 'reserved'}}})
         state, sha = self.store.load()
         validate(state)
@@ -85,6 +113,13 @@ class DeliveryLedger:
         self.store.save(state, sha)
 
     def confirm(self, key):
+        for attempt in range(3):
+            try: return self._confirm(key)
+            except LedgerConflict:
+                if attempt == 2: raise
+                time.sleep(.2 * (attempt + 1))
+
+    def _confirm(self, key):
         state, sha = self.store.load()
         validate(state)
         if key not in state['entries']:

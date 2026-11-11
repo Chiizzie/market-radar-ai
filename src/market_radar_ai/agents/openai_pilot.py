@@ -57,7 +57,7 @@ class PilotReply:
 
 
 class OpenAIPilot:
-    def __init__(self, *, api_key, ledger, eur_per_usd, enabled=False, count_input_tokens=False):
+    def __init__(self, *, api_key, ledger, eur_per_usd, enabled=False, count_input_tokens=False, receipt_directory=None):
         if enabled is not True:
             raise ValueError('Paid pilot is disabled')
         if not isinstance(api_key, str) or not api_key.strip():
@@ -72,6 +72,7 @@ class OpenAIPilot:
             raise ValueError('Token counting flag must be boolean')
         self.count_input_tokens = count_input_tokens
         self.last_counted_input_tokens = None
+        self.receipt_directory = receipt_directory
 
     def fork(self):
         """Create isolated request accounting while retaining the same budget.
@@ -80,7 +81,8 @@ class OpenAIPilot:
         ledger serializes its own mutations; provider requests remain parallel.
         """
         return OpenAIPilot(api_key=self._key, ledger=self.ledger, eur_per_usd=self.rate,
-                           enabled=True, count_input_tokens=self.count_input_tokens)
+                           enabled=True, count_input_tokens=self.count_input_tokens,
+                           receipt_directory=self.receipt_directory)
 
     def _input_reservation(self, payload):
         if not self.count_input_tokens:
@@ -148,13 +150,18 @@ class OpenAIPilot:
         except (KeyError, TypeError, ValueError, AttributeError):
             raise RuntimeError('Unknown usage; reservation retained') from None
         estimated = self._eur(usd)
-        self.ledger.settle(request_id, estimated, usage={
+        usage_record={
             'response_id':body.get('id'), 'model':body.get('model'),
             'input_tokens':body['usage']['input_tokens'],
             'output_tokens':body['usage']['output_tokens'],
             'cached_input_tokens':body['usage'].get('input_tokens_details', {}).get('cached_tokens', 0),
             'cost_usd':str(usd), 'eur_per_usd':str(self.rate),
-            'pricing_checked':'2026-11-02'})
+            'pricing_checked':'2026-11-02'}
+        if self.receipt_directory is not None:
+            from .settlement_receipts import save_receipt
+            save_receipt(self.receipt_directory, request_id=request_id, now=now,
+                         actual_microeur=estimated, usage=usage_record, response=body)
+        self.ledger.settle(request_id, estimated, usage=usage_record)
         if body.get('status') != 'completed':
             raise RuntimeError('Incomplete or unexpected model response; usage settled')
         if self.count_input_tokens and body['usage']['input_tokens'] != self.last_counted_input_tokens:

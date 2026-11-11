@@ -1,5 +1,6 @@
 """Bounded diagnostics: never copy provider bodies, URLs or credentials."""
 import re
+from datetime import datetime
 
 QUOTE_REASONS = {'missing_quote','stale_quote','future_quote','crossed_quote',
                  'nonpositive_or_nonfinite_quote','wrong_currency','malformed_quote'}
@@ -31,3 +32,32 @@ def record_failure(health, failure, now):
             recent=health.setdefault('recent_quote_failures',[])
             recent.append(detail)
             del recent[:-20]
+            if parts[2] in ('stale_quote','missing_quote'):
+                gaps=health.setdefault('quote_gap_counts',{})
+                gaps[parts[1]]=gaps.get(parts[1],0)+1
+                health.setdefault('unrecovered_quote_gaps',{}).setdefault(parts[1],now.isoformat())
+
+
+def record_quote_recovery(health, symbol, now):
+    pending=health.get('unrecovered_quote_gaps',{})
+    if symbol in pending:
+        elapsed=(now-datetime.fromisoformat(pending[symbol])).total_seconds()
+        if elapsed < 0: raise ValueError('quote_recovery_before_gap')
+        health['maximum_quote_gap_seconds']=max(health.get('maximum_quote_gap_seconds',0),elapsed)
+        health.setdefault('recovered_quote_gap_symbols',{})[symbol]=now.isoformat()
+        del pending[symbol]
+
+
+def recovered_quote_gaps(health):
+    """Only small, recovered source-data gaps may be warnings, never an outage."""
+    comparison=health.get('comparison',{})
+    counts=comparison.get('failure_counts',{})
+    soft=sum(comparison.get('quote_gap_counts',{}).values())
+    return bool(soft and not health.get('failure_counts')
+        and set(counts)=={'stock_quote_unavailable'} and counts['stock_quote_unavailable']==soft
+        and not comparison.get('unrecovered_quote_gaps')
+        and health.get('quotes_received',0)>0 and health.get('polls',0)>0
+        and health['error_polls']/health['polls']<=.2
+        and comparison.get('capacity_deferred',0)==0
+        and comparison.get('maximum_quote_gap_seconds',0)<=30
+        and max(health.get('maximum_poll_gap_seconds',0),comparison.get('maximum_poll_gap_seconds',0))<=15)

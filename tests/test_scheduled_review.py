@@ -53,7 +53,8 @@ def test_lost_marker_reply_blocks_generation_and_retry():
     assert next(iter(s.state['entries'].values()))['actual'] is None
 
 def test_budget_headroom_defers_without_reset():
-    s=Store(); s.state['entries']['old']={'day':'2026-11-03','reserved':4900000,'actual':4900000,'usage':None}
+    s=Store();spent=s.state['limits_microeur']['lifetime']-100000
+    s.state['entries']['old']={'day':'2026-10-03','reserved':spent,'actual':spent,'usage':None}
     assert not claim_review(s,'stocks',NOW)
     assert s.version==0
 
