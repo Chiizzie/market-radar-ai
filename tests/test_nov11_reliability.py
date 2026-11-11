@@ -246,3 +246,23 @@ def test_interrupted_review_recovers_cost_into_comparison_without_authorizing_tr
     assert args[0]['packet_id']=='audited-original' and args[1]['entries']['paid']['actual']==959
     assert [x[0] for x in comparison.method_calls]==['sync','reconcile_cost','close']
     assert not (tmp_path/'run'/'decision.json').exists()
+
+
+def test_approved_watcher_records_recovery_without_erasing_missing_quote_history(tmp_path,monkeypatch):
+    from market_radar_ai.agents.paper_watcher import run
+    from market_radar_ai.agents import github_paper_tracking as journal
+    from test_paper_watcher import Clock,ENV,approved,observation
+    from test_github_paper_tracking import Session
+    from decimal import Decimal
+    d=approved(monkeypatch);session=Session();clock=Clock()
+    journal.update('offline',now=clock.now(),decision=d,session=session)
+    observer=Mock()
+    def fetch(decisions):
+        if clock.elapsed==0:return [],['stock_quote_unavailable:TEST:stale_quote']
+        return [observation(d,clock.now(),Decimal(d['plan']['entry_eur'])-Decimal('.01'))],[]
+    observer.fetch.side_effect=fetch
+    health=run(env=ENV,output=tmp_path,duration=15,clock=clock.now,
+        monotonic=lambda:clock.elapsed,sleep=clock.sleep,observer=observer,session=session)
+    assert health['error_polls']==1 and health['state']=='completed_with_gaps'
+    assert health['unrecovered_quote_gaps']=={} and health['maximum_quote_gap_seconds']==5
+    assert health['quote_gap_counts']=={'TEST':1} and 'TEST' in health['recovered_quote_gap_symbols']

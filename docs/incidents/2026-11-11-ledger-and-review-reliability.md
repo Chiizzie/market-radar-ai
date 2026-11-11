@@ -25,7 +25,7 @@ The new prompt revision is `paper-scope-clarification-20261111-v1`, recorded ins
 
 ## Validation before deployment
 
-- 405 relevant backend tests passed across the accounting, notification, paper-review, conditional-entry, watcher, comparison, replay and readiness paths, including 29 new failure-case and quote-quality tests. A lifetime-headroom fixture was made independent of the old EUR 5 cap. Interrupted-review receipt recovery is also checked to append corrected comparison costs without creating a decision.
+- 406 relevant backend tests passed across the accounting, notification, paper-review, conditional-entry, watcher, comparison, replay and readiness paths, including 30 new failure-case and quote-quality tests. A lifetime-headroom fixture was made independent of the old EUR 5 cap. Interrupted-review receipt recovery is also checked to append corrected comparison costs without creating a decision.
 - Replayed the production archive from run 43064257889: 26,165 immutable events, 98 cohorts, as of 17:03:32. Every event identity and historical packet validated; the reconstructed execution report exactly matched the published report. No model calls.
 - A narrowly scoped live workflow verifies one clearly identified zero-cost budget marker (`storage-consistency-check-20261111-v1`), settlement, fresh read, and preservation of existing entries/limits. It receives no model or Telegram credentials.
 
@@ -52,6 +52,9 @@ Dashboard commit `40ceab430c0d9e2c1ca4f9fa21dead174de895e2` explicitly allows th
 - [SLM recovery](https://github.com/Chiizzie/market-radar-ai/actions/runs/43069409824) succeeded. The restored archive hash is `8fb0931977f08e53c21ba60ad20592c7969916d53cb771bca5390769422d97cf`.
 - Both database rows were read back and matched their original packet identities and completion times. Recovery made zero model calls, placed no orders and sent no expired Telegram watches. It did not replay an entire scanner or change any original evidence timestamp.
 - SLM's paper entry was observed at 17:31:01.257873, before its 17:31:55 expiry. No real-account fill is implied.
+- Normal dashboard ingestion subsequently succeeded for MTCH's 17:33:37 and MOS's 17:38:33 approvals, without recovery. The live scanner uses runtime `dc1ab74f830ecb926f69475e8e7740d3746f29ec` plus the later diagnostics-only recovery-marker fix; execution-report quality diagnostics use `3f62f228e2197e20c3348a9b9155b503f809df34`.
+
+The 17:30 run's review succeeded, but both quote watchers reported stale SLM observations around 17:35:37–17:36:02. The comparison worker recovered that source gap; its initial 16.16-second polling gap still exceeded the 15-second warning-only limit, so failure remained visible. Approved-trade watcher gap histories also remain visible even after recovery. Its recovery metadata now clears only after a validated same-symbol observation passes journal processing, without erasing error counts or changing severity. This is not an error-free feed claim.
 
 ## Material remaining limitation: reference-quote execution quality
 
