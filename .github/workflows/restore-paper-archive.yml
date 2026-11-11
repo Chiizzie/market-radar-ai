@@ -1,0 +1,63 @@
+name: Restore saved paper archive
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/restore-paper-archive.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: market-radar-ai-restore-nov11-paper-archive
+  cancel-in-progress: false
+jobs:
+  restore:
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dc1ab74f830ecb926f69475e8e7740d3746f29ec
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e .
+      - uses: actions/download-artifact@v4
+        with:
+          name: scheduled-decision-43066344862
+          run-id: 43066344862
+          github-token: ${{ github.token }}
+          path: recovery
+      - name: Restore exact archived decision through authenticated validation
+        env:
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+        run: |
+          python - <<'PY'
+          import hashlib, hmac, json, os, time
+          from pathlib import Path
+          import requests
+          from market_radar_ai.agents.candidate_packages import canonical
+          from market_radar_ai.dashboard.candidate_delivery import ENDPOINT
+          assert not any(os.environ.get(k) for k in ('OPENAI_API_KEY','OPEN_API_KEY','TELEGRAM_BOT_TOKEN','GH_BUDGET_TOKEN'))
+          archive=json.loads(Path('recovery/decision/dashboard-archive.json').read_text())
+          expected='78f9dca960d9141e7d4956ff19462109dcf65f3b1325a3425d88a97145349ae7'
+          assert archive['packet_id']==hashlib.sha256(archive['packet_json'].encode()).hexdigest()==expected
+          assert archive['trade_authorized'] is False and archive['decision']['live_orders_enabled'] is False
+          body=(canonical(archive)+'\n').encode(); identity=hashlib.sha256(body).hexdigest()
+          stamp=str(int(time.time())); secret=os.environ['REVIEW_INGEST_SECRET']
+          signature=hmac.new(secret.encode(),stamp.encode()+b'.'+body,hashlib.sha256).hexdigest()
+          try:
+              response=requests.post(ENDPOINT,data=body,headers={'Content-Type':'application/json; charset=utf-8',
+                  'X-Timestamp':stamp,'X-Signature':'sha256='+signature},timeout=(10,30),allow_redirects=False)
+              result=response.json()
+          except Exception:
+              raise SystemExit('Archive restore unconfirmed; inspect stored record before retry') from None
+          ok=response.status_code==200 and result.get('ok') is True and result.get('archive_id')==identity
+          duplicate=response.status_code==409 and result.get('error')=='Already stored'
+          print(json.dumps({'archive_id':identity,'http_status':response.status_code,
+              'state':'restored' if ok else 'already_stored_verify_hash' if duplicate else 'failed',
+              'model_calls':0,'messages_sent':0,'trade_authorized':False}))
+          if not(ok or duplicate):raise SystemExit('Archive restore rejected; original evidence preserved')
+          PY
