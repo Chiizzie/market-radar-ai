@@ -28,11 +28,19 @@ def run(*, env, output, duration=330, interval=5, clock=lambda: datetime.now(tim
             # Restore immutable history before measuring the steady quote cadence.
             # Startup remains separately timed; it never counts as a quote or a
             # recovered data gap, and cannot consume the whole worker window.
-            comparison.sync()
-            health['startup_sync_seconds']=monotonic()-start
+            health['startup_state']='restoring'
+            try:
+                comparison.sync()
+            except (RuntimeError,ValueError,KeyError,TypeError):
+                health['startup_state']='failed'
+                raise
+            finally:
+                health['startup_sync_seconds']=monotonic()-start
+                health['comparison']=dict(comparison.health)
             health['startup_state']='slow' if health['startup_sync_seconds']>15 else 'ready'
             if health['startup_sync_seconds']>15: health['requires_attention']=True
-            if health['startup_sync_seconds']>60 or monotonic()>=end:
+            if monotonic()>=end:
+                health['startup_state']='window_exhausted'
                 raise RuntimeError('comparison_startup_deadline_exceeded')
         while comparison is not None and monotonic()<end and allowed(env,clock()):
             tick=monotonic()
