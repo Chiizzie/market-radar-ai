@@ -6,7 +6,7 @@ import json
 import time
 from . import github_paper_tracking as journal
 from .paper_observer import ReferenceObserver
-from .watcher_diagnostics import record_failure, record_quote_recovery
+from .watcher_diagnostics import record_failure, record_quote_recovery, recovered_quote_gaps
 from ..dashboard.collection_schedule import scheduled_scope
 from ..dashboard.paper_lifecycle_delivery import notify
 
@@ -88,6 +88,11 @@ def run(*, env, output, duration=330, interval=5, clock=lambda:datetime.now(time
         if remaining>0: sleep(min(remaining,max(0.1,interval-(monotonic()-tick))))
     status['state']='outside_window' if status['polls']==0 and status['error_polls']==0 else 'completed_with_gaps' if status['error_polls'] else 'completed'
     status['completed_at']=clock().isoformat()
+    status['critical_failure']=bool(status['error_polls'] or status['notification_unconfirmed'])
+    if recovered_quote_gaps(status):
+        status['state']='completed_with_recovered_quote_gaps'
+        status['critical_failure']=False
+        status['requires_attention']=True
     (output/'watcher-health.json').write_text(json.dumps(status,indent=2)+'\n')
     return status
 
@@ -100,7 +105,13 @@ def main():
     args=p.parse_args()
     result=run(env=os.environ,output=args.output,duration=args.duration)
     print(json.dumps(result))
-    return int(result['error_polls']>0 or result['notification_unconfirmed']>0)
+    if result.get('requires_attention'):
+        print('::warning::Paper watcher recovered brief quote gaps; missing observations remain recorded in watcher-health.json.')
+        if os.environ.get('GITHUB_STEP_SUMMARY'):
+            with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+                f.write('\n- Paper watcher recovered quote gaps: '+json.dumps(result['quote_gap_counts'])
+                    +'. No missing price, entry or exit was invented.\n')
+    return int(result['critical_failure'])
 
 
 if __name__=='__main__': raise SystemExit(main())

@@ -6,6 +6,7 @@ QUOTE_REASONS = {'missing_quote','stale_quote','future_quote','crossed_quote',
                  'nonpositive_or_nonfinite_quote','wrong_currency','malformed_quote'}
 
 CODES = {'paper_journal_rate_limited', 'paper_journal_unavailable',
+         'comparison_startup_deadline_exceeded',
          'stock_quote_unavailable', 'stock_reference_observation_unavailable',
          'crypto_reference_observation_unavailable', 'stale_comparison_quote',
          'stock_fx_unavailable', 'stock_clock_unavailable', 'stock_quotes_unavailable',
@@ -50,14 +51,15 @@ def record_quote_recovery(health, symbol, now):
 
 def recovered_quote_gaps(health):
     """Only small, recovered source-data gaps may be warnings, never an outage."""
-    comparison=health.get('comparison',{})
+    comparison=health.get('comparison',health)
     counts=comparison.get('failure_counts',{})
     soft=sum(comparison.get('quote_gap_counts',{}).values())
-    return bool(soft and not health.get('failure_counts')
+    return bool(soft and (comparison is health or not health.get('failure_counts'))
         and set(counts)=={'stock_quote_unavailable'} and counts['stock_quote_unavailable']==soft
         and not comparison.get('unrecovered_quote_gaps')
         and health.get('quotes_received',0)>0 and health.get('polls',0)>0
         and health['error_polls']/health['polls']<=.2
+        and not health.get('notification_unconfirmed')
         and comparison.get('capacity_deferred',0)==0
         and comparison.get('maximum_quote_gap_seconds',0)<=30
         and max(health.get('maximum_poll_gap_seconds',0),comparison.get('maximum_poll_gap_seconds',0))<=15)

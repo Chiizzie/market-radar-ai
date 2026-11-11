@@ -1,0 +1,38 @@
+name: Watcher and quote-policy regression checks
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/watcher-regression.yml'
+      - 'src/market_radar_ai/agents/observation_policy.py'
+      - 'tests/test_quote_policy_rollout.py'
+      - 'tests/test_watcher_startup_recovery.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 5f8619397e8f3ee7bd1ec74f793e844144f2d1c1
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[dev]'
+      - name: Check watcher timing and both immutable comparison policies offline
+        env:
+          EXECUTION_SOURCE_VERSION: legacy
+          PYTHONPATH: src:tests
+        run: >-
+          python -m pytest -q
+          tests/test_watcher_reliability.py tests/test_nov11_reliability.py
+          tests/test_paper_watcher.py tests/test_paper_tracking.py tests/test_paper_outcomes.py
+          tests/test_paper_comparison.py tests/test_comparison_live.py tests/test_comparison_policy_v3.py
+          tests/test_conditional_policy_v3.py tests/test_execution_research.py
+          tests/test_execution_source_binding.py tests/test_trade_evaluation.py
+          tests/test_paper_lifecycle_delivery.py tests/test_quote_policy_rollout.py
+          tests/test_watcher_startup_recovery.py tests/test_comparison_startup.py tests/test_fill_quote_quality.py

@@ -37,12 +37,16 @@ jobs:
           allowed=event in ('push','workflow_dispatch') or (d.weekday()<5 and 8<=d.hour<23)
           if event=='schedule': allowed=allowed and (d.hour==8 or n.hour==9)
           with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('run='+str(allowed).lower()+'\n')
+          # Start a separate forward series at the next session; do not mix or
+          # rewrite the original reference-quote outcomes.
+          with open(os.environ['GITHUB_ENV'],'a') as f:
+              f.write('EXECUTION_SOURCE_VERSION='+('guarded-v2' if d.date().isoformat()>='2026-11-12' else 'legacy')+'\n')
           PY
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
           # Publish the current conditional-chief experiment; historical events stay unchanged.
-          ref: 3f62f228e2197e20c3348a9b9155b503f809df34
+          ref: 5f8619397e8f3ee7bd1ec74f793e844144f2d1c1
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'

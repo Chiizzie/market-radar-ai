@@ -81,6 +81,7 @@ def paper_gate(row, *, now):
 
 def build_packets(document, feed, *, now):
     from .qualification import qualify
+    from .observation_policy import policy_for_day
     report=qualify(document,feed,now=now)
     packets=[]
     for row in report['candidates']:
@@ -94,6 +95,8 @@ def build_packets(document, feed, *, now):
               'reference_checks':row['reference_checks'],
               'sources':row['review_sources'],'source_ids':list(row['review_sources']),
               'assumptions':gate['assumptions'],'live_trade_authorized':False}
+        policy=policy_for_day(now.date())
+        if policy is not None:body['quote_observation_policy']=policy
         packets.append({'packet_id':digest(body),'packet':body})
     return {'packets':packets,'qualification':report,'model_calls':0,'trade_authorized':False}
 
@@ -146,6 +149,10 @@ def review(packet, document, feed, ask, *, clock, parallel_specialists=False):
 def finalize(packet, audit, fresh_document, fresh_feed, *, now):
     """Rebuild fresh checks after AI; an old quote can never authorize a paper entry."""
     body=packet['packet'];blocks=[]
+    from .observation_policy import validate_policy
+    observation_policy=validate_policy(body.get('quote_observation_policy'))
+    if observation_policy and body.get('review_policy_version')!=REVIEW_POLICY_VERSION:
+        raise ValueError('quote_policy_requires_current_review_policy')
     if digest(body)!=packet['packet_id'] or audit['packet_id']!=packet['packet_id']:
         raise ValueError('paper_decision_identity')
     reports=[VerdictReview.model_validate(r) for r in audit['reviews']]
@@ -169,6 +176,7 @@ def finalize(packet, audit, fresh_document, fresh_feed, *, now):
         plan,fresh_blocks=revalidate(body,fresh_document,fresh_feed,now=now)
         blocks.extend(fresh_blocks)
         return {'schema_version':'paper-final-decision-v1','review_policy_version':REVIEW_POLICY_VERSION,'candidate_id':body['candidate_id'],
+            **({'quote_observation_policy':observation_policy} if observation_policy else {}),
             'packet_id':packet['packet_id'],'evaluated_at':now.isoformat(),
             'verdict':'PAPER_WATCH_FOR_ENTRY' if not blocks else 'NO_ACTION',
             'paper_only':True,'trade_authorized':False,'live_orders_enabled':False,

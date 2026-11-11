@@ -14,6 +14,7 @@ from .paper_team import PaperPlan
 from .paper_verdict import STAGES, VerdictReview, paper_attempt_id, paper_gate
 from .setup_checks import validate_paper_plan
 from .review_policy import team_approval_allowed
+from .observation_policy import GUARDED, policy_for_day, validate_policy
 
 PROTOCOL = {
     'version': 'paper-comparison-v1',
@@ -31,6 +32,12 @@ PROTOCOL = {
     'prices': 'reference_venue_only',
     'costs': 'fixed_plan_assumptions_plus_separate_recorded_AI_cost',
 }
+GUARDED_PROTOCOL = {**PROTOCOL, 'version': 'paper-comparison-v2',
+                    'quote_observation_policy': GUARDED}
+
+
+def protocol_for_day(day):
+    return GUARDED_PROTOCOL if policy_for_day(day)==GUARDED else PROTOCOL
 
 
 def aware(value):
@@ -42,6 +49,9 @@ def aware(value):
 
 def validate_packet(packet, now):
     body = packet['packet']
+    validate_policy(body.get('quote_observation_policy'))
+    if body.get('quote_observation_policy') and body.get('review_policy_version')!=PROTOCOL['review_policy_version']:
+        raise ValueError('quote_policy_requires_current_review_policy')
     if (digest(body) != packet['packet_id'] or body['schema_version'] != 'paper-review-packet-v1'
             or body['live_trade_authorized'] is not False
             or body['candidate_id'] not in ('stocks:' + body['symbol'], 'crypto:' + body['symbol'])
@@ -62,10 +72,13 @@ def validate_packet(packet, now):
 
 def cohort_snapshot(packets, *, now):
     """Persist before selection/model access; this is not observation coverage."""
+    protocol=protocol_for_day(aware(now).date())
     for packet in packets:
-        validate_packet(packet, now)
+        body=validate_packet(packet, now)
+        if body.get('quote_observation_policy')!=protocol.get('quote_observation_policy'):
+            raise ValueError('comparison_observation_policy_mismatch')
     body = {'schema_version': 'paper-comparison-cohort-v1', 'recorded_at': aware(now).isoformat(),
-            'protocol': PROTOCOL, 'packets': packets, 'trade_authorized': False,
+            'protocol': protocol, 'packets': packets, 'trade_authorized': False,
             'observations_started': False}
     return json.loads(canonical({**body, 'cohort_sha256': digest(body)}))
 
@@ -77,7 +90,7 @@ def _plan(value):
                      invalidation=value['invalidation'], exit_by=value['exit_by'])
 
 
-def _outcome(plan, observations, *, start, now):
+def _outcome(plan, observations, *, start, now, quote_observation_policy=None):
     # Receipt is the earliest time the observer could act. Preserve the exchange
     # time separately; a late-received quote cannot backdate an entry or exit.
     quotes = [Quote(observed_at=x['received_at'], bid=x['quote']['bid'], ask=x['quote']['ask'])
@@ -86,11 +99,12 @@ def _outcome(plan, observations, *, start, now):
     result = replay_long(_plan(plan), quotes, decision_at=start,
                          entry_expires_at=aware(plan['expires_at']),
                          entry_mode='breakout', exit_window_seconds=30,
-                         maximum_entry_spread_bps=Decimal('20'),maximum_entry_gap_bps=Decimal('20'))
+                         maximum_entry_spread_bps=Decimal('20'),maximum_entry_gap_bps=Decimal('20'),
+                         quote_observation_policy=quote_observation_policy)
     state = result.status
     if state == 'not_filled' and result.reason == 'no_observed_eligible_fill' and now < aware(plan['expires_at']):
         state = 'watching'
-    elif state == 'unresolved' and now < aware(plan['exit_by']):
+    elif state == 'unresolved' and result.reason!='exit_quote_quality_unresolved' and now < aware(plan['exit_by']):
         state = 'open_simulation'
     return {'state': state, 'outcome': result.model_dump(mode='json'),
             'observations_available': len(quotes)}
@@ -133,7 +147,7 @@ class ComparisonStore:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.protocol = json.loads(canonical(protocol or PROTOCOL))
-        if self.protocol != PROTOCOL:
+        if self.protocol not in (PROTOCOL, GUARDED_PROTOCOL):
             raise ValueError('unsupported_comparison_protocol')
         self.dataset_kind = dataset_kind
         meta = canonical({'protocol': self.protocol, 'dataset_kind': dataset_kind})
@@ -181,6 +195,8 @@ class ComparisonStore:
     def enrol(self, packet, *, now):
         now = aware(now)
         body = validate_packet(packet, now)
+        if body.get('quote_observation_policy') != self.protocol.get('quote_observation_policy'):
+            raise ValueError('comparison_observation_policy_mismatch')
         key = paper_attempt_id(packet, now=aware(body['assembled_at']))
         value = {'packet': packet, 'enrolled_at': now.isoformat()}
         with self.connection() as db:
@@ -203,6 +219,8 @@ class ComparisonStore:
         """Call before model access, never retrospectively after reading outcomes."""
         now = aware(now)
         body = validate_packet(packet, now)
+        if body.get('quote_observation_policy')!=self.protocol.get('quote_observation_policy'):
+            raise ValueError('comparison_observation_policy_mismatch')
         key = paper_attempt_id(packet, now=aware(body['assembled_at']))
         with self.connection() as db:
             if not db.in_transaction: db.execute('BEGIN IMMEDIATE')
@@ -257,6 +275,7 @@ class ComparisonStore:
                 or decision['packet_id'] != packet['packet_id'] or decision['candidate_id'] != body['candidate_id']
                 or decision['schema_version'] != 'paper-final-decision-v1'
                 or decision.get('review_policy_version') != body.get('review_policy_version')
+                or decision.get('quote_observation_policy') != body.get('quote_observation_policy')
                 or decision['paper_only'] is not True or decision['trade_authorized'] is not False
                 or decision['live_orders_enabled'] is not False
                 or not aware(body['assembled_at']) <= aware(audit['completed_at']) <= aware(decision['evaluated_at']) <= now):
@@ -335,7 +354,8 @@ class ComparisonStore:
                 body = cohort['packet']['packet']
                 quotes = [json.loads(q[0]) for q in db.execute(
                     'SELECT payload FROM comparison_quotes WHERE candidate=? ORDER BY at', (body['candidate_id'],))]
-                baseline = _outcome(body['plan'], quotes, start=aware(cohort['enrolled_at']), now=now)
+                baseline = _outcome(body['plan'], quotes, start=aware(cohort['enrolled_at']), now=now,
+                                    quote_observation_policy=self.protocol.get('quote_observation_policy'))
                 stored = db.execute('SELECT payload FROM comparison_reviews WHERE id=?', (key,)).fetchone()
                 review = json.loads(stored[0]) if stored else None
                 if review and aware(review['received_at']) > now:
@@ -345,7 +365,8 @@ class ComparisonStore:
                 ai = {'state': 'review_incomplete' if attempted else 'not_reviewed', 'outcome': None}
                 if review:
                     decision = review['decision']
-                    ai = (_outcome(decision['plan'], quotes, start=aware(decision['evaluated_at']), now=now)
+                    ai = (_outcome(decision['plan'], quotes, start=aware(decision['evaluated_at']), now=now,
+                                   quote_observation_policy=self.protocol.get('quote_observation_policy'))
                           if decision['verdict'] == 'PAPER_WATCH_FOR_ENTRY'
                           else {'state': 'no_action', 'outcome': None})
                 cost = db.execute('SELECT payload FROM comparison_costs WHERE id=? AND at<=? ORDER BY at DESC LIMIT 1',

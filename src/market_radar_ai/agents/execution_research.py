@@ -14,12 +14,19 @@ from tempfile import TemporaryDirectory
 
 from .candidate_packages import canonical, digest
 from .comparison_live import EventClient, LiveComparison, envelope
-from .paper_comparison import PROTOCOL as SOURCE_PROTOCOL, aware
+from .paper_comparison import PROTOCOL as LEGACY_SOURCE_PROTOCOL, GUARDED_PROTOCOL, aware
+from .observation_policy import GUARDED
 from .paper_verdict import paper_attempt_id
 
 # Deliberate source binding: changing review policy requires a new experiment,
 # never silently repoint an existing portfolio series to another cohort.
-SOURCE_PROTOCOL_ID = 'abfaa5c8b4fd3e76a46dddd142bd4747765b32c0caf2c6122afe9dbff6c7e4e8'
+SOURCE_VERSION = os.environ.get('EXECUTION_SOURCE_VERSION','legacy')
+if SOURCE_VERSION not in ('legacy','guarded-v2'):
+    raise ValueError('unsupported_execution_source_version')
+SOURCE_PROTOCOL = GUARDED_PROTOCOL if SOURCE_VERSION=='guarded-v2' else LEGACY_SOURCE_PROTOCOL
+SOURCE_PROTOCOL_ID = ('eab2d59128f2d320ec2d32e1cd903d2b3d9d17c93f324534c607f640e1b93fd8'
+                      if SOURCE_VERSION=='guarded-v2' else
+                      'abfaa5c8b4fd3e76a46dddd142bd4747765b32c0caf2c6122afe9dbff6c7e4e8')
 
 def validate_source_protocol():
     if digest(SOURCE_PROTOCOL) != SOURCE_PROTOCOL_ID:
@@ -32,8 +39,10 @@ PROFILES = {
     'stressed': {'label': 'EUR conversion, stressed slippage', 'fx_bps': '15', 'slippage_bps': '20'},
 }
 PROTOCOL = {
-    'version': 'execution-research-v1', 'source_protocol_id': SOURCE_PROTOCOL_ID,
-    'since': '2026-11-08', 'initial_balance_eur': '1000', 'maximum_allocation_eur': '500',
+    'version': 'execution-research-v2' if SOURCE_VERSION=='guarded-v2' else 'execution-research-v1',
+    'source_protocol_id': SOURCE_PROTOCOL_ID,
+    'since': '2026-11-12' if SOURCE_VERSION=='guarded-v2' else '2026-11-08',
+    'initial_balance_eur': '1000', 'maximum_allocation_eur': '500',
     'maximum_trade_risk_eur': '20', 'maximum_combined_risk_eur': '40', 'maximum_positions': 3,
     'minimum_net_rr': '2', 'maximum_entry_gap_bps': '20', 'maximum_spread_bps': '20',
     'profiles': PROFILES, 'fee_schedule_checked': '2026-11-08', 'fee_schedule_expires': '2026-12-08',
@@ -161,6 +170,12 @@ class Book:
             if r['candidate_id'] != candidate or r['state'] not in {'reserved', 'open'}: continue
             if aware(quote['observed_at']) < aware(r['at']): continue
             p = r['plan']
+            spread = (ask - bid) / ((ask + bid) / 2) * 10000
+            if SOURCE_PROTOCOL.get('quote_observation_policy')==GUARDED and spread>20:
+                if r['state']=='open' and (bid<=dec(p['stop_eur']) or bid>=dec(p['target_eur'])
+                        or now>=aware(p['exit_by'])-timedelta(seconds=30)):
+                    r.update(state='unresolved',reason='exit_quote_quality_unresolved')
+                continue
             if r['state'] == 'reserved':
                 if bid <= dec(p['stop_eur']):
                     r.update(state='invalidated', reason='stop_crossed_before_entry'); continue
@@ -279,7 +294,7 @@ def collect(client, *, now, root, diagnostics=None):
     events, size_bytes = [], 0
     for n in range(days):
         day = (first + timedelta(days=n)).isoformat()
-        worker = LiveComparison(Path(root) / day, client=client, day=day, clock=lambda: now)
+        worker = LiveComparison(Path(root) / day, client=client, day=day, clock=lambda: now, protocol=SOURCE_PROTOCOL)
         if worker.experiment != SOURCE_PROTOCOL_ID:
             raise ValueError('execution_source_protocol_mismatch')
         worker.sync()  # Existing signed receipt, immutable identity and review validation.

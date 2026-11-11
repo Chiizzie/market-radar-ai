@@ -11,7 +11,7 @@ from tempfile import TemporaryDirectory
 
 from .candidate_packages import digest
 from .comparison_live import LiveComparison
-from .execution_research import SOURCE_PROTOCOL_ID
+from .execution_research import SOURCE_PROTOCOL_ID, SOURCE_PROTOCOL
 from .paper_comparison import aware
 from .research_views import comparison_rows, exposure
 
@@ -173,7 +173,8 @@ def evaluate(events, execution, *, day=None):
     # The original validator reconstructs every event with unchanged clocks and
     # hashes. No append/publish interface is exposed by this offline client.
     with TemporaryDirectory() as scratch:
-        projection = LiveComparison(Path(scratch)/'projection',client=ReadOnlyEvents(),day=day,clock=lambda:now)
+        projection = LiveComparison(Path(scratch)/'projection',client=ReadOnlyEvents(),day=day,
+                                    clock=lambda:now,protocol=SOURCE_PROTOCOL)
         projection.sync(); comparison = projection.store.report(now=now)
     rows = comparison_rows(comparison)
     symbols = Counter(r['candidate_id'] for r in rows)

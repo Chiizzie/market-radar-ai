@@ -27,7 +27,9 @@ def render(row, plan=None):
                   'Observed exit '+price(o['exit_fill']),f'Paper P/L after assumed costs: {pnl:+.2f} EUR',
                   'Reason: '+o['reason'].replace('_',' ')]
     elif row['state']=='unresolved':
-        lines += ['No valid exit quote was observed before the cutoff. Profit/loss is unknown.']
+        lines += [('A wide reference quote crossed an exit level. The exit and profit/loss are unverified; review the evidence.'
+                  if o['reason']=='exit_quote_quality_unresolved' else
+                  'No valid exit quote was observed before the cutoff. Profit/loss is unknown.')]
     if usd:lines.append('USD equivalents use the approved plan FX; original observation FX may differ. EUR is the accounting record.')
     lines += ['This records a simulation already observed; it is not a fresh instruction to buy.',
               'Reference prices and assumed fills; not broker execution.',DASHBOARD]

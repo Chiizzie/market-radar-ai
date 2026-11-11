@@ -1,9 +1,10 @@
 """Deterministic EUR quote replay. No broker orders or claim of executable fills."""
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Literal
 from pydantic import AwareDatetime, Field
 from .paper_team import Frozen, PaperPlan
+from .observation_policy import GUARDED, validate_policy, wide
 
 
 class Quote(Frozen):
@@ -24,14 +25,27 @@ class PaperOutcome(Frozen):
 
 
 def replay_long(plan: PaperPlan, quotes: list[Quote], *, decision_at: datetime,
-                entry_expires_at: datetime) -> PaperOutcome:
+                entry_expires_at: datetime, entry_mode: Literal['limit', 'breakout'] = 'limit',
+                exit_window_seconds: int = 0, maximum_entry_spread_bps: Decimal | None = None,
+                maximum_entry_gap_bps: Decimal | None = None,
+                quote_observation_policy: str | None = None) -> PaperOutcome:
     """Limit-entry long simulation, using asks for entry and bids for exit.
 
     First eligible ask at/below entry fills at the ask. A stop gap exits at the
     observed bid (never the more favourable stop). Deadline exits require an exact
     deadline quote; later data does not retroactively prove an intraday exit.
+    Breakout mode instead requires ask >= trigger, rejects invalidation before
+    entry and skips trigger gaps whose projected stop loss exceeds EUR20.
     Estimated round-trip costs are deducted once. No volume/queue/slippage model.
     """
+    validate_policy(quote_observation_policy)
+    if type(exit_window_seconds) is not int or not 0 <= exit_window_seconds <= 30:
+        raise ValueError('Invalid scheduled exit window')
+    if entry_mode not in ('limit', 'breakout'):
+        raise ValueError('Unknown entry mode')
+    for limit in (maximum_entry_spread_bps, maximum_entry_gap_bps):
+        if limit is not None and (not limit.is_finite() or limit < 0):
+            raise ValueError('Invalid entry tolerance')
     from zoneinfo import ZoneInfo
     plan = PaperPlan.model_validate(plan.model_dump())
     if decision_at.tzinfo is None or entry_expires_at.tzinfo is None:
@@ -47,17 +61,41 @@ def replay_long(plan: PaperPlan, quotes: list[Quote], *, decision_at: datetime,
     if any(b.observed_at <= a.observed_at for a,b in zip(rows,rows[1:])):
         raise ValueError('Quotes must be strictly ordered without duplicates')
     entry = None
+    exit_start = plan.exit_by - timedelta(seconds=exit_window_seconds)
     for q in rows:
         if q.observed_at < decision_at: continue
         if q.observed_at > plan.exit_by: break
+        if quote_observation_policy == GUARDED and wide(q):
+            # A venue's empty/wide book cannot prove a breakout, invalidation,
+            # executable stop, target or timed exit. Preserve uncertainty rather
+            # than replacing a suspect exit with a later, more favourable price.
+            if entry is not None and (q.bid <= plan.stop or q.bid >= plan.target
+                    or q.observed_at >= exit_start):
+                return PaperOutcome(status='unresolved', reason='exit_quote_quality_unresolved',
+                                    entry_at=entry.observed_at, entry_fill=entry.ask)
+            continue
         if entry is None:
+            if exit_window_seconds and q.observed_at >= exit_start:
+                break  # Never open a new simulation during its scheduled exit window.
             if q.observed_at >= entry_expires_at: break
-            if q.ask > plan.entry: continue
+            if entry_mode == 'breakout':
+                # Invalidate before trigger; never buy a breakout below its trigger.
+                if q.bid <= plan.stop:
+                    return PaperOutcome(status='not_filled', reason='entry_already_invalidated')
+                if q.ask < plan.entry: continue
+                if maximum_entry_gap_bps is not None and (q.ask/plan.entry-1)*10000 > maximum_entry_gap_bps:
+                    return PaperOutcome(status='not_filled', reason='trigger_gap_exceeds_protocol_limit')
+                if (q.ask-plan.stop)*plan.quantity+plan.costs_eur > 20:
+                    return PaperOutcome(status='not_filled', reason='trigger_gap_exceeds_risk_budget')
+            elif q.ask > plan.entry: continue
             if q.ask <= plan.stop:
                 return PaperOutcome(status='not_filled', reason='entry_already_invalidated')
+            if maximum_entry_spread_bps is not None and (q.ask-q.bid)/((q.ask+q.bid)/2)*10000 > maximum_entry_spread_bps:
+                continue
             entry = q
         reason = ('stop' if q.bid <= plan.stop else 'target' if q.bid >= plan.target
-                  else 'deadline' if q.observed_at == plan.exit_by else None)
+                  else 'deadline' if q.observed_at == plan.exit_by
+                  else 'scheduled_exit' if exit_window_seconds and q.observed_at >= exit_start else None)
         if reason:
             return PaperOutcome(status='closed', reason=reason, entry_at=entry.observed_at,
                 exit_at=q.observed_at, entry_fill=entry.ask, exit_fill=q.bid,
@@ -68,7 +106,7 @@ def replay_long(plan: PaperPlan, quotes: list[Quote], *, decision_at: datetime,
                         entry_at=entry.observed_at,entry_fill=entry.ask)
 
 
-def record_replay(store, run_id, quotes, *, entry_expires_at):
+def record_replay(store, run_id, quotes, *, entry_expires_at, entry_mode='limit'):
     """Evaluate only an accepted stored plan; preserve quote evidence with outcome."""
     import json
     import sqlite3
@@ -78,10 +116,14 @@ def record_replay(store, run_id, quotes, *, entry_expires_at):
     plan = PaperPlan.model_validate(record['result']['plan'])
     result = replay_long(plan, quotes,
         decision_at=datetime.fromisoformat(record['request']['now']),
-        entry_expires_at=entry_expires_at)
+        entry_expires_at=entry_expires_at, entry_mode=entry_mode)
     payload = json.dumps({'entry_expires_at':entry_expires_at.isoformat(),
         'quotes':[q.model_dump(mode='json') for q in quotes],
         'outcome':result.model_dump(mode='json')},sort_keys=True)
+    if entry_mode != 'limit':
+        document = json.loads(payload)
+        document['entry_mode'] = entry_mode
+        payload = json.dumps(document, sort_keys=True)
     with sqlite3.connect(store.path) as db:
         db.execute('CREATE TABLE IF NOT EXISTS paper_replays (run_id TEXT PRIMARY KEY, payload TEXT NOT NULL)')
         db.execute('BEGIN IMMEDIATE')
