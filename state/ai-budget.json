@@ -9279,6 +9279,12 @@
       "day": "2026-11-02",
       "reserved": 1,
       "usage": null
+    },
+    "storage-consistency-check-20261111-v1": {
+      "actual": null,
+      "day": "2026-11-11",
+      "reserved": 1,
+      "usage": null
     }
   },
   "limits_microeur": {
