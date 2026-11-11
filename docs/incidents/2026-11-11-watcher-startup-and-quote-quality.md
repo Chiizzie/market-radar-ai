@@ -60,3 +60,19 @@ The feed remains Alpaca IEX, not consolidated broker execution. A live SIP probe
 
 Next verification: read the saved health record when available; inspect a completed scheduled run pinned to `e6053db`; confirm separate startup timing, unchanged strict recovery conditions, and signed dashboard delivery. On 12 November verify the new comparison/execution identities and first genuine guarded paper outcome. No extra live trades, AI-budget increases or paid model test calls were made.
 
+
+## Follow-up verification, 21:07 Dublin
+
+The unavailable 20:15 log was recovered through authenticated GitHub job-log access. It confirms the first repair's 60-second startup cutoff caused that comparison-worker failure: restoration completed in 86.453 seconds, followed by `comparison_startup_deadline_exceeded`, zero polls and zero model calls. The final runtime `e6053db` had already removed that arbitrary cutoff at 20:25. This supersedes the earlier uncertainty about that specific failure.
+
+The [20:50 scheduled run](https://github.com/Chiizzie/market-radar-ai/actions/runs/43098356909) started its runners around 20:57 after queueing. Logs verify checkout of final runtime `e6053db510f0a32f38685351198e42029e852da6`:
+- Comparison process: 60 polls, zero error polls, maximum steady outer polling gap 5.000 seconds; startup took 31.721 seconds, was explicitly warned, and did not prevent observation. Final process state `completed`, `critical_failure=false`.
+- Paper process: 66 polls, zero error polls, no unconfirmed notifications, maximum polling gap 5.000 seconds; final process state `completed`, `critical_failure=false`.
+- Both processes received zero tracked quotes, and the paper watcher reported zero active plans. This is runtime verification, not a newly observed trade lifecycle or proof of market-data completeness.
+- Collection, account sync, review and market context jobs completed successfully. Review recorded `no_qualified_candidate_zero_cost`, with zero model calls. At this check, the overall workflow and watcher job metadata still reported in progress; process completion must not be described as a completed successful whole workflow.
+
+Six scheduled runs from 20:20 through 20:45 recorded `startup_failure`; the 20:45 run has an empty job list. Other jobs had stalled on artifact transfers, and the final hosted regression check remained queued. These are distinct from the confirmed 20:15 application cutoff.
+
+GitHub's [official status summary](https://www.githubstatus.com/api/v2/summary.json), updated at 20:59:33, now reports a major Actions outage, first posted at 20:48:25, as part of [incident dvy0t3mvh1lg](https://www.githubstatus.com/incidents/dvy0t3mvh1lg). The queued/startup/transfer symptoms are consistent with this service incident; the public report alone does not prove the cause of every earlier failed run. At 20:26 that status page had still reported operational.
+
+Remaining: a fully completed scheduled workflow after service recovery, final hosted regression completion, and a genuine next-session guarded trade lifecycle. No additional scanner code, risk thresholds, budget limits or historical outcomes were changed in this follow-up.
