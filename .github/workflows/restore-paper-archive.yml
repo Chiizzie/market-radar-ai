@@ -26,8 +26,8 @@ jobs:
       - run: python -m pip install -e .
       - uses: actions/download-artifact@v4
         with:
-          name: scheduled-decision-43066344862
-          run-id: 43066344862
+          name: scheduled-decision-43067975183
+          run-id: 43067975183
           github-token: ${{ github.token }}
           path: recovery
       - name: Restore exact archived decision through authenticated validation
@@ -42,7 +42,7 @@ jobs:
           from market_radar_ai.dashboard.candidate_delivery import ENDPOINT
           assert not any(os.environ.get(k) for k in ('OPENAI_API_KEY','OPEN_API_KEY','TELEGRAM_BOT_TOKEN','GH_BUDGET_TOKEN'))
           archive=json.loads(Path('recovery/decision/dashboard-archive.json').read_text())
-          expected='78f9dca960d9141e7d4956ff19462109dcf65f3b1325a3425d88a97145349ae7'
+          expected='65cfec9d9261360c07e09c1b0be317bbb535deb4725abb3fe59574c70f99cd9d'
           assert archive['packet_id']==hashlib.sha256(archive['packet_json'].encode()).hexdigest()==expected
           assert archive['trade_authorized'] is False and archive['decision']['live_orders_enabled'] is False
           body=(canonical(archive)+'\n').encode(); identity=hashlib.sha256(body).hexdigest()
