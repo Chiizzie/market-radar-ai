@@ -4033,6 +4033,12 @@
         "response_id": "resp_0c3734939a6532c3016af4a161a1f887d1baf48f872c4426ef"
       }
     },
+    "paper-final-v1:65cfec9d9261360c07e09c1b0be317bbb535deb4725abb3fe59574c70f99cd9d:final_decision": {
+      "actual": null,
+      "day": "2026-11-11",
+      "reserved": 8598,
+      "usage": null
+    },
     "paper-final-v1:7299987611e6187c5665a949d3db9d685f1bde399caed4e613fc8bccdfa3ad31:conclusion": {
       "actual": 10202,
       "day": "2026-11-06",
