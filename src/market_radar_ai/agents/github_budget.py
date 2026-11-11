@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 from typing import Literal
 import requests
 from pydantic import BaseModel, ConfigDict, Field
+from ..github_state import ConfirmedWrites, LedgerConflict, StaleLedgerRead, fresh_params
 
 REPOSITORY = 'Chiizzie/market-radar-ai'
 BRANCH = 'state/ai-budget'
@@ -68,16 +69,21 @@ class GitHubBudgetStore:
         if not token:
             raise ValueError('GitHub token required')
         self._headers = {'Authorization':'Bearer '+token, 'Accept':'application/vnd.github+json',
-                         'X-GitHub-Api-Version':'2022-11-28'}
+                         'X-GitHub-Api-Version':'2022-11-28', 'Cache-Control':'no-cache'}
+        self._confirmed = ConfirmedWrites()
 
     def load(self):
-        # Only idempotent reads may retry. Never retry a write or an AI call.
+        cached = self._confirmed.take()
+        if cached is not None:
+            return cached
+        # Only idempotent reads retry here. A confirmed write can be read directly
+        # without racing GitHub's branch-content cache; its SHA still guards CAS.
         reason = 'transport_unavailable'
         for attempt in range(3):
             response = None
             delay = attempt + 1
             try:
-                response = requests.get(URL, params={'ref':BRANCH}, headers=self._headers,
+                response = requests.get(URL, params=fresh_params(BRANCH), headers=self._headers,
                                         timeout=(10,30), allow_redirects=False)
             except requests.RequestException:
                 reason = 'transport_unavailable'
@@ -92,7 +98,15 @@ class GitHubBudgetStore:
                         sha = data['sha']
                         if not re.fullmatch(r'[0-9a-f]{40}', sha):
                             raise ValueError('Invalid budget version')
-                        return validate_state(state), sha
+                        state = validate_state(state)
+                        self._confirmed.accept(state)
+                        return state, sha
+                    except StaleLedgerRead:
+                        reason = 'stale_read'
+                        if attempt < 2:
+                            time.sleep(attempt + 1)
+                            continue
+                        break
                     except Exception:
                         # Corruption/configuration changes must not be hidden by retries.
                         raise RuntimeError('Budget read failed [invalid_payload]; paid calls disabled') from None
@@ -120,11 +134,14 @@ class GitHubBudgetStore:
                 allow_redirects=False, json={'branch':BRANCH, 'sha':expected_sha,
                     'message':'Record AI budget reservation or settlement',
                     'content':base64.b64encode(raw).decode()})
-            if response.status_code != 200:
-                raise ValueError('Conflict or failed write')
-        except Exception:
+        except requests.RequestException:
             # Even if the write succeeded but the reply was lost, DO NOT call OpenAI.
-            raise RuntimeError('Budget write unconfirmed; paid calls disabled') from None
+            raise RuntimeError('Budget write unconfirmed [transport]; paid calls disabled') from None
+        if response.status_code == 409:
+            raise LedgerConflict('Budget write conflict [http_409]; paid calls disabled')
+        if response.status_code != 200:
+            raise RuntimeError(f'Budget write unconfirmed [http_{int(response.status_code)}]; paid calls disabled')
+        self._confirmed.remember(state, raw)
 
 
 class GitHubSpendingLedger:
@@ -141,7 +158,12 @@ class GitHubSpendingLedger:
 
     def reserve(self, request_id, maximum_microeur, now):
         with self._lock:
-            return self._reserve(request_id, maximum_microeur, now)
+            for attempt in range(3):
+                try:
+                    return self._reserve(request_id, maximum_microeur, now)
+                except LedgerConflict:
+                    if attempt == 2: raise
+                    time.sleep(.2 * (attempt + 1))
 
     def _reserve(self, request_id, maximum_microeur, now):
         if (not re.fullmatch(r'[a-zA-Z0-9:_-]{1,160}', request_id)
@@ -166,14 +188,33 @@ class GitHubSpendingLedger:
 
     def settle(self, request_id, actual_microeur, *, usage=None):
         with self._lock:
-            return self._settle(request_id, actual_microeur, usage=usage)
+            for attempt in range(3):
+                try:
+                    return self._settle(request_id, actual_microeur, usage=usage)
+                except LedgerConflict:
+                    if attempt == 2: raise
+                    time.sleep(.2 * (attempt + 1))
+                except RuntimeError:
+                    # Settlement is after a charged response. Read-only recovery
+                    # may confirm its exact receipt, never repeat a model request.
+                    try:
+                        state, _ = self.store.load()
+                        row = validate_state(state)['entries'].get(request_id)
+                        record = Usage.model_validate(usage).model_dump() if usage is not None else None
+                        if row and row['actual'] == actual_microeur and row['usage'] == record and actual_microeur <= row['reserved']:
+                            return
+                    except (RuntimeError, ValueError, KeyError):
+                        pass
+                    raise
 
     def _settle(self, request_id, actual_microeur, *, usage=None):
         if type(actual_microeur) is not int or actual_microeur < 0:
             raise ValueError('Invalid actual cost')
         state, sha = self.store.load()
         state = validate_state(state)
-        row = state['entries'][request_id]
+        row = state['entries'].get(request_id)
+        if row is None:
+            raise RuntimeError('Budget settlement reservation unavailable; hold retained')
         record = Usage.model_validate(usage).model_dump() if usage is not None else None
         if row['actual'] is not None:
             if row['actual'] != actual_microeur or row['usage'] != record:

@@ -1,0 +1,55 @@
+name: Ledger consistency verification
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ledger-reliability-check.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: market-radar-ai-ledger-verification
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 82a1bea71b0c6781ad379267b9fd0205a3df7897
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e .
+      - name: Verify reservation, settlement and fresh read without provider access
+        env:
+          GH_BUDGET_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
+          from market_radar_ai.agents.github_budget import GitHubBudgetStore, GitHubSpendingLedger
+          assert not any(os.environ.get(k) for k in ('OPENAI_API_KEY','OPEN_API_KEY','TELEGRAM_BOT_TOKEN'))
+          token=os.environ['GH_BUDGET_TOKEN']
+          store=GitHubBudgetStore(token); ledger=GitHubSpendingLedger(store)
+          identity='storage-consistency-check-20261111-v1'
+          before,_=store.load()
+          if identity not in before['entries']:
+              ledger.reserve(identity,1,datetime.now(timezone.utc))
+          ledger.settle(identity,0)
+          after,_=GitHubBudgetStore(token).load()
+          assert after['entries'][identity]['actual']==0
+          assert after['limits_microeur']==before['limits_microeur']
+          assert set(before['entries']).issubset(after['entries'])
+          for key,row in before['entries'].items():
+              if row['actual'] is not None: assert after['entries'][key]==row
+          report={'status':'reservation_settlement_and_fresh_read_verified','model_calls':0,
+                  'actual_microeur':0,'trade_authorized':False,'limits_microeur':after['limits_microeur']}
+          print(json.dumps(report))
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write('Verified a zero-cost ledger marker, preserving existing entries and limits. No model or messaging credentials supplied.\n')
+          PY

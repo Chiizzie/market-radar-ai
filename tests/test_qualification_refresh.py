@@ -64,7 +64,7 @@ def test_dispatch_refreshes_after_sync_before_pipeline(monkeypatch,tmp_path):
     monkeypatch.setattr(live,'LiveComparison',Comparison)
     monkeypatch.setattr(live,'EventClient',lambda *a,**kw:object())
     monkeypatch.setattr(dispatch,'YahooFxProvider',lambda:SimpleNamespace(fetch=lambda *a,**kw:SimpleNamespace(eur_per_unit='.9')))
-    monkeypatch.setattr(dispatch,'OpenAIPilot',lambda **kw:object())
+    monkeypatch.setattr(dispatch,'OpenAIPilot',lambda **kw:SimpleNamespace(ledger=kw['ledger']))
     monkeypatch.setattr(qr,'collect',lambda *a,**kw:fresh_record(kw['catalogue_record'],current[0]))
     def pipeline(document,feed,**kw):
         order.append('pipeline');assert build_packets(document,feed,now=current[0])['packets']

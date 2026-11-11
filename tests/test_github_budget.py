@@ -185,7 +185,9 @@ def test_transient_read_retries_without_writes_and_preserves_existing_holds(monk
     monkeypatch.setattr('market_radar_ai.agents.github_budget.requests.put',forbidden)
     loaded,sha=GitHubBudgetStore('secret').load()
     assert loaded==state and sha=='b'*40 and len(calls)==2 and waits==[1]
-    assert all(c['allow_redirects'] is False and c['params']=={'ref':BRANCH} for c in calls)
+    assert all(c['allow_redirects'] is False and c['params']['ref']==BRANCH
+               and c['headers']['Cache-Control']=='no-cache' for c in calls)
+    assert len({c['params']['cache_bust'] for c in calls})==2
 
 
 @pytest.mark.parametrize('code,headers,expected', [(401,{},1),(403,{},1),(404,{},1),(302,{},1),

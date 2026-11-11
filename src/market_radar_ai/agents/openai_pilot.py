@@ -53,10 +53,11 @@ class PilotReply:
     cost_usd: Decimal
     estimated_cost_microeur: int
     eur_per_usd: Decimal
+    counted_input_tokens: int | None = None
 
 
 class OpenAIPilot:
-    def __init__(self, *, api_key, ledger, eur_per_usd, enabled=False):
+    def __init__(self, *, api_key, ledger, eur_per_usd, enabled=False, count_input_tokens=False, receipt_directory=None):
         if enabled is not True:
             raise ValueError('Paid pilot is disabled')
         if not isinstance(api_key, str) or not api_key.strip():
@@ -67,15 +68,54 @@ class OpenAIPilot:
         if ledger.monthly_limit is None or ledger.lifetime_limit is None:
             raise ValueError('Monthly and lifetime pilot limits are required')
         self._key, self.ledger, self.rate = api_key, ledger, rate
+        if type(count_input_tokens) is not bool:
+            raise ValueError('Token counting flag must be boolean')
+        self.count_input_tokens = count_input_tokens
+        self.last_counted_input_tokens = None
+        self.receipt_directory = receipt_directory
+
+    def fork(self):
+        """Create isolated request accounting while retaining the same budget.
+
+        Concurrent callers must use one fork per worker. The shared durable
+        ledger serializes its own mutations; provider requests remain parallel.
+        """
+        return OpenAIPilot(api_key=self._key, ledger=self.ledger, eur_per_usd=self.rate,
+                           enabled=True, count_input_tokens=self.count_input_tokens,
+                           receipt_directory=self.receipt_directory)
+
+    def _input_reservation(self, payload):
+        if not self.count_input_tokens:
+            return 400000
+        # Count the same model, prompt, instructions and structured-output schema.
+        # Do not send generation-only options to the counting endpoint.
+        counted = {k: deepcopy(payload[k]) for k in
+                   ('model', 'input', 'instructions', 'text', 'reasoning') if k in payload}
+        try:
+            response = requests.post(ENDPOINT+'/input_tokens', json=counted,
+                headers={'Authorization':'Bearer '+self._key}, timeout=(10, 15),
+                allow_redirects=False)
+            if response.status_code != 200:
+                raise ValueError('count_failed')
+            body = response.json()
+            n = body['input_tokens']
+            if (body.get('object') != 'response.input_tokens' or type(n) is not int
+                    or not 0 < n <= 400000):
+                raise ValueError('invalid_count')
+        except Exception:
+            raise RuntimeError('Input token count unavailable; generation not started') from None
+        # Extra headroom; never treat a local character count as a token count.
+        self.last_counted_input_tokens = n
+        return min(400000, n + max(1024, (n+9)//10))
 
     def _eur(self, usd):
         return int((usd*self.rate*1_000_000).to_integral_value(rounding=ROUND_CEILING))
 
     def call(self, *, prompt, schema, request_id, now, max_output_tokens=512, instructions=None, reasoning_effort='none'):
-        if not isinstance(prompt, str) or not 0 < len(prompt.encode('utf-8')) <= 32000:
-            raise ValueError('Pilot prompt must be 1 to 32000 UTF-8 bytes')
-        if type(max_output_tokens) is not int or not 16 <= max_output_tokens <= 2048:
-            raise ValueError('Pilot output cap must be 16 to 2048 tokens')
+        if not isinstance(prompt, str) or not 0 < len(prompt.encode('utf-8')) <= 256000:
+            raise ValueError('Pilot prompt must be 1 to 256000 UTF-8 bytes')
+        if type(max_output_tokens) is not int or not 16 <= max_output_tokens <= 3072:
+            raise ValueError('Pilot output cap must be 16 to 3072 tokens')
         if reasoning_effort not in ('none', 'low'):
             raise ValueError('Unsupported pilot reasoning effort')
         validated_schema = strict_schema(schema)
@@ -88,11 +128,10 @@ class OpenAIPilot:
             if not isinstance(instructions, str) or not 0 < len(instructions) <= 8000:
                 raise ValueError('Invalid trusted instructions')
             payload['instructions'] = instructions
-        if len(json.dumps(payload).encode('utf-8')) > 64000:
+        if len(json.dumps(payload).encode('utf-8')) > 512000:
             raise ValueError('Pilot request too large')
-        # Reserve the full context window at uncached price, plus output cap.
-        # This deliberately avoids claiming a byte-count token estimate is exact.
-        bound = (400000*INPUT_USD_PER_MILLION + max_output_tokens*OUTPUT_USD_PER_MILLION)/1_000_000
+        incoming_bound = self._input_reservation(payload)
+        bound = (incoming_bound*INPUT_USD_PER_MILLION + max_output_tokens*OUTPUT_USD_PER_MILLION)/1_000_000
         self.ledger.reserve(request_id, self._eur(bound), now)
         try:
             response = requests.post(ENDPOINT, json=payload,
@@ -111,15 +150,22 @@ class OpenAIPilot:
         except (KeyError, TypeError, ValueError, AttributeError):
             raise RuntimeError('Unknown usage; reservation retained') from None
         estimated = self._eur(usd)
-        self.ledger.settle(request_id, estimated, usage={
+        usage_record={
             'response_id':body.get('id'), 'model':body.get('model'),
             'input_tokens':body['usage']['input_tokens'],
             'output_tokens':body['usage']['output_tokens'],
             'cached_input_tokens':body['usage'].get('input_tokens_details', {}).get('cached_tokens', 0),
             'cost_usd':str(usd), 'eur_per_usd':str(self.rate),
-            'pricing_checked':'2026-11-02'})
+            'pricing_checked':'2026-11-02'}
+        if self.receipt_directory is not None:
+            from .settlement_receipts import save_receipt
+            save_receipt(self.receipt_directory, request_id=request_id, now=now,
+                         actual_microeur=estimated, usage=usage_record, response=body)
+        self.ledger.settle(request_id, estimated, usage=usage_record)
         if body.get('status') != 'completed':
             raise RuntimeError('Incomplete or unexpected model response; usage settled')
+        if self.count_input_tokens and body['usage']['input_tokens'] != self.last_counted_input_tokens:
+            raise RuntimeError('Counted and billed input differ; usage settled; review stopped')
         texts = [part['text'] for item in body.get('output', []) if item.get('type') == 'message'
                  for part in item.get('content', []) if part.get('type') == 'output_text']
         if len(texts) != 1 or len(texts[0]) > 100000:
@@ -129,4 +175,4 @@ class OpenAIPilot:
             raise ValueError('Expected an object response')
         Draft202012Validator(validated_schema).validate(data)
         return PilotReply(data, body['id'], body['usage']['input_tokens'],
-            body['usage']['output_tokens'], usd, estimated, self.rate)
+            body['usage']['output_tokens'], usd, estimated, self.rate, self.last_counted_input_tokens)
