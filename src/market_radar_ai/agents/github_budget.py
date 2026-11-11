@@ -14,7 +14,7 @@ REPOSITORY = 'Chiizzie/market-radar-ai'
 BRANCH = 'state/ai-budget'
 PATH = 'state/ai-budget.json'
 URL = f'https://api.github.com/repos/{REPOSITORY}/contents/{PATH}'
-LIMITS = {'daily':1000000, 'monthly':10000000, 'lifetime':5000000}
+LIMITS = {'daily':1000000, 'monthly':10000000, 'lifetime':100000000}
 
 
 class Strict(BaseModel):
