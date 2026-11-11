@@ -101,6 +101,11 @@ def execute(document,feed,root,*,env,clock=lambda:datetime.now(timezone.utc)):
             from .settlement_receipts import reconcile_receipts
             recovery=reconcile_receipts(root/'provider-receipts',client.ledger)
             (root/'settlement-recovery.json').write_text(json.dumps(recovery,indent=2)+'\n')
+            if comparison is not None and recovery['reconciled'] and (root/'packet.json').exists():
+                # Append the corrected accounting view after recovery. This never
+                # promotes the interrupted review or rewrites its decision.
+                comparison.reconcile_cost(json.loads((root/'packet.json').read_text()),
+                    client.ledger.store.load()[0],now=clock())
             (root/'qualification-inputs.json').write_text(json.dumps(document,indent=2)+'\n')
             (root/'qualification-refresh.json').write_text(json.dumps({
                 'initial':initial_refresh,'post_replay':locals().get('post_replay_refresh'),

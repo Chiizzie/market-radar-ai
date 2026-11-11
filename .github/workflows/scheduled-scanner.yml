@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 82a1bea71b0c6781ad379267b9fd0205a3df7897
+          ref: dc1ab74f830ecb926f69475e8e7740d3746f29ec
           persist-credentials: false
       - name: Enforce Dublin operating hours before provider calls
         id: window
@@ -156,7 +156,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.review_window.outputs.run == 'true'
         with:
-          ref: 82a1bea71b0c6781ad379267b9fd0205a3df7897
+          ref: dc1ab74f830ecb926f69475e8e7740d3746f29ec
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.review_window.outputs.run == 'true'
@@ -253,7 +253,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 82a1bea71b0c6781ad379267b9fd0205a3df7897
+          ref: dc1ab74f830ecb926f69475e8e7740d3746f29ec
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -312,7 +312,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 82a1bea71b0c6781ad379267b9fd0205a3df7897
+          ref: dc1ab74f830ecb926f69475e8e7740d3746f29ec
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -494,7 +494,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 82a1bea71b0c6781ad379267b9fd0205a3df7897
+          ref: dc1ab74f830ecb926f69475e8e7740d3746f29ec
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:

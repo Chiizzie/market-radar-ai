@@ -213,3 +213,36 @@ def test_wide_spread_candidate_is_skipped_before_payment_without_starving_next(m
     selected,_,_,skipped=choose_unreviewed_packet([wide,p],{},now=NOW)
     assert selected==p and selected['packet']['prompt_revision']==PROMPT_REVISION
     assert skipped==[{'candidate_id':'stocks:WIDE','reason':'reference_spread_exceeds_20bps_before_paid_review'}]
+
+
+def test_interrupted_review_recovers_cost_into_comparison_without_authorizing_trade(tmp_path,monkeypatch):
+    from market_radar_ai.agents import paper_dispatch as dispatch
+    from market_radar_ai.agents.settlement_receipts import save_receipt
+    from market_radar_ai.agents.openai_pilot import MODEL
+    from test_pullback_strategy import synthetic_setup
+    doc,feed,now=synthetic_setup();store=MemoryStore();ledger=GitHubSpendingLedger(store)
+    ledger.reserve('paid',2000,now)
+    comparison=Mock();comparison.sync.return_value=None
+    monkeypatch.setattr('market_radar_ai.agents.comparison_live.LiveComparison',lambda *a,**k:comparison)
+    monkeypatch.setattr('market_radar_ai.agents.comparison_live.EventClient',lambda *a,**k:None)
+    monkeypatch.setattr('market_radar_ai.agents.scheduled_review.permitted',lambda *a:True)
+    monkeypatch.setattr(dispatch,'refresh_current_inputs',lambda d,**k:(d,{}))
+    monkeypatch.setattr(dispatch,'YahooFxProvider',lambda:SimpleNamespace(fetch=lambda *a,**k:SimpleNamespace(eur_per_unit='.9')))
+    monkeypatch.setattr(dispatch,'OpenAIPilot',lambda **k:SimpleNamespace(ledger=ledger))
+    def interrupted(*a,**kw):
+        root=kw['root'];root.mkdir()
+        (root/'packet.json').write_text(json.dumps({'packet_id':'audited-original'}))
+        save_receipt(root/'provider-receipts',request_id='paid',now=now,actual_microeur=959,
+            usage={'response_id':'resp_test','model':MODEL,'input_tokens':1000,'output_tokens':100,
+                   'cached_input_tokens':200,'cost_usd':'0.001065','eur_per_usd':'.9','pricing_checked':'2026-11-02'},
+            response=body())
+        raise RuntimeError('review_interrupted')
+    monkeypatch.setattr(dispatch,'run_pipeline',interrupted)
+    with pytest.raises(RuntimeError,match='review_interrupted'):
+        dispatch.execute(doc,feed,tmp_path/'run',env={'PAPER_FINAL_VERDICTS':'true',
+            'PAPER_COMPARISON_ENABLED':'true','GH_BUDGET_TOKEN':'offline'},clock=lambda:now)
+    assert store.state['entries']['paid']['actual']==959
+    args=comparison.reconcile_cost.call_args.args
+    assert args[0]['packet_id']=='audited-original' and args[1]['entries']['paid']['actual']==959
+    assert [x[0] for x in comparison.method_calls]==['sync','reconcile_cost','close']
+    assert not (tmp_path/'run'/'decision.json').exists()

@@ -25,8 +25,19 @@ The new prompt revision is `paper-scope-clarification-20261111-v1`, recorded ins
 
 ## Validation before deployment
 
-- 397 relevant tests passed across the accounting, notification, paper-review, conditional-entry, watcher, comparison, replay and readiness paths, including 21 new failure-case tests. A lifetime-headroom fixture was made independent of the old EUR 5 cap.
+- 398 relevant tests passed across the accounting, notification, paper-review, conditional-entry, watcher, comparison, replay and readiness paths, including 22 new failure-case tests. A lifetime-headroom fixture was made independent of the old EUR 5 cap. Interrupted-review receipt recovery is also checked to append corrected comparison costs without creating a decision.
 - Replayed the production archive from run 43064257889: 26,165 immutable events, 98 cohorts, as of 17:03:32. Every event identity and historical packet validated; the reconstructed execution report exactly matched the published report. No model calls.
 - A narrowly scoped live workflow verifies one clearly identified zero-cost budget marker (`storage-consistency-check-20261111-v1`), settlement, fresh read, and preservation of existing entries/limits. It receives no model or Telegram credentials.
 
 Daily EUR 1, monthly EUR 10, lifetime EUR 100, EUR 20 planned loss, 20bps spread, 20bps entry-gap, intraday-only execution and the original scanner remain unchanged. Deployment verification and subsequent forward observations are required before claiming that the live failure rate or decision quality improved.
+
+## Production verification
+
+- Deployment `e1ac569ecfdea3248dd071378e7e646d1e380739` pinned the operational jobs to runtime `82a1bea71b0c6781ad379267b9fd0205a3df7897` at 17:13. The original scanner and special context/method pins were preserved.
+- [Live zero-cost ledger verification](https://github.com/Chiizzie/market-radar-ai/actions/runs/43065992805) passed. The marker settled to zero and a fresh store read confirmed it, with all previous entries and the EUR1/EUR10/EUR100 limits preserved.
+- [Production reconstruction](https://github.com/Chiizzie/market-radar-ai/actions/runs/43065992655) passed with 27,103 events and 116 cohorts; archive restoration was verified. No AI calls or orders.
+- The [first updated scan](https://github.com/Chiizzie/market-radar-ai/actions/runs/43066344862), 17:15, delivered 79/79 selected stock charts and 30/30 crypto charts. Account sync and market context passed. Its independent comparison watcher completed 66 polls and 220 quotes with zero errors.
+- Its LRCX review used the new prompt revision, cleared all final checks at 17:19:26, and registered a conditional paper watch. All eight model stages settled: total 68,189 microEUR (EUR 0.068189), no outstanding holds for this review.
+- The approved-trade journal recorded LRCX's paper entry at 17:21:57.761434, before its 17:22:26 expiry. It was an open simulation when verified; no realised outcome or profitability claim follows from this one entry. No real broker order was placed.
+- A FIGS watch at 17:05:40 preceded this deployment. Its Telegram/dashboard delivery was confirmed and its inline watcher received 35 quotes with no errors. It expired at 17:08:40 with no eligible fill. Concurrent comparison observations remained below the entry trigger. It is not an executed trade and is not evidence for this patch.
+- Receipt recovery appends a fresh comparison accounting event after settlement, including when the review failed. This corrects the cost view without replaying the AI, rewriting historical decisions or authorizing a trade.
