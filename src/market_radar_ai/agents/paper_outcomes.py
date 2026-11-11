@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import Literal
 from pydantic import AwareDatetime, Field
 from .paper_team import Frozen, PaperPlan
+from .observation_policy import GUARDED, validate_policy, wide
 
 
 class Quote(Frozen):
@@ -26,7 +27,8 @@ class PaperOutcome(Frozen):
 def replay_long(plan: PaperPlan, quotes: list[Quote], *, decision_at: datetime,
                 entry_expires_at: datetime, entry_mode: Literal['limit', 'breakout'] = 'limit',
                 exit_window_seconds: int = 0, maximum_entry_spread_bps: Decimal | None = None,
-                maximum_entry_gap_bps: Decimal | None = None) -> PaperOutcome:
+                maximum_entry_gap_bps: Decimal | None = None,
+                quote_observation_policy: str | None = None) -> PaperOutcome:
     """Limit-entry long simulation, using asks for entry and bids for exit.
 
     First eligible ask at/below entry fills at the ask. A stop gap exits at the
@@ -36,6 +38,7 @@ def replay_long(plan: PaperPlan, quotes: list[Quote], *, decision_at: datetime,
     entry and skips trigger gaps whose projected stop loss exceeds EUR20.
     Estimated round-trip costs are deducted once. No volume/queue/slippage model.
     """
+    validate_policy(quote_observation_policy)
     if type(exit_window_seconds) is not int or not 0 <= exit_window_seconds <= 30:
         raise ValueError('Invalid scheduled exit window')
     if entry_mode not in ('limit', 'breakout'):
@@ -62,6 +65,15 @@ def replay_long(plan: PaperPlan, quotes: list[Quote], *, decision_at: datetime,
     for q in rows:
         if q.observed_at < decision_at: continue
         if q.observed_at > plan.exit_by: break
+        if quote_observation_policy == GUARDED and wide(q):
+            # A venue's empty/wide book cannot prove a breakout, invalidation,
+            # executable stop, target or timed exit. Preserve uncertainty rather
+            # than replacing a suspect exit with a later, more favourable price.
+            if entry is not None and (q.bid <= plan.stop or q.bid >= plan.target
+                    or q.observed_at >= exit_start):
+                return PaperOutcome(status='unresolved', reason='exit_quote_quality_unresolved',
+                                    entry_at=entry.observed_at, entry_fill=entry.ask)
+            continue
         if entry is None:
             if exit_window_seconds and q.observed_at >= exit_start:
                 break  # Never open a new simulation during its scheduled exit window.

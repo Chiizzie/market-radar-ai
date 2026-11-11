@@ -17,7 +17,7 @@ from tempfile import TemporaryDirectory
 import requests
 
 from .candidate_packages import canonical, digest
-from .paper_comparison import ComparisonStore, PROTOCOL, aware, validate_packet
+from .paper_comparison import ComparisonStore, PROTOCOL, protocol_for_day, aware, validate_packet
 from .paper_outcomes import Quote
 from .paper_verdict import paper_attempt_id
 
@@ -123,16 +123,17 @@ class LiveComparison:
     Failed durable writes never count as recorded observations. Replay is only
     from authenticated immutable events; synthetic exercises use ComparisonStore.
     """
-    def __init__(self, directory, *, client, observer=None, clock=lambda: datetime.now(UTC), day=None):
+    def __init__(self, directory, *, client, observer=None, clock=lambda: datetime.now(UTC), day=None, protocol=None):
         self.root = Path(directory)
         self.root.mkdir(parents=True, exist_ok=True)
         path = self.root / 'comparison.sqlite'
         if path.exists():
             raise ValueError('fresh_comparison_projection_required')
-        self.store = ComparisonStore(path)
-        self.client, self.observer, self.clock = client, observer, clock
         self.day = day or aware(clock()).date().isoformat()
-        self.experiment = digest(PROTOCOL)
+        self.protocol = protocol if protocol is not None else protocol_for_day(self.day)
+        self.store = ComparisonStore(path,protocol=self.protocol)
+        self.client, self.observer, self.clock = client, observer, clock
+        self.experiment = digest(self.protocol)
         self.cursor = 0
         self.seen = set()
         self.lock = threading.RLock()
@@ -217,7 +218,7 @@ class LiveComparison:
                 with TemporaryDirectory() as scratch:
                     path = Path(scratch)/'validation.sqlite'
                     self.store.backup(path)
-                    self.apply_payload(ComparisonStore(path), event)
+                    self.apply_payload(ComparisonStore(path,protocol=self.protocol), event)
             self.client.append(self.experiment, [event])
             self.sync()
 

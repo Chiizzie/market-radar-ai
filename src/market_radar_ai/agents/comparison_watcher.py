@@ -25,6 +25,15 @@ def run(*, env, output, duration=330, interval=5, clock=lambda: datetime.now(tim
             comparison=(factory or (lambda: LiveComparison(output,
                 client=EventClient(env.get('REVIEW_INGEST_SECRET'),clock=clock),
                 observer=ReferenceObserver(env,clock=clock),clock=clock)))()
+            # Restore immutable history before measuring the steady quote cadence.
+            # Startup remains separately timed; it never counts as a quote or a
+            # recovered data gap, and cannot consume the whole worker window.
+            comparison.sync()
+            health['startup_sync_seconds']=monotonic()-start
+            health['startup_state']='slow' if health['startup_sync_seconds']>15 else 'ready'
+            if health['startup_sync_seconds']>15: health['requires_attention']=True
+            if health['startup_sync_seconds']>60 or monotonic()>=end:
+                raise RuntimeError('comparison_startup_deadline_exceeded')
         while comparison is not None and monotonic()<end and allowed(env,clock()):
             tick=monotonic()
             if previous is not None:
@@ -66,10 +75,12 @@ def main():
     args=p.parse_args(); result=run(env=os.environ,output=args.output,duration=args.duration)
     print(json.dumps(result))
     if result.get('requires_attention'):
-        print('::warning::Comparison completed with recovered quote gaps; gaps remain recorded in worker-health.json.')
+        print('::warning::Comparison has startup or recovered-quote warnings; inspect worker-health.json for retained timings and gaps.')
         if os.environ.get('GITHUB_STEP_SUMMARY'):
             with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
-                f.write('\n- Comparison had recovered quote gaps: '+json.dumps(result['comparison']['quote_gap_counts'])+'. Historical gaps remain recorded.\n')
+                f.write('\n- Comparison warnings: startup '+str(result.get('startup_sync_seconds'))
+                    +' seconds; recovered gaps '+json.dumps(result.get('comparison',{}).get('quote_gap_counts',{}))
+                    +'. Historical gaps remain recorded.\n')
     return int(result['critical_failure'])
 
 if __name__=='__main__': raise SystemExit(main())

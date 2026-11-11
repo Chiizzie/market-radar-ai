@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from .paper_team import PaperPlan
 from .paper_outcomes import Quote, replay_long
 from .setup_checks import validate_paper_plan
+from .observation_policy import GUARDED, validate_policy, wide, spread_bps
 
 
 def canonical(value):
@@ -20,6 +21,7 @@ class PaperTracker:
             db.execute('CREATE TABLE IF NOT EXISTS tracked_quotes (id TEXT, at TEXT, payload TEXT NOT NULL, PRIMARY KEY(id, at))')
 
     def register(self, decision):
+        validate_policy(decision.get('quote_observation_policy'))
         if (decision.get('schema_version') != 'paper-final-decision-v1'
             or decision.get('verdict') != 'PAPER_WATCH_FOR_ENTRY'
             or decision.get('paper_only') is not True
@@ -62,7 +64,7 @@ class PaperTracker:
 
     def report(self, *, now):
         if now.tzinfo is None: raise ValueError('aware_clock_required')
-        rows=[]
+        rows=[]; quality_warnings=[]
         with sqlite3.connect(self.path) as db:
             for key,body in db.execute('SELECT id,payload FROM tracked_plans ORDER BY id'):
                 d=json.loads(body); p=d['plan']
@@ -76,17 +78,24 @@ class PaperTracker:
                 result=replay_long(plan,quotes,decision_at=datetime.fromisoformat(d['evaluated_at']),
                                    entry_expires_at=expiry,entry_mode='breakout',exit_window_seconds=30,
                     maximum_entry_spread_bps=Decimal('20') if d.get('review_policy_version')=='paper-specialists-v3-conditional-chief' else None,
-                    maximum_entry_gap_bps=Decimal('20') if d.get('review_policy_version')=='paper-specialists-v3-conditional-chief' else None)
+                    maximum_entry_gap_bps=Decimal('20') if d.get('review_policy_version')=='paper-specialists-v3-conditional-chief' else None,
+                    quote_observation_policy=d.get('quote_observation_policy'))
                 status=result.status
                 if status=='not_filled' and result.reason=='no_observed_eligible_fill' and now<expiry:
                     status='watching'
-                elif status=='unresolved' and now<plan.exit_by:
+                elif status=='unresolved' and result.reason!='exit_quote_quality_unresolved' and now<plan.exit_by:
                     status='open_simulation'
+                suspect=[q for q in quotes if wide(q)]
+                if suspect:
+                    quality_warnings.append(p['symbol']+' '+format(max(spread_bps(q) for q in suspect)/100,'.2f')+'%')
                 rows.append({'packet_id':key,'symbol':p['symbol'],'state':status,
                              'quote_count':len(quotes),'outcome':result.model_dump(mode='json')})
+        warning=(' Quote-quality review required: '+', '.join(quality_warnings[:5])
+                 +(' and '+str(len(quality_warnings)-5)+' more' if len(quality_warnings)>5 else '')
+                 +'. Wide reference spreads do not verify broker fills; recorded historical outcomes are retained.') if quality_warnings else ''
         return {'schema_version':'paper-tracking-v1','as_of':now.isoformat(),'trades':rows,
                 'model_calls':0,'trade_authorized':False,
-                'note':'Reference-quote simulation only. Scheduled exits use an observed bid in the final 30 seconds before the cutoff; never a later quote. Only decision-changing observations need be retained. Sampling gaps can miss triggers or stops. Missing entry or exit evidence never creates profit.'}
+                'note':'Reference-quote simulation only. Scheduled exits use an observed bid in the final 30 seconds before the cutoff; never a later quote. Only decision-changing observations and the first excluded wide quote need be retained. Sampling gaps can miss triggers or stops. Missing entry or exit evidence never creates profit.'+warning}
 
     def decisions(self):
         with sqlite3.connect(self.path) as db:
@@ -101,7 +110,8 @@ class PaperTracker:
         quote = Quote.model_validate(quote.model_dump())
         before = next((r for r in self.report(now=now)['trades'] if r['packet_id']==key), None)
         if before is None: raise ValueError('unknown_plan')
-        if before['state']=='closed' or (before['state']=='not_filled' and before['outcome']['reason']!='no_observed_eligible_fill'):
+        if (before['state']=='closed' or before['outcome']['reason']=='exit_quote_quality_unresolved'
+                or (before['state']=='not_filled' and before['outcome']['reason']!='no_observed_eligible_fill')):
             return False
         with sqlite3.connect(self.path) as db:
             stored = [json.loads(r[0]) for r in db.execute('SELECT payload FROM tracked_quotes WHERE id=?',(key,))]
@@ -110,6 +120,11 @@ class PaperTracker:
         self.observe(key,quote,symbol=symbol,source=source,now=now)
         after = next(r for r in self.report(now=now)['trades'] if r['packet_id']==key)
         if after['outcome']==before['outcome']:
+            with sqlite3.connect(self.path) as db:
+                decision=json.loads(db.execute('SELECT payload FROM tracked_plans WHERE id=?',(key,)).fetchone()[0])
+            if (decision.get('quote_observation_policy')==GUARDED and wide(quote)
+                    and not any(wide(Quote.model_validate(r['quote'])) for r in stored)):
+                return True  # Bounded evidence of the excluded quote, never a fill.
             with sqlite3.connect(self.path) as db:
                 db.execute('DELETE FROM tracked_quotes WHERE id=? AND at=?',
                            (key,quote.observed_at.astimezone(timezone.utc).isoformat()))
