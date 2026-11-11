@@ -17,7 +17,7 @@ These comparison jobs have no paid model credentials and reported zero model cal
 
 ## Repairs
 
-1. Restore comparison history before starting the steady polling timer. Keep startup duration and first completed poll delay explicit. Warn when bootstrap exceeds 15 seconds; fail if it exceeds 60 seconds or consumes the whole worker window. Steady polling gaps remain measured.
+1. Restore comparison history before starting the steady polling timer. Keep startup duration and first completed poll delay explicit. Warn when bootstrap exceeds 15 seconds; fail if it consumes the whole worker window. Slow but successful restoration still leaves the remaining window available for quotes; an arbitrary shorter startup cutoff must not suppress those observations. Failed restoration also retains its elapsed time. Steady polling gaps remain measured.
 2. Apply the same bounded recovered-gap classification to the approved-paper watcher. Recovery requires same-symbol valid evidence, no outstanding gaps, only missing/stale quote errors, no notification uncertainty or capacity deferrals, affected polls at most 20%, quote gaps at most 30 seconds and steady polling gaps at most 15 seconds. Storage, invalid-quote, long-duration and unrecovered failures still fail. Raw counts and timestamps remain in artifacts.
 3. Introduce `reference-quote-quality-v2` for packets assembled from 12 November 2026. A reference spread above 20 bps cannot trigger or invalidate entry. After entry, a wide quote crossing a stop, target or scheduled exit makes the exit unresolved; a later favorable quote cannot replace it. Narrow quotes retain actual gap losses. Unresolved execution simulations keep their capital and risk reserved.
 4. Preserve every old packet and recorded historical outcome. The journal adds a bounded warning naming affected symbols and spreads. Today it identifies SLM 0.23%, LRCX 8.73% and MTCH 3.69%; a quality flag alone does not prove a quote was wrong or a broker fill impossible.
@@ -36,7 +36,7 @@ The execution workflow explicitly chooses the matching source. Historical method
 
 ## Verification completed before deployment
 
-- 184 focused backend tests passed, including 18 new regression checks for startup timing, real outages, symmetric quote ambiguity, policy binding, immutable replay and retained unresolved exposure.
+- 186 focused backend tests passed, including 20 new regression checks for startup timing, real outages, symmetric quote ambiguity, policy binding, immutable replay and retained unresolved exposure.
 - 91 dashboard/parser/signed-ingestion tests passed, including actual Python-generated unresolved execution outputs and crossed-protocol/date rejection.
 - Dashboard production build passed.
 - Replayed all eight current paper-journal records: the complete trade rows match the old implementation exactly; only the explanatory warning note changes.

@@ -38,7 +38,7 @@ def test_actual_delay_during_monitoring_remains_critical(tmp_path):
 
 
 def test_startup_deadline_failure_is_named_and_has_no_quotes(tmp_path):
-    r,c=worker(tmp_path,startup=61)
+    r,c=worker(tmp_path,startup=101)
     assert r['critical_failure'] and r['quotes_received']==0 and r['polls']==0
     assert r['last_failure']['code']=='comparison_startup_deadline_exceeded'
     c.poll.assert_not_called()
@@ -63,3 +63,21 @@ def test_paper_worker_reports_recovery_without_clearing_error_counts(tmp_path,mo
     r=paper.run(env=ENV,output=tmp_path,duration=100,clock=c.now,monotonic=lambda:c.elapsed,sleep=c.sleep,observer=Mock())
     assert not r['critical_failure'] and r['requires_attention'] and r['error_polls']==1
     assert r['state']=='completed_with_recovered_quote_gaps' and r['quote_gap_counts']=={'TEST':1}
+
+
+def test_slow_startup_still_observes_for_the_remaining_worker_window(tmp_path):
+    r,c=worker(tmp_path,startup=65)
+    assert r['startup_state']=='slow' and r['startup_sync_seconds']==65
+    assert r['polls']==7 and r['quotes_received']==6 and r['first_completed_poll_delay_seconds']==65
+    assert r['requires_attention'] and not r['critical_failure']
+    c.close.assert_called_once()
+
+def test_failed_bootstrap_keeps_its_elapsed_time_and_error(tmp_path):
+    c=Clock();comparison=Mock();comparison.health={'polls':0,'quotes_received':0,'error_polls':0}
+    def fail():
+        c.sleep(30)
+        raise RuntimeError('invalid_comparison_event')
+    comparison.sync.side_effect=fail
+    r=run(env=ENV,output=tmp_path,duration=100,clock=c.now,monotonic=lambda:c.elapsed,sleep=c.sleep,factory=lambda:comparison)
+    assert r['startup_state']=='failed' and r['startup_sync_seconds']==30
+    assert r['critical_failure'] and r['quotes_received']==0 and r['last_failure']['code']=='invalid_comparison_event'
