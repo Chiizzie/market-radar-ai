@@ -971,7 +971,7 @@
       "usage": null
     },
     "paper-cooldown-v1:2dace7248795db0843e4869e6635dff6587a4dc8f76d7e1584f3bd48df20d15e:1794414857": {
-      "actual": null,
+      "actual": 0,
       "day": "2026-11-11",
       "reserved": 1,
       "usage": null
