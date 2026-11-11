@@ -6,7 +6,7 @@ import json
 import time
 from . import github_paper_tracking as journal
 from .paper_observer import ReferenceObserver
-from .watcher_diagnostics import record_failure
+from .watcher_diagnostics import record_failure, record_quote_recovery
 from ..dashboard.collection_schedule import scheduled_scope
 from ..dashboard.paper_lifecycle_delivery import notify
 
@@ -41,6 +41,7 @@ def poll_once(*, env, observer, clock, session=None, notifications=True, state=N
         report=journal.inspect(updated,now=clock())
     receipt=notify(report,env=env,now=clock(),seen=seen,decisions=updated['decisions']) if notifications else {'sent':0,'unconfirmed':0}
     return {'active_plans':len(active),'quotes_received':len(observations),'failures':failures,
+            'observed_symbols':sorted({o['symbol'] for o in observations}),
             'notifications':receipt,'report':report,'state':updated}
 
 
@@ -70,6 +71,7 @@ def run(*, env, output, duration=330, interval=5, clock=lambda:datetime.now(time
             status['last_success_at']=clock().isoformat()
             status['error_polls']+=bool(result['failures'])
             for failure in result['failures']: record_failure(status, failure, clock())
+            for symbol in result['observed_symbols']:record_quote_recovery(status,symbol,clock())
             status['notification_unconfirmed']+=result['notifications']['unconfirmed']
             (output/'paper-tracking.json').write_text(json.dumps(result['report'],indent=2)+'\n')
         except (RuntimeError,ValueError,KeyError,TypeError) as exc:
