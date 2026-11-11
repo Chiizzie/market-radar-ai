@@ -6823,6 +6823,12 @@
         "response_id": "resp_0c7b43101687c245016af344099bd487d1aed1eb7d4e9b57bc"
       }
     },
+    "paper-final-v1:f9f2f2037a6ca28b59899ca74206b6af44e7c85a67a72c6e3ef504230fe6eccf:news_analyst": {
+      "actual": null,
+      "day": "2026-11-11",
+      "reserved": 9819,
+      "usage": null
+    },
     "paper-final-v1:faac5a8143cb40ab89b4a34f7da931dbdbe2facd12716ac0e3888b4db42f4fb6:conclusion": {
       "actual": 10016,
       "day": "2026-11-11",
