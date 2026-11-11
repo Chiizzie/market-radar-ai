@@ -9281,7 +9281,7 @@
       "usage": null
     },
     "storage-consistency-check-20261111-v1": {
-      "actual": null,
+      "actual": 0,
       "day": "2026-11-11",
       "reserved": 1,
       "usage": null
