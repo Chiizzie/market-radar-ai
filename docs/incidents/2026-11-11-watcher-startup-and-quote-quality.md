@@ -76,3 +76,24 @@ Six scheduled runs from 20:20 through 20:45 recorded `startup_failure`; the 20:4
 GitHub's [official status summary](https://www.githubstatus.com/api/v2/summary.json), updated at 20:59:33, now reports a major Actions outage, first posted at 20:48:25, as part of [incident dvy0t3mvh1lg](https://www.githubstatus.com/incidents/dvy0t3mvh1lg). The queued/startup/transfer symptoms are consistent with this service incident; the public report alone does not prove the cause of every earlier failed run. At 20:26 that status page had still reported operational.
 
 Remaining: a fully completed scheduled workflow after service recovery, final hosted regression completion, and a genuine next-session guarded trade lifecycle. No additional scanner code, risk thresholds, budget limits or historical outcomes were changed in this follow-up.
+
+## Requested verification completed, 21:10 Dublin
+
+Two complete scheduled workflows now succeeded on the final deployed runtime:
+- [20:50 dispatch](https://github.com/Chiizzie/market-radar-ai/actions/runs/43098356909), completed at 21:05:15.
+- [20:55 dispatch](https://github.com/Chiizzie/market-radar-ai/actions/runs/43098810283), completed at 21:08:06.
+
+All seven jobs passed in both: collection, comparison watcher, paper watcher, account sync, review, market context and method shadow. Both watcher logs explicitly confirm checkout of `e6053db510f0a32f38685351198e42029e852da6`. The later comparison worker completed 61 polls with zero error polls and a 5.000-second maximum outer gap; startup took 28.118 seconds and remained a retained warning. The later paper watcher completed 66 polls with zero error polls and no unconfirmed notifications. Both had zero active tracked quotes; the paper watcher reported zero active plans.
+
+[Execution verification](https://github.com/Chiizzie/market-radar-ai/actions/runs/43099463437) also succeeded against the final runtime. It reconstructed 48,818 source events, verified restoration, published the execution report and readiness report, and completed offline trade evaluation with zero paid model calls.
+
+A direct read of the dashboard database confirmed fresh scanner, private-account, comparison, execution, context, method and operations records. The scanner snapshot was generated at 21:07:07 and received at 21:07:09; the account snapshot was generated at 21:05:34 and received at 21:05:40. The execution record was received at 21:08:31. No account contents are reproduced here. Lovable reports published project commit `de25d117c804e735cb48ff645d92b666c35608c2` ready. Public candidate-research and performance routes returned HTTP 200, and the served performance JavaScript contains the exact new execution experiment hash and unresolved-exit reason.
+
+The latest persisted readiness report (as of 21:08:32, received 21:09:22) now marks scanner jobs PASS. Its overall `attention_required` status is still accurate:
+- Daily configured AI allowance has EUR 0.092205 available, below the EUR 0.15 start threshold. The EUR 100 lifetime allowance has EUR 95.440044 available. These are application ledger limits, not provider credit balances. No budget was changed and no paid test call was made.
+- The stock reference quote probe is paused after the regular session.
+- Sustained observation with active eligible setups remains pending. Successful empty-watch loops do not prove entry-to-exit coverage or profitability.
+- The final hosted regression workflow remains queued; the previously completed local checks remain 186 backend and 91 frontend tests. No source code changed in this verification.
+- GitHub still reports its Actions incident as active; successful scanner runs do not prove service-wide recovery.
+
+Result: production runtime, complete workflow execution, historical reconstruction and dashboard ingestion are verified. A genuinely active guarded trade lifecycle from 12 November remains to be observed.
