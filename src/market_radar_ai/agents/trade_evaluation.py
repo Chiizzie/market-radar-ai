@@ -122,6 +122,38 @@ def stall_exit(rows, events, arm):
         'rows': results, 'note': 'Selected after observing this day, so any improvement is hindsight-biased. Sparse paths are excluded, not treated as no progress. The paired subset is coverage-selected and its delta is not a full-cohort or portfolio result. Observed quotes cannot prove an intrapoll high/low. Validate a frozen rule on later unseen sessions before any adoption.'}
 
 
+def fill_quote_quality(rows, events, arm):
+    """Audit the exact fill observations, without changing fills or outcomes."""
+    quotes=defaultdict(set)
+    for event in events:
+        if event['kind']!='quote':continue
+        p=json.loads(event['payload_json']);q=p['quote']
+        quotes[(p['candidate_id'],aware(p['received_at']))].add((q.get('bid'),q.get('ask')))
+    findings=[];checked=0;wide=0;unavailable=0;maximum=None
+    for row in rows:
+        outcome=row['arms'][arm].get('outcome') or {}
+        for side in ('entry','exit'):
+            at=outcome.get(side+'_at')
+            if not at:continue
+            item={'setup_id':row['setup_id'],'candidate_id':row['candidate_id'],'side':side,'fill_at':at}
+            observed=quotes.get((row['candidate_id'],aware(at)),set())
+            try:
+                if len(observed)!=1:raise ValueError('exact_fill_quote_unavailable')
+                bid,ask=map(number,next(iter(observed)))
+                if not 0<bid<=ask:raise ValueError('invalid_fill_quote')
+                spread=(ask-bid)/((ask+bid)/2)*10000
+                checked+=1;maximum=spread if maximum is None else max(maximum,spread)
+                if spread>20:
+                    wide+=1;findings.append({**item,'reason':'reference_spread_exceeds_20bps',
+                        'bid_eur':amount(bid),'ask_eur':amount(ask),'spread_bps':amount(spread)})
+            except (ValueError,TypeError,ArithmeticError):
+                unavailable+=1;findings.append({**item,'reason':'exact_fill_quote_unavailable_or_invalid'})
+    return {'threshold_bps':'20','checked_fills':checked,'wide_spread_fills':wide,
+        'unavailable_fills':unavailable,'maximum_spread_bps':amount(maximum) if maximum is not None else None,
+        'requires_review':bool(wide or unavailable),'findings':findings,'outcomes_changed':False,
+        'note':'Exact receipt-time fill observations only; no nearest-price substitution. Wide reference-venue spreads can dominate simulated P/L and do not establish an executable broker fill. Flag gains and losses equally. Original fills, costs and outcomes remain unchanged; a flag alone does not prove a quote was erroneous.'}
+
+
 def evaluate(events, execution, *, day=None):
     if (execution['schema_version'] != 'execution-research-report-v1'
             or execution['source_protocol_id'] != SOURCE_PROTOCOL_ID
@@ -156,6 +188,7 @@ def evaluate(events, execution, *, day=None):
         'cohort_count':len(rows),'distinct_symbols':len(symbols),
         'duplicate_symbol_setups':{s:n for s,n in sorted(symbols.items()) if n>1},
         'arms':{a:_arm_summary(rows,a) for a in ('code_only','ai_reviewed')},'by_strategy':strategies,
+        'fill_quote_quality':{a:fill_quote_quality(rows,selected,a) for a in ('code_only','ai_reviewed')},
         'closed_trades':{a:[{'setup_id':r['setup_id'],'candidate_id':r['candidate_id'],
             'strategy_id':r['strategy_id'],'outcome':r['arms'][a]['outcome'],
             'assumed_round_trip_cost_eur':r['arms'][a]['plan']['assumed_round_trip_cost_eur']}
@@ -188,6 +221,12 @@ def markdown(report):
     lines += ['', f"Trading net excludes separate AI research costs: {eur(report['ai_costs']['settled_estimated_eur'])} recorded estimated cost, with {report['ai_costs']['unreconciled_candidates']} candidates lacking a complete reconciliation (including unreviewed candidates; this does not imply extra spending). This does not establish the complete AI cost or the AI's comparative value."]
     lines += ['', '## Entry and exit evidence','']
     for arm,a in report['arms'].items():lines.append(f"- {arm}: "+', '.join(f'{k}: {v}' for k,v in a['outcome_reasons'].items()))
+    lines += ['', '## Reference-quote quality','',
+        'Wide reference-venue spreads can dominate simulated results. These are not verified broker fills. Exact quote evidence is checked for both winning and losing entries/exits; no historical result is rescored.','']
+    for arm,q in report['fill_quote_quality'].items():
+        lines.append(f"- {arm}: {q['checked_fills']} exact fill quotes checked; {q['wide_spread_fills']} above 20bps; {q['unavailable_fills']} unavailable/invalid. Maximum observed spread: "+('unavailable' if q['maximum_spread_bps'] is None else f"{number(q['maximum_spread_bps']):.2f}bps")+'.')
+        for item in q['findings']:
+            lines.append(f"  - {item['candidate_id']} {item['side']} at {item['fill_at']}: {item['reason']}"+(f" ({number(item['spread_bps']):.2f}bps)." if 'spread_bps' in item else '.'))
     lines += ['', '## Strategy and exposure context','',
         '| Strategy | Setups | Code closed | Code net | AI closed | AI net |','|---|---:|---:|---:|---:|---:|']
     for strategy,s in report['by_strategy'].items():
