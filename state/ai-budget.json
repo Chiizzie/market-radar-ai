@@ -4258,6 +4258,12 @@
         "response_id": "resp_0d48b58f553e784a016af499e30bc087d1b0e5a7bdfe483b07"
       }
     },
+    "paper-final-v1:8e983783c5c8839389f2463181310c36c85498a128aa3ee4a45dd91d965b4ca2:devils_advocate": {
+      "actual": null,
+      "day": "2026-11-11",
+      "reserved": 8200,
+      "usage": null
+    },
     "paper-final-v1:8e983783c5c8839389f2463181310c36c85498a128aa3ee4a45dd91d965b4ca2:technical_analyst": {
       "actual": null,
       "day": "2026-11-11",
