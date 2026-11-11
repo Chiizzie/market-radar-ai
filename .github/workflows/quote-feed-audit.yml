@@ -1,0 +1,35 @@
+name: Read-only quote feed audit
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/quote-feed-audit.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: market-radar-ai-quote-feed-audit
+  cancel-in-progress: false
+jobs:
+  audit:
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compare reference quotes with available consolidated data
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+        run: python scripts/audit_nov11_quote_feed.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: quote-feed-audit-${{ github.run_id }}
+          path: artifacts/quote-feed-audit.json
+          if-no-files-found: error
+          retention-days: 30
