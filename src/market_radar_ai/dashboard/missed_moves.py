@@ -38,6 +38,7 @@ def explain(manifest, qualification, decision, selection, *, now):
             'decision_blockers':decision.get('blockers',[]) if decision.get('candidate_id')==cid else []})
     rows.sort(key=lambda r:(r['symbol'] not in CORE,-r['day_change_pct'],r['symbol']))
     return {'schema_version':'missed-move-diagnostics-v1','as_of':now.isoformat(),
+        'selection_evidence_status':'available' if isinstance(manifest.get('symbols'),list) else 'unavailable',
         'observed_movers_and_core_count':len(rows),'rows':rows[:100],'rows_omitted':max(0,len(rows)-100),
         'reason_counts':dict(Counter(b for r in rows for b in r['reasons'])),
         'trade_authorized':False,'model_calls':0,

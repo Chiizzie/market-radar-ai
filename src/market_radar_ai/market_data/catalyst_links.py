@@ -129,8 +129,8 @@ def routing_report(report, manifest, qualification):
     rows = []
     for r in report.get('rows', []):
         m = selected.get(r['symbol'], {}); q = candidates.get('stocks:'+r['symbol'])
-        rows.append({**r, 'detail_selected': m.get('detail_selected', False),
-            'selection_reason': m.get('selection_reason', 'outside_catalogue'),
+        rows.append({**r, 'detail_selected': m.get('detail_selected'),
+            'selection_reason': m.get('selection_reason', 'selection_evidence_unavailable'),
             'qualification_available': q is not None,
             'qualification_blockers': q.get('paper_blockers', []) if q else [],
             'admission_state': 'not_assessed' if q is None else 'blocked' if q.get('paper_blockers') else 'qualified_not_approved'})

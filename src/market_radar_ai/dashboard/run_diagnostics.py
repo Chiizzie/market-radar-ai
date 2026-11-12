@@ -34,10 +34,10 @@ def category(reason):
     return 'evidence_or_validation_gap'
 
 
-def read(path, issues):
+def read(path, issues, *, maximum_bytes=4_000_000):
     if not path.exists():return None
     try:
-        if path.stat().st_size>4_000_000:raise ValueError()
+        if path.stat().st_size>maximum_bytes:raise ValueError()
         value=json.loads(path.read_text())
         if not isinstance(value,dict):raise ValueError()
         return value
@@ -171,12 +171,15 @@ def build_report(collection, review=None, *, now, budget_loader=None):
     money=spending(packet,status,audit,budget_loader=budget_loader,phase=phase)
     from .missed_moves import explain
     from ..market_data.catalyst_links import routing_report
-    missed=explain(read(collection/'discovery-selection.json',issues) or {},q,decision,selection,now=now)
+    # A normal 5,722-symbol manifest is already 4.6 MB. Keep the ordinary
+    # artifact bound, but allow the bounded broad-universe trace to be read.
+    manifest=read(collection/'discovery-selection.json',issues,maximum_bytes=32_000_000) or {}
+    missed=explain(manifest,q,decision,selection,now=now)
     return {'schema_version':'internal-run-diagnostics-v1','generated_at_dublin':now.astimezone(ZoneInfo('Europe/Dublin')).isoformat(),
             'phase':phase,'qualification_origin':origin,'qualification_available':bool(q),
             'discovery':discovery_summary(discovery, now=now),
             'missed_moves':missed,
-            'catalyst_links':routing_report(discovery.get('catalyst_links',{}),read(collection/'discovery-selection.json',issues) or {},q),
+            'catalyst_links':routing_report(discovery.get('catalyst_links',{}),manifest,q),
             'coverage':coverage,'candidates':candidates,'blocker_counts':dict(sorted(reasons.items())),
             'blocker_groups':dict(sorted(groups.items())),
             'review':{'state':label(status.get('state','not_confirmed')),
