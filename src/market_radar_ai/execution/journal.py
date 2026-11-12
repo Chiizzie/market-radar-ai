@@ -141,7 +141,7 @@ class Journal:
         body = canonical(order)
         if not previous or previous[0] != body:
             self.db.execute("INSERT INTO observations(order_id,observed_at,filled_qty,filled_avg_price,body) VALUES(?,?,?,?,?)",
-                            (order["id"], now.isoformat(), str(filled), order.get("filled_avg_price"), body))
+                            (order["id"], utcnow().isoformat(), str(filled), order.get("filled_avg_price"), body))
         self.db.execute("INSERT INTO orders VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET body=excluded.body",
                         (order["id"], intent_id, body))
         self.db.execute("UPDATE operations SET phase='OBSERVED' WHERE client_id=? AND intent_id=?",

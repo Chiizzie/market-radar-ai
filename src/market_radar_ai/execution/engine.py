@@ -146,6 +146,8 @@ class Engine:
                     blocked.add(row["id"])
                     self._row_failure(row, exc)
             positions = self._inventory()
+            if not supplied_now:
+                now = utcnow()  # Recheck deadlines after network observations.
             for row in self.journal.rows(active=True):
                 if row["id"] in blocked:
                     continue
@@ -153,7 +155,7 @@ class Engine:
                     self._manage(row, positions, clock, now)
                 except (BrokerError, SafetyError, KeyError, TypeError, ValueError) as exc:
                     self._row_failure(row, exc)
-            self.last_reconciled_at = now.isoformat()
+            self.last_reconciled_at = (now if supplied_now else utcnow()).isoformat()
         except (BrokerError, SafetyError, KeyError, TypeError, ValueError) as exc:
             self.last_error = type(exc).__name__ + ": " + str(exc)
             self.journal.halt(self.last_error)
@@ -215,8 +217,34 @@ class Engine:
                     for order in orders), dec(0))
 
     def _protection(self, intent, orders, remaining):
+        entry = next((o for o in orders if o.get("client_order_id") == intent.client_id("entry")), None)
+
+        def active_stop(order):
+            if any(order.get(k) for k in ("canceled_at", "expired_at", "failed_at", "replaced_at")):
+                return False
+            if order["status"] in PROTECTIVE:
+                return True
+            # Held is normal for an untriggered stop AFTER a full bracket entry.
+            # Require group identity, full entry, live sibling and matching quantity.
+            if order["status"] != "held" or not entry or entry["status"] != "filled":
+                return False
+            group = entry.get("group_id")
+            if (not group or entry.get("group_role") != "entry"
+                    or entry.get("order_class") != "bracket"
+                    or dec(entry["filled_qty"]) != dec(entry["qty"])
+                    or order.get("group_id") != group or order.get("group_role") != "stop_loss"
+                    or order.get("order_class") != "bracket"):
+                return False
+            siblings = [o for o in orders if o.get("group_id") == group
+                and o.get("group_role") == "take_profit" and o.get("order_class") == "bracket"
+                and o["symbol"] == intent.symbol and o["side"] == "sell" and o["type"] == "limit"
+                and o["status"] in PROTECTIVE | {"partially_filled"}
+                and dec(o["qty"]) - dec(o["filled_qty"]) == remaining
+                and not any(o.get(k) for k in ("canceled_at", "expired_at", "failed_at", "replaced_at"))]
+            return len(siblings) == 1
+
         stops = [o for o in orders if o["side"] == "sell" and o.get("type") == "stop"
-                 and o["status"] in PROTECTIVE
+                 and o["symbol"] == intent.symbol and active_stop(o)
                  and dec(o.get("stop_price", 0)) == dec(intent.stop_usd)
                  and dec(o["qty"]) - dec(o["filled_qty"]) == remaining]
         return remaining > 0 and len(stops) == 1

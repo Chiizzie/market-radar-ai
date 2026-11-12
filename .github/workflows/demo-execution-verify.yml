@@ -5,6 +5,7 @@ on:
     paths:
       - 'src/market_radar_ai/execution/**'
       - 'tests/test_demo_execution.py'
+      - 'tests/fixtures/alpaca_held_stop_20261112.json'
       - '.github/workflows/demo-execution-verify.yml'
       - 'deploy/paper-exercise-request.json'
   workflow_dispatch:
@@ -73,7 +74,7 @@ jobs:
         env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
-        run: python -m market_radar_ai.execution.exercise --paper-orders --exercise-id engineering-20261112-v3 --wait-for-open-seconds 1800
+        run: python -m market_radar_ai.execution.exercise --paper-orders --exercise-id engineering-20261112-v4 --wait-for-open-seconds 1800
       - uses: actions/upload-artifact@v4
         if: always()
         with:

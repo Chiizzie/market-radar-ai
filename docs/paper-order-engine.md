@@ -7,7 +7,7 @@ This is an isolated engineering component, not scanner auto-execution or evidenc
 - Initial deployment: `8a0d7e787c5a2707a6761044ad90014ff0527a21`.
 - Initial GitHub verification: https://github.com/Chiizzie/market-radar-ai/actions/runs/43232188896 — both fault drills and read-only paper connectivity passed.
 - At **13:57:10 Europe/Dublin, 12 November**: paper account ACTIVE, USD, trading/account blocks false, **0 open orders, 0 positions**. Regular session closed; next open **14:30 Dublin**, close **21:00 Dublin**.
-- Initial 39 fault tests passed remotely. Expanded local suite: **60 tests**, including 30 seeded fill/cancel/restart sequences within one test. Final revision must be checked in GitHub before claiming deployed verification.
+- Initial 39 fault tests passed remotely. Expanded local suite: **66 tests**, including 30 seeded fill/cancel/restart sequences within one test. Final revision must be checked in GitHub before claiming deployed verification.
 - Read-only preflight **does not establish order-submission permission**. A completed broker entry/fill/protection/exit round trip has **not yet been observed**.
 
 ## What is implemented
@@ -105,3 +105,13 @@ Sources checked 12 November:
 - https://docs.alpaca.markets/us/docs/paper-trading
 - https://docs.trading212.com/api/orders/placelimitorder
 - https://docs.trading212.com/api/section/general-information/api-limitations
+
+## Broker response mapping learned during acceptance
+
+On the third broker exercise, an actual paper entry filled and the engine flattened it after incorrectly treating a `held` stop as missing. The account ended flat. The raw broker group is now a regression fixture with its source run/commit/artifact digest. A held stop is recognized as armed only when the same bracket group has a fully filled entry, a live take-profit sibling, matching remaining quantity and no termination timestamps. Missing group identity, both exits held, partial entry, wrong quantity and cancellation markers still fail closed.
+
+Observation records now use receipt time after the broker response; broker event timestamps remain separate. Earlier artifacts retain their original poll-start observation timestamps and are not rewritten.
+
+Relevant primary references:
+- https://docs.alpaca.markets/us/reference/subscribetotradev2sse
+- https://forum.alpaca.markets/t/bracket-order-exit-trades-not-executing/3697

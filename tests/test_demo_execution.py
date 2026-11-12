@@ -73,11 +73,14 @@ class Broker:
         order = dict(payload, id=f"order-{len(self.posts)}", status="new", filled_qty="0", filled_avg_price=None)
         self.orders[order["id"]] = order
         if payload.get("order_class") == "bracket":
+            order.update(group_id="group-" + order["id"], group_role="entry")
             order["leg_ids"] = []
             for name, kind, price in (("tp", "limit", "limit_price"), ("sl", "stop", "stop_price")):
                 leg = {"id": order["id"] + "-" + name, "client_order_id": "broker-" + order["id"] + name,
                        "symbol": order["symbol"], "side": "sell", "qty": order["qty"], "type": kind,
                        "status": "held", "filled_qty": "0", "filled_avg_price": None,
+                       "group_id": order["group_id"], "group_role": "take_profit" if name == "tp" else "stop_loss",
+                       "order_class": "bracket",
                        price: payload["take_profit" if name == "tp" else "stop_loss"][price]}
                 self.orders[leg["id"]] = leg
                 order["leg_ids"].append(leg["id"])
@@ -110,7 +113,7 @@ class Broker:
                      status="filled" if dec(qty) == dec(order["qty"]) else "partially_filled")
         if order.get("leg_ids") and order["status"] == "filled":
             for leg in order["leg_ids"]:
-                self.orders[leg]["status"] = "new"
+                self.orders[leg]["status"] = "new" if self.orders[leg]["type"] == "limit" else "held"
 
     def cancel(self, order_id):
         self.cancels.append(order_id)
@@ -294,6 +297,43 @@ class DemoEngineTests(unittest.TestCase):
         self.broker.orders["order-1-sl"]["qty"] = "3"
         self.tick()
         self.assertEqual(self.state(), "EXIT_CANCEL_PENDING")
+
+    def test_captured_broker_held_stop_is_armed_after_full_entry(self):
+        fixture = json.loads((Path(__file__).parent / "fixtures/alpaca_held_stop_20261112.json").read_text())
+        plan = Intent(**fixture["intent"])
+        self.assertTrue(self.engine._protection(plan, fixture["orders"], dec(1)))
+
+    def test_both_bracket_exits_held_does_not_count_as_protected(self):
+        self.filled()
+        self.broker.orders["order-1-tp"]["status"] = "held"
+        self.tick()
+        self.assertEqual(self.state(), "EXIT_CANCEL_PENDING")
+
+    def test_held_stop_without_group_identity_is_not_protection(self):
+        self.filled()
+        self.broker.orders["order-1-sl"].pop("group_id")
+        self.tick()
+        self.assertEqual(self.state(), "EXIT_CANCEL_PENDING")
+
+    def test_held_stop_wrong_group_is_not_protection(self):
+        self.filled()
+        self.broker.orders["order-1-sl"]["group_id"] = "different-group"
+        self.tick()
+        self.assertEqual(self.state(), "EXIT_CANCEL_PENDING")
+
+    def test_held_stop_with_cancellation_timestamp_is_not_protection(self):
+        self.filled()
+        self.broker.orders["order-1-sl"]["canceled_at"] = NOW.isoformat()
+        self.tick()
+        self.assertEqual(self.state(), "EXIT_CANCEL_PENDING")
+
+    def test_observation_time_is_receipt_time_not_poll_start(self):
+        self.start()
+        self.broker.fill("order-1", 1, 100)
+        before = datetime.now(timezone.utc)
+        self.journal.observe("test-source-1", self.broker.get_order("order-1"), NOW - timedelta(days=1))
+        at = self.journal.db.execute("SELECT observed_at FROM observations ORDER BY seq DESC LIMIT 1").fetchone()[0]
+        self.assertGreaterEqual(datetime.fromisoformat(at), before)
 
     def test_partial_target_adjusted_stop_remains_protected(self):
         self.filled()
@@ -712,8 +752,7 @@ Engine(journal, broker).submit(intent(), NOW)
 
     def test_wall_clock_advance_during_network_reads_does_not_look_future_dated(self):
         self.broker.now = NOW + timedelta(seconds=1)
-        moments = [NOW, NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=1),
-                   NOW + timedelta(seconds=2), NOW + timedelta(seconds=2)]
+        moments = [NOW, NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=1)] + [NOW + timedelta(seconds=2)] * 20
         with patch("market_radar_ai.execution.engine.utcnow", side_effect=moments):
             self.engine.submit(intent())
         self.assertEqual(len(self.broker.posts), 1)
