@@ -163,5 +163,133 @@
     "assumed_round_trip_cost_percent": "0.40",
     "closed_baseline_median_cost_share_of_planned_loss_percent": "47.77733726620141018464229244",
     "note": "Describes selected closed observations; does not prove wider stops or different volume rules improve outcomes."
+  },
+  "production_verification": {
+    "run_id": 43252970506,
+    "workflow_commit": "2033ce306af0cce60d594d76b7159905b2b6c888",
+    "source_commit": "3a113a4e8c4e03e9b28799c146db1f1cae6f987a",
+    "capture_artifact_id": 13960941298,
+    "capture_artifact_sha256": "fdd7b3b5b9280ba576b8225af668f832c3c49a27eadb99f2e2c6242689fc7a56",
+    "decision_artifact_id": 13960416674,
+    "decision_artifact_sha256": "83c158901404b02346aa34f727997f2c3a1f1fa182935109abe23d679c3de0bc",
+    "catalogue_source": "same_capture_validated_metadata",
+    "original_catalogue_observed_at_retained": "2026-11-12T15:56:15.261374+00:00",
+    "reference_refresh_at": "2026-11-12T15:56:58.663601+00:00",
+    "reference_and_qualification_step_seconds": 3.715,
+    "routing_rows": 446,
+    "unreadable_artifacts": [],
+    "review_status": "no_qualified_candidate_zero_cost",
+    "review_model_calls": 0,
+    "account_sync_delivered_at": "2026-11-12T15:55:34.7314079+00:00",
+    "dashboard_generated_at": "2026-11-12T15:56:22.291312+00:00",
+    "dashboard_received_at": "2026-11-12T15:56:24.329246+00:00",
+    "workflow_status": "completed",
+    "watchers": {
+      "approved": {
+        "schema_version": "paper-watcher-health-v1",
+        "started_at": "2026-11-12T15:55:36.193120+00:00",
+        "target_interval_seconds": 5,
+        "polls": 66,
+        "quotes_received": 0,
+        "error_polls": 0,
+        "notification_unconfirmed": 0,
+        "maximum_poll_gap_seconds": 5,
+        "model_calls": 0,
+        "live_orders_enabled": false,
+        "trade_authorized": false,
+        "active_plans": 0,
+        "last_success_at": "2026-11-12T16:01:01.243799+00:00",
+        "maximum_poll_duration_seconds": 0.43,
+        "checked_at": "2026-11-12T16:01:01.244150+00:00",
+        "state": "completed",
+        "completed_at": "2026-11-12T16:01:06.193278+00:00",
+        "critical_failure": false
+      },
+      "comparison": {
+        "polls": 66,
+        "quotes_received": 0,
+        "error_polls": 0,
+        "model_calls": 0,
+        "started_at": "2026-11-12T15:55:35.979297+00:00",
+        "maximum_poll_duration_seconds": 0.7880102450000095,
+        "maximum_poll_gap_seconds": 5.000208369999996,
+        "trade_authorized": false,
+        "startup_state": "ready",
+        "startup_sync_seconds": 1.843496304999995,
+        "comparison": {
+          "polls": 66,
+          "quotes_received": 0,
+          "error_polls": 0,
+          "capacity_deferred": 0,
+          "maximum_poll_gap_seconds": 5.230615,
+          "target_interval_seconds": 5,
+          "model_calls": 0,
+          "last_sync": {
+            "pages": 1,
+            "events": 0,
+            "seconds": 0.277,
+            "storage_read_seconds": 0.277,
+            "projection_seconds": 0
+          },
+          "maximum_sync_seconds": 1.709,
+          "initial_sync": {
+            "pages": 2,
+            "events": 153,
+            "seconds": 1.709,
+            "storage_read_seconds": 1.431,
+            "projection_seconds": 0.277
+          },
+          "last_success_at": "2026-11-12T16:01:03.186410+00:00"
+        },
+        "first_completed_poll_delay_seconds": 2.2701808459999953,
+        "completed_at": "2026-11-12T16:01:07.163563+00:00",
+        "state": "completed",
+        "critical_failure": false
+      }
+    },
+    "workflow_conclusion": "success",
+    "completed_at": "2026-11-12T16:02:35Z",
+    "jobs": [
+      {
+        "id": 131303523781,
+        "name": "paper-watcher",
+        "conclusion": "success"
+      },
+      {
+        "id": 131303524556,
+        "name": "comparison-watcher",
+        "conclusion": "success"
+      },
+      {
+        "id": 131303525180,
+        "name": "account-sync",
+        "conclusion": "success"
+      },
+      {
+        "id": 131303525449,
+        "name": "collect",
+        "conclusion": "success"
+      },
+      {
+        "id": 131304383267,
+        "name": "method-shadow",
+        "conclusion": "success"
+      },
+      {
+        "id": 131304384720,
+        "name": "market-context",
+        "conclusion": "success"
+      },
+      {
+        "id": 131304384733,
+        "name": "review",
+        "conclusion": "success"
+      }
+    ],
+    "limitations": [
+      "No qualifying setup in this run; no new approved entry/exit lifecycle was observed.",
+      "Both quote workers completed 66 polls without errors but received zero quotes because no active setups required observation.",
+      "Single observed runtime comparison, not a speed guarantee for future runs."
+    ]
   }
 }
