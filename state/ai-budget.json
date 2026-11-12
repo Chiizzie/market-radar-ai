@@ -3167,10 +3167,19 @@
       }
     },
     "paper-final-v1:360529350447cb8baec2098f925d2419c40171ec3134f99498a662feea6411fe:opportunity_hunter": {
-      "actual": null,
+      "actual": 7807,
       "day": "2026-11-12",
       "reserved": 9685,
-      "usage": null
+      "usage": {
+        "cached_input_tokens": 0,
+        "cost_usd": "0.00863325",
+        "eur_per_usd": "0.9042000107573462844340257183",
+        "input_tokens": 7113,
+        "model": "gpt-5.4-mini-2026-03-17",
+        "output_tokens": 733,
+        "pricing_checked": "2026-11-02",
+        "response_id": "resp_0226be0083cdd13b016af5f182355c87d1b82f57a90af6cabf"
+      }
     },
     "paper-final-v1:360529350447cb8baec2098f925d2419c40171ec3134f99498a662feea6411fe:risk_manager": {
       "actual": 6677,
