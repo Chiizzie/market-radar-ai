@@ -1,8 +1,13 @@
 # Volume, risk and cost experiment
 
-Prepared 12 November 2026, Europe/Dublin. **Not activated yet.** The ordinary
-scanner remains at runtime 3a113a4. Dashboard/storage publication and a complete
-natural run are required before claiming that prospective collection has begun.
+Prepared 12 November 2026, Europe/Dublin. **Approved, but not activated.** The
+user approved the Lovable plan and integration/activation on 12 November. The
+plan approval was accepted at approximately 16:52 Dublin. Lovable committed a
+partial dashboard implementation, then refused the required follow-up because
+the workspace is out of credits. That partial change is not ready to publish.
+The ordinary scanner remains at runtime 3a113a4. Dashboard publication and a
+complete natural run are required before claiming prospective collection began.
+See [the saved integration review](volume-risk-cost-dashboard-review.md).
 
 ## Hypothesis and scope
 
@@ -112,13 +117,38 @@ been demonstrated for this new protocol.
 ## Activation checklist
 
 1. Review/pass the producer regression workflow and synthetic contract fixtures.
-2. Complete Lovable's pending plan approval, validate actual producer fixtures
-   against its strict parser, finish migration/tests and publish dashboard support.
+2. Restore Lovable editing capacity; approval has already been supplied. Fix the
+   recorded producer/parser mismatches, validate every actual producer fixture,
+   finish migration/build/auth checks and publish dashboard support. The additive
+   database constraints and viewer policy are present, but that alone does not
+   make the unpublished HTTP validator usable.
 3. Add [the prepared job](../../deploy/strategy-experiment-job.yml) with its exact
    tested runtime SHA and enable only `STRATEGY_EXPERIMENT_ENABLED`. Existing
    collection/review/watcher pins, budgets and order settings remain unchanged.
 4. Inspect a full natural run, durable source/report receipts and viewer output.
    Record actual activation time; do not count earlier captures as forward trades.
+
+## Verification checkpoint, 12 November 2026
+
+- Producer commit `73d880261768b32453986d7da717058810178920`: 155 focused
+  regression tests passed locally and in [CI run 43259903724](https://github.com/Chiizzie/market-radar-ai/actions/runs/43259903724),
+  including 30 experiment tests. Runtime source is unchanged at this checkpoint.
+- Dashboard commit `7b59aab79e14c59aee3574df9d060d20dba49458`: provider reports
+  unfinished build verification. Independent offline testing of the committed
+  validator accepts empty report and screen fixtures, rejects enrolment because
+  the cohort safety fields are absent from the schema, and rejects watching and
+  closed reports because reserved capital is incorrectly treated as notional.
+- Database inspection confirms the new kinds/protocol constraint and restricted
+  report-only viewer policy. There are zero records for the new protocol. No
+  synthetic fixture was ingested, no new worker was enabled, no publication was
+  attempted, and production workflow pins/budgets were not changed.
+- Ordinary [16:50 collection run](https://github.com/Chiizzie/market-radar-ai/actions/runs/43262983134)
+  completed all seven jobs successfully. The separate
+  [16:52 health run](https://github.com/Chiizzie/market-radar-ai/actions/runs/43263449903)
+  failed with `comparison_storage_unavailable`; the subsequent
+  [16:58 health run](https://github.com/Chiizzie/market-radar-ai/actions/runs/43264367635)
+  passed and database receipts continued through 16:59. The transient's cause
+  is not established; this checkpoint does not claim continuous availability.
 
 Primary sources:
 - https://docs.alpaca.markets/us/reference/stockbars

@@ -1,13 +1,24 @@
 # Dashboard integration review before publication
 
-The Lovable turn requested for this feature is paused at `plan--show`, with
-`{"path":".lovable/plan.md"}`. User message
-`umsg_01m788snh8erebw5qtdyrczwq4`, thread `main`, approval event
-`main:agent#00000000006410#tcb:NR4LLP4F`. No approval was supplied on the user's
-behalf. Do not supersede this pause with another message. Read its current state
-before resuming after the user's decision.
+The user approved the pending `plan--show` action on 12 November 2026. The
+approval for user message `umsg_01m788snh8erebw5qtdyrczwq4`, thread `main`, event
+`main:agent#00000000006410#tcb:NR4LLP4F`, was accepted at approximately 16:52
+Dublin. The resumed turn completed a **partial** implementation in commit
+`7b59aab79e14c59aee3574df9d060d20dba49458`. It reports an existing
+`src/lib/market/opportunity-page.test.tsx` typecheck error; tests and browser
+checks were not completed, and the app was not published.
 
-The uncommitted proposed parser was reviewed from the returned tool activity.
+A follow-up specifying the six fixes below and attaching the exact synthetic
+producer fixture was refused with: "Your workspace is out of credits, so
+Lovable can't send this message." No follow-up message ID was created. This
+is an editing-credit blocker, not another pending user approval, and not the
+scanner's OpenAI allowance. After capacity is restored, resume the focused
+fix request through Lovable; do not publish the partial commit as-is.
+
+The committed parser was read and independently exercised offline with the
+unchanged producer fixture. Empty report and screen parse successfully.
+Enrolment fails on unrecognized cohort safety fields; watching and closed
+reports fail `Unsafe strategy paper plan`. The defects below are still present.
 Before publishing, test it against the real producer's **synthetic-only** fixture
 at `tests/fixtures/strategy-experiment-producer.json`. Never ingest that fixture
 into production. It includes empty, watching and closed reports, source enrolment,
@@ -34,7 +45,26 @@ Concrete compatibility issues in the proposed patch:
 6. Keep the changes focused. Unrelated page metadata and unrelated test casts in
    the proposed patch should be omitted unless an independently reproduced build
    failure makes them necessary and their reason is recorded.
+7. The panel currently says full validation begins 13 November without the
+   activation condition. Change this to planned validation only after actual
+   activation, so a delayed launch cannot mislabel unobserved sessions.
+8. The new migration is named `0004_isolated_strategy_experiment.sql`, ahead
+   of the existing `0006_research_events.sql` that creates the affected table.
+   Review clean-database replay/journal ordering and use a later unique migration
+   name as appropriate. Do not reapply destructive migrations or assume that a
+   successful change to the existing database proves clean recovery works.
+
+Read-only production checks confirmed the expanded kind constraint, exact
+protocol/paper flags constraint and viewer policy allowing only this protocol's
+strategy reports. No new-protocol records exist; raw enrolment/screen/quote
+events remain excluded from viewer policy. No synthetic fixture was ingested.
+
+Completion checks after fixes: parse all six fixture payloads (including quote),
+negative safety/count/finite/partition tests, role and sign-out regression tests,
+existing research-events/opportunity/Performance checks, typecheck and production
+build. Check parsed timestamp equality across Postgres normalization. Then
+publish and verify actual publication before enabling the prepared worker.
 
 Complete migration and parser/RLS/sign-out tests, then verify a production report
 and viewer rendering after the new backend worker is explicitly activated. A
-paused or accepted Lovable turn is not a completed build or publication.
+completed Lovable turn alone is not a verified build or publication.
