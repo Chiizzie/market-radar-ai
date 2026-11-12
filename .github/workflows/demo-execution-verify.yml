@@ -1,0 +1,56 @@
+name: Broker paper execution verification
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/market_radar_ai/execution/**'
+      - 'tests/test_demo_execution.py'
+      - '.github/workflows/demo-execution-verify.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: broker-paper-engine-verification
+  cancel-in-progress: false
+jobs:
+  fault-drills:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Isolated paper engine failure and recovery drills
+        env:
+          PYTHONPATH: src
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python -m unittest discover -s tests -p test_demo_execution.py -v
+      - name: Compile isolated engine
+        run: python -m compileall -q src/market_radar_ai/execution
+  paper-connectivity:
+    needs: fault-drills
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Read-only paper account and clock verification
+        env:
+          PYTHONPATH: src
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+        run: python -m market_radar_ai.execution.cli preflight --report artifacts/paper-preflight.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: broker-paper-preflight
+          path: artifacts/paper-preflight.json
+          retention-days: 30
+          if-no-files-found: error
