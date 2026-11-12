@@ -101,7 +101,10 @@ class Journal:
         return [x for x in rows if x["state"] not in TERMINAL] if active else rows
 
     def intent(self, row):
-        return Intent(**json.loads(row["body"]))
+        intent = Intent(**json.loads(row["body"]))
+        if intent.fingerprint != row["fingerprint"] or intent.intent_id != row["id"]:
+            raise SafetyError("journal intent fingerprint mismatch")
+        return intent
 
     def reserve(self, intent, risk, capital):
         self.db.execute("INSERT INTO intents VALUES(?,?,?,?,?,?,NULL,NULL,NULL)", (

@@ -1,6 +1,8 @@
 """Paper-only REST adapter. No configurable host, redirects, retries or live fallback."""
 import json
 import os
+import re
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -29,6 +31,7 @@ class AlpacaPaper:
             raise SafetyError("paper API credentials missing")
         self._key, self._secret = key, secret
         self._opener = urllib.request.build_opener(NoRedirect())
+        self._last_request_at = 0.0
 
     @classmethod
     def from_env(cls):
@@ -37,10 +40,24 @@ class AlpacaPaper:
     def _request(self, method, path, payload=None, missing_ok=False):
         if not path.startswith("/v2/") or "://" in path or "\\" in path:
             raise SafetyError("invalid broker path")
-        request = urllib.request.Request(PAPER_URL + path, method=method,
+        return self._http(method, PAPER_URL + path, payload, missing_ok=missing_ok)
+
+    def _http(self, method, url, payload=None, missing_ok=False):
+        target = urllib.parse.urlsplit(url)
+        allowed = target.hostname == "paper-api.alpaca.markets" or (
+            target.hostname == "data.alpaca.markets" and method == "GET")
+        if not allowed or target.scheme != "https" or target.port is not None or target.username or target.password:
+            raise SafetyError("endpoint outside paper trading/read-only market data allowlist")
+        request = urllib.request.Request(url, method=method,
             data=json.dumps(payload, allow_nan=False).encode() if payload is not None else None,
             headers={"APCA-API-KEY-ID": self._key, "APCA-API-SECRET-KEY": self._secret,
                      "Content-Type": "application/json", "User-Agent": "market-radar-demo/1"})
+        # Bound aggregate REST traffic in this single worker, including reconciliation.
+        # This is a conservative local ceiling, not a claim about account entitlements.
+        delay = 0.5 - (time.monotonic() - self._last_request_at)
+        if delay > 0:
+            time.sleep(delay)
+        self._last_request_at = time.monotonic()
         try:
             with self._opener.open(request, timeout=8) as response:
                 body = response.read(2_000_001)
@@ -83,3 +100,11 @@ class AlpacaPaper:
 
     def cancel(self, order_id):
         return self._request("DELETE", "/v2/orders/" + urllib.parse.quote(order_id, safe=""))
+
+    def latest_quote(self, symbol):
+        if not re.fullmatch(r"[A-Z][A-Z0-9.-]{0,9}", symbol):
+            raise SafetyError("invalid quote symbol")
+        result = self._http("GET", f"https://data.alpaca.markets/v2/stocks/{symbol}/quotes/latest?feed=iex")
+        if result.get("symbol") != symbol:
+            raise SafetyError("quote symbol mismatch")
+        return result["quote"]

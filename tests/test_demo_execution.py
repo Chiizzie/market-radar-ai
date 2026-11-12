@@ -5,9 +5,13 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 import json
 from pathlib import Path
+import random
 import sqlite3
 import tempfile
+from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
+import urllib.error
 
 from market_radar_ai.execution.alpaca import AlpacaPaper, BrokerError, PAPER_URL
 from market_radar_ai.execution.engine import Engine, ORDER_TERMINAL
@@ -54,6 +58,12 @@ class Broker:
         return {"timestamp": self.now.isoformat(), "is_open": self.open, "next_close": CLOSE.isoformat()}
 
     def submit(self, payload):
+        if payload["side"] == "sell":
+            actual_position = sum((dec(o["filled_qty"]) * (1 if o["side"] == "buy" else -1)
+                                   for o in self.orders.values() if o["symbol"] == payload["symbol"]), dec(0))
+            assert 0 < dec(payload["qty"]) <= actual_position, "engine attempted to sell more than owned"
+            assert all(o["status"] in ORDER_TERMINAL for o in self.orders.values()
+                       if o["symbol"] == payload["symbol"]), "engine submitted exit before cancel completion"
         self.posts.append(deepcopy(payload))
         if self.post_fault == "before_accept":
             raise BrokerError()
@@ -170,6 +180,15 @@ class DemoEngineTests(unittest.TestCase):
         plan = self.start()
         with self.assertRaises(SafetyError):
             self.engine.submit(replace(plan, stop_usd="97.00"), NOW)
+        self.assertEqual(len(self.broker.posts), 1)
+
+    def test_same_source_with_new_id_cannot_reenter_after_close(self):
+        plan = self.filled()
+        self.broker.fill("order-1-tp", 4, 104)
+        self.broker.orders["order-1-sl"]["status"] = "canceled"
+        self.tick()
+        with self.assertRaisesRegex(SafetyError, "source event already consumed"):
+            self.engine.submit(replace(plan, intent_id="changed-id"), NOW)
         self.assertEqual(len(self.broker.posts), 1)
 
     def test_timeout_after_accept_reconciles_without_resubmit(self):
@@ -320,6 +339,55 @@ class DemoEngineTests(unittest.TestCase):
         self.engine.submit(plan, NOW)
         self.assertEqual(len(self.broker.posts), 1)
 
+    def test_crash_after_post_before_recording_ack_recovers(self):
+        original_observe = self.journal.observe
+        self.journal.observe = lambda *args: (_ for _ in ()).throw(sqlite3.OperationalError("disk full"))
+        with self.assertRaises(sqlite3.OperationalError):
+            self.start()
+        self.journal.observe = original_observe
+        self.journal.close()
+        self.journal = Journal(self.path)
+        self.engine = Engine(self.journal, self.broker)
+        self.broker.fill("order-1", 4, 100)
+        self.engine.submit(intent(), NOW)
+        self.assertEqual(len(self.broker.posts), 1)
+        self.assertEqual(self.state(), "OPEN_PROTECTED")
+
+    def test_unknown_reservation_survives_day_boundary(self):
+        self.broker.post_fault = "before_accept"
+        self.start()
+        self.tick(NOW + timedelta(days=1))
+        self.assertEqual(len(self.journal.rows(active=True)), 1)
+        self.assertGreater(dec(self.journal.rows(active=True)[0]["risk"]), 0)
+
+    def test_foreign_unrelated_exposure_does_not_disable_our_exit(self):
+        self.filled()
+        self.broker.extra_positions = [{"symbol": "OTHER", "qty": "1"}]
+        self.journal.request_exit("test-source-1", "test exit")
+        self.tick()
+        self.tick()
+        self.assertEqual(self.broker.posts[-1]["symbol"], "TEST")
+        self.assertEqual(self.broker.posts[-1]["qty"], "4")
+
+    def test_exit_rejections_are_bounded(self):
+        self.filled()
+        self.journal.request_exit("test-source-1", "test exit")
+        self.tick()
+        for number in range(2, 5):
+            self.tick()
+            self.broker.orders[f"order-{number}"]["status"] = "rejected"
+        self.tick()
+        self.assertEqual(self.state(), "UNRESOLVED_EXIT_RETRIES")
+        self.assertEqual(len(self.broker.posts), 4)  # Entry + at most 3 terminal exit attempts.
+
+    def test_early_close_uses_broker_session(self):
+        early_close = NOW + timedelta(minutes=5)
+        self.broker.clock = lambda: {"timestamp": NOW.isoformat(), "is_open": True,
+                                    "next_close": early_close.isoformat()}
+        with self.assertRaises(SafetyError):
+            self.start(session_close=early_close.isoformat())
+        self.assertEqual(self.broker.posts, [])
+
     def test_second_writer_rejected(self):
         with self.assertRaises(SafetyError):
             Journal(self.path)
@@ -421,7 +489,7 @@ class DemoEngineTests(unittest.TestCase):
         self.engine.limits = replace(Limits(), combined_risk_eur=dec("10"))
         self.start()
         with self.assertRaisesRegex(SafetyError, "combined risk"):
-            self.start(intent_id="second", symbol="TWO")
+            self.start(intent_id="second", symbol="TWO", source_event_id="event-2")
         self.assertEqual(len(self.broker.posts), 1)
 
     def test_daily_realized_loss_plus_reservation_limit(self):
@@ -430,7 +498,7 @@ class DemoEngineTests(unittest.TestCase):
         self.broker.orders["order-1-tp"]["status"] = "canceled"
         self.tick()
         with self.assertRaisesRegex(SafetyError, "daily loss"):
-            self.start(intent_id="second", symbol="TWO")
+            self.start(intent_id="second", symbol="TWO", source_event_id="event-2")
 
     def test_cash_gate_does_not_use_margin(self):
         self.broker.cash = "10"
@@ -461,6 +529,130 @@ class DemoEngineTests(unittest.TestCase):
         self.broker.orders["order-1"]["filled_qty"] = "3"
         self.tick()
         self.assertIn("backwards", self.engine.last_error)
+
+    def test_empty_journal_cannot_replay_completed_broker_intent(self):
+        self.filled()
+        self.broker.fill("order-1-tp", 4, 104)
+        self.broker.orders["order-1-sl"]["status"] = "canceled"
+        self.tick()
+        self.journal.close()
+        self.journal = Journal(Path(self.tmp.name) / "new.sqlite3")
+        self.engine = Engine(self.journal, self.broker)
+        with self.assertRaisesRegex(SafetyError, "outside journal"):
+            self.engine.submit(intent(), NOW)
+        self.assertEqual(len(self.broker.posts), 1)
+
+    def test_backup_works_while_worker_owns_journal(self):
+        from market_radar_ai.execution.cli import main
+        self.filled()
+        backup = Path(self.tmp.name) / "online.sqlite3"
+        result = main(["backup", "--db", str(self.path), "--backup-to", str(backup)])
+        self.assertEqual(result, 0)
+        with sqlite3.connect(backup) as restored:
+            self.assertEqual(restored.execute("SELECT state FROM intents").fetchone()[0], "OPEN_PROTECTED")
+        self.assertEqual(len(self.broker.posts), 1)
+
+    def test_transport_timeout_never_retries_post_or_leaks_secret(self):
+        broker = AlpacaPaper("test-key", "secret-that-must-not-leak")
+        with patch.object(broker._opener, "open", side_effect=TimeoutError("secret-that-must-not-leak")) as call:
+            with self.assertRaises(BrokerError) as error:
+                broker.submit(intent().entry_order())
+            self.assertEqual(call.call_count, 1)
+            self.assertNotIn("secret-that-must-not-leak", str(error.exception))
+            self.assertEqual(call.call_args.args[0].full_url, PAPER_URL + "/v2/orders")
+
+    def test_quote_host_cannot_be_used_for_order_mutation(self):
+        broker = AlpacaPaper("test-key", "test-secret")
+        for url, method in (("https://api.alpaca.markets/v2/orders", "GET"),
+                            ("https://data.alpaca.markets/v2/orders", "POST"),
+                            ("https://paper-api.alpaca.markets.evil.test/v2/orders", "POST")):
+            with self.subTest(url=url), self.assertRaises(SafetyError):
+                broker._http(method, url)
+
+    def test_broker_oco_double_fill_is_unresolved_not_a_clean_close(self):
+        self.filled()
+        self.broker.fill("order-1-tp", 4, 104)
+        self.broker.fill("order-1-sl", 4, 98)
+        report = self.tick()
+        self.assertEqual(self.state(), "RECONCILIATION_REQUIRED")
+        self.assertFalse(report["all_intents_terminal"])
+        self.assertEqual(len(self.broker.posts), 1)
+
+    def test_corrupted_intent_fails_closed_with_visible_report(self):
+        self.filled()
+        row = self.journal.get("test-source-1")
+        body = json.loads(row["body"])
+        body["qty"] = "400"
+        self.journal.db.execute("UPDATE intents SET body=? WHERE id=?", (json.dumps(body), row["id"]))
+        report = self.tick()
+        self.assertIn("fingerprint", report["last_error"])
+        self.assertEqual(report["intents"][0]["state"], "JOURNAL_CORRUPT")
+        self.assertFalse(report["all_intents_terminal"])
+        self.assertEqual(self.broker.cancels, [])
+
+    def test_engineering_fixture_has_bounded_notional_and_valid_current_evidence(self):
+        from market_radar_ai.execution.exercise import build_intent
+        self.broker.latest_quote = lambda symbol: {"t": NOW.isoformat(), "bp": "12.00", "ap": "12.01"}
+        fx = SimpleNamespace(eur_per_unit=dec(1) / dec("1.10"), observed_at=NOW, source="fixture")
+        with patch("market_radar_ai.execution.exercise.utcnow", return_value=NOW):
+            plan = build_intent(self.broker, fx, "fixture-20261112")
+        risk, capital = plan.validate(NOW, self.broker.clock(), Limits())
+        self.assertEqual(plan.qty, "1")
+        self.assertLess(risk, dec(1))
+        self.assertLess(capital, dec(30))
+        self.assertEqual(plan.policy_version, "broker-paper-plumbing-v1")
+
+    def test_closed_market_never_submits_entry(self):
+        self.broker.open = False
+        with self.assertRaises(SafetyError):
+            self.start()
+        self.assertEqual(self.broker.posts, [])
+
+    def test_wall_clock_advance_during_network_reads_does_not_look_future_dated(self):
+        self.broker.now = NOW + timedelta(seconds=1)
+        moments = [NOW, NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=1),
+                   NOW + timedelta(seconds=2), NOW + timedelta(seconds=2)]
+        with patch("market_radar_ai.execution.engine.utcnow", side_effect=moments):
+            self.engine.submit(intent())
+        self.assertEqual(len(self.broker.posts), 1)
+
+    def test_seeded_fill_cancel_timeout_and_restart_sequences(self):
+        # Independent fake-broker assertions reject any short/reversing/overlapping exit.
+        # Sequences vary when fills and cancellation acknowledgements become visible.
+        for seed in range(30):
+            rng = random.Random(seed)
+            journal = Journal(Path(self.tmp.name) / f"sequence-{seed}.sqlite3")
+            broker = Broker()
+            engine = Engine(journal, broker)
+            try:
+                engine.submit(intent(), NOW)
+                broker.fill("order-1", rng.choice((1, 2, 4)), 100)
+                journal.request_exit("test-source-1", "fault-sequence requested exit")
+                for step in range(20):
+                    broker.cancel_pending = step < rng.randrange(1, 5)
+                    broker.cancel_fault = step == 0 and seed % 3 == 0
+                    if step > 5:
+                        for order in broker.orders.values():
+                            if order["status"] == "pending_cancel":
+                                order["status"] = "canceled"
+                    if step == 3:
+                        journal.close()
+                        journal = Journal(Path(self.tmp.name) / f"sequence-{seed}.sqlite3")
+                        engine = Engine(journal, broker)
+                    engine.tick(NOW)
+                    for order in list(broker.orders.values()):
+                        if order["side"] == "sell" and order["type"] == "market" and order["status"] not in ORDER_TERMINAL:
+                            remaining = dec(order["qty"]) - dec(order["filled_qty"])
+                            amount = remaining if step > 12 else min(remaining, dec(1))
+                            broker.fill(order["id"], dec(order["filled_qty"]) + amount, 99)
+                    if engine.report()["all_intents_terminal"]:
+                        break
+                engine.tick(NOW)
+                self.assertTrue(engine.report()["all_intents_terminal"], f"seed {seed}")
+                self.assertEqual(sum(p["side"] == "buy" for p in broker.posts), 1)
+                self.assertEqual(broker.positions(), [])
+            finally:
+                journal.close()
 
 
 if __name__ == "__main__":

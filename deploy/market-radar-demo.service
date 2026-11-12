@@ -1,0 +1,30 @@
+# Template only. Install after choosing a persistent host and dedicated paper account.
+[Unit]
+Description=Market Radar paper order recovery worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=market-radar-demo
+Group=market-radar-demo
+WorkingDirectory=/opt/market-radar-ai
+EnvironmentFile=/etc/market-radar-demo.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+StateDirectory=market-radar-demo
+StateDirectoryMode=0700
+ExecStart=/opt/market-radar-ai/.venv/bin/python -m market_radar_ai.execution.cli watch --paper-orders --db /var/lib/market-radar-demo/journal.sqlite3 --report /var/lib/market-radar-demo/status.json --kill-file /var/lib/market-radar-demo/STOP_ENTRIES --flatten-file /var/lib/market-radar-demo/FLATTEN
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=150
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/market-radar-demo
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

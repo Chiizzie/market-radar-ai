@@ -50,7 +50,7 @@ class Limits:
     total_capital_eur: Decimal = Decimal("1000")
     max_positions: int = 3
     quote_age_seconds: int = 5
-    fx_age_seconds: int = 86400
+    fx_age_seconds: int = 900
     spread_bps: Decimal = Decimal("20")
     roundtrip_cost_bps: Decimal = Decimal("40")
     close_buffer_seconds: int = 300

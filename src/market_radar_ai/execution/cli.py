@@ -68,12 +68,21 @@ def main(argv=None):
             write_report(args.report, report)
             print(json.dumps(report))
             return 0
-        journal = Journal(args.db)
         if args.command == "backup":
             if not args.backup_to:
-                parser.error("backup requires --backup-to; stop the worker first")
-            journal.backup(args.backup_to)
+                parser.error("backup requires --backup-to")
+            source_path, target_path = Path(args.db).resolve(), Path(args.backup_to).resolve()
+            if source_path == target_path or target_path.exists():
+                raise SafetyError("backup destination must be a new, distinct file")
+            # SQLite's backup API includes committed WAL state and works while the worker runs.
+            with sqlite3.connect(source_path.as_uri() + "?mode=ro", uri=True) as source:
+                with sqlite3.connect(target_path) as target:
+                    os.chmod(target_path, 0o600)
+                    source.backup(target)
+                    if target.execute("PRAGMA quick_check").fetchone()[0] != "ok":
+                        raise SafetyError("backup integrity failure")
             return 0
+        journal = Journal(args.db)
         engine = Engine(journal, AlpacaPaper.from_env())
         stopping_at = None
 
@@ -103,9 +112,11 @@ def main(argv=None):
                 # Never claim flat when a halt, rejected exit or missing response prevents proof.
                 return 3
             time.sleep(2)
-    except (SafetyError, BrokerError, sqlite3.Error, ValueError, TypeError, OSError) as exc:
+    except (SafetyError, BrokerError, sqlite3.Error, ValueError, TypeError, KeyError, OSError) as exc:
         report = engine.report() if engine else {"mode": "paper", "live_orders_enabled": False}
         report.update(error_type=type(exc).__name__, verification_complete=False)
+        if isinstance(exc, SafetyError):
+            report["error_code"] = str(exc)
         # Avoid raw exception payloads: broker/account data must not leak into public logs.
         write_report(args.report, report)
         print(json.dumps({"error_type": type(exc).__name__, "report": args.report}), file=sys.stderr)

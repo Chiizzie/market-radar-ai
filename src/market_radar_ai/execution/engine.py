@@ -49,9 +49,11 @@ class Engine:
             if previous["fingerprint"] != intent.fingerprint:
                 raise SafetyError("same intent ID has different immutable contents")
             # A duplicate signal/restart is a read/reconcile operation, never another POST.
-            self.tick(now)
+            self.tick(now if supplied_now else None)
             return self.journal.get(intent.intent_id)
-        self.tick(now)
+        if any(self.journal.intent(row).source_event_id == intent.source_event_id for row in self.journal.rows()):
+            raise SafetyError("source event already consumed; changing the intent ID cannot replay it")
+        self.tick(now if supplied_now else None)
         if self.last_error or self.journal.get_meta("entry_halt"):
             raise SafetyError("entries halted; inspect reconciliation report")
         account = self.account()
@@ -82,6 +84,13 @@ class Engine:
         if dec(account["cash"]) < dec(intent.qty) * dec(intent.limit_usd) + reserved_usd:
             raise SafetyError("insufficient unreserved cash")
         payload = intent.entry_order()
+        # A new/empty journal is not permission to replay an old broker client ID.
+        if self.broker.lookup(payload["client_order_id"]) is not None:
+            self.journal.halt("broker intent exists outside journal; restore journal before proceeding")
+            raise SafetyError("broker intent exists outside journal")
+        if not supplied_now:
+            now = utcnow()
+            intent.validate(now, clock, self.limits)
         with self.journal.transaction():
             self.journal.check()
             self.journal.reserve(intent, risk, capital)
@@ -95,7 +104,11 @@ class Engine:
         except BrokerError:
             self.journal.halt("submission outcome unknown; reconcile client ID", intent_id)
             return
-        self._validate_identity(order, payload)
+        try:
+            self._validate_identity(order, payload)
+        except (SafetyError, KeyError, TypeError, AttributeError):
+            self.journal.halt("malformed acknowledgement; reconcile client ID", intent_id)
+            return
         with self.journal.transaction():
             self.journal.observe(intent_id, order, now)
         # Acknowledgement alone never marks a position entered or protected.
@@ -134,6 +147,7 @@ class Engine:
         return self.report()
 
     def _refresh(self, row, now):
+        refreshed_ids = set()
         for operation in self.journal.operations(row["id"]):
             order = self.broker.lookup(operation["client_id"])
             if order is None:
@@ -142,11 +156,12 @@ class Engine:
                 self.journal.halt("order lookup missing; no automatic resubmission", row["id"])
                 continue
             self._validate_identity(order, json.loads(operation["payload"]))
+            refreshed_ids.update(o["id"] for o in flatten_orders([order]))
             with self.journal.transaction():
                 self.journal.observe(row["id"], order, now)
         # A nested response can omit a previously observed leg: query it individually.
         for order in self.journal.orders(row["id"]):
-            if order["status"] not in ORDER_TERMINAL:
+            if order["status"] not in ORDER_TERMINAL and order["id"] not in refreshed_ids:
                 refreshed = self.broker.get_order(order["id"])
                 if refreshed["id"] != order["id"]:
                     raise SafetyError("broker changed order identity")
@@ -160,6 +175,11 @@ class Engine:
             if symbol in positions:
                 raise SafetyError("duplicate broker position record")
             positions[symbol] = dec(position["qty"])
+        encoded_positions = json.dumps({s: str(q) for s, q in sorted(positions.items())})
+        if self.journal.get_meta("positions") != encoded_positions:
+            self.journal.event("BROKER_POSITIONS", {s: str(q) for s, q in positions.items()})
+        self.journal.set_meta("positions", encoded_positions)
+        self.journal.set_meta("positions_observed_at", utcnow().isoformat())
         known = {order["id"] for row in self.journal.rows() for order in self.journal.orders(row["id"])}
         foreign = [order for order in flatten_orders(self.broker.open_orders()) if order["id"] not in known]
         if foreign:
@@ -275,8 +295,15 @@ class Engine:
 
     def report(self):
         items = []
+        corrupt = False
         for row in self.journal.rows():
-            intent, orders = self.journal.intent(row), self.journal.orders(row["id"])
+            try:
+                intent, orders = self.journal.intent(row), self.journal.orders(row["id"])
+            except (SafetyError, ValueError, TypeError, KeyError):
+                corrupt = True
+                items.append({"intent_id": row["id"], "state": "JOURNAL_CORRUPT",
+                              "protection_observed": False, "remaining_from_fills": None})
+                continue
             remaining = self._quantity(orders)
             items.append({"intent_id": row["id"], "symbol": intent.symbol, "state": row["state"],
                           "entry_limit_usd": intent.limit_usd, "stop_usd": intent.stop_usd,
@@ -290,5 +317,7 @@ class Engine:
                 "scanner_auto_execution_enabled": False, "fees_verified": False,
                 "entry_halt": self.journal.get_meta("entry_halt"), "last_error": self.last_error,
                 "last_reconciled_at": self.last_reconciled_at,
-                "all_intents_terminal": all(row["state"] in TERMINAL for row in self.journal.rows()),
+                "broker_positions": json.loads(self.journal.get_meta("positions") or "{}"),
+                "positions_observed_at": self.journal.get_meta("positions_observed_at"),
+                "all_intents_terminal": not corrupt and all(row["state"] in TERMINAL for row in self.journal.rows()),
                 "intents": items}
