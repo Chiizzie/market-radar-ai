@@ -5200,6 +5200,12 @@
         "response_id": "resp_0399d45268d61b4e016af22bef48d087d1bdc6fc593eae432d"
       }
     },
+    "paper-final-v1:76134fb38a238c6c54bd88bdedf473128b6b574cb867e580c4d2dd769b612384:opportunity_hunter": {
+      "actual": null,
+      "day": "2026-11-12",
+      "reserved": 9012,
+      "usage": null
+    },
     "paper-final-v1:76134fb38a238c6c54bd88bdedf473128b6b574cb867e580c4d2dd769b612384:technical_analyst": {
       "actual": null,
       "day": "2026-11-12",
