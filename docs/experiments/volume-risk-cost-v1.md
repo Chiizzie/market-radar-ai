@@ -1,13 +1,14 @@
 # Volume, risk and cost experiment
 
-Prepared 12 November 2026, Europe/Dublin. **Approved, but not activated.** The
-user approved the Lovable plan and integration/activation on 12 November. The
-plan approval was accepted at approximately 16:52 Dublin. Lovable committed a
-partial dashboard implementation, then refused the required follow-up because
-the workspace is out of credits. That partial change is not ready to publish.
-The ordinary scanner remains at runtime 3a113a4. Dashboard publication and a
-complete natural run are required before claiming prospective collection began.
-See [the saved integration review](volume-risk-cost-dashboard-review.md).
+12 November 2026, Europe/Dublin. **Approved and enabled for commissioning.**
+The user clarified that development should avoid Lovable editing-agent credits.
+Dashboard contract fixes were completed directly through GitHub, tested and
+published; the live Performance asset was verified at 17:12. Main workflow
+commit `a9012fdab28e2095297aba1f396be0c1b7727036` enabled the separate worker at
+approximately 17:13. A completed natural run and durable report still require
+verification. The ordinary scanner remains at runtime 3a113a4. See the current
+[deployment checkpoint on main](https://github.com/Chiizzie/market-radar-ai/blob/main/docs/experiments/volume-risk-cost-deployment.md)
+and [integration review](volume-risk-cost-dashboard-review.md).
 
 ## Hypothesis and scope
 
@@ -117,18 +118,19 @@ been demonstrated for this new protocol.
 ## Activation checklist
 
 1. Review/pass the producer regression workflow and synthetic contract fixtures.
-2. Restore Lovable editing capacity; approval has already been supplied. Fix the
-   recorded producer/parser mismatches, validate every actual producer fixture,
-   finish migration/build/auth checks and publish dashboard support. The additive
-   database constraints and viewer policy are present, but that alone does not
-   make the unpublished HTTP validator usable.
-3. Add [the prepared job](../../deploy/strategy-experiment-job.yml) with its exact
-   tested runtime SHA and enable only `STRATEGY_EXPERIMENT_ENABLED`. Existing
-   collection/review/watcher pins, budgets and order settings remain unchanged.
+2. Completed through direct GitHub edits: producer fixtures, contract/access/
+   sign-out checks, 681 offline dashboard tests, TypeScript and production build.
+   Dashboard `065cc4801196e137ee1aafda0b58156684416b27` is published. No additional
+   Lovable editing-agent call was made after the user's clarification.
+3. Enabled [the prepared job](../../deploy/strategy-experiment-job.yml) on main
+   with tested runtime `73d880261768b32453986d7da717058810178920`. Repository variable
+   `STRATEGY_EXPERIMENT_ENABLED=false` pauses new experimental jobs; otherwise
+   the approved experiment is enabled. Existing collection/review/watcher pins,
+   budgets and order settings remain unchanged.
 4. Inspect a full natural run, durable source/report receipts and viewer output.
    Record actual activation time; do not count earlier captures as forward trades.
 
-## Verification checkpoint, 12 November 2026
+## Earlier checkpoint, 12 November 2026, 16:59 Dublin
 
 - Producer commit `73d880261768b32453986d7da717058810178920`: 155 focused
   regression tests passed locally and in [CI run 43259903724](https://github.com/Chiizzie/market-radar-ai/actions/runs/43259903724),

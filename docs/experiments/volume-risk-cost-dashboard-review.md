@@ -1,4 +1,29 @@
-# Dashboard integration review before publication
+# Dashboard integration review and resolution
+
+## Resolved through direct GitHub development, 17:12 Dublin
+
+The user clarified the preference to avoid Lovable editing-agent credits. The
+integration was completed directly in `Chiizzie/pixel-perfect-replay-32614`
+commit `065cc4801196e137ee1aafda0b58156684416b27`: all six producer fixtures parse,
+681 offline dashboard tests pass, TypeScript passes and production build passes.
+The live Performance asset `/assets/performance-B6S69pZI.js` contains the repaired
+panel. No additional Lovable editing-agent calls were made. Existing database
+constraints/policies were inspected; no synthetic record was inserted.
+
+All eight findings below were addressed. The migration SQL itself was not
+reapplied; the file and journal tag now use 0012 to follow the research schema.
+The historical Drizzle journal alone still omits older manually applied
+migrations, so complete recovery is not claimed. The new regression tests also
+cover signed partition isolation, stored timestamp microseconds, report arithmetic,
+viewer access, sign-out and a read completing after sign-out. Two pre-existing
+TypeScript failures were reproduced/fixed at the optional RPC argument and
+stored-event kind boundary. The old evidence test/error text was aligned with
+the already-deployed 1000-item capacity, without changing that capacity.
+
+The new worker has been enabled on main. See the deployment checkpoint there
+for the first actual run/report; the following is the earlier review history.
+
+## Earlier blocked checkpoint
 
 The user approved the pending `plan--show` action on 12 November 2026. The
 approval for user message `umsg_01m788snh8erebw5qtdyrczwq4`, thread `main`, event

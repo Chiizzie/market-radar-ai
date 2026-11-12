@@ -1,9 +1,9 @@
-# Prepared job fragment for scheduled-scanner.yml. Not an active workflow.
-# Replace RUNTIME_COMMIT after CI; publish dashboard storage support first.
+# Job fragment deployed in scheduled-scanner.yml on 12 November 2026.
+# Dashboard contract/build/publication verified before activation.
 # No dependencies are added to collection, review, account sync or existing watchers.
   strategy-experiment:
     needs: [collect, market-context]
-    if: ${{ always() && needs.collect.outputs.review_ready == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.STRATEGY_EXPERIMENT_ENABLED == 'true' }}
+    if: ${{ always() && needs.collect.outputs.review_ready == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.STRATEGY_EXPERIMENT_ENABLED != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     # Experimental storage/provider faults must not interrupt ordinary scanning.
@@ -26,7 +26,7 @@
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: RUNTIME_COMMIT
+          ref: 73d880261768b32453986d7da717058810178920
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
