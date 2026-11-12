@@ -1,0 +1,167 @@
+{
+  "schema_version": "scanner-day-audit-v1",
+  "evaluation_day": "2026-11-11",
+  "audited_at": "2026-11-12T15:50:54.688507+00:00",
+  "timezone": "Europe/Dublin",
+  "trade_authorized": false,
+  "live_orders_enabled": false,
+  "model_calls_by_audit": 0,
+  "source_provenance": {
+    "report_seq": 85083,
+    "report_event_id": "14d8f6dec9b9fa0ecd40d35cc66e179c5fa41c9f089b342a86a1b925a26b25d3",
+    "report_occurred_at": "2026-11-11 23:00:04.707918+00",
+    "report_received_at": "2026-11-11 23:00:09.085873+00",
+    "comparison_protocol_id": "abfaa5c8b4fd3e76a46dddd142bd4747765b32c0caf2c6122afe9dbff6c7e4e8",
+    "detail_snapshot_id": "2f8dfe8d7f5dace0e9e81d4038783c16bd8b8bc4d7006cb9bc5a8c13b133be43",
+    "detail_row_count": 347,
+    "detail_rows_sha256": "cc32ca0b2345e4405a0085cedc2e58453cf8d923402c5d870033cd6d336f3272",
+    "source_integrity": "Stored report/detail row consistency checked; all raw quote events not replayed in this audit."
+  },
+  "workflow_runs": {
+    "total": 180,
+    "success": 134,
+    "failure": 40,
+    "startup_failure": 6,
+    "dashboard_captures": 174,
+    "collection_job_failures": 3,
+    "note": "A workflow failure can be isolated to a watcher, review or recovery receipt; it does not mean collection failed. Six startup failures have no jobs and are not assigned a cause."
+  },
+  "cohorts": {
+    "setups": 347,
+    "distinct_symbols": 197,
+    "review_started": 17,
+    "review_complete": 14,
+    "review_interrupted": 3,
+    "approved_watches": 5,
+    "approved_filled": 3,
+    "approved_unfilled": 2,
+    "ai_no_action": 9,
+    "ai_not_reviewed": 330
+  },
+  "code_only": {
+    "average_closed_pnl_eur": "-5.271795444747936694472487375",
+    "average_gain_eur": "10.07320300885986609052751631",
+    "average_loss_eur": "-6.550545315881920259889154348",
+    "breakeven": 0,
+    "closed": 13,
+    "closed_net_pnl_eur": "-68.53334078172317702814233588",
+    "losses": 12,
+    "realized_closed_drawdown_eur": "72.85032146088591431072339937",
+    "states": {
+      "closed": 13,
+      "not_filled": 320,
+      "unresolved": 14
+    },
+    "wins": 1
+  },
+  "ai_reviewed": {
+    "average_closed_pnl_eur": "-11.73717930656387975852850126",
+    "average_gain_eur": null,
+    "average_loss_eur": "-11.73717930656387975852850126",
+    "breakeven": 0,
+    "closed": 3,
+    "closed_net_pnl_eur": "-35.21153791969163927558550378",
+    "losses": 3,
+    "realized_closed_drawdown_eur": "35.21153791969163927558550378",
+    "states": {
+      "closed": 3,
+      "no_action": 9,
+      "not_filled": 2,
+      "not_reviewed": 330,
+      "review_incomplete": 3
+    },
+    "wins": 0
+  },
+  "matched_pair_count": 1,
+  "baseline_reasons": {
+    "no_observed_eligible_fill": 180,
+    "entry_already_invalidated": 98,
+    "trigger_gap_exceeds_protocol_limit": 42,
+    "no_observed_exit_by_deadline": 14,
+    "stop": 12,
+    "target": 1
+  },
+  "approved_trade_rows": [
+    {
+      "symbol": "stocks:LRCX",
+      "setup_id": "paper-final-attempt-v1:34e374d02fbee0aa53a970ad57c03fbc0666751dd2c06eb8129747cbfad1f7e1",
+      "outcome": {
+        "entry_at": "2026-11-11T17:21:59.989476Z",
+        "entry_fill": "216.8227826435975177936899346",
+        "exit_at": "2026-11-11T17:24:16.041093Z",
+        "exit_fill": "206.4081476126836388511750933",
+        "net_pnl_eur": "-25.92224827706745736837654632",
+        "reason": "stop",
+        "simulated": true,
+        "status": "closed"
+      }
+    },
+    {
+      "symbol": "stocks:SLM",
+      "setup_id": "paper-final-attempt-v1:4409f26dda9947cfb6196b53d1db9af5e2fdd00c2df37a8bbe8d676e20fbc917",
+      "outcome": {
+        "entry_at": "2026-11-11T17:31:13.058812Z",
+        "entry_fill": "15.46630762830452671175277488",
+        "exit_at": "2026-11-11T18:12:21.617140Z",
+        "exit_fill": "15.35644723479617352172940033",
+        "net_pnl_eur": "-5.534208652263586624432892680",
+        "reason": "stop",
+        "simulated": true,
+        "status": "closed"
+      }
+    },
+    {
+      "symbol": "stocks:MOS",
+      "setup_id": "paper-final-attempt-v1:5f77d8034eb9f5ea8a861aa2a9cd4e5919f63b833d8afe2a701ac725aec3505b",
+      "outcome": {
+        "entry_at": "2026-11-11T17:40:39.746171Z",
+        "entry_fill": "20.36937951047099671827579909",
+        "exit_at": "2026-11-11T18:00:48.865270Z",
+        "exit_fill": "20.29727551220384274759163697",
+        "net_pnl_eur": "-3.755080990360595282776064778",
+        "reason": "stop",
+        "simulated": true,
+        "status": "closed"
+      }
+    }
+  ],
+  "budget": {
+    "first_observed_below_start_threshold": "2026-11-11T17:43:53.345750+00:00",
+    "daily_limit_eur": "1",
+    "settled_eur": "0.878877",
+    "reserved_eur": "0.028918",
+    "remaining_eur": "0.092205",
+    "minimum_attempt_headroom_eur": "0.15",
+    "unsettled_reservations": 5,
+    "note": "Application ledger allowance, not provider credit balance. No budgets changed."
+  },
+  "limitations": [
+    "Reference-quote simulations, not actual broker fills or personal account P/L.",
+    "Code and AI are alternative independent-allocation arms, not balances to add.",
+    "LRCX exit reference spread 8.73% and SLM 0.23% require quote-quality caution; original losses retained.",
+    "Fourteen unresolved code outcomes are not zero-profit outcomes.",
+    "Only one matched closed policy pair; no causal AI-value conclusion.",
+    "New guarded quote experiment starts 12 November; historical results not rewritten."
+  ],
+  "repairs": {
+    "source_commit": "3a113a4e8c4e03e9b28799c146db1f1cae6f987a",
+    "tests": 99,
+    "ci_run_id": 43251925658,
+    "captured_replay": {
+      "run_id": 43248535495,
+      "capture_artifact_id": 13957547493,
+      "decision_artifact_id": 13957812637,
+      "manifest_bytes": 4625840,
+      "manifest_symbols": 5722,
+      "movers_or_core_before": 0,
+      "movers_or_core_after": 319,
+      "unreadable_artifacts_after": []
+    }
+  },
+  "strategy_diagnostics": {
+    "closed_baseline_median_stop_percent": "0.4372170214746721495351723849",
+    "assumed_round_trip_cost_percent": "0.40",
+    "closed_baseline_median_cost_share_of_planned_loss_percent": "47.77733726620141018464229244",
+    "note": "Describes selected closed observations; does not prove wider stops or different volume rules improve outcomes."
+  }
+}
