@@ -1744,6 +1744,12 @@
       "reserved": 1,
       "usage": null
     },
+    "paper-final-attempt-v1:ce68a24c987ff03f0583aae138e5fd9de5ecdea279f72cfb7c413a3fa71e36bd": {
+      "actual": null,
+      "day": "2026-11-12",
+      "reserved": 1,
+      "usage": null
+    },
     "paper-final-attempt-v1:ced03dbb0bb3298dce27156f28b134faa5282ff775270e4688d63ad05783374d": {
       "actual": 0,
       "day": "2026-11-10",
