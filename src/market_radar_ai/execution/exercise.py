@@ -37,9 +37,12 @@ def main(argv=None):
     parser.add_argument("--exercise-id", required=True)
     parser.add_argument("--paper-orders", action="store_true")
     parser.add_argument("--directory", default="artifacts/paper-exercise")
+    parser.add_argument("--wait-for-open-seconds", type=int, default=0)
     args = parser.parse_args(argv)
     if not args.paper_orders:
         parser.error("this exercise places paper orders; --paper-orders is required")
+    if not 0 <= args.wait_for_open_seconds <= 3600:
+        parser.error("wait-for-open-seconds must be between 0 and 3600")
     directory = Path(args.directory)
     directory.mkdir(parents=True, exist_ok=True)
     journal, engine = None, None
@@ -49,10 +52,18 @@ def main(argv=None):
         broker = AlpacaPaper.from_env()
         readiness = preflight(broker)
         report["preflight"] = readiness
-        if not readiness["market_open"]:
-            raise SafetyError("market closed; no queued or extended-hours exercise")
         if readiness["open_order_count"] or readiness["position_count"]:
             raise SafetyError("exercise requires empty dedicated paper account")
+        wait_deadline = time.monotonic() + args.wait_for_open_seconds
+        while not readiness["market_open"]:
+            if time.monotonic() >= wait_deadline:
+                raise SafetyError("market closed; no queued or extended-hours exercise")
+            report.update(waiting_for_regular_session=True, checked_at=utcnow().isoformat())
+            write_report(directory / "report.json", report)
+            time.sleep(min(30, max(0, wait_deadline - time.monotonic())))
+            clock = broker.clock()
+            readiness.update(market_open=clock["is_open"], next_close=clock["next_close"])
+        report["waiting_for_regular_session"] = False
         if instant(readiness["next_close"]) - utcnow() < timedelta(minutes=15):
             raise SafetyError("insufficient regular session remaining")
         # Reuse the scanner's FX provider, including its completed-bar/freshness checks.
@@ -60,10 +71,16 @@ def main(argv=None):
         fx = YahooFxProvider().fetch("USD")
         journal = Journal(directory / "journal.sqlite3")
         engine = Engine(journal, broker)
-        plan = build_intent(broker, fx, args.exercise_id)
-        # Retain the actual evidence used; no AI verdict or performance comparison.
-        write_report(directory / "intent.json", plan.body())
-        engine.submit(plan)
+        for attempt in range(3):
+            plan = build_intent(broker, fx, args.exercise_id)
+            # Refresh evidence only BEFORE any durable submission attempt exists.
+            write_report(directory / f"intent-{attempt + 1}.json", plan.body())
+            try:
+                engine.submit(plan)
+                break
+            except SafetyError as exc:
+                if journal.rows() or str(exc) != "stale or future evidence" or attempt == 2:
+                    raise
         started = time.monotonic()
         protected_seen = False
         while time.monotonic() - started < 240:

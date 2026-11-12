@@ -1,0 +1,12 @@
+{
+  "exercise_id": "engineering-20261112-v1",
+  "mode": "paper",
+  "purpose": "One-share engineering entry/protection/exit verification",
+  "wait_for_regular_session_only": true,
+  "maximum_wait_seconds": 1800,
+  "maximum_observation_seconds": 240,
+  "maximum_quantity": 1,
+  "maximum_price_usd": "30",
+  "scanner_signal": false,
+  "live_orders_enabled": false
+}
