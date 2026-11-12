@@ -23,6 +23,15 @@ the already-deployed 1000-item capacity, without changing that capacity.
 The new worker has been enabled on main. See the deployment checkpoint there
 for the first actual run/report; the following is the earlier review history.
 
+The broader pull-request CI also exposed two pre-existing test assumptions:
+the readiness fixture reserved EUR4.90 against the former EUR5 lifetime cap,
+and a workflow-boundary test expected the main scheduled workflow in a runtime
+source branch that did not contain it. The fixture now reserves the configured
+lifetime allowance minus EUR0.10 in a prior month, isolating the intended
+headroom check. The branch includes an exact copy of the deployed workflow for
+the boundary test. No live budget or runtime code changed. The full backend suite
+then passed all 1,557 tests locally on 12 November at 17:18 Dublin.
+
 ## Earlier blocked checkpoint
 
 The user approved the pending `plan--show` action on 12 November 2026. The
