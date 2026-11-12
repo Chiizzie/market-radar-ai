@@ -1780,6 +1780,12 @@
       "reserved": 1,
       "usage": null
     },
+    "paper-final-attempt-v1:fe11e45a4f8ab3544b9d23ecf97101883c0f3f0693c6a18ee69ebe81347c47ec": {
+      "actual": null,
+      "day": "2026-11-12",
+      "reserved": 1,
+      "usage": null
+    },
     "paper-final-v1:0af7ba1c160f85770813ef6e80113816e82accc9b60fa70b03bcd3c50d7dec9f:conclusion": {
       "actual": 11889,
       "day": "2026-11-06",
