@@ -255,6 +255,22 @@ class DemoEngineTests(unittest.TestCase):
         self.assertEqual(len(self.broker.posts), 1)
         self.assertTrue(self.journal.get_meta("entry_halt"))
 
+    def test_native_sibling_already_canceled_is_reconciled_without_false_halt(self):
+        self.filled()
+        self.journal.request_exit("test-source-1", "test exit")
+        original = self.broker.cancel
+        def cancel(order_id):
+            if order_id == "order-1-sl":
+                raise BrokerError(422)
+            original(order_id)
+            self.broker.orders["order-1-sl"]["status"] = "canceled"
+        self.broker.cancel = cancel
+        self.tick()
+        self.assertIsNone(self.journal.get_meta("entry_halt"))
+        self.assertEqual(len(self.broker.posts), 1)  # Still reconcile positions before exit.
+        self.tick()
+        self.assertEqual(self.broker.posts[-1]["qty"], "4")
+
     def test_stop_fills_during_cancel_no_duplicate_sell(self):
         self.filled()
         self.journal.request_exit("test-source-1", "test exit")
@@ -686,6 +702,7 @@ Engine(journal, broker).submit(intent(), NOW)
         self.assertLess(risk, dec(1))
         self.assertLess(capital, dec(30))
         self.assertEqual(plan.policy_version, "broker-paper-plumbing-v1")
+        self.assertLessEqual(dec(plan.limit_usd), dec("12.01") + dec("0.05"))
 
     def test_closed_market_never_submits_entry(self):
         self.broker.open = False

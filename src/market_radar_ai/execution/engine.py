@@ -102,7 +102,9 @@ class Engine:
     def _post(self, intent_id, payload, now):
         try:
             order = self.broker.submit(payload)
-        except BrokerError:
+        except BrokerError as exc:
+            self.journal.event("SUBMISSION_ERROR", {"client_order_id": payload["client_order_id"],
+                               "http_status": exc.status}, intent_id)
             self.journal.halt("submission outcome unknown; reconcile client ID", intent_id)
             return
         try:
@@ -291,7 +293,17 @@ class Engine:
                     try:
                         self.broker.cancel(order["id"])
                     except BrokerError:
-                        self.journal.halt("cancel outcome uncertain; await terminal broker state", intent.intent_id)
+                        # Canceling one bracket leg can already cancel its sibling. A
+                        # failed DELETE is not a failure if a fresh GET proves terminal.
+                        try:
+                            current = self.broker.get_order(order["id"])
+                        except BrokerError:
+                            current = None
+                        if current and current.get("id") == order["id"] and current.get("status") in ORDER_TERMINAL:
+                            with self.journal.transaction():
+                                self.journal.observe(intent.intent_id, current, now)
+                        else:
+                            self.journal.halt("cancel outcome uncertain; await terminal broker state", intent.intent_id)
             return
         if remaining == 0:
             return  # Next reconciliation records flat only after all orders are terminal.
@@ -338,5 +350,7 @@ class Engine:
                 "last_reconciled_at": self.last_reconciled_at,
                 "broker_positions": json.loads(self.journal.get_meta("positions") or "{}"),
                 "positions_observed_at": self.journal.get_meta("positions_observed_at"),
+                "submission_errors": [dict(at=r[0], intent_id=r[1], **json.loads(r[2])) for r in
+                    self.journal.db.execute("SELECT at,intent_id,detail FROM events WHERE kind='SUBMISSION_ERROR' ORDER BY seq DESC LIMIT 10")],
                 "all_intents_terminal": not corrupt and all(row["state"] in TERMINAL for row in self.journal.rows()),
                 "intents": items}

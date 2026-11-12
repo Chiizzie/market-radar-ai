@@ -7,7 +7,7 @@ This is an isolated engineering component, not scanner auto-execution or evidenc
 - Initial deployment: `8a0d7e787c5a2707a6761044ad90014ff0527a21`.
 - Initial GitHub verification: https://github.com/Chiizzie/market-radar-ai/actions/runs/43232188896 — both fault drills and read-only paper connectivity passed.
 - At **13:57:10 Europe/Dublin, 12 November**: paper account ACTIVE, USD, trading/account blocks false, **0 open orders, 0 positions**. Regular session closed; next open **14:30 Dublin**, close **21:00 Dublin**.
-- Initial 39 fault tests passed remotely. Expanded local suite: **59 tests**, including 30 seeded fill/cancel/restart sequences within one test. Final revision must be checked in GitHub before claiming deployed verification.
+- Initial 39 fault tests passed remotely. Expanded local suite: **60 tests**, including 30 seeded fill/cancel/restart sequences within one test. Final revision must be checked in GitHub before claiming deployed verification.
 - Read-only preflight **does not establish order-submission permission**. A completed broker entry/fill/protection/exit round trip has **not yet been observed**.
 
 ## What is implemented
@@ -86,7 +86,7 @@ Backups must use a new destination filename. Recovery requires stopping/fencing 
 python -m market_radar_ai.execution.exercise --paper-orders --exercise-id engineering-20261112-v1
 ```
 
-The engineering fixture uses **one share of F**, only if its fresh quote is between $2 and $30 and the account is otherwise empty. This symbol is a small-notional plumbing fixture, not a recommendation or scanner signal. It uses the scanner's existing fresh FX provider. It refuses closed markets and does not substitute extended hours. It requests an exit once active protection is observed, then verifies that the broker has no positions/open orders. It preserves the input, report, journal and recovery backup. The 240-second observation bound can end unresolved; such a result is not success and needs immediate paper recovery investigation.
+The engineering fixture uses **one share of F**, only if its fresh quote is between $2 and $30 and the account is otherwise empty. Its fixed limit ceiling is at most five cents above the observed ask (half a percent for lower-priced quotes), rounded down to a whole cent. The $30 ceiling and all spread, freshness and risk gates still apply. This symbol is a small-notional plumbing fixture, not a recommendation or scanner signal. It uses the scanner's existing fresh FX provider. It refuses closed markets and does not substitute extended hours. It requests an exit once active protection is observed, then verifies that the broker has no positions/open orders. It preserves the input, report, journal and recovery backup. The 240-second observation bound can end unresolved; such a result is not success and needs immediate paper recovery investigation.
 
 The GitHub workflow's ordinary pushes run tests and read-only preflight only. A separate order-exercise job is deliberately gated by the exact one-shot commit message `Verify broker paper round trip 2026-11-12`; it must not be triggered until the market is open. Rerunning without restoring the original journal is not a recovery procedure. GitHub Actions is used for this bounded engineering test, **not as the persistent trading service**.
 

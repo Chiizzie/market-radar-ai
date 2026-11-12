@@ -21,7 +21,11 @@ def build_intent(broker, fx, exercise_id):
     clock = broker.clock()
     quote = broker.latest_quote("F")
     now = utcnow()
-    entry = dec(quote["ap"]).quantize(dec("0.01"), rounding=ROUND_CEILING)
+    # This is a one-share plumbing fixture, not a scanner strategy. A small fixed
+    # limit ceiling allows for quote-to-submit movement without using a market buy.
+    ask = dec(quote["ap"])
+    buffer = min(dec("0.05"), ask * dec("0.005"))
+    entry = (ask + buffer).quantize(dec("0.01"), rounding=ROUND_FLOOR)
     if not dec("2") <= entry <= dec("30"):
         raise SafetyError("engineering exercise price outside $2-$30 bound")
     stop = (entry * dec("0.98")).quantize(dec("0.01"), rounding=ROUND_FLOOR)
