@@ -1,0 +1,121 @@
+{
+  "version": "volume-risk-cost-v1",
+  "variants": {
+    "rolling_structural_flat40": {
+      "volume": "rolling",
+      "risk": "structural",
+      "cost": "flat40"
+    },
+    "rolling_structural_usd": {
+      "volume": "rolling",
+      "risk": "structural",
+      "cost": "usd"
+    },
+    "rolling_atr_flat40": {
+      "volume": "rolling",
+      "risk": "atr",
+      "cost": "flat40"
+    },
+    "rolling_atr_usd": {
+      "volume": "rolling",
+      "risk": "atr",
+      "cost": "usd"
+    },
+    "same_time_structural_flat40": {
+      "volume": "same_time",
+      "risk": "structural",
+      "cost": "flat40"
+    },
+    "same_time_structural_usd": {
+      "volume": "same_time",
+      "risk": "structural",
+      "cost": "usd"
+    },
+    "same_time_atr_flat40": {
+      "volume": "same_time",
+      "risk": "atr",
+      "cost": "flat40"
+    },
+    "same_time_atr_usd": {
+      "volume": "same_time",
+      "risk": "atr",
+      "cost": "usd"
+    },
+    "same_time_atr_eur": {
+      "volume": "same_time",
+      "risk": "atr",
+      "cost": "eur"
+    },
+    "same_time_atr_stress": {
+      "volume": "same_time",
+      "risk": "atr",
+      "cost": "stress"
+    }
+  },
+  "since": "2026-11-12",
+  "validation_first_full_session": "2026-11-13",
+  "scope": "captured_US_Invest_stocks_long_only_no_AI_no_alerts_no_orders",
+  "universe": "same_capture_all_selected_stocks_in_capture_order",
+  "repeat": "first_common_eligible_setup_per_symbol_per_NY_session_all_variants_frozen",
+  "common": "20_contiguous_completed_5m_bars_positive_momentum_above_rolling_VWAP_bounded_news_check",
+  "feed": "iex_partial_venue",
+  "volume_minimum": "1",
+  "rolling_volume": "last5_mean_over_prior15_mean",
+  "same_time_volume": "last5_sum_over_mean_same_NY_buckets_prior10_full_sessions_min5_complete",
+  "history_adjustment": "split",
+  "history_missing": "unknown_never_zero_no_fallback",
+  "entry": "previous5_bar_high_plus10bps",
+  "entry_lifetime_seconds": 180,
+  "structural_stop": "last3_bar_low",
+  "structural_target": "2R_net_at_maximum_allowed_entry_gap_including_costs",
+  "atr": "simple_mean_last14_true_ranges_completed_5m",
+  "atr_stop": "min_structural_stop_or_entry_minus1.5ATR14",
+  "atr_target": "min_3R_gross_or6ATR14_or_nearest_observed_prior_bar_resistance_above_entry",
+  "maximum_stop_width_bps": "300",
+  "minimum_net_rr": "2",
+  "maximum_reference_spread_bps": "20",
+  "maximum_entry_gap_bps": "20",
+  "quote_policy": "wide_quotes_cannot_fill_or_invalidate_entry_ambiguous_exit_unresolved",
+  "maximum_planned_loss_eur": "20",
+  "allocation_eur": "500",
+  "allocation": "independent_not_portfolio_alternative_variants_do_not_add",
+  "observer_capacity_symbols": 40,
+  "poll_seconds": 5,
+  "exit": "first_eligible_observed_stop_target_or_last30s_before_session_close_minus5min_or22Dublin",
+  "fill_clock": "max_local_receipt_database_receipt_not_exchange_backdating",
+  "costs": {
+    "flat40": {
+      "fx_bps": "0",
+      "slippage_bps": "0",
+      "flat_bps": "40"
+    },
+    "usd": {
+      "fx_bps": "0",
+      "slippage_bps": "5",
+      "flat_bps": "0"
+    },
+    "eur": {
+      "fx_bps": "15",
+      "slippage_bps": "5",
+      "flat_bps": "0"
+    },
+    "stress": {
+      "fx_bps": "15",
+      "slippage_bps": "20",
+      "flat_bps": "0"
+    }
+  },
+  "fee_checked": "2026-11-12",
+  "fee_expires": "2026-12-12",
+  "sec_sell_rate": "0.0000206",
+  "finra_usd_per_share": "0.000195",
+  "fee_sources": [
+    "https://www.trading212.com/terms/invest",
+    "https://helpcentre.trading212.com/hc/en-us/articles/360007081637-What-are-the-applicable-stock-exchange-fees",
+    "https://helpcentre.trading212.com/hc/en-us/articles/11669719976093-What-is-a-multi-currency-account"
+  ],
+  "cost_limitations": "assumed_slippage_and_conditional_sale_levies_not_verified_broker_fees_ADR_taxes_unknown",
+  "spread_accounting": "buy_at_ask_sell_at_bid_do_not_subtract_spread_again",
+  "fx": "source_indicative_EUR_per_USD_held_fixed_not_currency_hedging",
+  "no_parameter_tuning_during_validation": true
+}
