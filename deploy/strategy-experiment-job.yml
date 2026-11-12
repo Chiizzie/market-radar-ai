@@ -1,0 +1,68 @@
+# Job fragment deployed in scheduled-scanner.yml on 12 November 2026.
+# Dashboard contract/build/publication verified before activation.
+# No dependencies are added to collection, review, account sync or existing watchers.
+  strategy-experiment:
+    needs: [collect, market-context]
+    if: ${{ always() && needs.collect.outputs.review_ready == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.STRATEGY_EXPERIMENT_ENABLED != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    # Experimental storage/provider faults must not interrupt ordinary scanning.
+    # The failed job and retained artifacts remain visible; no result is fabricated.
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - name: Check experimental session window
+        id: window
+        run: |
+          python - <<'PY'
+          import os
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          now=datetime.now(ZoneInfo('America/New_York'))
+          allowed=now.weekday()<5 and (9,35)<=(now.hour,now.minute)<=(16,5)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('run='+str(allowed).lower()+'\n')
+          PY
+      - uses: actions/checkout@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          ref: 73d880261768b32453986d7da717058810178920
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        if: steps.window.outputs.run == 'true'
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[market]'
+        if: steps.window.outputs.run == 'true'
+      - uses: actions/download-artifact@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          name: scheduled-capture-${{ github.run_id }}
+          path: artifacts/scheduled/
+      - uses: actions/download-artifact@v4
+        if: steps.window.outputs.run == 'true'
+        continue-on-error: true
+        with:
+          name: market-context-${{ github.run_id }}
+          path: artifacts/context-source/
+      - name: Observe frozen volume risk and cost variants without AI or alerts
+        if: steps.window.outputs.run == 'true'
+        run: >-
+          python -m market_radar_ai.agents.strategy_experiment_live
+          --capture artifacts/scheduled/enriched-capture.json
+          --news artifacts/scheduled/news.json
+          --history artifacts/context-source/.scanner-cache/market-context.json
+          --duration 330
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+          TRADING212_API_KEY: ${{ secrets.TRADING212_API_KEY }}
+          TRADING212_API_SECRET: ${{ secrets.TRADING212_API_SECRET }}
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.window.outputs.run == 'true'
+        with:
+          name: strategy-experiment-${{ github.run_id }}
+          path: artifacts/strategy-experiment/
+          retention-days: 30
+          if-no-files-found: warn

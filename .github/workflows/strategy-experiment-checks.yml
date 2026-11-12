@@ -1,0 +1,29 @@
+name: Strategy experiment regression checks
+on:
+  push:
+    branches: [experiment/volume-risk-cost-v1]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[dev]'
+      - name: Test synthetic experiment and ordinary scanner boundaries
+        run: >-
+          python -m pytest -q
+          tests/test_strategy_experiment.py tests/test_scanner_audit_repairs.py
+          tests/test_account_sync.py tests/test_stock_checks.py tests/test_catalogue_reuse.py
+          tests/test_run_diagnostics.py tests/test_catalyst_links.py tests/test_opening_improvements.py
+          tests/test_cross_scanner_audit.py tests/test_qualification_refresh.py
+          tests/test_partial_collection_routing.py tests/test_paper_outcomes.py tests/test_market_context.py
+      - name: Compile new producer
+        run: python -m compileall -q src/market_radar_ai/agents/strategy_experiment.py src/market_radar_ai/agents/strategy_experiment_live.py
