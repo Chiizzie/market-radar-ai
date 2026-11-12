@@ -33,6 +33,7 @@ class Engine:
         self.limits = limits or Limits()
         self.last_reconciled_at = None
         self.last_error = None
+        self._ambiguous_symbols = set()
 
     def account(self):
         account = self.broker.account()
@@ -135,16 +136,31 @@ class Engine:
                 now = utcnow()
             if not 0 <= (now - instant(clock["timestamp"])).total_seconds() <= 10:
                 raise SafetyError("stale broker clock")
+            blocked = set()
             for row in self.journal.rows(active=True):
-                self._refresh(row, now)
+                try:
+                    self._refresh(row, now)
+                except (BrokerError, SafetyError, KeyError, TypeError, ValueError) as exc:
+                    blocked.add(row["id"])
+                    self._row_failure(row, exc)
             positions = self._inventory()
             for row in self.journal.rows(active=True):
-                self._manage(row, positions, clock, now)
+                if row["id"] in blocked:
+                    continue
+                try:
+                    self._manage(row, positions, clock, now)
+                except (BrokerError, SafetyError, KeyError, TypeError, ValueError) as exc:
+                    self._row_failure(row, exc)
             self.last_reconciled_at = now.isoformat()
         except (BrokerError, SafetyError, KeyError, TypeError, ValueError) as exc:
             self.last_error = type(exc).__name__ + ": " + str(exc)
             self.journal.halt(self.last_error)
         return self.report()
+
+    def _row_failure(self, row, exc):
+        self.last_error = type(exc).__name__ + ": " + str(exc)
+        self.journal.state(row["id"], "RECONCILIATION_REQUIRED")
+        self.journal.halt(self.last_error, row["id"])
 
     def _refresh(self, row, now):
         refreshed_ids = set()
@@ -188,8 +204,7 @@ class Engine:
         if any(qty != 0 and symbol not in symbols for symbol, qty in positions.items()):
             self.journal.halt("unowned broker position; no automatic liquidation")
         # Unrelated foreign exposure stops entries but does not stop management of ours.
-        if any(order["symbol"] in symbols for order in foreign):
-            raise SafetyError("unowned order in managed symbol; exposure ambiguous")
+        self._ambiguous_symbols = {order["symbol"] for order in foreign if order["symbol"] in symbols}
         return positions
 
     @staticmethod
@@ -206,6 +221,10 @@ class Engine:
 
     def _manage(self, row, positions, clock, now):
         intent = self.journal.intent(row)
+        if intent.symbol in self._ambiguous_symbols:
+            self.journal.state(row["id"], "RECONCILIATION_REQUIRED")
+            self.journal.halt("unowned order in managed symbol; exposure ambiguous", row["id"])
+            return
         operations = self.journal.operations(row["id"])
         if any(op["phase"] == "UNKNOWN" for op in operations):
             self.journal.state(row["id"], "RECONCILIATION_REQUIRED")

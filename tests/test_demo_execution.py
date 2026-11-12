@@ -4,9 +4,12 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 import json
+import os
 from pathlib import Path
 import random
 import sqlite3
+import subprocess
+import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
@@ -353,6 +356,44 @@ class DemoEngineTests(unittest.TestCase):
         self.assertEqual(len(self.broker.posts), 1)
         self.assertEqual(self.state(), "OPEN_PROTECTED")
 
+    def test_real_process_crash_after_acceptance_recovers_committed_wal(self):
+        crash_db = Path(self.tmp.name) / "crashed.sqlite3"
+        broker_state = Path(self.tmp.name) / "fake-broker.json"
+        child = '''
+import json, os, sys
+from test_demo_execution import Broker, Engine, Journal, intent, NOW
+journal = Journal(sys.argv[1])
+broker = Broker()
+original = broker.submit
+def submit(payload):
+    original(payload)
+    with open(sys.argv[2], "w") as handle:
+        json.dump({"orders": broker.orders, "posts": broker.posts}, handle)
+        handle.flush()
+        os.fsync(handle.fileno())
+    os._exit(77)  # No finally, sqlite close, acknowledgement save or graceful shutdown.
+broker.submit = submit
+Engine(journal, broker).submit(intent(), NOW)
+'''
+        env = dict(os.environ, PYTHONPATH=os.pathsep.join((str(Path(__file__).parent),
+                    str(Path(__file__).resolve().parents[1] / "src"))), PYTHONDONTWRITEBYTECODE="1")
+        result = subprocess.run([sys.executable, "-c", child, str(crash_db), str(broker_state)],
+                                env=env, capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 77, result.stderr)
+        recovered = Journal(crash_db)
+        try:
+            broker = Broker()
+            saved = json.loads(broker_state.read_text())
+            broker.orders, broker.posts = saved["orders"], saved["posts"]
+            broker.fill("order-1", 4, 100)
+            self.assertEqual(recovered.operations("test-source-1")[0]["phase"], "UNKNOWN")
+            engine = Engine(recovered, broker)
+            engine.submit(intent(), NOW)
+            self.assertEqual(len(broker.posts), 1)
+            self.assertEqual(recovered.get("test-source-1")["state"], "OPEN_PROTECTED")
+        finally:
+            recovered.close()
+
     def test_unknown_reservation_survives_day_boundary(self):
         self.broker.post_fault = "before_accept"
         self.start()
@@ -368,6 +409,50 @@ class DemoEngineTests(unittest.TestCase):
         self.tick()
         self.assertEqual(self.broker.posts[-1]["symbol"], "TEST")
         self.assertEqual(self.broker.posts[-1]["qty"], "4")
+
+    def two_positions(self):
+        self.start(qty="1")
+        self.start(qty="1", intent_id="second", source_event_id="event-2", symbol="OTHER")
+        self.broker.fill("order-1", 1, 100)
+        self.broker.fill("order-2", 1, 100)
+        self.tick()
+        self.journal.request_exit("second", "test exit")
+
+    def test_ambiguous_symbol_does_not_block_other_position_exit(self):
+        self.two_positions()
+        self.broker.orders["foreign"] = {"id": "foreign", "client_order_id": "foreign", "symbol": "TEST",
+            "type": "limit", "side": "buy", "qty": "1", "filled_qty": "0", "filled_avg_price": None, "status": "new"}
+        self.tick()
+        self.tick()
+        self.assertEqual(self.state(), "RECONCILIATION_REQUIRED")
+        self.assertEqual(self.broker.posts[-1]["symbol"], "OTHER")
+        self.assertEqual(self.broker.posts[-1]["side"], "sell")
+        self.assertNotIn("foreign", self.broker.cancels)
+
+    def test_one_order_read_failure_does_not_block_other_position_exit(self):
+        self.two_positions()
+        original = self.broker.lookup
+        def lookup(cid):
+            if cid == intent().client_id("entry"):
+                raise BrokerError(503)
+            return original(cid)
+        self.broker.lookup = lookup
+        self.tick()
+        self.tick()
+        self.assertEqual(self.state(), "RECONCILIATION_REQUIRED")
+        self.assertEqual(self.broker.posts[-1]["symbol"], "OTHER")
+        self.assertEqual(self.broker.posts[-1]["side"], "sell")
+        self.assertNotIn("order-1-sl", self.broker.cancels)
+
+    def test_fractional_partial_execution_closes_exact_fraction(self):
+        self.start(qty="1")
+        self.broker.fill("order-1", "0.5", 100)
+        self.tick()
+        self.tick()
+        self.assertEqual(self.broker.posts[-1]["qty"], "0.5")
+        self.broker.fill("order-2", "0.5", 99)
+        self.tick()
+        self.assertEqual(self.state(), "CLOSED")
 
     def test_exit_rejections_are_bounded(self):
         self.filled()

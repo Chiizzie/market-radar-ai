@@ -7,7 +7,7 @@ This is an isolated engineering component, not scanner auto-execution or evidenc
 - Initial deployment: `8a0d7e787c5a2707a6761044ad90014ff0527a21`.
 - Initial GitHub verification: https://github.com/Chiizzie/market-radar-ai/actions/runs/43232188896 — both fault drills and read-only paper connectivity passed.
 - At **13:57:10 Europe/Dublin, 12 November**: paper account ACTIVE, USD, trading/account blocks false, **0 open orders, 0 positions**. Regular session closed; next open **14:30 Dublin**, close **21:00 Dublin**.
-- Initial 39 fault tests passed remotely. Expanded local suite: **55 tests**, including 30 seeded fill/cancel/restart sequences within one test. Final revision must be checked in GitHub before claiming deployed verification.
+- Initial 39 fault tests passed remotely. Expanded local suite: **59 tests**, including 30 seeded fill/cancel/restart sequences within one test. Final revision must be checked in GitHub before claiming deployed verification.
 - Read-only preflight **does not establish order-submission permission**. A completed broker entry/fill/protection/exit round trip has **not yet been observed**.
 
 ## What is implemented
