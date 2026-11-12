@@ -1,0 +1,134 @@
+{
+  "schema": "broker-paper-acceptance-summary-v1",
+  "source": {
+    "repository": "Chiizzie/market-radar-ai",
+    "core_commit": "443b3f7f38e24d8f2cd83c5902ae998878555749",
+    "workflow_run_id": 43240631152,
+    "workflow_url": "https://github.com/Chiizzie/market-radar-ai/actions/runs/43240631152",
+    "artifact_id": 13954043792,
+    "artifact_digest": "sha256:07868e485425685c841726560d3f4a0608ead2b1485e62223b61a53f0924a3b1"
+  },
+  "purpose": "Engineering fixture; not strategy performance",
+  "tests_passed": 66,
+  "final_report": {
+    "mode": "paper",
+    "source": "broker_paper_engineering_exercise",
+    "strategy_evaluation": false,
+    "live_orders_enabled": false,
+    "verification_complete": true,
+    "preflight": {
+      "schema": "broker-paper-preflight-v1",
+      "checked_at": "2026-11-12T14:46:58.107978+00:00",
+      "endpoint": "https://paper-api.alpaca.markets",
+      "mode": "paper",
+      "orders_submitted": 0,
+      "account_status": "ACTIVE",
+      "account_currency": "USD",
+      "trading_blocked": false,
+      "account_blocked": false,
+      "trade_suspended_by_user": false,
+      "open_order_count": 0,
+      "position_count": 0,
+      "market_open": true,
+      "next_open": "2026-11-13T09:30:00-05:00",
+      "next_close": "2026-11-12T16:00:00-05:00",
+      "live_orders_enabled": false,
+      "order_submission_permissions": "not_tested_by_read_only_preflight"
+    },
+    "waiting_for_regular_session": false,
+    "engine": {
+      "schema": "broker-paper-engine-v1",
+      "mode": "paper",
+      "live_orders_enabled": false,
+      "scanner_auto_execution_enabled": false,
+      "fees_verified": false,
+      "entry_halt": null,
+      "last_error": null,
+      "last_reconciled_at": "2026-11-12T14:47:23.863747+00:00",
+      "broker_positions": {},
+      "positions_observed_at": "2026-11-12T14:47:23.355386+00:00",
+      "submission_errors": [],
+      "all_intents_terminal": true,
+      "intents": [
+        {
+          "intent_id": "engineering-20261112-v4",
+          "symbol": "F",
+          "state": "CLOSED",
+          "entry_limit_usd": "12.20",
+          "stop_usd": "11.95",
+          "target_usd": "12.45",
+          "remaining_from_fills": "0",
+          "protection_observed": false,
+          "exit_reason": "bounded engineering exercise complete",
+          "reserved_risk_eur": "0.2695175962087778581047457131",
+          "pnl_eur_after_assumed_costs": "-0.05303759925393620500856441743",
+          "orders": [
+            {
+              "id": "caaa938d-21ca-4321-8e4b-3ee558ec4bb4",
+              "client_order_id": "mrdemo-08c0969efb237cc9343e0b4a1b6649ab-entry",
+              "side": "buy",
+              "type": "limit",
+              "status": "filled",
+              "qty": "1",
+              "filled_qty": "1",
+              "filled_avg_price": "12.15"
+            },
+            {
+              "id": "881fd7f3-c587-4488-b9c6-488d9e74b2aa",
+              "client_order_id": "e02f9f6d-11ce-4972-85d0-966e6dc7f942",
+              "side": "sell",
+              "type": "limit",
+              "status": "canceled",
+              "qty": "1",
+              "filled_qty": "0",
+              "filled_avg_price": null
+            },
+            {
+              "id": "c3687ecf-78ee-4840-8a85-dab10955e32e",
+              "client_order_id": "6f2ff973-22af-4174-968e-85175debf600",
+              "side": "sell",
+              "type": "stop",
+              "status": "canceled",
+              "qty": "1",
+              "filled_qty": "0",
+              "filled_avg_price": null
+            },
+            {
+              "id": "83e39220-607f-4dc5-9e9c-cd638795e0ba",
+              "client_order_id": "mrdemo-08c0969efb237cc9343e0b4a1b6649ab-exit0",
+              "side": "sell",
+              "type": "market",
+              "status": "filled",
+              "qty": "1",
+              "filled_qty": "1",
+              "filled_avg_price": "12.14"
+            }
+          ]
+        }
+      ]
+    },
+    "protection_observed": true,
+    "checked_at": "2026-11-12T14:47:23.863989+00:00",
+    "fx_source": "yahoo_finance:EURUSD=X:5m",
+    "final_preflight": {
+      "schema": "broker-paper-preflight-v1",
+      "checked_at": "2026-11-12T14:47:25.857426+00:00",
+      "endpoint": "https://paper-api.alpaca.markets",
+      "mode": "paper",
+      "orders_submitted": 0,
+      "account_status": "ACTIVE",
+      "account_currency": "USD",
+      "trading_blocked": false,
+      "account_blocked": false,
+      "trade_suspended_by_user": false,
+      "open_order_count": 0,
+      "position_count": 0,
+      "market_open": true,
+      "next_open": "2026-11-13T09:30:00-05:00",
+      "next_close": "2026-11-12T16:00:00-05:00",
+      "live_orders_enabled": false,
+      "order_submission_permissions": "not_tested_by_read_only_preflight"
+    },
+    "finished_at": "2026-11-12T14:47:25.857460+00:00"
+  }
+}

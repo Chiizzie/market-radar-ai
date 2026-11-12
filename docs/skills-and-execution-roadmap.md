@@ -66,3 +66,20 @@ These tests can begin locally without credentials. Demo account access and desir
 Only consider this after independently reviewable strategy evidence and execution/recovery tests. Confirm broker/account suitability, actual fee/currency route, persistent hosting, monitoring, stop/protection behavior and explicit capital/risk policy. Planned EUR20 risk is not a guaranteed loss ceiling. No arbitrary sample count, return target or agent consensus automatically promotes the system.
 
 No live order submission, live execution activation, runtime strategy change, budget increase or historical-outcome rewrite was made by this skills milestone.
+
+## Engineering implementation and acceptance — 12 November, 14:47 Dublin
+
+The isolated Alpaca paper order-management core is implemented in `src/market_radar_ai/execution/`. **66 focused tests passed in GitHub**, including 30 seeded failure sequences, a real subprocess crash after simulated broker acceptance, backup recovery and replay of a captured broker bracket response.
+
+A complete broker-paper lifecycle passed on core **443b3f7f38e24d8f2cd83c5902ae998878555749**: one-share engineering entry filled, conditional bracket protection recognized, deliberate exit filled, and **zero open orders / zero positions** afterward. This is an engineering fixture, not a scanner signal or profitability evidence.
+
+- [Verified workflow](https://github.com/Chiizzie/market-radar-ai/actions/runs/43240631152)
+- [Implementation, earlier attempts and remaining rollout work](paper-order-engine.md)
+- [Persistent acceptance summary](evidence/2026-11-12-paper-engine-v4.json)
+- [Six existing skill candidates and review depth](skill-catalogue-review-2026-11-12.md)
+
+Broker trials exposed sibling-cancellation acknowledgement handling and the normal conditional `held` stop state. Both were corrected and covered by regressions. Earlier blocked, unfilled and recovery attempts remain recorded.
+
+**Still outstanding:** persistent hosting, trusted scanner-intent ingestion, Lovable order-status display, operational alerts, actual fees/corrections and eventual Trading 212-specific demo acceptance. The host template and read-only JSON status report are available. Live orders and scanner auto-execution remain disabled.
+
+Ordinary verification runs are now broker-read-only. Further order exercises require an explicit manual workflow selection and a new exercise ID. These engineering checks made no paid AI calls. No additional third-party skill was installed by the catalogue scan.

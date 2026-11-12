@@ -9,6 +9,17 @@ on:
       - '.github/workflows/demo-execution-verify.yml'
       - 'deploy/paper-exercise-request.json'
   workflow_dispatch:
+    inputs:
+      paper_order_exercise:
+        description: 'Place a bounded one-share order exercise in the empty Alpaca PAPER account'
+        type: boolean
+        required: true
+        default: false
+      exercise_id:
+        description: 'Unique ID for a new exercise; recover an existing attempt from its journal instead'
+        type: string
+        required: false
+        default: ''
 permissions:
   contents: read
 concurrency:
@@ -57,8 +68,8 @@ jobs:
           retention-days: 30
           if-no-files-found: error
   bounded-paper-order-exercise:
-    # Explicit one-shot engineering trigger; ordinary code pushes never place orders.
-    if: github.event_name == 'push' && github.event.head_commit.message == 'Verify broker paper round trip 2026-11-12'
+    # Routine pushes and default manual runs are read-only at the broker.
+    if: github.event_name == 'workflow_dispatch' && inputs.paper_order_exercise == true
     needs: [fault-drills, paper-connectivity]
     runs-on: ubuntu-latest
     timeout-minutes: 35
@@ -74,7 +85,8 @@ jobs:
         env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
-        run: python -m market_radar_ai.execution.exercise --paper-orders --exercise-id engineering-20261112-v4 --wait-for-open-seconds 1800
+          PAPER_EXERCISE_ID: ${{ inputs.exercise_id }}
+        run: python -m market_radar_ai.execution.exercise --paper-orders --exercise-id "$PAPER_EXERCISE_ID"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

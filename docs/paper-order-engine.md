@@ -7,8 +7,8 @@ This is an isolated engineering component, not scanner auto-execution or evidenc
 - Initial deployment: `8a0d7e787c5a2707a6761044ad90014ff0527a21`.
 - Initial GitHub verification: https://github.com/Chiizzie/market-radar-ai/actions/runs/43232188896 — both fault drills and read-only paper connectivity passed.
 - At **13:57:10 Europe/Dublin, 12 November**: paper account ACTIVE, USD, trading/account blocks false, **0 open orders, 0 positions**. Regular session closed; next open **14:30 Dublin**, close **21:00 Dublin**.
-- Initial 39 fault tests passed remotely. Expanded local suite: **66 tests**, including 30 seeded fill/cancel/restart sequences within one test. Final revision must be checked in GitHub before claiming deployed verification.
-- Read-only preflight **does not establish order-submission permission**. A completed broker entry/fill/protection/exit round trip has **not yet been observed**.
+- Final core **443b3f7f38e24d8f2cd83c5902ae998878555749**: **66 tests passed in GitHub**, including 30 seeded fill/cancel/restart sequences, real subprocess crash recovery and replay of a captured broker response.
+- **Complete broker-paper lifecycle passed at 14:47:25 Dublin**: entry filled, protection recognized, exit filled, and final broker inventory **0 orders / 0 positions**. [Workflow](https://github.com/Chiizzie/market-radar-ai/actions/runs/43240631152). [Persistent acceptance summary](evidence/2026-11-12-paper-engine-v4.json). Read-only preflight alone does not establish order permission; the completed order exercise establishes the tested paper path.
 
 ## What is implemented
 
@@ -83,16 +83,16 @@ Backups must use a new destination filename. Recovery requires stopping/fencing 
 ## Bounded broker exercise
 
 ```bash
-python -m market_radar_ai.execution.exercise --paper-orders --exercise-id engineering-20261112-v1
+python -m market_radar_ai.execution.exercise --paper-orders --exercise-id NEW_UNIQUE_EXERCISE_ID
 ```
 
 The engineering fixture uses **one share of F**, only if its fresh quote is between $2 and $30 and the account is otherwise empty. Its fixed limit ceiling is at most five cents above the observed ask (half a percent for lower-priced quotes), rounded down to a whole cent. The $30 ceiling and all spread, freshness and risk gates still apply. This symbol is a small-notional plumbing fixture, not a recommendation or scanner signal. It uses the scanner's existing fresh FX provider. It refuses closed markets and does not substitute extended hours. It requests an exit once active protection is observed, then verifies that the broker has no positions/open orders. It preserves the input, report, journal and recovery backup. The 240-second observation bound can end unresolved; such a result is not success and needs immediate paper recovery investigation.
 
-The GitHub workflow's ordinary pushes run tests and read-only preflight only. A separate order-exercise job is deliberately gated by the exact one-shot commit message `Verify broker paper round trip 2026-11-12`; it must not be triggered until the market is open. Rerunning without restoring the original journal is not a recovery procedure. GitHub Actions is used for this bounded engineering test, **not as the persistent trading service**.
+The GitHub workflow's ordinary pushes and default manual runs execute tests and read-only preflight only. The temporary commit-message trigger has been removed. A new paper-order exercise requires explicitly setting `paper_order_exercise=true` and a new `exercise_id` in **Run workflow**, during the regular session. The ID is passed through a quoted environment variable. Rerunning without restoring the original journal is not a recovery procedure. GitHub Actions is used for this bounded engineering test, **not as the persistent trading service**.
 
 ## Remaining acceptance / rollout work
 
-1. Observe the full broker-paper entry → active protection → exit → reconciled-flat evidence on the final code.
+1. **Completed:** full broker-paper entry → recognized conditional protection → exit → reconciled-flat evidence on the verified core.
 2. Deploy a persistent dedicated paper worker, backups and health/incident reporting; exercise process termination and storage/feed/broker outages there.
 3. Wire trusted scanner approvals into this isolated demo pipeline and a read-only dashboard status view, with explicit source/price/risk validation.
 4. Reconcile execution activities, fees and later corrections; add streaming trade updates with REST recovery before claiming low-latency execution.
@@ -115,3 +115,16 @@ Observation records now use receipt time after the broker response; broker event
 Relevant primary references:
 - https://docs.alpaca.markets/us/reference/subscribetotradev2sse
 - https://forum.alpaca.markets/t/bracket-order-exit-trades-not-executing/3697
+
+## Acceptance history (Europe/Dublin)
+
+| Attempt / workflow | Observed result | Final exposure |
+| --- | --- | --- |
+| [v1, 14:30](https://github.com/Chiizzie/market-radar-ai/actions/runs/43235269100) | Opening IEX quote $12.17/$12.79 failed the plan/quote gate; no order submitted | Zero |
+| [v2, 14:32](https://github.com/Chiizzie/market-radar-ai/actions/runs/43236966654) | Broker accepted a $12.18 limit bracket; it expired unfilled and all legs were cancelled. Revealed benign sibling-cancellation acknowledgement race | Zero |
+| [v3, 14:38](https://github.com/Chiizzie/market-radar-ai/actions/runs/43239136121) | One share filled at $12.15. Incorrect held-stop classification caused a conservative exit at $12.14. Classification and receipt timestamps were fixed; original evidence retained | Zero |
+| [v4, 14:47](https://github.com/Chiizzie/market-radar-ai/actions/runs/43240631152) | **Passed:** one share filled at $12.15, conditional stop recognized, deliberate engineering exit at $12.14, no unresolved errors or halt | Zero |
+
+The final test's gross simulated price result was **−$0.01**, before fees. The journal's indicative EUR result after an assumed 40-bps round-trip cost was approximately **−€0.053**. This deliberately immediate exit is an engineering fixture, not a strategy evaluation. Actual fees remain unverified. These entries are not added to the scanner's strategy comparison portfolios.
+
+Final run **43240631152**, verified core **443b3f7f38e24d8f2cd83c5902ae998878555749**. Broker artifact **13954043792**, digest **sha256:07868e485425685c841726560d3f4a0608ead2b1485e62223b61a53f0924a3b1**. The persistent JSON summary contains the final broker report and provenance, without credentials or account balances. The complete observation journal and recovery SQLite remain in the GitHub run artifact for its stated retention window; an always-on backup service is not deployed.

@@ -2,11 +2,13 @@
   "exercise_id": "engineering-20261112-v4",
   "mode": "paper",
   "purpose": "One-share engineering entry/protection/exit verification",
-  "wait_for_regular_session_only": true,
-  "maximum_wait_seconds": 1800,
-  "maximum_observation_seconds": 240,
+  "status": "completed",
+  "verified_at": "2026-11-12T14:47:25.857460+00:00",
+  "workflow_run_id": 43240631152,
+  "core_commit": "443b3f7f38e24d8f2cd83c5902ae998878555749",
   "maximum_quantity": 1,
   "maximum_price_usd": "30",
   "scanner_signal": false,
-  "live_orders_enabled": false
+  "live_orders_enabled": false,
+  "future_runs": "manual_workflow_selection_only"
 }
