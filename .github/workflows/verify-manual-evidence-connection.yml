@@ -1,0 +1,37 @@
+name: Verify manual evidence connection
+on:
+  push:
+    branches: [verify/manual-evidence-connection-20261113]
+permissions:
+  contents: read
+jobs:
+  connect:
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 015fa5a0586d2b390067b4772f1f723b4e74c7b4
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[market]'
+      - name: Verify private read-only cost capture
+        run: python scripts/verify_private_cost_capture.py
+        env:
+          TRADING212_API_KEY: ${{ secrets.TRADING212_API_KEY }}
+          TRADING212_API_SECRET: ${{ secrets.TRADING212_API_SECRET }}
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+      - name: Verify independent signed timing audit
+        run: python -m market_radar_ai.agents.manual_alert_evidence --publish
+        env:
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: manual-evidence-commissioning
+          path: artifacts/manual-alert-evidence/report.json
+          retention-days: 30
+          if-no-files-found: error
