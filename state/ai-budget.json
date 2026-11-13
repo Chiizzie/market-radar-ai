@@ -8710,6 +8710,12 @@
         "response_id": "resp_0f2972e7a1fb43c1016af34b2a5ab487d1b67eb131b9223cc4"
       }
     },
+    "paper-final-v1:e361e73da7d5ba9afb31689011ab3bd3d312d2bd02ff628a6a3ac607a0a79374:final_decision": {
+      "actual": null,
+      "day": "2026-11-13",
+      "reserved": 8425,
+      "usage": null
+    },
     "paper-final-v1:e3f5bd5d764ca4a7b9cc7c9659ca4270804603b2325be47079a67aabe51144d1:conclusion": {
       "actual": 9713,
       "day": "2026-11-10",
