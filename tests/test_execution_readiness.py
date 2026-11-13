@@ -74,7 +74,7 @@ def test_open_session_stale_quote_and_failed_jobs_are_attention():
 
 
 def test_budget_headroom_accounts_for_lifetime_unsettled_reservations():
-    state=initial_state();state['entries']['offline-reservation']={'day':'2026-11-01','reserved':4900000,'actual':None,'usage':None}
+    state=initial_state();state['entries']['offline-reservation']={'day':'2026-11-01','reserved':99900000,'actual':None,'usage':None}
     r=result(budget_store=Budget(state))
     assert states(r)['ai_spending_headroom']=='blocked'
     assert r['budget']['periods']['lifetime']['remaining_microeur']==100000

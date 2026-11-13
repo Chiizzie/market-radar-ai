@@ -222,7 +222,7 @@ def build(inputs, *, now):
     except (KeyError,TypeError,ValueError,ArithmeticError,StopIteration):return fail('source_invalid_or_unavailable')
 
 
-def replay(cohort, observations, *, now):
+def replay(cohort, observations, *, now, bid_confirmation=False):
     """Receipt-bound fills, symmetric quote quality and no fabricated exits."""
     now=aware(now);start=aware(cohort['enrolled_at']);out={}
     for name,v in cohort['variants'].items():
@@ -250,6 +250,7 @@ def replay(cohort, observations, *, now):
                 if ask>entry*D('1.002'):r.update(state='not_filled',reason='entry_gap_exceeded');break
                 fill=ask*(1+slip);e=economics(p,cost,entry=fill)
                 if e['risk']>num(p['planned_loss_eur']) or e['capital']>num(p['reserved_capital_eur']) or e['rr']<2-D('.000001'):continue
+                if bid_confirmation and bid<entry:continue
                 r.update(state='open',reason='observed_reference_entry',entry_at=at.isoformat(),entry_usd=text(fill/fx))
                 entry_fill=fill;entry_reference=ask;continue
             reason=('scheduled_exit' if at>=deadline-timedelta(seconds=30) else 'stop' if bid<=stop else 'target' if bid>=target else None)
