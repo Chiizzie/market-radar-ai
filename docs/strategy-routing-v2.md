@@ -1,0 +1,9 @@
+# Independent strategy evaluation and expanded knowledge
+
+Hypothesis: the current single-label qualification can hide a valid continuation setup when a pullback detector takes precedence. Evaluating each compatible strategy independently on the same frozen inputs should reveal that coverage difference without loosening its gates. The additional opening-range, anchored-VWAP and competitor experiments already exist; this release connects their exact rules and source histories to a separate knowledge experiment.
+
+Scope: six independently evaluated, long-only stock research strategies and an offline-only mean-reversion prototype. No production approval/alert/order change, paid-call activation or budget increase. The original knowledge experiment, its library and outcomes remain frozen. New inputs, protocols, plans, historical policies and overlapping same-stock alternatives are recorded separately.
+
+Mean-reversion hypothesis: after a low-efficiency, bounded intraday range, an unusually low completed close followed by a bullish recovery may offer a conditional move toward the earlier range mean. All baseline statistics exclude the two signal bars. Parameters are predeclared in code and illustrative; offline fixtures demonstrate mechanics, not an estimated edge. No automatic promotion is based on historical fit.
+
+Validation: preserve original qualification output by default; reproduce overlapping patterns; reject future, stale, incomplete, misidentified and missing source inputs; retain historical source/receipt clocks and outcome policies; use separate histories per strategy; cap knowledge extracts; preserve EUR20 cost-inclusive risk and intraday deadlines; exercise all seven detectors offline. Prospective preparation starts 16 November 2026. Actual outcomes and paid AI comparisons remain a later validation step.

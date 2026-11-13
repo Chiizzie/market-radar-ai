@@ -42,11 +42,18 @@ def reference_checks(document, *, symbol, market, now):
     return result
 
 
-def technical_checks(bars, *, market=None):
+def technical_checks(bars, *, market=None, strategy_id=None):
     """Transparent measurements, not a fitted strategy or success probability."""
+    allowed = {'trend_continuation_20bar_v1', 'trend_pullback_reclaim_v1', 'opening_continuation_30m_v1'}
+    if strategy_id is not None and (market != 'stocks' or strategy_id not in allowed):
+        raise ValueError('unsupported_explicit_stock_strategy')
     rows = bars.candles[-20:]
     from ..market_data.strategy_window import profile
     strategy = profile(list(bars.candles), now=bars.validated_at)
+    if strategy_id == 'opening_continuation_30m_v1' and strategy != strategy_id:
+        return {'state': 'NOT_APPLICABLE', 'strategy_id': strategy_id}
+    if strategy_id == 'trend_continuation_20bar_v1' and len(rows) < 20:
+        return {'state': 'NOT_APPLICABLE', 'strategy_id': strategy_id}
     if strategy is None:
         return {'state': 'INSUFFICIENT_HISTORY'}
     recent_n = 5 if len(rows) >= 20 else 3
@@ -72,7 +79,7 @@ def technical_checks(bars, *, market=None):
         measured['opening_session_vwap'] = measured.pop('rolling_20_bar_vwap')
         measured['completed_bars'] = len(rows)
         measured['note'] = 'Experimental opening-session paper setup: at least six contiguous completed bars from the regular open; last three bars versus earlier opening bars. Not backtested or a proven edge.'
-    if market == 'stocks' or (market is None and getattr(bars, 'provider', None) == 'alpaca_iex'):
+    if strategy_id not in ('trend_continuation_20bar_v1', 'opening_continuation_30m_v1') and (market == 'stocks' or (market is None and getattr(bars, 'provider', None) == 'alpaca_iex')):
         from ..market_data.pullback import detect_pullback, STRATEGY
         pattern = detect_pullback(list(bars.candles), now=bars.validated_at)
         if pattern:
@@ -82,6 +89,8 @@ def technical_checks(bars, *, market=None):
                 target_cap_native=pattern['target_cap_native'],
                 trigger_state='ALREADY_ABOVE_TRIGGER' if rows[-1].close >= trigger else 'WAITING_FOR_TRIGGER',
                 note='Experimental stock pullback/reclaim. Rolling volume and VWAP checks remain required. News is checked for adverse evidence; a fresh catalyst is not required for this separate chart strategy.')
+    if strategy_id == 'trend_pullback_reclaim_v1' and measured.get('strategy_id') != strategy_id:
+        return {'state': 'NOT_APPLICABLE', 'strategy_id': strategy_id}
     if measured.get('strategy_id')=='trend_continuation_20bar_v1':
         measured['thesis_basis']='chart_led'
         measured['note']+=' Separate chart-led continuation: recent volume at least its earlier baseline; a completed news risk check is required, a fresh positive headline is not.'

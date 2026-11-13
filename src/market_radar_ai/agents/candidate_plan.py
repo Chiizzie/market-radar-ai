@@ -7,7 +7,7 @@ from ..market_data.admission import FxQuote
 D = Decimal
 
 
-def draft(bars, fx, *, now, market=None):
+def draft(bars, fx, *, now, market=None, strategy_id=None):
     """Validated MarketEvidence in, explicit fictional assumptions out."""
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError('aware_clock_required')
@@ -32,7 +32,7 @@ def draft(bars, fx, *, now, market=None):
     # A conditional scenario, not a market order or an optimized strategy.
     from .setup_checks import technical_checks
     from ..market_data.pullback import STRATEGY
-    technical = technical_checks(bars, market=market)
+    technical = technical_checks(bars, market=market, **({'strategy_id':strategy_id} if strategy_id is not None else {}))
     if technical.get('state') != 'MEASURED':
         return None
     chart = technical.get('strategy_id') == STRATEGY
