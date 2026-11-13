@@ -12,7 +12,7 @@ The user asked to finish the engineering milestones from the earlier chat: revie
 - Main workflow: `.github/workflows/scheduled-scanner.yml`; each job has an explicit runtime SHA. Main source is not the deployed runtime and still has pre-existing missing legacy modules.
 - Collection, review, comparison, execution/readiness and ledger-maintenance runtime: `5ca5ffe1354729ddbbb735f8055fd0d50656f6d0`.
 - Strategy-diagnostic runtime: `fc12be18156a2ebbef2141275bf07f3962655e71`. Other observer/context/method/account pins remain unchanged.
-- Dashboard contracts: `1793d4fe146e05659dd09a48f0d394fe5b5ec57c`.
+- Dashboard contracts: `0210a0133233e0988fb6179c1d7d658d3d1701fb`.
 - Runtime deployment: `75446426e5cd66dba6f0c6b18e1ff8a7924acd14`. Supplemental quote-permission probe: `a913bb2efd7b2db55fb892bf2d9f22c6d1e8bb8c`.
 - Full source CI: [43484084327](https://github.com/Chiizzie/market-radar-ai/actions/runs/43484084327), 1,580 tests plus offline fixtures. Main budget compatibility: 50 tests.
 - First complete natural run after deployment: [43485677181](https://github.com/Chiizzie/market-radar-ai/actions/runs/43485677181), all eight jobs passed, completed 18:53:11 Dublin.
@@ -47,3 +47,11 @@ Use Dublin timestamps, USD instrument prices and EUR allowances/risk. Preserve E
 ## Latest follow-up: entry quality
 
 A read-only replay at about 19:19 Dublin reproduced 12,562 source events and all strategy-variant totals. In the five closed `rolling_structural_usd` examples, entry asks crossed the trigger while bids remained below it; four had no later recorded bid reach the trigger before their stop exits. Existing spread plus assumed entry slippage initially consumed 15–39% of fill-to-stop distance. This is a small incomplete sample, not proof of a replacement rule. Next proposed milestone: a separately frozen prospective bid-confirmation paper comparison. No new entry rule is active. See [entry-quality follow-up](incidents/2026-11-13-entry-quality-follow-up.md), including provenance and the distinction between actual AI positions and frozen selection counterfactuals.
+
+## Entry-quality implementation (13 November, 19:59 Dublin)
+
+The user authorized improving overall scanner quality. A separate paired entry-confirmation experiment is now wired into the normal workflow, pinned to `08809c9349d8c400b55625996ee1ee9649acfd44`. The original strategy stays pinned to fc12be1 and all other jobs are unchanged. Protocol `c73bb1ce0fe2f7e1db2cfa27d4fafdad8d65f31de1e12ff5514cc647d5dc27dc` reuses the same USD structural plans and costs; only bid >= trigger differs. It has an independent observer, durable restart, bounded concurrency and no model/notification/order operations. Commissioning is 13 Nov; validation sampling starts 16 Nov. Do not tune on commissioning outcomes.
+
+Source CI [43496893665](https://github.com/Chiizzie/market-radar-ai/actions/runs/43496893665) passed all 1,580 tests and compilation. Replay of the original 12,562 recorded events reproduced all ten original variant totals unchanged. Dashboard: 726 offline tests plus 12 live access checks passed (the latter needed a network-timeout retry); typecheck and build pass. The private Performance page displays paired outcomes, entry cost components, incomplete states and experiment screen blockers. Detail/paired counts stay bound to validated reports; raw quotes/enrolments remain machine-only. Local screenshot review was unavailable; DOM rendering was verified.
+
+Publication and the first completed natural nine-job run still require verification below. No new result or profitability claim exists at this checkpoint. See [frozen entry protocol](experiments/entry-confirmation-v1.md).
