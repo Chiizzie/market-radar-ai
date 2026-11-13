@@ -7495,6 +7495,12 @@
         "response_id": "resp_08148c8eaac6d9c3016af5e57010ac87d19b0e6360a403fc5b"
       }
     },
+    "paper-final-v1:c13ca75d1793f8a60c0db4d7fc79155353af2fa5ba88bc6f9d643e08f59667a8:devils_advocate": {
+      "actual": null,
+      "day": "2026-11-13",
+      "reserved": 8255,
+      "usage": null
+    },
     "paper-final-v1:c13ca75d1793f8a60c0db4d7fc79155353af2fa5ba88bc6f9d643e08f59667a8:news_analyst": {
       "actual": null,
       "day": "2026-11-13",
