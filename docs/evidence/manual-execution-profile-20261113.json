@@ -1,0 +1,88 @@
+{
+  "schema_version": "manual-execution-profile-offline-receipt-v1",
+  "verified_at": "2026-11-13T23:25:53.763436+00:00",
+  "timezone": "Europe/Dublin",
+  "profile_id": "31cb0c3f4bbcd52fe1c4cf62b4b72fc9113d1ef1368befb4b141c9d00b488b5b",
+  "source_base": "81a1dc65c29837158ba35ea9ae2e85b7a568f005",
+  "dataset_kind": "synthetic",
+  "status": "offline_checks_only_not_deployed",
+  "targeted_tests": {
+    "command": "python -m pytest -q tests/test_manual_execution_profile.py",
+    "passed": 41,
+    "failed": 0
+  },
+  "synthetic_four_minute_expiry": [
+    {
+      "profile_id": "31cb0c3f4bbcd52fe1c4cf62b4b72fc9113d1ef1368befb4b141c9d00b488b5b",
+      "status": "profile_checks_passed",
+      "reasons": [],
+      "trade_authorized": false,
+      "ready_at": "2026-11-16T15:01:00+00:00",
+      "entry_deadline": "2026-11-16T15:04:00+00:00",
+      "delay_seconds": 60
+    },
+    {
+      "profile_id": "31cb0c3f4bbcd52fe1c4cf62b4b72fc9113d1ef1368befb4b141c9d00b488b5b",
+      "status": "profile_checks_passed",
+      "reasons": [],
+      "trade_authorized": false,
+      "ready_at": "2026-11-16T15:03:00+00:00",
+      "entry_deadline": "2026-11-16T15:04:00+00:00",
+      "delay_seconds": 180
+    },
+    {
+      "profile_id": "31cb0c3f4bbcd52fe1c4cf62b4b72fc9113d1ef1368befb4b141c9d00b488b5b",
+      "status": "blocked",
+      "reasons": [
+        "response_exceeds_entry_window",
+        "entry_window_expired"
+      ],
+      "trade_authorized": false,
+      "ready_at": "2026-11-16T15:05:00+00:00",
+      "entry_deadline": "2026-11-16T15:04:00+00:00",
+      "delay_seconds": 300
+    }
+  ],
+  "synthetic_after_40_eur_net_daily_loss": [
+    {
+      "profile_id": "31cb0c3f4bbcd52fe1c4cf62b4b72fc9113d1ef1368befb4b141c9d00b488b5b",
+      "status": "blocked",
+      "reasons": [
+        "daily_loss_budget"
+      ],
+      "trade_authorized": false,
+      "daily_realized_loss_eur": "40",
+      "remaining_planned_risk_eur": "10",
+      "proposed_daily_loss_exposure_eur": "60"
+    },
+    {
+      "profile_id": "31cb0c3f4bbcd52fe1c4cf62b4b72fc9113d1ef1368befb4b141c9d00b488b5b",
+      "status": "profile_checks_passed",
+      "reasons": [],
+      "trade_authorized": false,
+      "daily_realized_loss_eur": "40",
+      "remaining_planned_risk_eur": "10",
+      "proposed_daily_loss_exposure_eur": "50"
+    }
+  ],
+  "file_sha256": {
+    "config/research/manual-execution-20261113.json": "28cb6239517a2c97afe38e58b550eac7e7140f041c879616dd0c9064494df182",
+    "src/market_radar_ai/agents/manual_execution_profile.py": "aaa716172fded1dee846e5141a8734f1adb949704925b824a82143119236bb56",
+    "tests/test_manual_execution_profile.py": "9715c4e8ee4382cdaa8b0eab206c38c1640a4fd2c7e37596af8b87e0bcb5cc88",
+    "docs/manual-execution-test-profile.md": "5e19f27081c153170bbf380bfdf6cf21b5765ac9a9342e03f111fd6422c36e87"
+  },
+  "existing_tracked_source_unchanged": true,
+  "full_suite_run": false,
+  "new_model_calls": 0,
+  "new_orders": 0,
+  "new_subscriptions": 0,
+  "runtime_changed": false,
+  "real_market_performance_evaluated": false,
+  "remaining": [
+    "integrate into a separate prospective replay",
+    "actual alert receipt clock",
+    "durable daily halt state and reconciled reservations",
+    "private fill fee/FX reconciliation",
+    "future-session performance and coverage evidence"
+  ]
+}

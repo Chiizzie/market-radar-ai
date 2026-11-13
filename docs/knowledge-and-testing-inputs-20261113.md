@@ -29,13 +29,17 @@ This ordering is an engineering recommendation from the documentation and curren
 - **Primary sources are available.** [SEC APIs](https://www.sec.gov/search-filings/edgar-application-programming-interfaces) and the [Nasdaq halt feed](https://www.nasdaqtrader.com/Trader.aspx?id=TradeHaltRSS) supply useful source material. Collection, timing, coverage and failure handling still need implementation and validation.
 - **Costs depend on the actual route.** [Invest currency selection](https://helpcentre.trading212.com/hc/en-us/articles/34159237080861-Can-I-choose-the-currency-in-which-to-buy-sell-assets-for-Invest-accounts) matters independently of the dashboard's USD display. Read the records first; ask about wallet use only if ambiguity remains.
 
-## What Charlie needs to provide
+## Confirmed test settings
 
-| Input | Answer needed | What it determines |
-| --- | --- | --- |
-| Paper capital | EUR amount the simulated account should start with | Affordable positions, cash constraints and concurrent exposure; this is a modelling choice, not a request for account balance. |
-| Daily loss ceiling | Maximum combined EUR loss allowed in one simulated day | A portfolio-level stop in addition to the existing per-trade limit; realized loss and open risk must be accounted for together. |
-| Manual execution availability | Usual trading hours in Dublin time, and typical alert-to-order delay: under 1 minute, 1–3 minutes or over 5 minutes, or a better estimate | Which opportunities are usable and which delay scenarios should be the main benchmark. |
+Charlie supplied all three inputs on 13 November 2026:
+
+| Input | Confirmed value |
+| --- | --- |
+| Paper capital | **EUR1,000** |
+| Daily loss ceiling | **EUR50** |
+| Availability / response | Throughout the permitted trading day; responds within **1–5 minutes** |
+
+The [manual execution test profile](manual-execution-test-profile.md) now records these settings, with 1-, 3- and 5-minute scenarios and five minutes as the conservative benchmark. Its initial offline risk/timing checks pass; deployment and forward performance evaluation remain separate work. No further answers are needed to begin the engineering steps.
 
 The existing **EUR20 maximum planned loss per trade**, intraday restriction and **no new entries at/after 22:00 Dublin** remain the starting constraints. Calendar-specific session and product restrictions may end trading earlier.
 
@@ -45,7 +49,7 @@ No new API keys, subscription decision or initial Invest CSV is required. Existi
 
 ## How the next testing stage should follow
 
-1. Turn the three user inputs into an explicit simulation specification. Define usable-entry rate, net outcome after costs, aggregate exposure/drawdown and data failures before comparing variants.
+1. Use the now-frozen manual execution profile as the simulation specification. Define usable-entry rate, net outcome after costs, aggregate exposure/drawdown and data failures before comparing variants.
 2. Verify the historical-data route and reconcile cost records. Preserve unknown or incomplete fields; do not silently assign zero costs or fill missing quotes.
 3. Freeze a narrow change at a time. Keep the current baseline and original protocols; historical development comes before later untouched evaluation.
 4. Compare identical future candidate inputs with existing knowledge and with selected additional notes. Implement the new schema/retrieval boundary and citation handling before any expanded AI comparison; existing budgets still apply.

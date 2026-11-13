@@ -2,13 +2,25 @@
 
 Last verified: 13 November 2026; the expanded strategy-routing worker succeeded in the 22:35 scan and reported at 22:36:27 Europe/Dublin. Its 717-case library and pre-validation guard are verified. Active-session coverage and performance remain unverified. Refresh source and production evidence before editing.
 
+## Confirmed manual test profile: 13 November
+
+Charlie supplied **EUR1,000 starting paper capital, EUR50 daily loss ceiling, all-day availability within existing trading hours and a 1–5 minute alert response**. No further user input is required for the next engineering step.
+
+The [test specification](manual-execution-test-profile.md) and [profile JSON](../config/research/manual-execution-20261113.json) preserve EUR20 per-trade risk, the existing EUR40 combined open-risk limit, EUR500 allocation / three reservations, Invest scope, intraday rules and the Dublin 22:00 entry cutoff. Response scenarios are 60/180/300 seconds; 300 is the conservative benchmark, not an assumed probability distribution.
+
+Source revision: [`512ebbfe9fd569b3e48ca5d5bf451c62fee7860f`](https://github.com/Chiizzie/market-radar-ai/commit/512ebbfe9fd569b3e48ca5d5bf451c62fee7860f), branch `research/manual-execution-profile-20261113`. The new module supplies additional **offline** profile/risk/timing gates and 41 passing synthetic boundary tests. It is not integrated into the scheduled scanner or a new fill engine. Existing runtime pins, frozen libraries and portfolio results are unchanged. See [offline receipt](evidence/manual-execution-profile-20261113.json).
+
+The day limit includes net realised loss plus risk reserved for pending/open/unresolved positions. A future integration must persist the daily halt latch, supply dated reconciled state, and use actual alert-receipt evidence. Missing receipt/cost data stays unknown; an expired setup is never extended to accommodate the user's reaction time. The test profile alone does not enforce a live daily stop or establish profitability.
+
+Next: integrate this profile into a separately frozen prospective replay, verify alert-receipt coverage, and reconcile actual Invest fee/FX data. These settings are complete; performance evidence is still pending.
+
 ## Knowledge-first research supplement: 13 November
 
 The user requested more knowledge now, then the inputs needed to improve and build testing later. Added a content-only [primary-source supplement](../knowledge/primary-research-supplement-20261113.json): **12 additional notes / 12 official pages**, 24 notes across both research collections. It is not wired into runtime retrieval or scheduled AI. The existing bank, case libraries, source pins and budgets remain unchanged.
 
 The [requirements brief](knowledge-and-testing-inputs-20261113.md) prioritizes retaining actual Invest fee/FX fields, modelling manual reaction time, verifying historical feed access, and preserving primary catalyst/halt timestamps. The deployed Invest importer already collects fill history; do not request a full CSV or new keys before using that access. Its parser drops `walletImpact.fxRate`, `walletImpact.taxes` and `order.initiatedFrom`. This is a documented future change, not implemented in this content-only turn.
 
-Ask only for simulated capital, aggregate daily loss ceiling, and usual Dublin availability/alert-response delay. Keep Invest as the initial scope; EUR20 planned per-trade loss, intraday and 22:00 entry cutoff remain. Historical SIP access on this account is unverified: Alpaca's historical FAQ and Paper Only entitlement guidance differ in scope, so a bounded access check should precede any purchase recommendation.
+Those three inputs have now been supplied; use the confirmed manual test profile above. Keep Invest as the initial scope; EUR20 planned per-trade loss, intraday and 22:00 entry cutoff remain. Historical SIP access on this account is unverified: Alpaca's historical FAQ and Paper Only entitlement guidance differ in scope, so a bounded access check should precede any purchase recommendation.
 
 Read-only operational refresh: [43523131703](https://github.com/Chiizzie/market-radar-ai/actions/runs/43523131703) completed all 12 jobs after the regular session. Private account sync reported delivery at 22:55:38 Dublin. Latest SIP audit was `forbidden_unclassified`; do not label that specific response a confirmed subscription restriction. Its stale IEX observations were after close. This does not establish in-session performance.
 
