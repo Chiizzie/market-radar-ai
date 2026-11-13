@@ -243,8 +243,8 @@ def test_free_shadow_reports_period_and_never_needs_model_credentials(monkeypatc
 
 def test_deployed_preparation_has_no_paid_order_or_notification_credentials():
     from pathlib import Path
-    import yaml
-    worker=yaml.safe_load(Path('deploy/knowledge-shadow-job.yml').read_text())['knowledge-shadow']
-    assert worker['needs']=='collect' and worker['permissions']=={'contents':'read'}
-    raw=canonical(worker)
+    import re
+    raw=Path('deploy/knowledge-shadow-job.yml').read_text()
+    assert re.search(r'(?m)^    needs: collect$',raw)
+    assert re.search(r'(?m)^    permissions:\n      contents: read\n    steps:',raw)
     assert 'secrets.' not in raw and 'knowledge_compare' not in raw and 'knowledge_shadow' in raw
