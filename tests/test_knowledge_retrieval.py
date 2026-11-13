@@ -189,3 +189,62 @@ def test_builder_rejects_missing_receipt_or_corrupt_event(tmp_path):
     event['received_at']=now.isoformat();event['payload_json']='{}'
     with gzip.open(path,'wt') as f:f.write(canonical(event)+'\n')
     with pytest.raises(ValueError):replay_partition(path,day='2026-11-12',cutoff=TRAINING_CUTOFF,projection=tmp_path/'b.sqlite')
+
+
+def test_future_paid_pair_uses_existing_caps_and_daily_durable_claim():
+    from test_github_budget import MemoryStore
+    from market_radar_ai.agents.github_budget import GitHubSpendingLedger
+    from market_radar_ai.agents.knowledge_compare import claim_pair
+    p,now=packet();lib=library();pair=prepare_pair(p,lib,now=now)
+    store=MemoryStore();ledger=GitHubSpendingLedger(store)
+    ledger.reserve('prior',860000,now)
+    assert claim_pair(ledger,pair,lib,now=now) is False
+    ledger.settle('prior',100)
+    assert claim_pair(ledger,pair,lib,now=now) is True
+    assert claim_pair(GitHubSpendingLedger(store),pair,lib,now=now) is False
+    assert store.state['limits_microeur']=={'daily':1000000,'monthly':10000000,'lifetime':100000000}
+
+
+def test_unconfirmed_budget_claim_blocks_before_calling_model():
+    from test_github_budget import MemoryStore
+    from market_radar_ai.agents.github_budget import GitHubSpendingLedger
+    from market_radar_ai.agents.knowledge_compare import claim_pair
+    p,now=packet();lib=library();pair=prepare_pair(p,lib,now=now)
+    store=MemoryStore();store.fail_write=True
+    with pytest.raises(RuntimeError):claim_pair(GitHubSpendingLedger(store),pair,lib,now=now)
+
+
+def test_metered_adapter_keeps_paid_incomplete_usage_and_pinned_settings(monkeypatch):
+    from test_github_budget import MemoryStore
+    from market_radar_ai.agents.github_budget import GitHubSpendingLedger
+    from market_radar_ai.agents.openai_pilot import OpenAIPilot, IncompleteModelResponse
+    from market_radar_ai.agents.knowledge_compare import metered_ask
+    client=OpenAIPilot(api_key='synthetic',ledger=GitHubSpendingLedger(MemoryStore()),eur_per_usd='.9',enabled=True,count_input_tokens=True)
+    def incomplete(**kwargs):
+        assert kwargs['reasoning_effort']=='none' and kwargs['max_output_tokens']==1024
+        assert 'reference_knowledge' not in kwargs['instructions'] or 'untrusted historical' in kwargs['instructions']
+        raise IncompleteModelResponse('max_output_tokens',{'input_tokens':10,'output_tokens':1024},42)
+    monkeypatch.setattr(client,'call',incomplete)
+    p,now=packet();lib=library();pair=prepare_pair(p,lib,now=now)
+    report=run_pair(pair,lib,ask=metered_ask(client,clock=lambda:now),clock=lambda:now)
+    assert report['state']=='incomplete' and report['model_calls']==1
+    assert next(iter(report['arms'].values()))['usage']['settled_microeur']==42
+
+
+def test_free_shadow_reports_period_and_never_needs_model_credentials(monkeypatch):
+    from market_radar_ai.agents import knowledge_shadow
+    monkeypatch.setattr('requests.post',lambda *a,**kw:pytest.fail('No network in free shadow'))
+    assert knowledge_shadow.prepare({}, {}, {}, now=aware(TRAINING_CUTOFF))['state']=='outside_validation_period'
+    p,now=packet()
+    monkeypatch.setattr(knowledge_shadow,'build_packets',lambda *a,**kw:{'packets':[p],'qualification':{'candidates':[]}})
+    result=knowledge_shadow.prepare({}, {}, library(), now=now)
+    assert result['paired_inputs']==1 and result['model_calls']==0
+
+
+def test_deployed_preparation_has_no_paid_order_or_notification_credentials():
+    from pathlib import Path
+    import yaml
+    worker=yaml.safe_load(Path('deploy/knowledge-shadow-job.yml').read_text())['knowledge-shadow']
+    assert worker['needs']=='collect' and worker['permissions']=={'contents':'read'}
+    raw=canonical(worker)
+    assert 'secrets.' not in raw and 'knowledge_compare' not in raw and 'knowledge_shadow' in raw

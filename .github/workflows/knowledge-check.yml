@@ -32,9 +32,13 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -e .
       - name: Read and replay frozen event history without AI
+        if: hashFiles('knowledge/library-20261113.json') == ''
         run: python -m market_radar_ai.agents.knowledge_build --download --output artifacts/knowledge
         env:
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+      - name: Verify the committed frozen library without model or provider access
+        if: hashFiles('knowledge/library-20261113.json') != ''
+        run: python scripts/verify_knowledge_offline.py --output artifacts/knowledge/offline-receipt.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:

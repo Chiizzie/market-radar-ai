@@ -13,6 +13,7 @@ from .paper_verdict import VerdictReview
 VALIDATION_START = '2026-11-16T00:00:00+00:00'
 PROTOCOL = {
     'schema_version':'knowledge-paired-review-v1', 'validation_start':VALIDATION_START,
+    'training_cutoff':'2026-11-13T21:17:12+00:00',
     'baseline_prompt_revision':PROMPT_REVISION, 'playbook_catalogue_id':CATALOGUE_ID,
     'arms':['baseline', 'knowledge'], 'stage':'final_decision', 'peer_reviews':[],
     'model':'gpt-5.4-mini-2026-03-17', 'max_output_tokens':1024, 'reasoning_effort':'none',
@@ -35,6 +36,8 @@ EXTRA_INSTRUCTION = (
 def prepare_pair(packet, library, *, now):
     now = aware(now)
     body = validate_packet(packet, now)
+    if aware(library['training_cutoff']) != aware(PROTOCOL['training_cutoff']):
+        raise ValueError('knowledge_training_cutoff_changed')
     if now < aware(VALIDATION_START) or aware(body['assembled_at']) < aware(VALIDATION_START):
         raise ValueError('outside_knowledge_validation_period')
     if not body['candidate_id'].startswith('stocks:'):
@@ -123,6 +126,8 @@ def run_pair(pair, library, *, ask, clock=lambda:datetime.now(UTC), timer=monoto
             row['state'] = 'complete'
         except Exception as exc:
             # Do not leak HTTP bodies, prompts, tokens or provider credentials.
+            if getattr(exc, 'safe_usage', None) is not None:
+                row['usage'] = exc.safe_usage
             row.update(state='failed_or_late', error_type=type(exc).__name__,
                        latency_seconds=round(timer()-tick,6))
             if checkpoint: checkpoint(deepcopy(report))
