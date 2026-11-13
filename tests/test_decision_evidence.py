@@ -15,6 +15,7 @@ def test_same_outcome_comparison_retains_rejected_loser_without_fake_fill(tmp_pa
     r=build(s,source)
     assert source==original and r['population_count']==1
     assert r['arms']['code_only']['selected_outcomes']['losses']==1
+    assert 'E' not in r['arms']['code_only']['matched_delta_before_model_cost_eur']
     assert r['arms']['independent_chief']['selected_outcomes']['losses']==1
     assert r['arms']['full_team']['not_selected']==1
     assert r['arms']['full_team']['selected_outcomes']['closed']==0

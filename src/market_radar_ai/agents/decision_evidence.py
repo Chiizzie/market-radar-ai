@@ -115,10 +115,10 @@ def build(store, report):
             'not_selected':sum(r['selections'][arm] is False for r in comparisons),
             'incomplete':sum(r['selections'][arm] is None for r in comparisons),
             'matched_closed':len(matched),'excluded_from_closed_comparison':len(comparisons)-len(matched),
-            'matched_delta_before_model_cost_eur':str(sum(deltas,Decimal(0))) if deltas else None,
-            'matched_delta_after_model_cost_eur':str(sum(net,Decimal(0))) if net and len(net)==len(matched) else None,
-            'known_cost_eur':str(sum((Decimal(r['cost_microeur'][arm])/1_000_000 for r in comparisons
-                                   if type(r['cost_microeur'][arm]) is int),Decimal(0))),
+            'matched_delta_before_model_cost_eur':format(sum(deltas,Decimal(0)),'f') if deltas else None,
+            'matched_delta_after_model_cost_eur':format(sum(net,Decimal(0)),'f') if net and len(net)==len(matched) else None,
+            'known_cost_eur':format(sum((Decimal(r['cost_microeur'][arm])/1_000_000 for r in comparisons
+                                   if type(r['cost_microeur'][arm]) is int),Decimal(0)),'f'),
             'cost_unknown':sum(r['cost_microeur'][arm] is None for r in comparisons)}
     return {'schema_version':'decision-evidence-report-v1','protocol_id':PROTOCOL_ID,'protocol':PROTOCOL,
         'as_of':report['as_of'],'evaluation_day':aware(report['as_of']).date().isoformat(),
