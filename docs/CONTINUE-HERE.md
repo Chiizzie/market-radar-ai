@@ -2,6 +2,18 @@
 
 Last verified: 13 November 2026; the expanded strategy-routing worker succeeded in the 22:35 scan and reported at 22:36:27 Europe/Dublin. Its 717-case library and pre-validation guard are verified. Active-session coverage and performance remain unverified. Refresh source and production evidence before editing.
 
+## Knowledge-first research supplement: 13 November
+
+The user requested more knowledge now, then the inputs needed to improve and build testing later. Added a content-only [primary-source supplement](../knowledge/primary-research-supplement-20261113.json): **12 additional notes / 12 official pages**, 24 notes across both research collections. It is not wired into runtime retrieval or scheduled AI. The existing bank, case libraries, source pins and budgets remain unchanged.
+
+The [requirements brief](knowledge-and-testing-inputs-20261113.md) prioritizes retaining actual Invest fee/FX fields, modelling manual reaction time, verifying historical feed access, and preserving primary catalyst/halt timestamps. The deployed Invest importer already collects fill history; do not request a full CSV or new keys before using that access. Its parser drops `walletImpact.fxRate`, `walletImpact.taxes` and `order.initiatedFrom`. This is a documented future change, not implemented in this content-only turn.
+
+Ask only for simulated capital, aggregate daily loss ceiling, and usual Dublin availability/alert-response delay. Keep Invest as the initial scope; EUR20 planned per-trade loss, intraday and 22:00 entry cutoff remain. Historical SIP access on this account is unverified: Alpaca's historical FAQ and Paper Only entitlement guidance differ in scope, so a bounded access check should precede any purchase recommendation.
+
+Read-only operational refresh: [43523131703](https://github.com/Chiizzie/market-radar-ai/actions/runs/43523131703) completed all 12 jobs after the regular session. Private account sync reported delivery at 22:55:38 Dublin. Latest SIP audit was `forbidden_unclassified`; do not label that specific response a confirmed subscription restriction. Its stale IEX observations were after close. This does not establish in-session performance.
+
+[Content-review receipt](evidence/knowledge-inputs-review-20261113.json) records integrity checks. No expanded testing campaign or new paid calls, broker operations or dependencies were introduced. The prior 1,684-test result remains historical code evidence, not a newly run suite.
+
 ## External research bank: offline expansion, 13 November
 
 The user asked to build the knowledge bank further using useful GitHub skills/code. A source-controlled offline expansion is implemented at `81a1dc65c29837158ba35ea9ae2e85b7a568f005` on `improve/external-research-20261113`: 12 authored research notes, eight fixed-revision source records (seven reference sources, TradingAgents deferred), bounded strategy/topic retrieval and a separate existing-knowledge versus expanded-knowledge comparison packet. This is an offline addition, not an installed third-party skill bundle or changed scheduled reviewer.

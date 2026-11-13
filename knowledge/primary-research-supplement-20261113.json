@@ -1,0 +1,320 @@
+{
+  "schema_version": "primary-research-supplement-v1",
+  "title": "Market Radar primary-source research supplement",
+  "review_completed_at": "2026-11-13T23:12:03.251Z",
+  "display_timezone": "Europe/Dublin",
+  "purpose": "Content-only research addition requested before expanding testing.",
+  "status": "reference_catalogue_not_runtime_integrated",
+  "prior_bank": {
+    "path": "knowledge/external-research-20261113.json",
+    "bank_id": "6ae9a6f1f03ffc4ad616be3115145039ff3a93cbfc42249c971c44b40c246e47",
+    "notes": 12,
+    "source_commit": "81a1dc65c29837158ba35ea9ae2e85b7a568f005"
+  },
+  "sources": [
+    {
+      "source_id": "alpaca_feed_faq",
+      "publisher": "Alpaca",
+      "title": "Market Data FAQ",
+      "url": "https://docs.alpaca.markets/us/docs/market-data-faq",
+      "reviewed_on": "2026-11-13",
+      "source_type": "primary_documentation",
+      "version_status": "mutable_web_page_not_an_immutable_snapshot",
+      "reuse": "Original short summaries only; no external code or full source text copied."
+    },
+    {
+      "source_id": "alpaca_paper",
+      "publisher": "Alpaca",
+      "title": "Paper Trading",
+      "url": "https://docs.alpaca.markets/us/docs/paper-trading",
+      "reviewed_on": "2026-11-13",
+      "source_type": "primary_documentation",
+      "version_status": "mutable_web_page_not_an_immutable_snapshot",
+      "reuse": "Original short summaries only; no external code or full source text copied."
+    },
+    {
+      "source_id": "alpaca_bars",
+      "publisher": "Alpaca",
+      "title": "Historical stock bars",
+      "url": "https://docs.alpaca.markets/us/reference/stockbars",
+      "reviewed_on": "2026-11-13",
+      "source_type": "primary_documentation",
+      "version_status": "mutable_web_page_not_an_immutable_snapshot",
+      "reuse": "Original short summaries only; no external code or full source text copied."
+    },
+    {
+      "source_id": "sec_api",
+      "publisher": "U.S. Securities and Exchange Commission",
+      "title": "EDGAR Application Programming Interfaces",
+      "url": "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+      "reviewed_on": "2026-11-13",
+      "source_type": "primary_documentation",
+      "version_status": "mutable_web_page_not_an_immutable_snapshot",
+      "reuse": "Original short summaries only; no external code or full source text copied."
+    },
+    {
+      "source_id": "sec_archives",
+      "publisher": "U.S. Securities and Exchange Commission",
+      "title": "Developer Resources",
+      "url": "https://www.sec.gov/about/developer-resources",
+      "reviewed_on": "2026-11-13",
+      "source_type": "primary_documentation",
+      "version_status": "mutable_web_page_not_an_immutable_snapshot",
+      "reuse": "Original short summaries only; no external code or full source text copied."
+    },
+    {
+      "source_id": "sec_8k",
+      "publisher": "U.S. Securities and Exchange Commission",
+      "title": "Form 8-K, Item 2.02",
+      "url": "https://www.sec.gov/files/form8-k.pdf",
+      "reviewed_on": "2026-11-13",
+      "source_type": "primary_documentation",
+      "version_status": "mutable_web_page_not_an_immutable_snapshot",
+      "reuse": "Original short summaries only; no external code or full source text copied."
+    },
+    {
+      "source_id": "nasdaq_halts",
+      "publisher": "Nasdaq Trader",
+      "title": "Trade Halt RSS Feed",
+      "url": "https://www.nasdaqtrader.com/Trader.aspx?id=TradeHaltRSS",
+      "reviewed_on": "2026-11-13",
+      "source_type": "primary_documentation",
+      "version_status": "mutable_web_page_not_an_immutable_snapshot",
+      "reuse": "Original short summaries only; no external code or full source text copied."
+    },
+    {
+      "source_id": "t212_scope",
+      "publisher": "Trading 212",
+      "title": "API limitations",
+      "url": "https://docs.trading212.com/api/section/general-information/api-limitations",
+      "reviewed_on": "2026-11-13",
+      "source_type": "primary_documentation",
+      "version_status": "mutable_web_page_not_an_immutable_snapshot",
+      "reuse": "Original short summaries only; no external code or full source text copied."
+    },
+    {
+      "source_id": "t212_history",
+      "publisher": "Trading 212",
+      "title": "Get historical orders data",
+      "url": "https://docs.trading212.com/api/historical-events/orders_1",
+      "reviewed_on": "2026-11-13",
+      "source_type": "primary_documentation",
+      "version_status": "mutable_web_page_not_an_immutable_snapshot",
+      "reuse": "Original short summaries only; no external code or full source text copied."
+    },
+    {
+      "source_id": "t212_currency",
+      "publisher": "Trading 212",
+      "title": "Choosing a trade currency in Invest",
+      "url": "https://helpcentre.trading212.com/hc/en-us/articles/34159237080861-Can-I-choose-the-currency-in-which-to-buy-sell-assets-for-Invest-accounts",
+      "reviewed_on": "2026-11-13",
+      "source_type": "primary_documentation",
+      "version_status": "mutable_web_page_not_an_immutable_snapshot",
+      "reuse": "Original short summaries only; no external code or full source text copied."
+    },
+    {
+      "source_id": "t212_cost_estimate",
+      "publisher": "Trading 212",
+      "title": "Estimated trade costs",
+      "url": "https://helpcentre.trading212.com/hc/en-us/articles/37664081239709-How-can-I-see-the-cost-of-a-trade-before-I-place-it",
+      "reviewed_on": "2026-11-13",
+      "source_type": "primary_documentation",
+      "version_status": "mutable_web_page_not_an_immutable_snapshot",
+      "reuse": "Original short summaries only; no external code or full source text copied."
+    },
+    {
+      "source_id": "sklearn_calibration",
+      "publisher": "scikit-learn",
+      "title": "Probability calibration",
+      "url": "https://scikit-learn.org/stable/modules/calibration.html",
+      "reviewed_on": "2026-11-13",
+      "source_type": "primary_documentation",
+      "version_status": "mutable_web_page_not_an_immutable_snapshot",
+      "reuse": "Original short summaries only; no external code or full source text copied."
+    }
+  ],
+  "notes": [
+    {
+      "note_id": "feed_scope",
+      "title": "Keep market-data feeds comparable",
+      "topic": "market_data",
+      "source_ids": [
+        "alpaca_feed_faq"
+      ],
+      "source_facts": "IEX represents one exchange; SIP consolidates exchange activity.",
+      "engineering_inference": "Compare volume and spread measurements within a declared feed. A later SIP research series is a separate source-policy partition from the existing IEX series.",
+      "limitation": "An IEX quote does not establish the Trading 212 execution price.",
+      "evidence_needed": "Record feed, request, event and receipt times, missing bars and coverage before interpreting changes in setup counts.",
+      "user_input": "none",
+      "evidence_status": "methodological_reference_not_performance_evidence"
+    },
+    {
+      "note_id": "historical_sip_access",
+      "title": "Check historical access before buying data",
+      "topic": "market_data",
+      "source_ids": [
+        "alpaca_feed_faq",
+        "alpaca_paper"
+      ],
+      "source_facts": "Alpaca's FAQ permits historical SIP queries with an end at least 15 minutes old without the live subscription; its Paper Only documentation restricts entitlement to IEX.",
+      "engineering_inference": "A bounded historical request can resolve account-specific access. The current latest-quote refusal does not settle this separate question.",
+      "limitation": "Historical SIP access on this account is unverified; delayed data cannot substitute for a live entry quote.",
+      "evidence_needed": "Later probe one completed session, preserve endpoint and response classification, then assess usefulness before discussing a subscription.",
+      "user_input": "none",
+      "evidence_status": "methodological_reference_not_performance_evidence"
+    },
+    {
+      "note_id": "corporate_actions_identity",
+      "title": "Freeze adjustments and instrument identity",
+      "topic": "data_integrity",
+      "source_ids": [
+        "alpaca_bars"
+      ],
+      "source_facts": "The bars API exposes adjustment and asof options. Split adjustment affects price and volume; asof controls symbol mapping.",
+      "engineering_inference": "Store the requested ticker, stable identity when available, feed, adjustment mode, asof date and retrieval time. Inspect discontinuities before comparing chart levels.",
+      "limitation": "Today's backfill need not reproduce the exact history visible at an old decision; a current universe also omits some former listings.",
+      "evidence_needed": "Later replay both sides of a known split or rename and document universe coverage without changing original case labels.",
+      "user_input": "none",
+      "evidence_status": "methodological_reference_not_performance_evidence"
+    },
+    {
+      "note_id": "halt_resumption",
+      "title": "Treat instrument halts separately from market hours",
+      "topic": "tradability",
+      "source_ids": [
+        "nasdaq_halts"
+      ],
+      "source_facts": "Nasdaq's halt RSS covers Nasdaq-listed and other exchange-listed securities. The feed refreshes once per minute and discourages faster polling.",
+      "engineering_inference": "Add an observed halt/resumption state to the research record, preserving announcement and receipt clocks; require fresh price evidence after resumption.",
+      "limitation": "A session clock and catalogue match alone do not prove that a particular instrument can trade; the feed can arrive late.",
+      "evidence_needed": "Later capture normal, halted, stale-feed and resumed scenarios. Keep unknown status explicit rather than treating silence as permission.",
+      "user_input": "none",
+      "evidence_status": "methodological_reference_not_performance_evidence"
+    },
+    {
+      "note_id": "primary_filing_clock",
+      "title": "Use when a filing became available",
+      "topic": "catalysts",
+      "source_ids": [
+        "sec_api"
+      ],
+      "source_facts": "SEC submissions and XBRL APIs require no API key and update as filings are disseminated.",
+      "engineering_inference": "Separate reporting period, public release or dissemination time, and first scanner receipt. Only information available by the decision cutoff may enter a replay.",
+      "limitation": "Fast API publication is not a guaranteed scanner receipt time, nor necessarily the earliest company announcement.",
+      "evidence_needed": "Later retain accession/document links and receipt timestamps; compare company releases with SEC publication where available.",
+      "user_input": "none",
+      "evidence_status": "methodological_reference_not_performance_evidence"
+    },
+    {
+      "note_id": "as_filed_revisions",
+      "title": "Preserve the original filing version",
+      "topic": "data_integrity",
+      "source_ids": [
+        "sec_archives",
+        "sec_api"
+      ],
+      "source_facts": "SEC provides dated filing archives and company submissions; company-facts data aggregates reported XBRL facts.",
+      "engineering_inference": "Keep the original document and amendment lineage. Use the version known then, rather than replacing an old decision's facts with a later restatement.",
+      "limitation": "A currently downloaded aggregate is not proof of the values visible at the historical cutoff.",
+      "evidence_needed": "Later retain source IDs, file hashes and acquisition times. Use a declared client identity and moderate cached requests under SEC fair-access guidance.",
+      "user_input": "none",
+      "evidence_status": "methodological_reference_not_performance_evidence"
+    },
+    {
+      "note_id": "earnings_evidence",
+      "title": "Separate an earnings release from an earnings surprise",
+      "topic": "catalysts",
+      "source_ids": [
+        "sec_8k"
+      ],
+      "source_facts": "Form 8-K Item 2.02 concerns public announcements of results or financial condition for a completed fiscal period and includes the release text.",
+      "engineering_inference": "Classify results, guidance and other events separately. An earnings-surprise hypothesis additionally needs a contemporaneous expectation benchmark with matching units and accounting basis.",
+      "limitation": "The form category alone establishes neither a positive surprise nor a profitable intraday reaction.",
+      "evidence_needed": "Later match announcement timing with pre-event expectations and fresh market response. If the expectation source is absent, label surprise unknown.",
+      "user_input": "none",
+      "evidence_status": "methodological_reference_not_performance_evidence"
+    },
+    {
+      "note_id": "paper_latency_limits",
+      "title": "Model the delay between alert and execution",
+      "topic": "execution",
+      "source_ids": [
+        "alpaca_paper"
+      ],
+      "source_facts": "Alpaca paper simulation omits effects including latency slippage, queue position, market impact and regulatory fees.",
+      "engineering_inference": "Keep scanner simulation, broker paper fills and existing real fills distinct. Replay declared manual reaction delays using later eligible quotes and expiry rules.",
+      "limitation": "Order-created to fill time does not reveal when the user saw an alert. A successful paper fill is not a guaranteed live fill.",
+      "evidence_needed": "Use existing fills where suitable and stress scenarios; no new real-money trade is needed. The user supplies typical alert-response time and availability.",
+      "user_input": "manual_availability_and_delay",
+      "evidence_status": "methodological_reference_not_performance_evidence"
+    },
+    {
+      "note_id": "broker_product_scope",
+      "title": "Keep Invest and CFD evidence separate",
+      "topic": "broker_constraints",
+      "source_ids": [
+        "t212_scope"
+      ],
+      "source_facts": "Trading 212's public API supports Invest and Stocks ISA, not CFD. API order execution uses the primary account currency and lacks multi-currency support.",
+      "engineering_inference": "Use the existing Invest mirror for the initial benchmark. Any future CFD experiment needs its own instrument eligibility, prices, spread, financing and position constraints.",
+      "limitation": "An Invest history import cannot establish CFD execution costs or short availability.",
+      "evidence_needed": "Retain Invest as the agreed starting scope. Request separate CFD evidence only if the user later chooses that expansion.",
+      "user_input": "none_unless_scope_changes",
+      "evidence_status": "methodological_reference_not_performance_evidence"
+    },
+    {
+      "note_id": "fee_fx_import",
+      "title": "Retain itemized fill costs and conversion fields",
+      "topic": "execution_costs",
+      "source_ids": [
+        "t212_history",
+        "t212_cost_estimate"
+      ],
+      "source_facts": "Historical orders expose walletImpact.fxRate, itemized taxes/fees and order.initiatedFrom. The app's cost preview is an estimate with assumed holding periods.",
+      "engineering_inference": "Extend the private import contract to retain those fields, currencies and timestamps, reconcile totals, and avoid subtracting fees twice from net amounts.",
+      "limitation": "Fields may be absent; fee arrays are not a complete execution-spread measure. Never interpret a missing cost as zero.",
+      "evidence_needed": "The deployed parser drops fxRate, taxes and initiatedFrom. Inspect bounded private responses and reconcile examples when implementing; no initial Invest CSV request is needed.",
+      "user_input": "none",
+      "evidence_status": "methodological_reference_not_performance_evidence"
+    },
+    {
+      "note_id": "currency_route",
+      "title": "Distinguish USD display from actual currency conversion",
+      "topic": "execution_costs",
+      "source_ids": [
+        "t212_currency"
+      ],
+      "source_facts": "Invest permits choosing a trade currency. Trading in the asset currency avoids conversion on that trade; converting funds can still incur an FX fee.",
+      "engineering_inference": "Infer actual order and wallet currencies before assigning conversion costs. Separate instrument-currency price return, currency movement and explicit charges.",
+      "limitation": "USD prices on the dashboard do not prove that a USD wallet funded the order. Pre-conversion costs should not also be charged on every subsequent trade.",
+      "evidence_needed": "Later inspect retained order currency and cost records. Ask the user about wallet routing only if those records leave a material ambiguity.",
+      "user_input": "conditional_only_if_records_are_ambiguous",
+      "evidence_status": "methodological_reference_not_performance_evidence"
+    },
+    {
+      "note_id": "confidence_calibration",
+      "title": "Measure whether confidence matches outcomes",
+      "topic": "evaluation",
+      "source_ids": [
+        "sklearn_calibration"
+      ],
+      "source_facts": "Calibration curves compare forecast probabilities with observed event frequencies. Brier and log loss also reflect discrimination and outcome uncertainty.",
+      "engineering_inference": "Define the event and horizon first, fit any calibration only on earlier data, and evaluate later untouched sessions with stock/session grouping.",
+      "limitation": "An AI confidence score is not automatically a probability. More reference notes do not create independent outcomes or establish calibration.",
+      "evidence_needed": "Use a future cohort with closed, unfilled and unresolved outcomes reported separately; retain a simple baseline and uncertainty estimates.",
+      "user_input": "none",
+      "evidence_status": "methodological_reference_not_performance_evidence"
+    }
+  ],
+  "boundaries": {
+    "new_model_calls": 0,
+    "new_paid_data_purchases": 0,
+    "new_broker_orders": 0,
+    "external_code_installed": false,
+    "runtime_injection": false,
+    "new_strategy_count": 0,
+    "new_historical_cases": 0,
+    "expanded_testing_started": false
+  },
+  "interpretation": "Source facts are summarized documentation. Engineering inferences and proposed evidence are our scanner-specific recommendations, not findings of profitable performance. Web pages are mutable and must be rechecked before implementation."
+}

@@ -1,0 +1,79 @@
+{
+  "schema_version": "knowledge-inputs-content-review-v1",
+  "verified_at": "2026-11-13T23:14:01.046777+00:00",
+  "display_timezone": "Europe/Dublin",
+  "scope": "Content and reference integrity only; no expanded experiment or full runtime test suite run.",
+  "new_reference_notes": 12,
+  "primary_source_pages": 12,
+  "total_external_reference_notes": 24,
+  "supplement_status": "reference_catalogue_not_runtime_integrated",
+  "file_sha256": {
+    "knowledge/primary-research-supplement-20261113.json": "f45438dfba47dec3207c9cb47343a0635161f9e39ad943a22b3711dfbc387557",
+    "docs/knowledge-and-testing-inputs-20261113.md": "98fe11e45e38a0ce1d43138364dd57f9a477dc91e8b4e8a8d9bc4c82addbac26",
+    "docs/CONTINUE-HERE.md": "8dd8790883560912dc464f3cf2ab3f5ab3b3b3d3b43a9cfb08da9590765724a0"
+  },
+  "checks": {
+    "valid_json": true,
+    "unique_note_and_source_ids": true,
+    "all_sources_referenced": true,
+    "https_source_links": true,
+    "facts_and_inferences_separate": true,
+    "prior_bank_valid_and_bytes_unchanged": true,
+    "case_library_bytes_unchanged": true,
+    "tracked_source_changes": false
+  },
+  "prior_code_source": "81a1dc65c29837158ba35ea9ae2e85b7a568f005",
+  "main_before_content_update": "26f00b9fd4eb2501eda37099abc4a961516bed92",
+  "prior_bank_id": "6ae9a6f1f03ffc4ad616be3115145039ff3a93cbfc42249c971c44b40c246e47",
+  "prior_case_library": {
+    "library_id": "b5b894a29e3cf2873e1e719ccf912a07ab525b46e1e3f93729c84d7bc134b6aa",
+    "setups": 717,
+    "code_outcome_states": {
+      "not_filled": 631,
+      "unresolved": 31,
+      "closed": 55
+    },
+    "enrolled_dates": {
+      "2026-11-12": 289,
+      "2026-11-13": 428
+    }
+  },
+  "operational_observations": {
+    "scheduled_run_id": 43523131703,
+    "successful_jobs": 12,
+    "session_context": "after_regular_session",
+    "account_sync_job_id": 132222110621,
+    "account_sync_delivered_at": "2026-11-13T22:55:38.4604092Z",
+    "account_sync_runtime": "3a113a4e8c4e03e9b28799c146db1f1cae6f987a",
+    "account_sync_source_blob": "54ab2ba1477a80716f8972ec142f60487cd26094",
+    "comparison_job_id": 132222110537,
+    "audit_reported_at": "2026-11-13T23:00:23.4423686Z",
+    "comparison_summary": "Three IEX observations were stale after close. SIP request classification forbidden_unclassified; not a confirmed reason or a historical-data entitlement result.",
+    "private_account_values_included": false
+  },
+  "current_turn": {
+    "new_tests_written": 0,
+    "full_suite_rerun": false,
+    "new_model_calls": 0,
+    "new_broker_orders": 0,
+    "new_subscriptions": 0,
+    "new_dependencies": 0,
+    "runtime_changes": false,
+    "testing_expansion_started": false
+  },
+  "needs_from_user": [
+    "simulated_capital_eur",
+    "aggregate_daily_loss_ceiling_eur",
+    "usual_dublin_hours_and_alert_response_delay"
+  ],
+  "next_engineering_checks": [
+    "historical_data_entitlement",
+    "private_fill_fee_fx_reconciliation"
+  ],
+  "limitations": [
+    "Mutable source URLs are not archived content hashes.",
+    "A source page is not performance evidence.",
+    "Two sessions are insufficient independent history for the proposed comparison.",
+    "Missing cost or execution fields must stay unknown."
+  ]
+}
