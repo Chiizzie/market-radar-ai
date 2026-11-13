@@ -1,6 +1,6 @@
 # Market Radar AI: continue here
 
-Last verified: 13 November 2026, about 20:13 Europe/Dublin. Refresh source and production evidence before editing.
+Last verified: 13 November 2026, about 20:17 Europe/Dublin. Refresh source and production evidence before editing.
 
 ## Scope and current deployment
 
@@ -10,7 +10,8 @@ The user asked to finish the engineering milestones from the earlier chat: revie
 - Dashboard source: https://github.com/Chiizzie/pixel-perfect-replay-32614
 - Dashboard: https://pixel-perfect-replay-32614.lovable.app
 - Main workflow: `.github/workflows/scheduled-scanner.yml`; each job has an explicit runtime SHA. Main source is not the deployed runtime and still has pre-existing missing legacy modules.
-- Collection, review, comparison, execution/readiness and ledger-maintenance runtime: `5ca5ffe1354729ddbbb735f8055fd0d50656f6d0`.
+- Collection, review, comparison and ledger-maintenance runtime: `5ca5ffe1354729ddbbb735f8055fd0d50656f6d0`.
+- Execution/readiness runtime: `abe1948321ee031b688a0e8e41d03881182e61ef`.
 - Strategy-diagnostic runtime: `fc12be18156a2ebbef2141275bf07f3962655e71`. Other observer/context/method/account pins remain unchanged.
 - Dashboard contracts: `0210a0133233e0988fb6179c1d7d658d3d1701fb`.
 - Runtime deployment: `75446426e5cd66dba6f0c6b18e1ff8a7924acd14`. Supplemental quote-permission probe: `a913bb2efd7b2db55fb892bf2d9f22c6d1e8bb8c`.
@@ -60,4 +61,4 @@ Publication verified at /performance: deployed JS contains the new panel and fro
 
 Separate execution/readiness runs failed after combined source journals crossed their 50 MB raw-history ceiling (run 43496441892, job 132130666653). This predates the entry experiment. Execution/readiness alone is now pinned to `abe1948321ee031b688a0e8e41d03881182e61ef`; its bounded disk archive preserves all events, stable replay order, canonical source hash and original protocols. Existing daily validation, a 1 GB/one-million-event aggregate bound and workflow timeouts still apply. Readiness stamps probes after replay. No budget reset or history deletion occurs.
 
-CI [43498939661](https://github.com/Chiizzie/market-radar-ai/actions/runs/43498939661) passed. A real 49,420-event replay reproduced the entire previous execution report, all six portfolios and trade-evaluation report exactly. See [history capacity repair](incidents/2026-11-13-execution-history-capacity.md). The first completed production report above the former ceiling is still being checked; add its receipt below after completion. Future checkpointing is needed before the larger bounds/time limits are reached.
+CI [43498939661](https://github.com/Chiizzie/market-radar-ai/actions/runs/43498939661) passed. A real 49,420-event replay reproduced the entire previous execution report, all six portfolios and trade-evaluation report exactly. See [history capacity repair](incidents/2026-11-13-execution-history-capacity.md). Production verification succeeded in [43499371328](https://github.com/Chiizzie/market-radar-ai/actions/runs/43499371328), job132140814855: 65,863 source events / 63,605,555 canonical bytes replayed, lossless export restore verified, execution published, readiness published, daily trade evaluation and artifact upload all passed. Execution seq227273 as-of20:14:19.929077, receipt20:14:54.519996; readiness seq228309 as-of20:16:12.112959, receipt20:16:19.891757 Dublin. At20:17:46 the evidence helper validated known schemas/bindings/counts: 11 operational passes and one existing AI allowance block (EUR0.129096 remaining versus EUR0.15 required). The helper does not independently authenticate source evidence. Live trading readiness and profitability remain unestablished; broker costs, incomplete AI-cost attribution and one unresolved hypothetical USD/code position remain evidence limits. Future checkpointing is needed before the larger bounds/time limits are reached.
