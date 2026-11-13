@@ -1,0 +1,58 @@
+{
+  "ci_run": 43507049241,
+  "ci_url": "https://github.com/Chiizzie/market-radar-ai/actions/runs/43507049241",
+  "job_id": 132168018154,
+  "proof": {
+    "schema_version": "checkpoint-recovery-verification-v1",
+    "verified_at": "2026-11-13T21:05:11.854963+00:00",
+    "evaluation_day": "2026-11-13",
+    "runtime_revision": "208f4bf5f9f1f403fb977075f0ea33912f4463b0",
+    "experiment_id": "eab2d59128f2d320ec2d32e1cd903d2b3d9d17c93f324534c607f640e1b93fd8",
+    "model_calls": 0,
+    "trade_authorized": false,
+    "cold_events": 54079,
+    "warm_events": 54079,
+    "cold_cursor": 253072,
+    "warm_cursor": 253072,
+    "cold_seconds": 50.876,
+    "restore_seconds": 3.087,
+    "tail_seconds": 0.265,
+    "tail_health": {
+      "polls": 0,
+      "quotes_received": 0,
+      "error_polls": 0,
+      "capacity_deferred": 0,
+      "maximum_poll_gap_seconds": 0,
+      "target_interval_seconds": 5,
+      "model_calls": 0,
+      "checkpoint_events": 54079,
+      "checkpoint_cursor": 253072,
+      "checkpoint_state": "restored",
+      "checkpoint_seconds": 3.087,
+      "last_sync": {
+        "pages": 1,
+        "events": 0,
+        "seconds": 0.264,
+        "storage_read_seconds": 0.264,
+        "projection_seconds": 0
+      },
+      "maximum_sync_seconds": 0.264,
+      "initial_sync": {
+        "pages": 1,
+        "events": 0,
+        "seconds": 0.264,
+        "storage_read_seconds": 0.264,
+        "projection_seconds": 0
+      }
+    },
+    "prefix_bytes": 48762175,
+    "prefix_sha256": "0abba4536e85677478f567c098a7a141a3a0cb063ffed6acc9d21cc1dd5862e4",
+    "report_sha256": "bc8211811bb9c3c51afc2e35cd9e22b7534dd1d66f3df25be9f49296c2d95b1a",
+    "cohort_count": 428,
+    "prefix_bytes_equal": true,
+    "all_report_fields_equal": true,
+    "limitations": [
+      "Read-only replay proof, not live quote-cadence or trading-performance validation."
+    ]
+  }
+}

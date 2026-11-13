@@ -1,6 +1,6 @@
 # Market Radar AI: continue here
 
-Last verified: 13 November 2026, about 20:17 Europe/Dublin. Refresh source and production evidence before editing.
+Last verified: 13 November 2026, about 21:06 Europe/Dublin (pre-deployment checks; natural-run receipt pending below). Refresh source and production evidence before editing.
 
 ## Scope and current deployment
 
@@ -62,3 +62,7 @@ Publication verified at /performance: deployed JS contains the new panel and fro
 Separate execution/readiness runs failed after combined source journals crossed their 50 MB raw-history ceiling (run 43496441892, job 132130666653). This predates the entry experiment. Execution/readiness alone is now pinned to `abe1948321ee031b688a0e8e41d03881182e61ef`; its bounded disk archive preserves all events, stable replay order, canonical source hash and original protocols. Existing daily validation, a 1 GB/one-million-event aggregate bound and workflow timeouts still apply. Readiness stamps probes after replay. No budget reset or history deletion occurs.
 
 CI [43498939661](https://github.com/Chiizzie/market-radar-ai/actions/runs/43498939661) passed. A real 49,420-event replay reproduced the entire previous execution report, all six portfolios and trade-evaluation report exactly. See [history capacity repair](incidents/2026-11-13-execution-history-capacity.md). Production verification succeeded in [43499371328](https://github.com/Chiizzie/market-radar-ai/actions/runs/43499371328), job132140814855: 65,863 source events / 63,605,555 canonical bytes replayed, lossless export restore verified, execution published, readiness published, daily trade evaluation and artifact upload all passed. Execution seq227273 as-of20:14:19.929077, receipt20:14:54.519996; readiness seq228309 as-of20:16:12.112959, receipt20:16:19.891757 Dublin. At20:17:46 the evidence helper validated known schemas/bindings/counts: 11 operational passes and one existing AI allowance block (EUR0.129096 remaining versus EUR0.15 required). The helper does not independently authenticate source evidence. Live trading readiness and profitability remain unestablished; broker costs, incomplete AI-cost attribution and one unresolved hypothetical USD/code position remain evidence limits. Future checkpointing is needed before the larger bounds/time limits are reached.
+
+## Current reliability repair (13 November, 21:06 Dublin)
+
+This section supersedes earlier runtime pins above. Storage retry, authenticated prefix recovery, split entry enrolment/observation and current-job readiness fixes have passed their source CI and real-history replay. See [runtime reliability repair](incidents/2026-11-13-runtime-reliability.md) for exact pins and evidence. Main workflow pins deploy those checked revisions; verify a completed natural run before claiming rollout success. No risk, budget, feed subscription or strategy protocol changed. Active-session quote/queue validation remains for the next session.

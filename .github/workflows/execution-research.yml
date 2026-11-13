@@ -46,7 +46,7 @@ jobs:
         if: steps.window.outputs.run == 'true'
         with:
           # Publish the current conditional-chief experiment; historical events stay unchanged.
-          ref: abe1948321ee031b688a0e8e41d03881182e61ef
+          ref: 839af4f09abc6e7e21daa5bd41c56e587c96b25f
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
