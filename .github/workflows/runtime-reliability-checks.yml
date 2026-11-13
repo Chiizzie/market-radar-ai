@@ -1,0 +1,75 @@
+name: Runtime reliability verification
+on:
+  push:
+    branches: [fix/runtime-reliability-20261113]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: scanner
+            ref: ${{ github.sha }}
+          - name: entry
+            ref: 5ecd5aae8851a63e9be86718739d4dab539d32a6
+          - name: method
+            ref: 889f1a110f9f7ac9d88dbbbc7e9548e8fe00f2c5
+          - name: context
+            ref: 7a518a9b8e8450612a3291e716814c811eba4e67
+          - name: execution
+            ref: 839af4f09abc6e7e21daa5bd41c56e587c96b25f
+          - name: strategy
+            ref: 5002a0e004b89bb9c17895fa6d19d5ce3ed236e6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: candidate
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+          path: runtime
+          persist-credentials: false
+      - name: Check runtime against proposed deployment topology
+        run: cp candidate/deploy/runtime-reliability-scheduled.yml runtime/.github/workflows/scheduled-scanner.yml
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: runtime/pyproject.toml
+      - run: python -m pip install -e '.[dev,market]'
+        working-directory: runtime
+      - run: python -m pytest -q
+        working-directory: runtime
+      - run: python -m compileall -q src tests
+        working-directory: runtime
+  checkpoint-recovery:
+    needs: regressions
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e .
+      - name: Prove raw prefix and full report recovery against the actual database
+        run: python scripts/verify_comparison_checkpoint.py --day 2026-11-13 --output artifacts/checkpoint-recovery.json
+        env:
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+          RUNTIME_REVISION: ${{ github.sha }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: runtime-recovery-${{ github.run_id }}
+          path: artifacts/checkpoint-recovery.json
+          if-no-files-found: error
+          retention-days: 30
+
