@@ -244,6 +244,7 @@ def run_metered(client, packet, document, feed, *, path, clock, enabled=False,
         path.parent.mkdir(parents=True,exist_ok=True)
         temporary=path.with_name(path.name+'.tmp')
         temporary.write_text(json.dumps({'review_policy_version':REVIEW_POLICY_VERSION,
+                                   'prompt_revision':PROMPT_REVISION,
                                    'execution_mode':'parallel_specialists' if parallel_specialists else 'sequential',
                                    'review_state':state,
                                    'calls':[calls[s] for s in STAGES if s in calls],
@@ -253,7 +254,7 @@ def run_metered(client, packet, document, feed, *, path, clock, enabled=False,
         began=monotonic()
         with audit_lock:
             if stage in calls:raise ValueError('paper_stage_already_attempted')
-            calls[stage]={'stage':stage,'state':'attempting'};save()
+            calls[stage]={'stage':stage,'state':'attempting','started_at':clock().isoformat()};save()
         # Identity and peer bookkeeping belong to the orchestrator. The model
         # supplies only its assessment and citations from the supplied evidence.
         model_schema=deepcopy(schema)
@@ -261,6 +262,10 @@ def run_metered(client, packet, document, feed, *, path, clock, enabled=False,
         for field in metadata: model_schema['properties'].pop(field)
         model_schema['required']=[f for f in model_schema['required'] if f not in metadata]
         model_schema['properties']['source_ids']['items']['enum']=list(prompt['packet']['source_ids'])
+        model_schema['properties']['source_ids']['maxItems']=2
+        model_schema['properties']['rationale']['maxLength']=350
+        model_schema['properties']['concerns']['maxItems']=2
+        model_schema['properties']['concerns']['items']['maxLength']=150
         instructions=prompt['instruction']+' Return only verdict, rationale, source_ids and concerns. Cite distinct IDs from the supplied source_ids list. The application supplies stage, packet identity and reviewed-stage bookkeeping.'
         role_client=client.fork() if parallel_specialists and stage in STAGES[:6] else client
         try:
@@ -269,16 +274,30 @@ def run_metered(client, packet, document, feed, *, path, clock, enabled=False,
                 max_output_tokens=1024,reasoning_effort='none',instructions=instructions)
             with audit_lock:
                 calls[stage].update(state='received', assessment=reply.data,
-                                    elapsed_seconds=round(monotonic()-began,3));save()
+                                    finished_at=clock().isoformat(),
+                                    elapsed_seconds=round(monotonic()-began,3),
+                                    estimated_cost_microeur=getattr(reply,'estimated_cost_microeur',None),
+                                    input_tokens=getattr(reply,'input_tokens',None),
+                                    output_tokens=getattr(reply,'output_tokens',None));save()
             from jsonschema import Draft202012Validator
             Draft202012Validator(model_schema).validate(reply.data)
             if len(set(reply.data['source_ids']))!=len(reply.data['source_ids']):
                 raise ValueError('paper_review_identity_or_citations')
             return {**reply.data,'stage':stage,'packet_id':packet['packet_id'],
                     'reviewed_stages':[r['stage'] for r in prompt['peer_reviews']]}
-        except Exception:
+        except Exception as exc:
+            from .openai_pilot import IncompleteModelResponse
+            from .github_budget import BudgetWriteError
+            diagnostic=({'reason':exc.reason,'usage_settled':True,
+                         'estimated_cost_microeur':exc.estimated_cost_microeur,
+                         'input_tokens':exc.usage_record['input_tokens'],
+                         'output_tokens':exc.usage_record['output_tokens']}
+                        if isinstance(exc,IncompleteModelResponse) else
+                        exc.diagnostic if isinstance(exc,BudgetWriteError) else
+                        {'reason':'review_failed_closed'})
             with audit_lock:
-                calls[stage].update(state='failed_review',elapsed_seconds=round(monotonic()-began,3));save()
+                calls[stage].update(state='failed_review',finished_at=clock().isoformat(),
+                                    elapsed_seconds=round(monotonic()-began,3),failure=diagnostic);save()
             raise
     try:
         result=review(packet,document,feed,ask,clock=clock,
@@ -286,7 +305,10 @@ def run_metered(client, packet, document, feed, *, path, clock, enabled=False,
     except Exception:
         with audit_lock:save(state='failed')
         raise
-    with audit_lock:save(result,state='completed')
+    with audit_lock:
+        result['prompt_revision']=PROMPT_REVISION
+        result['execution_evidence']=[{k:v for k,v in calls[s].items() if k!='assessment'} for s in STAGES]
+        save(result,state='completed')
     return result
 
 
@@ -410,14 +432,34 @@ def run_pipeline(document, feed, *, client, root, refresh, deliver, clock, enabl
         result={'state':'budget_deferred','model_calls':0,'trade_authorized':False,
                 'budget':budget,'selected_candidate_id':body['candidate_id']}
         save('status.json',result);return result
-    client.ledger.reserve(cooldown,1,now);client.ledger.settle(cooldown,0)
-    client.ledger.reserve(attempt,1,now);client.ledger.settle(attempt,0)
     save('packet.json',packet)
+    from .github_budget import BudgetWriteError
+    try:
+        client.ledger.claim_markers((cooldown,attempt),now)
+    except BudgetWriteError as exc:
+        result={'state':'budget_storage_unconfirmed','model_calls':0,'trade_authorized':False,
+                'requires_attention':True,'failure':exc.diagnostic,'selected_candidate_id':body['candidate_id']}
+        save('status.json',result)
+        raise
     if comparison is not None:
         comparison.begin_review(packet, now=clock())
     try:
         audit=run_metered(client,packet,document,feed,path=root/'review.json',clock=clock,enabled=True,
                           parallel_specialists=parallel_specialists)
+    except Exception as exc:
+        from .openai_pilot import IncompleteModelResponse
+        saved=json.loads((root/'review.json').read_text()) if (root/'review.json').exists() else {}
+        result={'state':'review_incomplete' if isinstance(exc,IncompleteModelResponse) else 'review_failed_closed',
+                'requires_attention':True,'model_calls':None,'stages_attempted':len(saved.get('calls',[])),
+                'trade_authorized':False,'selected_candidate_id':body['candidate_id'],
+                'failure_reason':exc.reason if isinstance(exc,IncompleteModelResponse) else 'review_failed_closed',
+                'automatic_paid_retry':False}
+        save('status.json',result)
+        if isinstance(exc,IncompleteModelResponse):
+            # Do not fabricate a NO_ACTION decision or parse the partial JSON.
+            # Every in-flight independent call has already finished/settled.
+            return result
+        raise
     finally:
         if comparison is not None:
             comparison.reconcile_cost(packet, client.ledger.store.load()[0], now=clock())

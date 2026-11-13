@@ -349,6 +349,12 @@ class LiveComparison:
             # Reports have a bounded summary; detailed immutable events remain the
             # recoverable source. Never truncate a cohort and call it complete.
             from .research_views import append_publication, comparison_rows
+            from .decision_evidence import build, bounded, PROTOCOL_ID as EVIDENCE_PROTOCOL
+            evidence=build(self.store,report)
+            (self.root/'decision-evidence-report.json').write_text(json.dumps(evidence,indent=2)+'\n')
+            # A separate audit partition cannot alter the source experiment or
+            # arm observations. No extra model, quote, notification or order calls.
+            self.client.append(EVIDENCE_PROTOCOL,[envelope('audit',bounded(evidence),self.clock())])
             append_publication(self.client,self.experiment,report,comparison_rows(report),clock=self.clock)
             self.sync()
             return report

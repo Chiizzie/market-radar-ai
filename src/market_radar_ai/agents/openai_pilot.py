@@ -17,6 +17,15 @@ CACHED_USD_PER_MILLION = Decimal('0.075')
 OUTPUT_USD_PER_MILLION = Decimal('4.50')
 
 
+class IncompleteModelResponse(RuntimeError):
+    """Known paid usage is settled; partial output can never be an assessment."""
+    def __init__(self, reason, usage_record, estimated_cost_microeur):
+        self.reason = reason if reason in ('max_output_tokens', 'content_filter') else 'unexpected_status'
+        self.usage_record = usage_record
+        self.estimated_cost_microeur = estimated_cost_microeur
+        super().__init__(f'Incomplete model response [{self.reason}]; usage settled; no automatic retry')
+
+
 def strict_schema(schema):
     result = deepcopy(schema)
     def visit(node):
@@ -163,7 +172,9 @@ class OpenAIPilot:
                          actual_microeur=estimated, usage=usage_record, response=body)
         self.ledger.settle(request_id, estimated, usage=usage_record)
         if body.get('status') != 'completed':
-            raise RuntimeError('Incomplete or unexpected model response; usage settled')
+            details = body.get('incomplete_details')
+            reason = details.get('reason') if isinstance(details, dict) else None
+            raise IncompleteModelResponse(reason, usage_record, estimated)
         if self.count_input_tokens and body['usage']['input_tokens'] != self.last_counted_input_tokens:
             raise RuntimeError('Counted and billed input differ; usage settled; review stopped')
         texts = [part['text'] for item in body.get('output', []) if item.get('type') == 'message'

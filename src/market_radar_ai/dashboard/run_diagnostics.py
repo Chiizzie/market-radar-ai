@@ -183,6 +183,10 @@ def build_report(collection, review=None, *, now, budget_loader=None):
             'coverage':coverage,'candidates':candidates,'blocker_counts':dict(sorted(reasons.items())),
             'blocker_groups':dict(sorted(groups.items())),
             'review':{'state':label(status.get('state','not_confirmed')),
+                      'requires_attention':status.get('requires_attention') is True,
+                      'failure_reason':label(status.get('failure_reason') or status.get('failure',{}).get('reason','none')),
+                      'failed_stages':[{'stage':label(c.get('stage')),'reason':label(c.get('failure',{}).get('reason'))}
+                                       for c in calls if c.get('state')=='failed_review'],
                       'selected_candidate':label(selection.get('selected_candidate_id') or packet.get('packet',{}).get('candidate_id')),
                       'validated_eight_stage_review':complete,
                       'final_verdict':label(decision.get('verdict','not_confirmed')),
@@ -200,6 +204,7 @@ def markdown(report):
     lines=['## Market Radar run diagnostics', '', report['generated_at_dublin'], '',
            f"Phase: {report['phase']}; qualification source: {report['qualification_origin']}.",
            f"Review: {report['review']['state']}; validated eight-stage review: {report['review']['validated_eight_stage_review']}.",
+           f"Review attention: {report['review'].get('requires_attention',False)}; reason: {report['review'].get('failure_reason','none')}.",
            f"Assessments received: {report['review']['stages_with_assessments']} / 8.",
            f"Final paper verdict: {report['review']['final_verdict']}; blockers: {', '.join(report['review']['final_blockers']) or 'None recorded'}.",
            f"Dashboard delivery: {report['review']['dashboard_delivery']}; Telegram: {report['review']['telegram_delivery']}.", '']

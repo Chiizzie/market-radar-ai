@@ -242,8 +242,11 @@ def main():
     args = parser.parse_args()
     if args.capture.stat().st_size > 4_000_000 or args.evidence.stat().st_size > 2_000_000:
         raise ValueError('input_too_large')
-    print(json.dumps(execute(json.loads(args.capture.read_text()), json.loads(args.evidence.read_text()),
-                            args.output, env=os.environ)))
+    result=execute(json.loads(args.capture.read_text()), json.loads(args.evidence.read_text()),
+                   args.output, env=os.environ)
+    print(json.dumps(result))
+    if result.get('requires_attention'):
+        print('::warning::AI review did not complete; no approval was issued. Inspect review/status diagnostics; paid calls are not retried automatically.')
 
 
 if __name__ == '__main__':

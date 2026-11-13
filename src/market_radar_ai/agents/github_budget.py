@@ -18,6 +18,38 @@ URL = f'https://api.github.com/repos/{REPOSITORY}/contents/{PATH}'
 LIMITS = {'daily':1000000, 'monthly':10000000, 'lifetime':100000000}
 
 
+class BudgetWriteError(RuntimeError):
+    """Safe structured diagnostics; no provider body or credentials escape."""
+    def __init__(self, code, reason, *, attempts=1, retry_after_seconds=None):
+        self.diagnostic = {'code': code, 'reason': reason, 'attempts': attempts,
+                           'retry_after_seconds': retry_after_seconds}
+        super().__init__(f'Budget write unconfirmed [{code};reason={reason}]; paid calls disabled')
+
+
+def write_refusal(response):
+    headers = {str(k).lower(): str(v) for k, v in (getattr(response, 'headers', {}) or {}).items()}
+    retry = headers.get('retry-after')
+    delay = int(retry) if retry and retry.isdigit() and len(retry) < 10 else None
+    primary = headers.get('x-ratelimit-remaining') == '0'
+    if primary:
+        reset = headers.get('x-ratelimit-reset', '')
+        if reset.isdigit() and len(reset) < 12:
+            remaining = max(1, int(reset) - int(time.time()) + 1)
+            delay = max(delay or 0, remaining)
+    # Classify only known phrases. Never log arbitrary error text or URLs.
+    limited = False
+    try:
+        message = response.json().get('message', '')
+        limited = isinstance(message, str) and ('rate limit' in message[:1000].lower())
+    except (AttributeError, TypeError, ValueError):
+        pass
+    if primary: reason = 'primary_rate_limit'
+    elif response.status_code == 429 or limited or delay is not None: reason = 'rate_limited'
+    elif response.status_code == 403: reason = 'forbidden_unclassified'
+    else: reason = 'http_refusal'
+    return reason, delay
+
+
 class Strict(BaseModel):
     model_config = ConfigDict(extra='forbid', strict=True)
 
@@ -126,22 +158,35 @@ class GitHubBudgetStore:
 
     def save(self, state, expected_sha):
         state = validate_state(state)
-        raw = json.dumps(state, sort_keys=True, indent=2).encode()
+        # Preserve every entry/receipt. Whitespace consumed about 23% of the original
+        # 500 KB budget file and blocked writes while spending headroom remained.
+        raw = json.dumps(state, sort_keys=True, separators=(',', ':')).encode()
         if len(raw) > 500000:
             raise RuntimeError('Budget record needs maintenance; paid calls disabled')
-        try:
-            response = requests.put(URL, headers=self._headers, timeout=(10,30),
-                allow_redirects=False, json={'branch':BRANCH, 'sha':expected_sha,
-                    'message':'Record AI budget reservation or settlement',
-                    'content':base64.b64encode(raw).decode()})
-        except requests.RequestException:
-            # Even if the write succeeded but the reply was lost, DO NOT call OpenAI.
-            raise RuntimeError('Budget write unconfirmed [transport]; paid calls disabled') from None
-        if response.status_code == 409:
-            raise LedgerConflict('Budget write conflict [http_409]; paid calls disabled')
-        if response.status_code != 200:
-            raise RuntimeError(f'Budget write unconfirmed [http_{int(response.status_code)}]; paid calls disabled')
-        self._confirmed.remember(state, raw)
+        payload = {'branch': BRANCH, 'sha': expected_sha,
+                   'message': 'Record AI budget reservation or settlement',
+                   'content': base64.b64encode(raw).decode()}
+        for attempt in range(1, 4):
+            try:
+                response = requests.put(URL, headers=self._headers, timeout=(10,30),
+                                        allow_redirects=False, json=payload)
+            except requests.RequestException:
+                # A lost acknowledgement is ambiguous. Never repeat this write.
+                raise BudgetWriteError('transport', 'acceptance_unknown', attempts=attempt) from None
+            if response.status_code == 200:
+                self._confirmed.remember(state, raw)
+                return
+            if response.status_code == 409:
+                raise LedgerConflict('Budget write conflict [http_409]; paid calls disabled')
+            reason, delay = write_refusal(response)
+            # Retry only an explicit, rejected throttle with a short server wait.
+            # Keep the identical CAS SHA; never retry transport/5xx ambiguity.
+            if (response.status_code in (403, 429) and reason in ('rate_limited', 'primary_rate_limit')
+                    and delay is not None and 0 <= delay <= 5 and attempt < 3):
+                time.sleep(max(1, delay))
+                continue
+            raise BudgetWriteError(f'http_{int(response.status_code)}', reason,
+                                   attempts=attempt, retry_after_seconds=delay)
 
 
 class GitHubSpendingLedger:
@@ -185,6 +230,28 @@ class GitHubSpendingLedger:
         state['entries'][request_id] = {'day':day, 'reserved':maximum_microeur,
                                         'actual':None, 'usage':None}
         self.store.save(state, sha)
+
+    def claim_markers(self, request_ids, now):
+        """Atomically claim zero-cost cooldown/attempt markers in one CAS write."""
+        if (not request_ids or len(set(request_ids)) != len(request_ids)
+                or now.tzinfo is None or now.utcoffset() is None
+                or any(not re.fullmatch(r'[a-zA-Z0-9:_-]{1,160}', key) for key in request_ids)):
+            raise ValueError('Invalid marker identity')
+        with self._lock:
+            for attempt in range(3):
+                state, sha = self.store.load()
+                state = validate_state(state)
+                if any(key in state['entries'] for key in request_ids):
+                    raise ValueError('Request ID already reserved; inspect before retry')
+                day = now.astimezone(ZoneInfo('Europe/Dublin')).date().isoformat()
+                for key in request_ids:
+                    state['entries'][key] = {'day': day, 'reserved': 1, 'actual': 0, 'usage': None}
+                try:
+                    self.store.save(state, sha)
+                    return
+                except LedgerConflict:
+                    if attempt == 2: raise
+                    time.sleep(.2 * (attempt + 1))
 
     def settle(self, request_id, actual_microeur, *, usage=None):
         with self._lock:
