@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 3a113a4e8c4e03e9b28799c146db1f1cae6f987a
+          ref: 208f4bf5f9f1f403fb977075f0ea33912f4463b0
           persist-credentials: false
       - name: Enforce Dublin operating hours before provider calls
         id: window
@@ -156,7 +156,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.review_window.outputs.run == 'true'
         with:
-          ref: 3a113a4e8c4e03e9b28799c146db1f1cae6f987a
+          ref: 208f4bf5f9f1f403fb977075f0ea33912f4463b0
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.review_window.outputs.run == 'true'
@@ -179,6 +179,7 @@ jobs:
           python -m market_radar_ai.agents.scheduled_review --capture artifacts/scheduled/fresh-all-reference-capture.json --evidence artifacts/scheduled/news.json --output artifacts/decision
         env:
           SCHEDULED_REVIEW_MODE: paid
+          AI_BUDGET_ARCHIVE_WRITES: 'true'
           OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
           PAPER_FINAL_VERDICTS: 'true'
           PAPER_COMPARISON_ENABLED: 'true'
@@ -308,11 +309,12 @@ jobs:
           allowed=now.weekday()<5 and 8<=now.hour<23
           with open(os.environ['GITHUB_OUTPUT'],'a') as f:
               f.write('run='+str(allowed).lower()+'\n')
+              f.write('day='+now.date().isoformat()+'\n')
           PY
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 3a113a4e8c4e03e9b28799c146db1f1cae6f987a
+          ref: 208f4bf5f9f1f403fb977075f0ea33912f4463b0
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -322,11 +324,29 @@ jobs:
           cache-dependency-path: pyproject.toml
       - run: python -m pip install -e '.[market]'
         if: steps.window.outputs.run == 'true'
+      - uses: actions/cache/restore@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          path: .scanner-cache/comparison-prefix
+          key: comparison-prefix-v1-${{ steps.window.outputs.day }}-${{ github.run_id }}
+          restore-keys: comparison-prefix-v1-${{ steps.window.outputs.day }}-
       - name: Observe prospective comparison independently of approved trades
         if: steps.window.outputs.run == 'true'
         run: python -m market_radar_ai.agents.comparison_watcher --duration 330
         env:
+          RESEARCH_CHECKPOINT_DIR: .scanner-cache/comparison-prefix
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+      - uses: actions/cache/save@v4
+        if: always() && steps.window.outputs.run == 'true' && hashFiles('.scanner-cache/comparison-prefix/manifest.json') != ''
+        with:
+          path: .scanner-cache/comparison-prefix
+          key: comparison-prefix-v1-${{ steps.window.outputs.day }}-${{ github.run_id }}
+      - name: Compare IEX and SIP quote coverage without changing observations
+        if: always() && steps.window.outputs.run == 'true' && hashFiles('artifacts/paper-watcher/comparison/worker-health.json') != ''
+        run: python -m market_radar_ai.market_data.quote_source_audit --health artifacts/paper-watcher/comparison/worker-health.json --output artifacts/paper-watcher/comparison/quote-source-report.json
+        env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
       - uses: actions/upload-artifact@v4
@@ -402,7 +422,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 4b4fc934b4d7e62148a2eaf340e8ebb9184f4d05
+          ref: 889f1a110f9f7ac9d88dbbbc7e9548e8fe00f2c5
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -542,7 +562,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: f9a1ed0750e10f2ef76d3350f895a6ee40d4db35
+          ref: 7a518a9b8e8450612a3291e716814c811eba4e67
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -610,7 +630,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 73d880261768b32453986d7da717058810178920
+          ref: 5002a0e004b89bb9c17895fa6d19d5ce3ed236e6
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -648,5 +668,127 @@ jobs:
         with:
           name: strategy-experiment-${{ github.run_id }}
           path: artifacts/strategy-experiment/
+          retention-days: 30
+          if-no-files-found: warn
+
+  # Independent frozen comparison; ENTRY_CONFIRMATION_ENABLED=false pauses this worker.
+  entry-enrol:
+    needs: [collect, market-context]
+    if: ${{ always() && needs.collect.outputs.review_ready == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.ENTRY_CONFIRMATION_ENABLED != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Experimental storage/provider faults must not interrupt ordinary scanning.
+    # The failed job and retained artifacts remain visible; no result is fabricated.
+    continue-on-error: true
+    permissions:
+      contents: read
+    concurrency:
+      group: market-radar-ai-entry-confirmation
+      cancel-in-progress: false
+    steps:
+      - name: Check experimental session window
+        id: window
+        run: |
+          python - <<'PY'
+          import os
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          now=datetime.now(ZoneInfo('America/New_York'))
+          allowed=now.weekday()<5 and (9,35)<=(now.hour,now.minute)<=(16,5)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('run='+str(allowed).lower()+'\n')
+          PY
+      - uses: actions/checkout@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          ref: 1f777dff0d7ae883cc54e6657a0ece8807c57d09
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        if: steps.window.outputs.run == 'true'
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[market]'
+        if: steps.window.outputs.run == 'true'
+      - uses: actions/download-artifact@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          name: scheduled-capture-${{ github.run_id }}
+          path: artifacts/scheduled/
+      - uses: actions/download-artifact@v4
+        if: steps.window.outputs.run == 'true'
+        continue-on-error: true
+        with:
+          name: market-context-${{ github.run_id }}
+          path: artifacts/context-source/
+      - name: Freeze paired entry setups under the short enrolment lock
+        if: steps.window.outputs.run == 'true'
+        run: >-
+          python -m market_radar_ai.agents.entry_confirmation_live
+          --capture artifacts/scheduled/enriched-capture.json
+          --news artifacts/scheduled/news.json
+          --history artifacts/context-source/.scanner-cache/market-context.json
+          --mode enrol
+          --duration 1
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+          TRADING212_API_KEY: ${{ secrets.TRADING212_API_KEY }}
+          TRADING212_API_SECRET: ${{ secrets.TRADING212_API_SECRET }}
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.window.outputs.run == 'true'
+        with:
+          name: entry-enrol-${{ github.run_id }}
+          path: artifacts/entry-confirmation/
+          retention-days: 30
+          if-no-files-found: warn
+
+  # Observation never enrols: overlap retains the original five-second cadence.
+  entry-confirmation:
+    if: ${{ github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.ENTRY_CONFIRMATION_ENABLED != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    # Experimental storage/provider faults must not interrupt ordinary scanning.
+    # The failed job and retained artifacts remain visible; no result is fabricated.
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - name: Check experimental session window
+        id: window
+        run: |
+          python - <<'PY'
+          import os
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          now=datetime.now(ZoneInfo('America/New_York'))
+          allowed=now.weekday()<5 and (9,35)<=(now.hour,now.minute)<=(16,5)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('run='+str(allowed).lower()+'\n')
+          PY
+      - uses: actions/checkout@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          ref: 1f777dff0d7ae883cc54e6657a0ece8807c57d09
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        if: steps.window.outputs.run == 'true'
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[market]'
+        if: steps.window.outputs.run == 'true'
+      - name: Observe paired entry confirmation without AI or alerts
+        if: steps.window.outputs.run == 'true'
+        run: >-
+          python -m market_radar_ai.agents.entry_confirmation_live
+          --mode observe
+          --duration 330
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.window.outputs.run == 'true'
+        with:
+          name: entry-confirmation-${{ github.run_id }}
+          path: artifacts/entry-confirmation/
           retention-days: 30
           if-no-files-found: warn
