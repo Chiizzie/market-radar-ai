@@ -65,7 +65,11 @@ class EventClient:
         raw = canonical({'version': 'research-events-v1', **body})
         if len(raw.encode()) > 2 * 1024 * 1024:
             raise ValueError('comparison_transport_capacity')
-        attempts = 3 if body.get('action') == 'read' else 1
+        # Append is idempotent: the server keys immutable envelopes by their
+        # content hash and uses ON CONFLICT DO NOTHING. Retry these exact bytes,
+        # including the original event clocks, if the acknowledgement is lost.
+        # Only the authentication timestamp/signature is refreshed.
+        attempts = 3 if body.get('action') in ('read', 'append') else 1
         for attempt in range(1, attempts + 1):
             timestamp = str(int(self.clock().timestamp()))
             signature = hmac.new(self.secret.encode(), f'{timestamp}.{raw}'.encode(), hashlib.sha256).hexdigest()

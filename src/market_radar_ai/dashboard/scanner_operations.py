@@ -52,7 +52,7 @@ def run_row(r):
         'updated_at':at(r['updated_at']),'url':f'https://github.com/{REPO}/actions/runs/{r["id"]}'}
 
 
-def health(github, *, now):
+def health(github, *, now, include_experiments=False, current=False):
     result={'schema_version':'scanner-operations-v1','protocol_id':EXPERIMENT,'as_of':now.isoformat(),
         'evaluation_day':now.date().isoformat(),'dataset_kind':'forward','trade_authorized':False,
         'monitoring_since':PROTOCOL['monitoring_since'],'model_calls':0,'source_status':'unavailable',
@@ -63,13 +63,17 @@ def health(github, *, now):
         rows=[run_row(r) for r in data['workflow_runs']]
         rows.sort(key=lambda r:(r['created_at'],r['run_id']),reverse=True)
         result.update(source_status='received',runs=rows)
-        latest=next((r for r in rows if r['status']=='completed'),None)
+        # The stored operations-v1 view keeps its original completed-run schema.
+        # Readiness can inspect current jobs directly, including independent
+        # observers, instead of turning a previous success into a current pass.
+        latest=(rows[0] if rows else None) if current else next((r for r in rows if r['status']=='completed'),None)
         if latest:
             data=github.get(f'/actions/runs/{latest["run_id"]}/jobs?per_page=100')
             if data['total_count']!=len(data['jobs']) or len(data['jobs'])>100: raise ValueError('job_pagination_incomplete')
             jobs=[]
             for j in data['jobs']:
-                if j['name'] not in JOBS: continue
+                allowed=JOBS|{'comparison-watcher','strategy-experiment','entry-confirmation','entry-enrol'} if include_experiments else JOBS
+                if j['name'] not in allowed: continue
                 if j['status'] not in STATES or j['conclusion'] not in CONCLUSIONS|{None}: raise ValueError('invalid_job')
                 jobs.append({'name':j['name'],'status':j['status'],'conclusion':j['conclusion'],
                     'started_at':at(j['started_at']) if j.get('started_at') else None,

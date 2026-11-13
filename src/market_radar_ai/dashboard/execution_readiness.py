@@ -81,7 +81,8 @@ def build(*, now, env, client, session=None, budget_store=None, github=None, sou
             f'SPY IEX reference quote age: {age:.1f} seconds. One-symbol provider check; not broker execution or broad coverage.', q['t'])
     except (ValueError, KeyError, TypeError, ArithmeticError, requests.RequestException):
         add('reference_quote_probe', 'unavailable', 'Reference quote probe unavailable; no synthetic quote substituted.')
-    ops = health(github or GitHubRead(env.get('GH_BUDGET_TOKEN')), now=now)
+    ops = health(github or GitHubRead(env.get('GH_BUDGET_TOKEN')), now=now,
+                 include_experiments=True, current=True)
     latest = ops['runs'][0] if ops['runs'] else None
     recent = latest and 0 <= (now - aware(latest['created_at'])).total_seconds() <= 1200
     add('scanner_dispatch', 'paused' if not expected else 'pass' if recent else 'unavailable',
@@ -89,11 +90,12 @@ def build(*, now, env, client, session=None, budget_store=None, github=None, sou
         f"Recent scanner dispatch observed; workflow status {latest['status']}, conclusion {latest['conclusion'] or 'pending'}.",
         latest['created_at'] if latest else None)
     jobs = {j['name']: j for j in ops['jobs']}
-    required = {'collect', 'review', 'paper-watcher', 'method-shadow', 'account-sync', 'market-context'}
+    required = {'collect', 'review', 'paper-watcher', 'comparison-watcher', 'method-shadow', 'account-sync', 'market-context'}
     failed = any(j['conclusion'] in ('failure', 'cancelled', 'timed_out', 'action_required', 'startup_failure') for j in jobs.values())
     add('scanner_jobs', 'unavailable' if ops['source_status'] != 'received' else 'blocked' if failed else
         'pass' if required <= jobs.keys() and all(jobs[k]['conclusion'] == 'success' for k in required) else 'pending',
-        'Latest completed workflow job metadata only; skipped or not-yet-run components do not demonstrate readiness.')
+        'Latest dispatched workflow jobs, including independent comparison and experiment failures; '
+        'running, skipped or missing required components remain pending. Run '+str(ops['jobs_run_id'])+'.')
     reports = [json.loads(e['payload_json']) for e in source_events if e['kind'] == 'report' and aware(e['occurred_at']) <= now]
     last = max(reports, key=lambda r: r['as_of'], default=None)
     if last and last.get('cohort_count', 0) and 0 <= (now - aware(last['as_of'])).total_seconds() <= 1200:
