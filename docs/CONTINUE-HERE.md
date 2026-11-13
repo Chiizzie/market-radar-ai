@@ -1,6 +1,6 @@
 # Market Radar AI: continue here
 
-Last verified: 13 November 2026; first repaired natural run completed at 21:17:12 Europe/Dublin. Active-session coverage remains unverified. Refresh source and production evidence before editing.
+Last verified: 13 November 2026; knowledge preparation worker succeeded in the 21:55 scan, reporting at 21:56:25 Europe/Dublin. First repaired reliability run completed at 21:17:12. Active-session coverage remains unverified. Refresh source and production evidence before editing.
 
 ## Playbooks and past-case retrieval: implemented 13 November
 
@@ -82,3 +82,5 @@ This section supersedes earlier runtime pins above. Storage retry, authenticated
 ## Knowledge proposal
 
 The user asked about strengthening the scanner with skills and knowledge. [The concrete proposal](scanner-knowledge-improvement-proposal.md) records the checked current reviewer path, a proposed versioned playbook/case-retrieval milestone, primary-source catalysts, point-in-time rules and acceptance measurements. This is a proposal, not an installed skill or deployed reviewer change. Preserve current strategy protocols and budgets while evaluating it.
+
+Deployment verification: the **knowledge-shadow job succeeded** in the regular [21:55 scan, run 43514885887](https://github.com/Chiizzie/market-radar-ai/actions/runs/43514885887/job/132194660782). At 21:56:25 Dublin it correctly reported `outside_validation_period`, zero model calls and no trade authorization, then saved artifact `knowledge-shadow-43514885887` (ID 14080970729). This verifies the installed worker and period guard; it is not a fresh-market paired decision or a claim that the entire still-running scan completed. [Deployment receipt](evidence/knowledge-deployment-20261113.json).

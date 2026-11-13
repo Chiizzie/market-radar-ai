@@ -1,0 +1,27 @@
+{
+  "schema_version": "knowledge-deployment-receipt-v1",
+  "observed_at": "2026-11-13T21:57:54.357Z",
+  "runtime_revision": "9ae20ef8454a654fabee488cba9c1fbed9ba664c",
+  "deployment_revision": "844aa59a35d0e2313ff40be9c147f2606e3de3b2",
+  "protocol_id": "a389b8bea0540be1f4e829428f5f806d9b6ac60548dde18a8077336601195506",
+  "library_id": "48672f661769ad1007d321127bf10301b432ceb4caf3934dd509c3642d5e5f76",
+  "source_export_run": 43512536368,
+  "final_source_ci_run": 43514177316,
+  "tests_passed": 1622,
+  "scheduled_run": 43514885887,
+  "knowledge_job": 132194660782,
+  "knowledge_job_conclusion": "success",
+  "worker_as_of": "2026-11-13T21:56:25.642887+00:00",
+  "worker_state": "outside_validation_period",
+  "model_calls": 0,
+  "paid_ai_cost_eur": "0",
+  "trade_authorized": false,
+  "artifact": {
+    "id": 14080970729,
+    "name": "knowledge-shadow-43514885887",
+    "digest": "sha256:5409a702794da5d6095574ea071baf239eb6d2f6df2b563b4a22332ef9b4abcc"
+  },
+  "future_validation_start": "2026-11-16",
+  "paid_comparison_scheduled": false,
+  "performance_claim": null
+}
