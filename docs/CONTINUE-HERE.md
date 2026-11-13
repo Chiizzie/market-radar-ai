@@ -1,6 +1,6 @@
 # Market Radar AI: continue here
 
-Last verified: 13 November 2026, about 18:54 Europe/Dublin. Refresh source and production evidence before editing.
+Last verified: 13 November 2026, about 20:13 Europe/Dublin. Refresh source and production evidence before editing.
 
 ## Scope and current deployment
 
@@ -46,7 +46,7 @@ Use Dublin timestamps, USD instrument prices and EUR allowances/risk. Preserve E
 
 ## Latest follow-up: entry quality
 
-A read-only replay at about 19:19 Dublin reproduced 12,562 source events and all strategy-variant totals. In the five closed `rolling_structural_usd` examples, entry asks crossed the trigger while bids remained below it; four had no later recorded bid reach the trigger before their stop exits. Existing spread plus assumed entry slippage initially consumed 15–39% of fill-to-stop distance. This is a small incomplete sample, not proof of a replacement rule. Next proposed milestone: a separately frozen prospective bid-confirmation paper comparison. No new entry rule is active. See [entry-quality follow-up](incidents/2026-11-13-entry-quality-follow-up.md), including provenance and the distinction between actual AI positions and frozen selection counterfactuals.
+A read-only replay at about 19:19 Dublin reproduced 12,562 source events and all strategy-variant totals. In the five closed `rolling_structural_usd` examples, entry asks crossed the trigger while bids remained below it; four had no later recorded bid reach the trigger before their stop exits. Existing spread plus assumed entry slippage initially consumed 15–39% of fill-to-stop distance. This is a small incomplete sample, not proof of a replacement rule. This finding motivated the separately frozen prospective comparison implemented below; production trade admission remains unchanged. See [entry-quality follow-up](incidents/2026-11-13-entry-quality-follow-up.md), including provenance and the distinction between actual AI positions and frozen selection counterfactuals.
 
 ## Entry-quality implementation (13 November, 19:59 Dublin)
 
@@ -54,4 +54,10 @@ The user authorized improving overall scanner quality. A separate paired entry-c
 
 Source CI [43496893665](https://github.com/Chiizzie/market-radar-ai/actions/runs/43496893665) passed all 1,580 tests and compilation. Replay of the original 12,562 recorded events reproduced all ten original variant totals unchanged. Dashboard: 726 offline tests plus 12 live access checks passed (the latter needed a network-timeout retry); typecheck and build pass. The private Performance page displays paired outcomes, entry cost components, incomplete states and experiment screen blockers. Detail/paired counts stay bound to validated reports; raw quotes/enrolments remain machine-only. Local screenshot review was unavailable; DOM rendering was verified.
 
-Publication and the first completed natural nine-job run still require verification below. No new result or profitability claim exists at this checkpoint. See [frozen entry protocol](experiments/entry-confirmation-v1.md).
+Publication verified at /performance: deployed JS contains the new panel and frozen protocol. The first entry job completed successfully in run 43497520575; report seq223057 at 20:08:40.480975 Dublin, received 20:08:40.611907. It enrolled 16 cohorts: each arm has eight blocked; ask-trigger has six unfilled/two open, bid-confirmed seven unfilled/one open. Zero closes/paired outcomes. Five CHYM quote-error polls remain visible. Eight of nine jobs passed; comparison-watcher correctly failed for an unrecovered stale CHYM IEX quote. Do not call the entire workflow green. The exact live report passes the browser parser; replay of all 359 source events reproduces it exactly (source digest 99dfb0bc3a9b32f0789adf79ca69184bdeeff69b505e642689926eee69edebd3). No profitability conclusion. See [frozen entry protocol](experiments/entry-confirmation-v1.md).
+
+## Execution-history reporting repair (13 November, 20:13 Dublin)
+
+Separate execution/readiness runs failed after combined source journals crossed their 50 MB raw-history ceiling (run 43496441892, job 132130666653). This predates the entry experiment. Execution/readiness alone is now pinned to `abe1948321ee031b688a0e8e41d03881182e61ef`; its bounded disk archive preserves all events, stable replay order, canonical source hash and original protocols. Existing daily validation, a 1 GB/one-million-event aggregate bound and workflow timeouts still apply. Readiness stamps probes after replay. No budget reset or history deletion occurs.
+
+CI [43498939661](https://github.com/Chiizzie/market-radar-ai/actions/runs/43498939661) passed. A real 49,420-event replay reproduced the entire previous execution report, all six portfolios and trade-evaluation report exactly. See [history capacity repair](incidents/2026-11-13-execution-history-capacity.md). The first completed production report above the former ceiling is still being checked; add its receipt below after completion. Future checkpointing is needed before the larger bounds/time limits are reached.
