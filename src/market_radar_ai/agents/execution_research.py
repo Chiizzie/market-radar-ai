@@ -13,6 +13,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from .candidate_packages import canonical, digest
+from .event_archive import EventArchive
 from .comparison_live import EventClient, LiveComparison, envelope
 from .paper_comparison import PROTOCOL as LEGACY_SOURCE_PROTOCOL, GUARDED_PROTOCOL, aware
 from .observation_policy import GUARDED
@@ -235,7 +236,7 @@ def replay(events, *, now, dataset_kind='forward'):
     books = [Book(p, a) for p in PROFILES for a in ('code_only', 'ai_reviewed')]
     cohorts, costs, seen = {}, {}, set()
     clock = aware(PROTOCOL['since'] + 'T00:00:00+00:00')
-    for event in sorted(events, key=lambda e: e['seq']):
+    for event in (events.ordered() if isinstance(events, EventArchive) else sorted(events, key=lambda e: e['seq'])):
         if event['event_id'] in seen: continue
         seen.add(event['event_id'])
         t = max(aware(event['occurred_at']), aware(event['received_at']), clock)
@@ -264,7 +265,7 @@ def replay(events, *, now, dataset_kind='forward'):
         'source_protocol_id': SOURCE_PROTOCOL_ID, 'as_of': now.isoformat(),
         'evaluation_day': now.date().isoformat(), 'since': PROTOCOL['since'], 'dataset_kind': dataset_kind,
         'trade_authorized': False, 'strategy_input': False, 'model_calls': 0,
-        'source_events': len(events), 'source_sha256': digest(events), 'source_cohorts': len(cohorts),
+        'source_events': len(events), 'source_sha256': events.source_digest() if isinstance(events, EventArchive) else digest(events), 'source_cohorts': len(cohorts),
         'source_last_at': max((e['occurred_at'] for e in events), default=None),
         'initial_balance_eur': '1000', 'maximum_trade_risk_eur': '20', 'maximum_combined_risk_eur': '40',
         'maximum_allocation_eur': '500', 'maximum_positions': 3,
@@ -291,21 +292,26 @@ def collect(client, *, now, root, diagnostics=None):
     first = aware(PROTOCOL['since'] + 'T00:00:00+00:00').date()
     days = (now.date() - first).days + 1
     if not 1 <= days <= 366: raise ValueError('execution_history_capacity_or_clock')
-    events, size_bytes = [], 0
-    for n in range(days):
-        day = (first + timedelta(days=n)).isoformat()
-        worker = LiveComparison(Path(root) / day, client=client, day=day, clock=lambda: now, protocol=SOURCE_PROTOCOL)
-        if worker.experiment != SOURCE_PROTOCOL_ID:
-            raise ValueError('execution_source_protocol_mismatch')
-        worker.sync()  # Existing signed receipt, immutable identity and review validation.
-        if diagnostics is not None:
-            diagnostics.append({'day':day,**worker.health['initial_sync']})
-        path = worker.root / 'comparison-events.jsonl'
-        if path.exists():
-            size_bytes += path.stat().st_size
-            if size_bytes > 50_000_000: raise ValueError('execution_source_capacity')
-            events.extend(json.loads(line) for line in path.read_text().splitlines())
-    return events
+    events = EventArchive()
+    try:
+        for n in range(days):
+            day = (first + timedelta(days=n)).isoformat()
+            worker = LiveComparison(Path(root) / day, client=client, day=day, clock=lambda: now, protocol=SOURCE_PROTOCOL)
+            if worker.experiment != SOURCE_PROTOCOL_ID:
+                raise ValueError('execution_source_protocol_mismatch')
+            worker.sync()  # Existing signed receipt, immutable identity and review validation.
+            if diagnostics is not None:
+                diagnostics.append({'day':day,**worker.health['initial_sync']})
+            path = worker.root / 'comparison-events.jsonl'
+            if path.exists():
+                with path.open() as source:
+                    for line in source:
+                        events.append(json.loads(line))
+        return events
+    except BaseException:
+        events.close()
+        raise
+
 
 
 def main():
@@ -317,26 +323,30 @@ def main():
     source_health=[]
     with TemporaryDirectory() as scratch:
         events = collect(client, now=now, root=scratch, diagnostics=source_health)
-    now = datetime.now(UTC)  # Include evidence that arrived during the signed reads.
-    report = replay(events, now=now)
-    args.output.mkdir(parents=True, exist_ok=True)
-    (args.output / 'source-replay-health.json').write_text(json.dumps({'days':source_health,
-        'model_calls':0,'trade_authorized':False},indent=2)+'\n')
-    (args.output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
-    # A lossless replay artifact accompanies each report. It contains private
-    # research evidence, is never included in the viewer report, and expires.
-    import gzip
-    with gzip.open(args.output / 'source-events.jsonl.gz', 'wt') as out:
-        for e in events: out.write(canonical(e) + '\n')
-    with gzip.open(args.output / 'source-events.jsonl.gz', 'rt') as source:
-        restored = [json.loads(line) for line in source]
-    if replay(restored, now=now) != report: raise ValueError('execution_restore_mismatch')
-    if args.publish: client.append(EXPERIMENT, [envelope('execution_report', report, now)])
-    print(json.dumps({'state': 'execution_report_recorded' if args.publish else 'execution_report_created',
-        'cohorts': report['source_cohorts'], 'source_events': len(events), 'restore_verified': True,
-        'source_replay_seconds':round(sum(d['seconds'] for d in source_health),3),
-        'source_projection_seconds':round(sum(d['projection_seconds'] for d in source_health),3),
-        'model_calls': 0, 'trade_authorized': False}))
+    with events:
+        now = datetime.now(UTC)  # Include evidence that arrived during the signed reads.
+        report = replay(events, now=now)
+        args.output.mkdir(parents=True, exist_ok=True)
+        (args.output / 'source-replay-health.json').write_text(json.dumps({'days':source_health,
+            'model_calls':0,'trade_authorized':False},indent=2)+'\n')
+        (args.output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
+        # A lossless replay artifact accompanies each report. It contains private
+        # research evidence, is never included in the viewer report, and expires.
+        import gzip
+        with gzip.open(args.output / 'source-events.jsonl.gz', 'wt') as out:
+            for e in events: out.write(canonical(e) + '\n')
+        with EventArchive() as restored:
+            with gzip.open(args.output / 'source-events.jsonl.gz', 'rt') as source:
+                for line in source: restored.append(json.loads(line))
+            if replay(restored, now=now) != report: raise ValueError('execution_restore_mismatch')
+        if args.publish: client.append(EXPERIMENT, [envelope('execution_report', report, now)])
+        print(json.dumps({'state': 'execution_report_recorded' if args.publish else 'execution_report_created',
+            'cohorts': report['source_cohorts'], 'source_events': len(events), 'restore_verified': True,
+            'source_replay_seconds':round(sum(d['seconds'] for d in source_health),3),
+            'source_projection_seconds':round(sum(d['projection_seconds'] for d in source_health),3),
+            'source_bytes':events.size_bytes,
+            'model_calls': 0, 'trade_authorized': False}))
+
 
 
 if __name__ == '__main__': main()

@@ -153,7 +153,11 @@ def main():
     client = EventClient(os.environ.get('REVIEW_INGEST_SECRET'))
     from tempfile import TemporaryDirectory
     with TemporaryDirectory() as scratch: events = collect(client, now=now, root=scratch)
-    report = build(now=now, env=os.environ, client=client, source_events=events, receipt_clock=lambda: datetime.now(UTC))
+    now = datetime.now(UTC)
+    try:
+        report = build(now=now, env=os.environ, client=client, source_events=events, receipt_clock=lambda: datetime.now(UTC))
+    finally:
+        events.close()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + '\n')
     if args.publish: client.append(EXPERIMENT, [envelope('readiness_report', report, now)])

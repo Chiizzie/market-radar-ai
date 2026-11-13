@@ -97,6 +97,10 @@ def test_authenticated_projection_roundtrip_and_input_mismatch(tmp_path, monkeyp
         'evaluation_day':store.day,'source_sha256':digest(events),'source_events':len(events),
         'books':[],'since':store.day,'source_cohorts':1,'source_last_at':time[0].isoformat(),'costs_verified':False}
     report=evaluate(events,execution)
+    from market_radar_ai.agents.event_archive import EventArchive
+    with EventArchive() as archive:
+        for item in events:archive.append(item)
+        assert evaluate(archive,execution)==report
     assert report['cohort_count']==1 and report['arms']['code_only']['closed']==1
     assert report['dataset_kind']=='historical_analysis' and report['trade_authorized'] is False
     assert report['exposure']['code_only']['peak_assumed_concurrent_positions']==1

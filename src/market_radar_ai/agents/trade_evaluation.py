@@ -1,5 +1,6 @@
 """Offline daily evidence review. No provider, model, alert or order calls."""
 import argparse
+from .event_archive import EventArchive
 import gzip
 import json
 from collections import Counter, defaultdict
@@ -161,7 +162,8 @@ def evaluate(events, execution, *, day=None):
         raise ValueError('current_forward_execution_source_required')
     now = aware(execution['as_of']); day = day or execution['evaluation_day']
     if day > now.date().isoformat(): raise ValueError('future_evaluation_day')
-    if execution['source_sha256'] != digest(events) or execution['source_events'] != len(events):
+    source_hash = events.source_digest() if isinstance(events, EventArchive) else digest(events)
+    if execution['source_sha256'] != source_hash or execution['source_events'] != len(events):
         raise ValueError('execution_source_export_mismatch')
     selected = [e for e in events if e['day'] == day]
     class ReadOnlyEvents:
@@ -185,7 +187,7 @@ def evaluate(events, execution, *, day=None):
     books = [{k:v for k,v in b.items() if k != 'details'} for b in execution['books']]
     return {'schema_version':'trade-evaluation-v1','evaluation_day':day,'as_of':now.isoformat(),
         'dataset_kind':'historical_analysis','source_protocol_id':SOURCE_PROTOCOL_ID,
-        'source_export_sha256':digest(events),'execution_report_sha256':digest(execution),
+        'source_export_sha256':source_hash,'execution_report_sha256':digest(execution),
         'cohort_count':len(rows),'distinct_symbols':len(symbols),
         'duplicate_symbol_setups':{s:n for s,n in sorted(symbols.items()) if n>1},
         'arms':{a:_arm_summary(rows,a) for a in ('code_only','ai_reviewed')},'by_strategy':strategies,
@@ -259,8 +261,10 @@ def main():
     p.add_argument('--events',type=Path,required=True);p.add_argument('--execution',type=Path,required=True)
     p.add_argument('--output',type=Path,required=True);p.add_argument('--day')
     args=p.parse_args()
-    with gzip.open(args.events,'rt') as f:events=[json.loads(line) for line in f]
-    report=evaluate(events,json.loads(args.execution.read_text()),day=args.day)
+    with EventArchive() as events:
+        with gzip.open(args.events,'rt') as f:
+            for line in f:events.append(json.loads(line))
+        report=evaluate(events,json.loads(args.execution.read_text()),day=args.day)
     args.output.mkdir(parents=True,exist_ok=True)
     (args.output/'trade-evaluation.json').write_text(json.dumps(report,indent=2)+'\n')
     (args.output/'trade-evaluation.md').write_text(markdown(report))
