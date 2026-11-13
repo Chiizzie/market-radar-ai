@@ -1,0 +1,113 @@
+{
+  "schema_version": "strategy-routing-deployment-receipt-v2",
+  "runtime": "12e7b42144b693f6ecdb86aac36b04c57c5bb694",
+  "deployment_commit": "22b1dbe3165aa0eb7ade334c30bcee4d80a24f86",
+  "workflow_path": ".github/workflows/scheduled-scanner.yml",
+  "workflow_blob_sha": "9c9831c64681765a543ad419a31f20e6a26e32db",
+  "existing_workflow_prefix_preserved": true,
+  "local_regressions": {
+    "passed": 1656,
+    "failed": 0,
+    "compileall": "passed"
+  },
+  "final_hosted_ci": {
+    "run_id": 43519887067,
+    "conclusion": "success",
+    "regression_job_id": 132211203577,
+    "offline_job_id": 132211707153,
+    "passed": 1656,
+    "artifact_id": 14081359194
+  },
+  "routing_protocol_id": "da8455f1bce1812dde9783629ceb96ee423029e7b5029fde4fdad9a9f561c531",
+  "paired_protocol_id": "1fe4a580b6a075dad2c8b3f6e07c777d894970f2c0cdb7721d7845196e32fb57",
+  "library": {
+    "built_at": "2026-11-13T22:19:07.593130+00:00",
+    "by_strategy": {
+      "competitor_strength_breakout_shadow_v1": 0,
+      "intraday_range_mean_reversion_offline_v1": 0,
+      "opening_continuation_30m_v1": 5,
+      "opening_range_15m_shadow_v1": 4,
+      "session_open_avwap_reclaim_v1": 1,
+      "trend_continuation_20bar_v1": 707,
+      "trend_pullback_reclaim_v1": 0
+    },
+    "cases": 717,
+    "code_states": {
+      "closed": 55,
+      "not_filled": 631,
+      "unresolved": 31
+    },
+    "library_id": "b5b894a29e3cf2873e1e719ccf912a07ab525b46e1e3f93729c84d7bc134b6aa",
+    "model_calls": 0,
+    "trade_authorized": false,
+    "training_cutoff": "2026-11-13T21:17:12+00:00"
+  },
+  "source_export": {
+    "run_id": 43518016893,
+    "artifact_id": 14081941083,
+    "accepted_method_events": 223,
+    "imported_method_cases": 5,
+    "imported_method_outcomes": "all_not_filled",
+    "offline_rebuild": "exact_match",
+    "zip_sha256": "68efea7bb0c45e31feff921f33151cb04fba0b06cd78f17444c29c8080a3e51c"
+  },
+  "offline": {
+    "real_detectors_exercised": 7,
+    "synthetic_paired_comparisons": 6,
+    "synthetic_review_invocations": 12,
+    "model_calls": 0,
+    "paid_ai_cost_eur": "0",
+    "dataset_kind": "synthetic_future_fixtures_not_forward_evidence"
+  },
+  "validation_start": "2026-11-16T00:00:00+00:00",
+  "scheduled_strategy_count": 6,
+  "offline_only_strategy": "intraday_range_mean_reversion_offline_v1",
+  "paid_comparison_enabled": false,
+  "production_trade_admission_changed": false,
+  "budgets_changed": false,
+  "trade_authorized": false,
+  "performance_claim": null,
+  "remaining": [
+    "Active-session coverage and latency",
+    "Forward outcomes for retained alternative plans under a declared policy",
+    "Actual budgeted knowledge/no-knowledge comparisons",
+    "Independent later-data decision quality and cost-adjusted performance"
+  ],
+  "scheduled_verification": {
+    "run_id": 43520477027,
+    "job_id": 132213533796,
+    "job_conclusion": "success",
+    "artifact_id": 14082662385,
+    "artifact_sha256": "14ab2f7ed39d06e9ce6eba23605eb4c2855a5b907bc952f58906be0299cf5252",
+    "report": {
+      "as_of": "2026-11-13T22:36:27.219947+00:00",
+      "library": {
+        "built_at": "2026-11-13T22:19:07.593130+00:00",
+        "by_strategy": {
+          "competitor_strength_breakout_shadow_v1": 0,
+          "intraday_range_mean_reversion_offline_v1": 0,
+          "opening_continuation_30m_v1": 5,
+          "opening_range_15m_shadow_v1": 4,
+          "session_open_avwap_reclaim_v1": 1,
+          "trend_continuation_20bar_v1": 707,
+          "trend_pullback_reclaim_v1": 0
+        },
+        "cases": 717,
+        "code_states": {
+          "closed": 55,
+          "not_filled": 631,
+          "unresolved": 31
+        },
+        "library_id": "b5b894a29e3cf2873e1e719ccf912a07ab525b46e1e3f93729c84d7bc134b6aa",
+        "model_calls": 0,
+        "trade_authorized": false,
+        "training_cutoff": "2026-11-13T21:17:12+00:00"
+      },
+      "model_calls": 0,
+      "routing_protocol_id": "da8455f1bce1812dde9783629ceb96ee423029e7b5029fde4fdad9a9f561c531",
+      "state": "outside_strategy_validation_or_session",
+      "trade_authorized": false
+    },
+    "scope": "Installed strategy-routing job, library verification and pre-validation session guard. Full workflow still running at observation; no active-session strategy result claimed."
+  }
+}

@@ -1,6 +1,6 @@
 # Market Radar AI: continue here
 
-Last verified: 13 November 2026; knowledge preparation worker succeeded in the 21:55 scan, reporting at 21:56:25 Europe/Dublin. First repaired reliability run completed at 21:17:12. Active-session coverage remains unverified. Refresh source and production evidence before editing.
+Last verified: 13 November 2026; the expanded strategy-routing worker succeeded in the 22:35 scan and reported at 22:36:27 Europe/Dublin. Its 717-case library and pre-validation guard are verified. Active-session coverage and performance remain unverified. Refresh source and production evidence before editing.
 
 ## Expanded independent strategies: implemented 13 November
 
@@ -8,9 +8,11 @@ Runtime `12e7b42144b693f6ecdb86aac36b04c57c5bb694` on `improve/strategy-routing-
 
 The new frozen library has **717 setups: 55 closed, 631 not filled and 31 unresolved**. All five additional method cases are unfilled; no added profitable-trade evidence exists. Original labels, receipt cutoffs, source protocol and quote/exit policies remain explicit. Cutoff `2026-11-13T21:17:12+00:00`, built `2026-11-13T22:19:07.593130+00:00`, library `b5b894a29e3cf2873e1e719ccf912a07ab525b46e1e3f93729c84d7bc134b6aa`. The original 712-case worker remains unchanged.
 
-All **1,656 tests** pass locally. Offline fixtures exercise all seven real detectors and six with/without-knowledge pairs through a synthetic reviewer, with zero model calls and EUR0 AI cost. Exact replay of 223 original method events reproduces the new library. Final hosted checks: [43519887067](https://github.com/Chiizzie/market-radar-ai/actions/runs/43519887067). See [implementation and remaining validation](strategy-routing-v2.md), [offline receipt](evidence/strategy-routing-offline-20261113.json) and the deployment receipt added after observing the scheduled job.
+All **1,656 tests** pass locally. Offline fixtures exercise all seven real detectors and six with/without-knowledge pairs through a synthetic reviewer, with zero model calls and EUR0 AI cost. Exact replay of 223 original method events reproduces the new library. Final hosted checks: [43519887067](https://github.com/Chiizzie/market-radar-ai/actions/runs/43519887067). See [implementation and remaining validation](strategy-routing-v2.md), [offline receipt](evidence/strategy-routing-offline-20261113.json) and [deployment receipt](evidence/strategy-routing-deployment-20261113.json).
 
 The new worker only prepares research inputs and artifacts. No production alerts, trade approvals, orders, paid AI comparisons, subscriptions or budget increases are activated. Prospective preparation starts **16 November 2026**. New alternative plans still need forward outcome observation and a budgeted actual knowledge/no-knowledge comparison before making performance claims. Preserve existing production pins and the v1 experiment; do not infer that this isolated worker replaces the original selector.
+
+Deployment verified: [run 43520477027, job 132213533796](https://github.com/Chiizzie/market-radar-ai/actions/runs/43520477027/job/132213533796) succeeded at 22:36 Dublin. Exact runtime, installed library, zero calls and `outside_strategy_validation_or_session` were checked in the logs and downloaded artifact. Full scan still had observers running at that observation; do not call all jobs complete. Main deployment commit: `22b1dbe3165aa0eb7ade334c30bcee4d80a24f86`.
 
 ## Playbooks and past-case retrieval: implemented 13 November
 

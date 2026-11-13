@@ -59,7 +59,7 @@ The offline receipt is [strategy-routing-offline-20261113.json](evidence/strateg
 
 The focused suite covers source ordering, all seven detector routes, overlap preservation, exact replay, receipt cutoffs, historical-policy separation, outcome-independent retrieval, risk/capital bounds, tampering, stale inputs, deadline failures, usage retention and the worker's absence of paid credentials. The final deployment receipt records the full regression count, exact runtime pin, hosted checks and observed scheduled job.
 
-Reproduce the offline detector and paired-input verification with:
+Reproduce the offline detector and paired-input verification from the pinned research runtime (`12e7b42144b693f6ecdb86aac36b04c57c5bb694`), not the legacy main source, with:
 
 ```sh
 python -m pip install -e '.[dev,market]'
@@ -72,3 +72,5 @@ Still required: future-session coverage and latency measurements, outcome observ
 ## Release verification
 
 Research runtime: `12e7b42144b693f6ecdb86aac36b04c57c5bb694`. Local suite: **1,656 passed**, compilation successful. Final hosted verification: [43519887067](https://github.com/Chiizzie/market-radar-ai/actions/runs/43519887067). The scheduled workflow adds only the independent research job; all existing job definitions and pins are preserved. The deployment receipt records the subsequent observed scheduled-job result.
+
+The new **strategy-routing job succeeded** in the normal [22:35 scan](https://github.com/Chiizzie/market-radar-ai/actions/runs/43520477027/job/132213533796). At **22:36:27 Europe/Dublin** it verified the 717-case frozen library and reported `outside_strategy_validation_or_session`, zero model calls and no trade authorization. The downloaded artifact matched its published SHA-256. This confirms deployment and the period guard; active-session qualification and decision quality remain unverified. Other long-running observers were still running when this job was checked, so this is not a claim that the whole scan had completed. See [deployment receipt](evidence/strategy-routing-deployment-20261113.json).
