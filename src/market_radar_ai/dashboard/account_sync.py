@@ -32,12 +32,14 @@ def instrument(row):
     return {'ticker':v.get('ticker') or row.get('ticker'), 'name':v.get('name'), 'currency':v.get('currency') or row.get('currency')}
 
 def order(row):
+    from .account_costs import label
     return dict(id=str(row['id']),**instrument(row),side=row['side'],status=row['status'],created_at=row['createdAt'],
                 quantity=money(row,'quantity'),filled_quantity=money(row,'filledQuantity'),requested_value=money(row,'value'),
-                filled_value=money(row,'filledValue'),order_currency=row.get('currency'))
+                filled_value=money(row,'filledValue'),order_currency=row.get('currency'),initiated_from=label(row.get('initiatedFrom')))
 
 
 def collect(get, now, sleep=time.sleep):
+    from .account_costs import extract, audit
     summary=get('/api/v0/equity/account/summary')
     if summary['currency']!='EUR':raise ValueError('account_currency_not_eur')
     investments=summary.get('investments',{});cash=summary.get('cash',{})
@@ -56,7 +58,8 @@ def collect(get, now, sleep=time.sleep):
             o=order(r['order']);f=r.get('fill');w=(f or {}).get('walletImpact') or {}
             if w and w.get('currency')!='EUR':raise ValueError('fill_currency_not_eur')
             history.append({'order':o,'fill':None if not f else {'id':str(f['id']),'filled_at':f['filledAt'],'type':f['type'],
-                'quantity':money(f,'quantity'),'price_native':money(f,'price'),'net_eur':money(w,'netValue'),'realized_eur':money(w,'realisedProfitLoss')}})
+                'quantity':money(f,'quantity'),'price_native':money(f,'price'),'net_eur':money(w,'netValue'),'realized_eur':money(w,'realisedProfitLoss'),
+                'cost_evidence':extract(w)}})
         path=data.get('nextPagePath')
         if not path:break
         safe_path(path)
@@ -64,7 +67,8 @@ def collect(get, now, sleep=time.sleep):
     return {'schema_version':'trading212-account-v1','broker':'trading212_invest','read_only':True,'generated_at':now.isoformat(),
             'account_ref':hashlib.sha256(str(summary['id']).encode()).hexdigest(),'currency':'EUR','summary':{'total_value_eur':money(summary,'totalValue'),'cash_eur':money(cash,'availableToTrade'),
             'invested_eur':money(investments,'totalCost'),'realized_eur':money(investments,'realizedProfitLoss'),'unrealized_eur':money(investments,'unrealizedProfitLoss')},
-            'positions':positions,'pending_orders':pending,'history':history,'history_complete':not bool(path)}
+            'positions':positions,'pending_orders':pending,'history':history,'history_complete':not bool(path),
+            'cost_audit':audit(history)}
 
 
 class Reader:

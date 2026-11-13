@@ -72,12 +72,24 @@ def deliver(archive, *, env, clock, session=None, ledger=None):
         key='research:'+hashlib.sha256(('paper-final:'+archive['packet_id']).encode()).hexdigest()
         ledger.reserve(key)
         try:
+            request_started_at=clock()
             reply=transport.post('https://api.telegram.org/bot'+token+'/sendMessage',
-                json={'chat_id':chat,'text':render(archive,clock()),'protect_content':True,
+                json={'chat_id':chat,'text':render(archive,request_started_at),'protect_content':True,
                       'link_preview_options':{'is_disabled':True}},timeout=(10,20),allow_redirects=False)
             value=reply.json()
             if reply.status_code!=200 or value.get('ok') is not True or str(value['result']['chat']['id'])!=chat or type(value['result']['message_id']) is not int:raise ValueError()
+            acknowledged_at=clock()
             ledger.confirm(key)
         except Exception:raise RuntimeError('Paper Telegram delivery unconfirmed; do not retry') from None
         receipt['telegram']='paper_notification_confirmed'
+        if env.get('RECORD_MANUAL_ALERT_CLOCK')=='true':
+            # Failed research recording must never resend a message or paid review.
+            try:
+                from ..agents.manual_alert_evidence import record_ack
+                from ..agents.comparison_live import EventClient
+                receipt['manual_evidence']=record_ack(archive,request_started_at=request_started_at,
+                    acknowledged_at=acknowledged_at,provider_date=value['result'].get('date'),
+                    recorded_at=clock(),client=EventClient(secret,clock=clock))
+            except Exception:
+                receipt['manual_evidence']={'state':'manual_clock_unconfirmed_no_notification_retry'}
     return receipt
