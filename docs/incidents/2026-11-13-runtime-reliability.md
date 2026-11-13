@@ -1,6 +1,6 @@
 # 13 November 2026: storage, startup and experiment queue repair
 
-Deployment candidate verified at about 21:06 Europe/Dublin. Natural-run receipts follow after the runtime pins move.
+Deployment and first natural run verified on 13 November, completed 21:17:12 Europe/Dublin. Active-session observation remains a separate check.
 
 ## Observed failure mechanisms
 
@@ -42,3 +42,15 @@ Collection/review/comparison use the scanner revision; execution/readiness and t
 
 These are operational repairs. IEX freshness/spread limitations remain; SIP access, AI allowance, trading authorization and all risk settings are unchanged. No production history is deleted, rewritten or re-dated. Successful replay and tests do not establish live quote coverage, broker execution or profitability.
 
+
+## Deployment and next observation
+
+The runtime pins moved in commit 52a2920c7ffdbc95afe05a60dc5db11e05619b74 at 21:07 Dublin. [Deployed recovery run 43507778125](https://github.com/Chiizzie/market-radar-ai/actions/runs/43507778125) passed and seeded the main-branch cache. Its independent repeat verified 54,080 events / 428 cohorts: cold reconstruction 52.072 seconds; authenticated replay plus server tail 8.517 seconds. Prefix bytes and all report fields again matched. Timing varies by runner/load; do not report the 3.352-second branch result as a guaranteed latency. [Receipt](evidence/2026-11-13-deployed-runtime-recovery.json). Operations reporting completed successfully in run 43507824082, job 132169968887, using 839af4f.
+
+The next active-session milestone is to inspect consecutive completed runs on 16 November or the next available session: authenticated warm startup below the existing 15-second warning boundary; no entry observer waiting on the enrolment lock; preserve actual missed/stale quote intervals; check fresh quote receipt coverage rather than green jobs alone. The frozen entry protocol already declares 16 November as validation start. Do not tune on commissioning outcomes, relax freshness/risk gates, or increase AI/data allowances to achieve a pass.
+
+## First completed natural run
+
+[43508253631](https://github.com/Chiizzie/market-radar-ai/actions/runs/43508253631), head 52a2920, completed successfully at 21:17:12 Dublin with all ten job conclusions successful. Comparison job 132171449937 restored the authenticated main cache: startup 6.109 seconds, first completed poll 8.704 seconds, 65 polls, zero storage/error polls, zero new quotes after market close. The largest internal poll gap was 5.490 seconds. All source data remained in the recovery journal. [Machine receipt](evidence/2026-11-13-runtime-natural-run.json).
+
+The entry-enrol, entry-confirmation and strategy experiment worker steps were session-skipped, so successful job conclusions do not validate their active-session overlap. Updated context collection and method jobs ran successfully. Execution/readiness run 43507778121 also passed at revision 839af4f: 77,035 source events, 72,662,801 source bytes, 713 cumulative cohorts, restore verified, zero model calls. Readiness seq 253964 correctly reported current-run jobs pending at 21:13:27 while observers were running; it was received 21:13:35.830102. Execution seq 253959 as-of 21:10:48.835088 was received 21:11:33.868826. AI daily headroom remained EUR0.129096 against the EUR0.15 requirement.

@@ -1,0 +1,61 @@
+{
+  "deployment_sha": "52a2920c7ffdbc95afe05a60dc5db11e05619b74",
+  "run_id": 43507778125,
+  "job_id": 132169815185,
+  "artifact_id": 14076697152,
+  "artifact_zip_sha256": "407aef9743b8627813c673c4528094382daa350154d987823f45bfa3957d1ac5",
+  "cache_saved_key": "comparison-prefix-v1-2026-11-13-seed-43507778125",
+  "proof": {
+    "schema_version": "checkpoint-recovery-verification-v1",
+    "verified_at": "2026-11-13T21:08:55.576397+00:00",
+    "evaluation_day": "2026-11-13",
+    "runtime_revision": "208f4bf5f9f1f403fb977075f0ea33912f4463b0",
+    "experiment_id": "eab2d59128f2d320ec2d32e1cd903d2b3d9d17c93f324534c607f640e1b93fd8",
+    "model_calls": 0,
+    "trade_authorized": false,
+    "cold_events": 54080,
+    "warm_events": 54080,
+    "cold_cursor": 253516,
+    "warm_cursor": 253516,
+    "cold_seconds": 52.072,
+    "restore_seconds": 7.863,
+    "tail_seconds": 0.654,
+    "tail_health": {
+      "polls": 0,
+      "quotes_received": 0,
+      "error_polls": 0,
+      "capacity_deferred": 0,
+      "maximum_poll_gap_seconds": 0,
+      "target_interval_seconds": 5,
+      "model_calls": 0,
+      "checkpoint_events": 54080,
+      "checkpoint_cursor": 253516,
+      "checkpoint_state": "restored",
+      "checkpoint_seconds": 7.863,
+      "last_sync": {
+        "pages": 1,
+        "events": 0,
+        "seconds": 0.654,
+        "storage_read_seconds": 0.654,
+        "projection_seconds": 0
+      },
+      "maximum_sync_seconds": 0.654,
+      "initial_sync": {
+        "pages": 1,
+        "events": 0,
+        "seconds": 0.654,
+        "storage_read_seconds": 0.654,
+        "projection_seconds": 0
+      }
+    },
+    "prefix_bytes": 48769253,
+    "prefix_sha256": "6e7e23ac09a66c580d5bed79d1a47f1cef46c2a8b5e04b62bff2d68082bd8c67",
+    "report_sha256": "75f9ab7a304a2604f79824f415a42f6f473a0e7e026f33acc7d166eafef30fae",
+    "cohort_count": 428,
+    "prefix_bytes_equal": true,
+    "all_report_fields_equal": true,
+    "limitations": [
+      "Read-only replay proof, not live quote-cadence or trading-performance validation."
+    ]
+  }
+}

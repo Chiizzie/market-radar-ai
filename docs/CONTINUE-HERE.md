@@ -1,6 +1,6 @@
 # Market Radar AI: continue here
 
-Last verified: 13 November 2026, about 21:06 Europe/Dublin (pre-deployment checks; natural-run receipt pending below). Refresh source and production evidence before editing.
+Last verified: 13 November 2026; first repaired natural run completed at 21:17:12 Europe/Dublin. Active-session coverage remains unverified. Refresh source and production evidence before editing.
 
 ## Scope and current deployment
 
@@ -10,15 +10,17 @@ The user asked to finish the engineering milestones from the earlier chat: revie
 - Dashboard source: https://github.com/Chiizzie/pixel-perfect-replay-32614
 - Dashboard: https://pixel-perfect-replay-32614.lovable.app
 - Main workflow: `.github/workflows/scheduled-scanner.yml`; each job has an explicit runtime SHA. Main source is not the deployed runtime and still has pre-existing missing legacy modules.
-- Collection, review, comparison and ledger-maintenance runtime: `5ca5ffe1354729ddbbb735f8055fd0d50656f6d0`.
-- Execution/readiness runtime: `abe1948321ee031b688a0e8e41d03881182e61ef`.
-- Strategy-diagnostic runtime: `fc12be18156a2ebbef2141275bf07f3962655e71`. Other observer/context/method/account pins remain unchanged.
+- Collection, review and comparison runtime: `208f4bf5f9f1f403fb977075f0ea33912f4463b0`. Ledger maintenance remains `5ca5ffe1354729ddbbb735f8055fd0d50656f6d0`.
+- Execution/readiness and operations reporting: `839af4f09abc6e7e21daa5bd41c56e587c96b25f`.
+- Strategy runtime: `5002a0e004b89bb9c17895fa6d19d5ce3ed236e6`; entry runtime: `1f777dff0d7ae883cc54e6657a0ece8807c57d09`; method: `889f1a110f9f7ac9d88dbbbc7e9548e8fe00f2c5`; context: `7a518a9b8e8450612a3291e716814c811eba4e67`. Paper watcher/account sync remain `3a113a4e8c4e03e9b28799c146db1f1cae6f987a`.
 - Dashboard contracts: `0210a0133233e0988fb6179c1d7d658d3d1701fb`.
-- Runtime deployment: `75446426e5cd66dba6f0c6b18e1ff8a7924acd14`. Supplemental quote-permission probe: `a913bb2efd7b2db55fb892bf2d9f22c6d1e8bb8c`.
-- Full source CI: [43484084327](https://github.com/Chiizzie/market-radar-ai/actions/runs/43484084327), 1,580 tests plus offline fixtures. Main budget compatibility: 50 tests.
-- First complete natural run after deployment: [43485677181](https://github.com/Chiizzie/market-radar-ai/actions/runs/43485677181), all eight jobs passed, completed 18:53:11 Dublin.
+- Latest runtime deployment: `52a2920c7ffdbc95afe05a60dc5db11e05619b74`. Supplemental quote-permission probe: `a913bb2efd7b2db55fb892bf2d9f22c6d1e8bb8c`.
+- Earlier source CI: [43484084327](https://github.com/Chiizzie/market-radar-ai/actions/runs/43484084327), 1,580 tests plus offline fixtures. Main budget compatibility: 50 tests.
+- Earlier budget deployment verification: [43485677181](https://github.com/Chiizzie/market-radar-ai/actions/runs/43485677181), all eight jobs passed, completed 18:53:11 Dublin.
 - Detailed receipts and unresolved limits: [budget rotation and quote feeds](incidents/2026-11-13-budget-rotation-and-quote-feeds.md).
 - Previous four-milestone work: [review and evidence milestones](incidents/2026-11-13-review-and-evidence-milestones.md).
+
+- Latest reliability checks: [43507049241](https://github.com/Chiizzie/market-radar-ai/actions/runs/43507049241), all six runtime suites and production replay; final entry follow-up [43507384567](https://github.com/Chiizzie/market-radar-ai/actions/runs/43507384567), 1,591 tests.
 
 ## Verified fixes and limits
 
@@ -61,8 +63,12 @@ Publication verified at /performance: deployed JS contains the new panel and fro
 
 Separate execution/readiness runs failed after combined source journals crossed their 50 MB raw-history ceiling (run 43496441892, job 132130666653). This predates the entry experiment. Execution/readiness alone is now pinned to `abe1948321ee031b688a0e8e41d03881182e61ef`; its bounded disk archive preserves all events, stable replay order, canonical source hash and original protocols. Existing daily validation, a 1 GB/one-million-event aggregate bound and workflow timeouts still apply. Readiness stamps probes after replay. No budget reset or history deletion occurs.
 
-CI [43498939661](https://github.com/Chiizzie/market-radar-ai/actions/runs/43498939661) passed. A real 49,420-event replay reproduced the entire previous execution report, all six portfolios and trade-evaluation report exactly. See [history capacity repair](incidents/2026-11-13-execution-history-capacity.md). Production verification succeeded in [43499371328](https://github.com/Chiizzie/market-radar-ai/actions/runs/43499371328), job132140814855: 65,863 source events / 63,605,555 canonical bytes replayed, lossless export restore verified, execution published, readiness published, daily trade evaluation and artifact upload all passed. Execution seq227273 as-of20:14:19.929077, receipt20:14:54.519996; readiness seq228309 as-of20:16:12.112959, receipt20:16:19.891757 Dublin. At20:17:46 the evidence helper validated known schemas/bindings/counts: 11 operational passes and one existing AI allowance block (EUR0.129096 remaining versus EUR0.15 required). The helper does not independently authenticate source evidence. Live trading readiness and profitability remain unestablished; broker costs, incomplete AI-cost attribution and one unresolved hypothetical USD/code position remain evidence limits. Future checkpointing is needed before the larger bounds/time limits are reached.
+CI [43498939661](https://github.com/Chiizzie/market-radar-ai/actions/runs/43498939661) passed. A real 49,420-event replay reproduced the entire previous execution report, all six portfolios and trade-evaluation report exactly. See [history capacity repair](incidents/2026-11-13-execution-history-capacity.md). Production verification succeeded in [43499371328](https://github.com/Chiizzie/market-radar-ai/actions/runs/43499371328), job 132140814855: 65,863 source events / 63,605,555 canonical bytes replayed, lossless export restore verified, execution published, readiness published, daily trade evaluation and artifact upload all passed. Execution seq227273 as-of20:14:19.929077, receipt20:14:54.519996; readiness seq228309 as-of20:16:12.112959, receipt20:16:19.891757 Dublin. At20:17:46 the evidence helper validated known schemas/bindings/counts: 11 operational passes and one existing AI allowance block (EUR0.129096 remaining versus EUR0.15 required). The helper does not independently authenticate source evidence. Live trading readiness and profitability remain unestablished; broker costs, incomplete AI-cost attribution and one unresolved hypothetical USD/code position remain evidence limits. Future checkpointing is needed before the larger bounds/time limits are reached.
 
 ## Current reliability repair (13 November, 21:06 Dublin)
 
-This section supersedes earlier runtime pins above. Storage retry, authenticated prefix recovery, split entry enrolment/observation and current-job readiness fixes have passed their source CI and real-history replay. See [runtime reliability repair](incidents/2026-11-13-runtime-reliability.md) for exact pins and evidence. Main workflow pins deploy those checked revisions; verify a completed natural run before claiming rollout success. No risk, budget, feed subscription or strategy protocol changed. Active-session quote/queue validation remains for the next session.
+This section supersedes earlier runtime pins above. Storage retry, authenticated prefix recovery, split entry enrolment/observation and current-job readiness fixes have passed their source CI and real-history replay. See [runtime reliability repair](incidents/2026-11-13-runtime-reliability.md) for exact pins and evidence. The repaired natural run 43508253631 completed successfully, with all ten job conclusions successful and authenticated watcher startup 6.109 seconds. It ran after regular close; entry/strategy workers were session-skipped and zero fresh comparison quotes were observed. See the incident receipt before inferring active-session readiness. No risk, budget, feed subscription or strategy protocol changed. Active-session quote/queue validation remains for the next session.
+
+## Knowledge proposal
+
+The user asked about strengthening the scanner with skills and knowledge. [The concrete proposal](scanner-knowledge-improvement-proposal.md) records the checked current reviewer path, a proposed versioned playbook/case-retrieval milestone, primary-source catalysts, point-in-time rules and acceptance measurements. This is a proposal, not an installed skill or deployed reviewer change. Preserve current strategy protocols and budgets while evaluating it.

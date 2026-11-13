@@ -1,0 +1,108 @@
+{
+  "deployment_sha": "52a2920c7ffdbc95afe05a60dc5db11e05619b74",
+  "run_id": 43508253631,
+  "run_url": "https://github.com/Chiizzie/market-radar-ai/actions/runs/43508253631",
+  "completed_at": "2026-11-13T21:17:12Z",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 132171449937,
+      "name": "comparison-watcher",
+      "conclusion": "success"
+    },
+    {
+      "id": 132171450228,
+      "name": "paper-watcher",
+      "conclusion": "success"
+    },
+    {
+      "id": 132171450334,
+      "name": "account-sync",
+      "conclusion": "success"
+    },
+    {
+      "id": 132171450434,
+      "name": "collect",
+      "conclusion": "success"
+    },
+    {
+      "id": 132171450527,
+      "name": "entry-confirmation",
+      "conclusion": "success"
+    },
+    {
+      "id": 132171869596,
+      "name": "method-shadow",
+      "conclusion": "success"
+    },
+    {
+      "id": 132171869820,
+      "name": "review",
+      "conclusion": "success"
+    },
+    {
+      "id": 132171869901,
+      "name": "market-context",
+      "conclusion": "success"
+    },
+    {
+      "id": 132172128139,
+      "name": "strategy-experiment",
+      "conclusion": "success"
+    },
+    {
+      "id": 132172128558,
+      "name": "entry-enrol",
+      "conclusion": "success"
+    }
+  ],
+  "comparison_health": {
+    "polls": 65,
+    "quotes_received": 0,
+    "error_polls": 0,
+    "model_calls": 0,
+    "started_at": "2026-11-13T21:10:47.908231+00:00",
+    "maximum_poll_duration_seconds": 3.406032048,
+    "maximum_poll_gap_seconds": 5.000210769999967,
+    "trade_authorized": false,
+    "startup_state": "ready",
+    "startup_sync_seconds": 6.1090477579999956,
+    "comparison": {
+      "polls": 65,
+      "quotes_received": 0,
+      "error_polls": 0,
+      "capacity_deferred": 0,
+      "maximum_poll_gap_seconds": 5.489814,
+      "target_interval_seconds": 5,
+      "model_calls": 0,
+      "checkpoint_events": 54080,
+      "checkpoint_cursor": 253516,
+      "checkpoint_state": "restored",
+      "checkpoint_seconds": 5.25,
+      "last_sync": {
+        "pages": 1,
+        "events": 0,
+        "seconds": 0.23,
+        "storage_read_seconds": 0.23,
+        "projection_seconds": 0
+      },
+      "maximum_sync_seconds": 0.837,
+      "initial_sync": {
+        "pages": 1,
+        "events": 0,
+        "seconds": 0.62,
+        "storage_read_seconds": 0.62,
+        "projection_seconds": 0
+      },
+      "last_success_at": "2026-11-13T21:16:16.447213+00:00"
+    },
+    "first_completed_poll_delay_seconds": 8.703865557,
+    "completed_at": "2026-11-13T21:16:29.133977+00:00",
+    "state": "completed",
+    "critical_failure": false
+  },
+  "limitations": [
+    "After regular market close: zero new comparison quotes; not proof of active-session coverage.",
+    "Entry enrolment/observation and strategy experiment steps were correctly session-skipped; active-session queue behavior is still unverified."
+  ]
+}
