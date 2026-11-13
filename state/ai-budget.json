@@ -7963,6 +7963,12 @@
         "response_id": "resp_04abfa888da70ef3016aee3cef728887d1ae2bd24d88acbe04"
       }
     },
+    "paper-final-v1:a46ae03a16891795a3240778a4a94caa1d795b889a322be3c3ef415351880569:final_decision": {
+      "actual": null,
+      "day": "2026-11-13",
+      "reserved": 8841,
+      "usage": null
+    },
     "paper-final-v1:a46ae03a16891795a3240778a4a94caa1d795b889a322be3c3ef415351880569:risk_manager": {
       "actual": null,
       "day": "2026-11-13",
