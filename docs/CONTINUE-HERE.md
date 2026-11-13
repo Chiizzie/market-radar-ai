@@ -2,6 +2,16 @@
 
 Last verified: 13 November 2026; first repaired natural run completed at 21:17:12 Europe/Dublin. Active-session coverage remains unverified. Refresh source and production evidence before editing.
 
+## Playbooks and past-case retrieval: implemented 13 November
+
+The user approved the offline knowledge milestone and later-data comparison. Verified runtime: `9ae20ef8454a654fabee488cba9c1fbed9ba664c` on `improve/knowledge-retrieval-20261113`. The new `knowledge-shadow` worker only prepares inputs and makes zero model calls. Existing production collector/reviewer/observer pins, alerts, risk gates and budgets remain unchanged.
+
+Frozen history cutoff: 13 November 21:17:12 Dublin; actual index build 21:41:28.972928. The library retains 712 stock cohorts: 55 closed code-only simulations (40 losses/15 wins), 626 unfilled and 31 unresolved. Only three AI-reviewed simulations closed. Do not treat 712 cases as 712 completed trades. There are no pullback/reclaim cases in this initial compatible population.
+
+Three existing-strategy playbooks, deterministic matching (max three cases / 7,200 bytes), point-in-time receipt guards, independent paired chief inputs and a manual future metered comparison runner are implemented. The paired runner is not scheduled; it requires `--paid`, unchanged global budgets and a durable one-pair-per-day claim. No paid AI calls were made for this milestone. Fresh validation starts 16 November; future decision quality/profit improvement is unproven.
+
+See [implementation, provenance and remaining validation](knowledge-retrieval-v1.md) and [offline receipt](evidence/knowledge-offline-20261113.json). Raw journals were independently replayed to the identical library hash. Source history export: [43512536368](https://github.com/Chiizzie/market-radar-ai/actions/runs/43512536368). Local expanded suite: 1,622 passed. Final hosted verification: [43514177316](https://github.com/Chiizzie/market-radar-ai/actions/runs/43514177316), 1,622 tests plus the committed-library offline check. A hosted test initially depended on an undeclared optional YAML package; the boundary test was corrected and the exact final source passed.
+
 ## Scope and current deployment
 
 The user asked to finish the engineering milestones from the earlier chat: review reliability, missed-entry tracing, explanation of frozen strategy results, and six reviewers versus code-only and independent-chief evidence. They then authorized fixing the remaining ledger growth and quote-reliability issues. Keep ordinary scans running and use direct repository edits instead of paid Lovable editing-agent credits.
