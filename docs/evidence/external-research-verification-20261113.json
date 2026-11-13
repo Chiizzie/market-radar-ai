@@ -1,0 +1,63 @@
+{
+  "schema_version": "external-research-verification-v1",
+  "source_revision": "81a1dc65c29837158ba35ea9ae2e85b7a568f005",
+  "source_branch": "improve/external-research-20261113",
+  "bank_id": "6ae9a6f1f03ffc4ad616be3115145039ff3a93cbfc42249c971c44b40c246e47",
+  "comparison_protocol_id": "61d6d454a74def5c43144f0000430f0fbae6d32e62b463f117f2f909a10a1fcc",
+  "verified_at": "2026-11-13T22:52:43.807408+00:00",
+  "source_catalogue": {
+    "repositories": 8,
+    "curated_notes": 12,
+    "review_scope": "Selected files and code sections; no complete installation or security audit",
+    "external_packages_installed": [],
+    "external_code_copied": false
+  },
+  "local": {
+    "tests_passed": 1684,
+    "tests_failed": 0,
+    "compileall": "passed",
+    "offline_integration": "passed"
+  },
+  "hosted": {
+    "run_id": 43522684658,
+    "job_id": 132220623674,
+    "conclusion": "success",
+    "tests_passed": 1684,
+    "artifact_id": 14082934473,
+    "artifact_sha256": "b94d5af44836091f4cc500a2ab6df71768195d89c0f511d7870a95be30fe0464"
+  },
+  "integration": {
+    "strategy_families": 7,
+    "prepared_comparison_packets": 6,
+    "paid_comparisons_run": 0,
+    "max_reference_notes": 3,
+    "max_reference_bytes": 4500,
+    "observed_max_reference_bytes": 2911
+  },
+  "case_library": {
+    "setups": 717,
+    "sessions": 2,
+    "closed_code_simulations": 55,
+    "unfilled": 631,
+    "unresolved": 31,
+    "library_id": "b5b894a29e3cf2873e1e719ccf912a07ab525b46e1e3f93729c84d7bc134b6aa",
+    "changed": false,
+    "validation_state": "insufficient_independent_history"
+  },
+  "production": {
+    "scheduled_workflow_blob_sha": "9c9831c64681765a543ad419a31f20e6a26e32db",
+    "workflow_unchanged": true,
+    "strategy_worker_revision": "12e7b42144b693f6ecdb86aac36b04c57c5bb694",
+    "external_notes_injected": false,
+    "budgets_changed": false
+  },
+  "model_calls": 0,
+  "paid_ai_cost_eur": "0",
+  "trade_authorized": false,
+  "performance_claim": null,
+  "remaining": [
+    "Actual comparison runner and citation validation for external references",
+    "Later-session outcomes and coverage",
+    "Cost-adjusted independent evaluation before changing production review behavior"
+  ]
+}

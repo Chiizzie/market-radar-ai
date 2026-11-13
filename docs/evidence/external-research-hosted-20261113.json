@@ -1,0 +1,219 @@
+{
+  "bank_id": "6ae9a6f1f03ffc4ad616be3115145039ff3a93cbfc42249c971c44b40c246e47",
+  "comparison_protocol_id": "61d6d454a74def5c43144f0000430f0fbae6d32e62b463f117f2f909a10a1fcc",
+  "curated_notes": 12,
+  "external_packages_installed": [],
+  "fixture_kind": "synthetic_inputs_not_forward_decisions",
+  "future_dependence_controls": {
+    "causal": {
+      "checks": [
+        {
+          "as_of": "2026-11-13T15:02:01+00:00",
+          "reason": null,
+          "state": "passed_tested_cutoff"
+        }
+      ],
+      "failed_cutoffs": 0,
+      "limitation": "Only exercised inputs and cutoffs are tested; missing triggers, joins or revisions can conceal leakage.",
+      "passed_tested_cutoffs": 1,
+      "performance_claim": null,
+      "schema_version": "future-dependence-audit-v1",
+      "trade_authorized": false
+    },
+    "deliberately_leaky": {
+      "checks": [
+        {
+          "as_of": "2026-11-13T15:02:01+00:00",
+          "reason": "future_dependence",
+          "state": "failed"
+        }
+      ],
+      "failed_cutoffs": 1,
+      "limitation": "Only exercised inputs and cutoffs are tested; missing triggers, joins or revisions can conceal leakage.",
+      "passed_tested_cutoffs": 0,
+      "performance_claim": null,
+      "schema_version": "future-dependence-audit-v1",
+      "trade_authorized": false
+    }
+  },
+  "library_audit": {
+    "library_id": "b5b894a29e3cf2873e1e719ccf912a07ab525b46e1e3f93729c84d7bc134b6aa",
+    "limitations": [
+      "No performance inference from two development sessions.",
+      "Unfilled and unresolved setups are excluded from closed-outcome labels, not converted to zero returns.",
+      "Known-at timestamps conservatively bound label end; exact exit clocks require original journals.",
+      "Symbol/session counts describe clustering, not independent bets."
+    ],
+    "partitions": [
+      {
+        "outcome_states": {
+          "not_filled": 5
+        },
+        "partition": "opening_continuation_30m_v1:eab2d59128f2d320ec2d32e1cd903d2b3d9d17c93f324534c607f640e1b93fd8:guarded_reference_quotes_v2",
+        "session_dates": [
+          "2026-11-12",
+          "2026-11-13"
+        ],
+        "setups": 5,
+        "symbol_session_groups": 5
+      },
+      {
+        "outcome_states": {
+          "not_filled": 4
+        },
+        "partition": "opening_range_15m_shadow_v1:a445697fa1aefc21647529520dc6e1bd965073e2ff9068b3fa99592146e2af25:legacy_method_entry_guards_exit_quotes_not_v2_guarded",
+        "session_dates": [
+          "2026-11-12"
+        ],
+        "setups": 4,
+        "symbol_session_groups": 4
+      },
+      {
+        "outcome_states": {
+          "not_filled": 1
+        },
+        "partition": "session_open_avwap_reclaim_v1:a8afeedf54f633f0324380cd5816fdbdd7604f35b801272912e2de94f0592ea4:legacy_method_entry_guards_exit_quotes_not_v2_guarded",
+        "session_dates": [
+          "2026-11-12"
+        ],
+        "setups": 1,
+        "symbol_session_groups": 1
+      },
+      {
+        "outcome_states": {
+          "closed": 55,
+          "not_filled": 621,
+          "unresolved": 31
+        },
+        "partition": "trend_continuation_20bar_v1:eab2d59128f2d320ec2d32e1cd903d2b3d9d17c93f324534c607f640e1b93fd8:guarded_reference_quotes_v2",
+        "session_dates": [
+          "2026-11-12",
+          "2026-11-13"
+        ],
+        "setups": 707,
+        "symbol_session_groups": 345
+      }
+    ],
+    "performance_claim": null,
+    "session_dates": [
+      "2026-11-12",
+      "2026-11-13"
+    ],
+    "setups": 717,
+    "validation": {
+      "note": "Prepared folds are not performance evidence or proof of independent observations.",
+      "partitions": [
+        {
+          "folds": [],
+          "labels": 55,
+          "partition": "trend_continuation_20bar_v1:eab2d59128f2d320ec2d32e1cd903d2b3d9d17c93f324534c607f640e1b93fd8:guarded_reference_quotes_v2",
+          "session_dates": [
+            "2026-11-12",
+            "2026-11-13"
+          ],
+          "state": "insufficient_independent_history"
+        }
+      ],
+      "performance_claim": null,
+      "schema_version": "chronological-validation-audit-v1",
+      "split_configuration": {
+        "gap_sessions": 1,
+        "min_train_sessions": 3,
+        "test_sessions": 1
+      },
+      "trade_authorized": false
+    }
+  },
+  "model_calls": 0,
+  "paid_ai_cost_eur": "0",
+  "performance_claim": null,
+  "production_runtime_changed": false,
+  "schema_version": "external-research-offline-receipt-v1",
+  "sources_catalogued": 8,
+  "strategy_checks": [
+    {
+      "comparison_id": "56eaf40dcefffca5afbae4c52499193b4a3a559afccb0573c1dd25b0fac83bee",
+      "comparison_state": "prepared_and_validated_not_run",
+      "extract_bytes": 2911,
+      "notes": [
+        "opening_window",
+        "point_in_time",
+        "walk_forward"
+      ],
+      "offline_only": false,
+      "strategy_id": "opening_continuation_30m_v1"
+    },
+    {
+      "comparison_id": "04a786fca8fa8837f703ee96718a6b817c59907bcce353f71c10c2d40027de82",
+      "comparison_state": "prepared_and_validated_not_run",
+      "extract_bytes": 2850,
+      "notes": [
+        "volatility_context",
+        "point_in_time",
+        "walk_forward"
+      ],
+      "offline_only": false,
+      "strategy_id": "trend_continuation_20bar_v1"
+    },
+    {
+      "comparison_id": "68c02c1c341bf4d513d542e931128ab3c74d8ed327e28d318df71dc74837d972",
+      "comparison_state": "prepared_and_validated_not_run",
+      "extract_bytes": 2848,
+      "notes": [
+        "volatility_context",
+        "point_in_time",
+        "walk_forward"
+      ],
+      "offline_only": false,
+      "strategy_id": "trend_pullback_reclaim_v1"
+    },
+    {
+      "comparison_id": "b0b9f62e724f5bcccfe1deae9d1e8fef25d84b58db03a0520eccde70c018a941",
+      "comparison_state": "prepared_and_validated_not_run",
+      "extract_bytes": 2867,
+      "notes": [
+        "point_in_time",
+        "walk_forward",
+        "label_purging"
+      ],
+      "offline_only": false,
+      "strategy_id": "competitor_strength_breakout_shadow_v1"
+    },
+    {
+      "comparison_id": "baf841c0f022759b9d394b42a08aed12de75a19955dc88fceb5512f93abdd35c",
+      "comparison_state": "prepared_and_validated_not_run",
+      "extract_bytes": 2911,
+      "notes": [
+        "opening_window",
+        "point_in_time",
+        "walk_forward"
+      ],
+      "offline_only": false,
+      "strategy_id": "opening_range_15m_shadow_v1"
+    },
+    {
+      "comparison_id": "f4fdfa4b0800ea0cbf933f2fb5f628410d1c08d1fc874796f13e659aeecbbb49",
+      "comparison_state": "prepared_and_validated_not_run",
+      "extract_bytes": 2845,
+      "notes": [
+        "volatility_context",
+        "point_in_time",
+        "walk_forward"
+      ],
+      "offline_only": false,
+      "strategy_id": "session_open_avwap_reclaim_v1"
+    },
+    {
+      "extract_bytes": 2879,
+      "notes": [
+        "mean_reversion_failure",
+        "mean_reversion_horizon",
+        "point_in_time"
+      ],
+      "offline_only": true,
+      "strategy_id": "intraday_range_mean_reversion_offline_v1"
+    }
+  ],
+  "trade_authorized": false,
+  "verified_at": "2026-11-13T22:52:43.807408+00:00"
+}

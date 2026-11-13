@@ -2,6 +2,16 @@
 
 Last verified: 13 November 2026; the expanded strategy-routing worker succeeded in the 22:35 scan and reported at 22:36:27 Europe/Dublin. Its 717-case library and pre-validation guard are verified. Active-session coverage and performance remain unverified. Refresh source and production evidence before editing.
 
+## External research bank: offline expansion, 13 November
+
+The user asked to build the knowledge bank further using useful GitHub skills/code. A source-controlled offline expansion is implemented at `81a1dc65c29837158ba35ea9ae2e85b7a568f005` on `improve/external-research-20261113`: 12 authored research notes, eight fixed-revision source records (seven reference sources, TradingAgents deferred), bounded strategy/topic retrieval and a separate existing-knowledge versus expanded-knowledge comparison packet. This is an offline addition, not an installed third-party skill bundle or changed scheduled reviewer.
+
+Original local code adds chronological event-label splits with source-policy partitions, outcome/receipt-time purging and observed-date gaps, plus a future-data dependence auditor. All 1,684 tests pass locally; offline integration covers seven strategy families and six prepared comparison packets. A deliberately leaky full-sample statistic is detected. Zero paid model calls, new external dependencies or broker operations occurred. Hosted CI: [43522684658](https://github.com/Chiizzie/market-radar-ai/actions/runs/43522684658).
+
+The actual 717-case audit finds only two sessions (12–13 November), with 55 closed / 631 unfilled / 31 unresolved code outcomes. The configured chronological validation reports insufficient independent history. Do not present external notes as additional trades, treat correlated alerts as independent bets, or use the compact known-at horizon as a precise exit time. New comparison packets are prepared only: actual AI runner/citation validation and forward outcomes remain separate work. All current workflow pins and budgets are unchanged.
+
+Bank ID `6ae9a6f1f03ffc4ad616be3115145039ff3a93cbfc42249c971c44b40c246e47`; built 22:47:47.442910 Dublin. See [external research record](external-research-bank-v1.md), [offline evidence](evidence/external-research-offline-20261113.json) and [verification receipt](evidence/external-research-verification-20261113.json). Review exact source licenses, code, permissions and assumptions before any later installation; this review covered selected material only.
+
 ## Expanded independent strategies: implemented 13 November
 
 Runtime `12e7b42144b693f6ecdb86aac36b04c57c5bb694` on `improve/strategy-routing-20261113` adds a separate free `strategy-routing` research worker. Six strategies evaluate identical fresh stock inputs independently: 20-bar continuation, pullback reclaim, 30-minute opening continuation, 15-minute opening range, session-open anchored VWAP and competitor-strength breakout. Multiple applicable plans are retained as overlapping alternatives. The seventh family, intraday range mean reversion, is implemented and tested offline only; the scheduled worker and paired AI exclude it.
