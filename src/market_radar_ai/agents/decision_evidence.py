@@ -55,10 +55,11 @@ def build(store, report):
                 cross_gap+=ask>Decimal(plan['entry_eur'])*Decimal('1.002')
         reason=('not_selected_for_review' if not start else
                 'review_not_completed' if not review else
-                'entry_observed_before_approval' if entry and decision and aware(entry)<aware(decision) else
+                'baseline_entry_before_review_decision' if entry and decision and aware(entry)<aware(decision) else
+                'baseline_entry_after_review_decision' if entry else
                 'no_quote_in_original_entry_window' if not before_expiry else
                 'trigger_observed_but_quote_outside_entry_rules' if cross_wide or cross_gap else
-                'no_observed_entry_trigger' if not entry else 'observed_entry_after_approval')
+                'no_observed_entry_trigger')
         traces.append({'setup_id':row['setup_id'],'candidate_id':row['candidate_id'],
             'strategy_id':row['strategy_id'],'prompt_revision':body.get('prompt_revision'),
             'assembled_at':body['assembled_at'],'enrolled_at':row['enrolled_at'],
@@ -130,7 +131,8 @@ def build(store, report):
                'Stage duration excludes preparation/revalidation; no latency saving is assumed. '
                'Current prompt revision only; first attempted asset/day retained even when incomplete. '
                'Costs use observed call allocation where available. Unresolved/unfilled/open outcomes stay separate. '
-               'Reference spread alone does not establish broker spread or a profitable missed trade.'}
+               'Reference spread alone does not establish broker spread or a profitable missed trade. '
+               'A baseline entry before review completion does not establish that faster AI would approve or profit.'}
 
 
 def bounded(report):

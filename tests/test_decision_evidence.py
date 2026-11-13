@@ -20,7 +20,7 @@ def test_same_outcome_comparison_retains_rejected_loser_without_fake_fill(tmp_pa
     assert r['arms']['full_team']['selected_outcomes']['closed']==0
     assert Decimal(r['arms']['full_team']['matched_delta_before_model_cost_eur'])>0
     assert r['arms']['full_team']['matched_delta_after_model_cost_eur'] is None
-    assert r['traces'][0]['trace_reason']=='entry_observed_before_approval'
+    assert r['traces'][0]['trace_reason']=='baseline_entry_before_review_decision'
     assert r['comparison_rows'][0]['actual_ai_state']=='no_action'
     assert r['model_calls']==0 and not r['strategy_input'] and not r['trade_authorized']
 
