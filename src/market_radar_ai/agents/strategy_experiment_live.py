@@ -89,6 +89,8 @@ class StrategyExperiment:
 
     def enrol(self,inputs,*,capture_sha,source_failures=()):
         self.sync();now=self.clock();active=len(self.active(now));events=[];rows=list(source_failures);known=set(self.cohorts)
+        from .strategy_diagnostics import input_trace
+        self.screen_trace=[]
         for source in inputs:
             s=build(source,now=now);blocks=s['blockers'][:]
             if not blocks and s['setup_id'] in known:blocks=['already_frozen_this_session']
@@ -101,6 +103,7 @@ class StrategyExperiment:
                     events.append(e);known.add(s['setup_id'])
                     active+=any(not v['blockers'] for v in s['variants'].values())
             rows.append({'candidate_id':'stocks:'+source['symbol'],'blockers':blocks})
+            self.screen_trace.append({**input_trace(source,now),'blockers':blocks})
         # Bounded writes; one failed/ambiguous batch stops enrolment. Restore
         # authoritative events rather than repeating an uncertain append.
         batch=[];size=0
@@ -155,6 +158,10 @@ class StrategyExperiment:
         (self.root/'report.json').write_text(canonical(r)+'\n')
         (self.root/'paired-results.json').write_text(canonical(paired_results(self,aware(r['as_of'])))+'\n')
         self.client.append(PROTOCOL_ID,[envelope('strategy_report',r,aware(r['as_of']))])
+        from .strategy_diagnostics import build as diagnose, bounded, PROTOCOL_ID as DIAGNOSTICS_PROTOCOL
+        evidence=diagnose(self,aware(r['as_of']))
+        (self.root/'strategy-diagnostics.json').write_text(canonical(evidence)+'\n')
+        self.client.append(DIAGNOSTICS_PROTOCOL,[envelope('audit',bounded(evidence),self.clock())])
         return r
 
 

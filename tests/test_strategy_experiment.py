@@ -177,7 +177,7 @@ class Events:
                                 'seq':len(self.events)+1,'received_at':(datetime.fromisoformat(e['occurred_at'])+timedelta(seconds=self.delay)).isoformat()})
     def read(self,experiment,day,after):
         if self.fail:raise RuntimeError('storage_failed')
-        events=[e for e in self.events if e['seq']>after][:3]
+        events=[e for e in self.events if e['seq']>after and e['experiment_id']==experiment and e['day']==day][:3]
         return {'events':events,'next':events[-1]['seq'] if events else after}
 
 
