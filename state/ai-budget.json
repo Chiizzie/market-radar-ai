@@ -1882,6 +1882,12 @@
       "reserved": 1,
       "usage": null
     },
+    "paper-final-v1:074e3687a71e142cebfc2cfaa90a7acc087c0210a2b573110b5994bf4991d718:debate": {
+      "actual": null,
+      "day": "2026-11-13",
+      "reserved": 9797,
+      "usage": null
+    },
     "paper-final-v1:074e3687a71e142cebfc2cfaa90a7acc087c0210a2b573110b5994bf4991d718:devils_advocate": {
       "actual": 4761,
       "day": "2026-11-13",
