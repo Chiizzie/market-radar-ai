@@ -272,3 +272,51 @@ def test_future_library_and_outcome_changes_cannot_change_case_selection():
     assert [c['case_id'] for c in a['cases']]==[c['case_id'] for c in b['cases']]
     future=seal(rows,base_library_id=base['library_id'],built_at='2026-11-17T00:00:00Z',manifests=[])
     with pytest.raises(ValueError,match='unavailable'):Retriever(future).retrieve(result,s,as_of=now)
+
+
+def test_collector_freezes_fresh_source_subset_before_routing(monkeypatch):
+    from types import SimpleNamespace
+    from market_radar_ai.agents.strategy_routing_live import collect_inputs
+    from market_radar_ai.market_data.models import Candle
+    from test_pullback_strategy import empty_feed
+    s,now=pullback_input();order=[]
+    capture={'captures':[{'market':'stocks','requested_symbol':'TEST'}],
+        'stock_reference_checks':s['reference_checks'],
+        'stock_context':[{'payload':s['context'],'payload_sha256':digest(s['context'])}]}
+    def histories(*args,**kwargs):
+        order.append('history')
+        return {'TEST':SimpleNamespace(status='ok',retrieved_at=now,candles=[Candle.model_validate(x) for x in s['candles']])}
+    def refs(*args,before_quotes,**kwargs):
+        assert kwargs['catalogue_record']==capture['stock_reference_checks']
+        before_quotes();order.append('quotes');return deepcopy(s['reference_checks'])
+    monkeypatch.setattr('market_radar_ai.market_data.providers.alpaca_batch.fetch_histories',histories)
+    monkeypatch.setattr('market_radar_ai.market_data.stock_checks.collect',refs)
+    batch,at,coverage=collect_inputs(capture,empty_feed('TEST',now),{}, {},env={},clock=lambda:now)
+    assert order==['history','quotes'] and at==now and coverage['source_missing_symbols']==[]
+    report=evaluate_batch(batch,knowledge(),now=at)
+    assert report['research_pairs']>=2 and report['model_calls']==0
+
+
+def test_installed_worker_checks_library_but_skips_providers_outside_validation(tmp_path,monkeypatch):
+    from types import SimpleNamespace
+    from market_radar_ai.agents import strategy_routing_live as live
+    lib=tmp_path/'library.json';lib.write_text(canonical(knowledge()))
+    output=tmp_path/'output'
+    monkeypatch.setattr(live,'datetime',SimpleNamespace(now=lambda *args:aware('2026-11-13T22:30:00Z')))
+    monkeypatch.setattr(live,'collect_inputs',lambda *args,**kwargs:pytest.fail('No provider access outside validation'))
+    monkeypatch.setattr('sys.argv',['strategy-routing','--capture','missing','--news','missing','--library',str(lib),'--output',str(output)])
+    live.main();report=json.loads((output/'report.json').read_text())
+    assert report['state']=='outside_strategy_validation_or_session' and report['model_calls']==0
+    assert report['library']['cases']==1 and not report['trade_authorized']
+
+
+def test_paid_budget_and_notification_credentials_absent_from_research_worker():
+    text=Path('deploy/strategy-routing-job.yml').read_text()
+    assert 'OPENAI' not in text and 'OPEN_API' not in text and 'TELEGRAM' not in text and 'BUDGET' not in text
+    assert 'contents: read' in text and '--paid' not in text and '--include-offline' not in text
+
+
+@pytest.mark.parametrize('field,value',[('volume','Infinity'),('high','Infinity'),('close','NaN')])
+def test_mean_reversion_nonfinite_values_cannot_satisfy_liquidity_or_range_gates(field,value):
+    s,now=mean_input();s['candles'][2][field]=value
+    assert measure(s['candles'],s['daily'],symbol='TEST',now=now)['blockers']

@@ -32,6 +32,8 @@ def measure(candles, daily, *, symbol, now):
         rows=rows[-22:]
         for j,c in enumerate(rows):
             if (c.symbol!=symbol or c.source!='alpaca_iex' or c.interval!='5m' or c.quote_currency!='USD'
+                    or not all(v.is_finite() for v in (c.open,c.high,c.low,c.close,c.volume))
+                    or c.timestamp.second or c.timestamp.microsecond or c.timestamp.minute%5
                     or c.timestamp<opening or c.timestamp+timedelta(minutes=5)>now or c.volume<=0
                     or (j and c.timestamp-rows[j-1].timestamp!=timedelta(minutes=5))):
                 raise ValueError('bars')
