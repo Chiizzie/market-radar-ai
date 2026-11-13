@@ -1,0 +1,476 @@
+{
+  "bank_id": "6ae9a6f1f03ffc4ad616be3115145039ff3a93cbfc42249c971c44b40c246e47",
+  "schema_version": "external-research-bank-v1",
+  "built_at": "2026-11-13T22:47:47.442910+00:00",
+  "sources": [
+    {
+      "source_id": "quantconnect_lean",
+      "repository": "QuantConnect/Lean",
+      "revision": "82d26047e95a89b53c9cbe02b67efaa3c4455ed9",
+      "license_spdx": "Apache-2.0",
+      "reviewed_at": "2026-11-13T22:44:16+00:00",
+      "status": "reference_only",
+      "review_scope": "Selected files or sections; no repository-wide security or installation audit.",
+      "assessment": "Selected opening-breakout example and license inspected. Header says five-minute range; OpeningSpanInMinutes is 3. Contains order operations; use concepts only, not as a broker adapter.",
+      "files": [
+        {
+          "path": "LICENSE",
+          "git_blob_sha": "6faed93d21a1a9551b11434e87c9000a393d73f2"
+        },
+        {
+          "path": "Algorithm.CSharp/OpeningBreakoutAlgorithm.cs",
+          "git_blob_sha": "ddfc1cc2bfdc1a7b1d1d9bc0b26a2d39e6c1956c"
+        }
+      ]
+    },
+    {
+      "source_id": "skfolio",
+      "repository": "skfolio/skfolio",
+      "revision": "c32310558b41c0198c73c4f67f236e400f4fb959",
+      "license_spdx": "BSD-3-Clause",
+      "reviewed_at": "2026-11-13T22:44:16+00:00",
+      "status": "reference_only",
+      "review_scope": "Selected files or sections; no repository-wide security or installation audit.",
+      "assessment": "Model-selection docs and selected splitter sections inspected. Useful chronological and purging reference; portfolio-return interfaces need adaptation to event labels and server receipt clocks.",
+      "files": [
+        {
+          "path": "LICENSE",
+          "git_blob_sha": "96b2a96a077c8daad196a2fc093e585942f67101"
+        },
+        {
+          "path": "docs/user_guide/model_selection.rst",
+          "git_blob_sha": "0ee0114954356bf84ef9d7a320f3f232b2c49211"
+        },
+        {
+          "path": "src/skfolio/model_selection/_walk_forward.py",
+          "git_blob_sha": "2800446a6255f08fda6653e4d52456e5ae8918c1"
+        }
+      ]
+    },
+    {
+      "source_id": "market_calendars",
+      "repository": "rsheftel/pandas_market_calendars",
+      "revision": "f511a67c0826065a1e880e4e32dd4f86be6840e7",
+      "license_spdx": "MIT",
+      "reviewed_at": "2026-11-13T22:44:16+00:00",
+      "status": "reference_only",
+      "review_scope": "Selected files or sections; no repository-wide security or installation audit.",
+      "assessment": "License and calendar documentation inspected. Package calendars are versioned rules, not live exchange or halt evidence. Existing Alpaca calendar checks remain authoritative for the scanner.",
+      "files": [
+        {
+          "path": "LICENSE",
+          "git_blob_sha": "669a260523f584bee791fbfa075611500e0e78d2"
+        },
+        {
+          "path": "README.rst",
+          "git_blob_sha": "ade9e640ba36ca4b1f1b7d12dcc88d21070f632d"
+        }
+      ]
+    },
+    {
+      "source_id": "freqtrade",
+      "repository": "freqtrade/freqtrade",
+      "revision": "5197bedab82559fac6be6c1539c64b94368fb91c",
+      "license_spdx": "GPL-3.0",
+      "reviewed_at": "2026-11-13T22:44:16+00:00",
+      "status": "reference_only",
+      "review_scope": "Selected files or sections; no repository-wide security or installation audit.",
+      "assessment": "Lookahead-analysis documentation inspected, not the whole engine. Sliced comparisons can reveal future-data dependence; untriggered signals and multi-asset coupling limit the test. No GPL engine code copied.",
+      "files": [
+        {
+          "path": "LICENSE",
+          "git_blob_sha": "9cecc1d4669ee8af2ca727a5d8cde10cd8b2d7cc"
+        },
+        {
+          "path": "docs/lookahead-analysis.md",
+          "git_blob_sha": "248fce7636865827e53f002579a02d166d1315b0"
+        }
+      ]
+    },
+    {
+      "source_id": "community_trading_skills",
+      "repository": "agiprolabs/claude-trading-skills",
+      "revision": "981e1d736cdc02bdc1c55c74ec9224e956414706",
+      "license_spdx": "MIT",
+      "reviewed_at": "2026-11-13T22:44:16+00:00",
+      "status": "reference_only",
+      "review_scope": "Selected files or sections; no repository-wide security or installation audit.",
+      "assessment": "Selected mean-reversion/walk-forward instructions and splitter sections inspected, not all skills. Illustrative Hurst/ADF claims are not trade probabilities; the DSR example mixes annualized-SR wording and inconsistent kurtosis labels. Do not copy its statistical thresholds.",
+      "files": [
+        {
+          "path": "LICENSE.md",
+          "git_blob_sha": "c62d40b6544655a6508044aec4cf836eadbe2870"
+        },
+        {
+          "path": "skills/mean-reversion/SKILL.md",
+          "git_blob_sha": "0053324f08d27fdcf5282e24b7647b9289f22a30"
+        },
+        {
+          "path": "skills/walk-forward-validation/SKILL.md",
+          "git_blob_sha": "59f6a262afed5b73e0a723fa959055f4c47260ae"
+        },
+        {
+          "path": "skills/walk-forward-validation/scripts/walk_forward.py",
+          "git_blob_sha": "f5c0a80e75ea77b60960a6c26dee84d0ff4930da"
+        }
+      ]
+    },
+    {
+      "source_id": "trading_agents",
+      "repository": "TauricResearch/TradingAgents",
+      "revision": "9fa1196fffbcfd9de5146d2dd2869df84ab99838",
+      "license_spdx": "Apache-2.0",
+      "reviewed_at": "2026-11-13T22:44:16+00:00",
+      "status": "deferred",
+      "review_scope": "Selected files or sections; no repository-wide security or installation audit.",
+      "assessment": "README and dependency manifest inspected only. Existing scanner already has multiple analytical roles. Framework replacement, authentication and model-cost behavior are not audited; deferred.",
+      "files": [
+        {
+          "path": "LICENSE",
+          "git_blob_sha": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64"
+        },
+        {
+          "path": "README.md",
+          "git_blob_sha": "9567a73615a9f73825038055dc6bb5dc298f43f3"
+        },
+        {
+          "path": "pyproject.toml",
+          "git_blob_sha": "70dcce013d178be8fea4af7e5755a367438f398c"
+        }
+      ]
+    },
+    {
+      "source_id": "quant_research_skill",
+      "repository": "quantskills/skill-quant-research",
+      "revision": "457cc945d3f9ec587bae637c05e3b9c1e59b5428",
+      "license_spdx": "GPL-3.0",
+      "reviewed_at": "2026-11-13T22:44:16+00:00",
+      "status": "reference_only",
+      "review_scope": "Selected files or sections; no repository-wide security or installation audit.",
+      "assessment": "Research instructions, validation reference and CSV validator inspected; data/risk references catalogued. Useful evidence discipline. Selected CSV validator checks local data but is not a point-in-time join or full intraday OHLC validator. No GPL code copied.",
+      "files": [
+        {
+          "path": "LICENSE",
+          "git_blob_sha": "d9a5094db6773f662213682fca1424dc4b1c9868"
+        },
+        {
+          "path": "SKILL.md",
+          "git_blob_sha": "08dc885ce634695b15ed6f2324100fd8e62a271e"
+        },
+        {
+          "path": "references/data-contract.md",
+          "git_blob_sha": "0decc85afee2aa851b06d42fc41af2c2d37a00f3"
+        },
+        {
+          "path": "references/statistical-validation.md",
+          "git_blob_sha": "e04025fcae052da3d3ce9eb4f18f896723d35415"
+        },
+        {
+          "path": "references/risk-and-reporting.md",
+          "git_blob_sha": "28b56bf0ea1c807c6757c8adc98c0ec71a6f5cbf"
+        },
+        {
+          "path": "scripts/validate_quant_data.py",
+          "git_blob_sha": "553b0dd8bd92446f53fcf390334dfdc2f819242d"
+        }
+      ]
+    },
+    {
+      "source_id": "alpaca_skills",
+      "repository": "alpacahq/alpaca-skills",
+      "revision": "0e7c35163ae462730de1f4a0bfafceac82b7d59b",
+      "license_spdx": "Apache-2.0",
+      "reviewed_at": "2026-11-13T22:44:16+00:00",
+      "status": "reference_only",
+      "review_scope": "Selected files or sections; no repository-wide security or installation audit.",
+      "assessment": "Official backtest instructions inspected and companion reference catalogued. It requests a CLI/authentication workflow and includes next-open bar proxies. Retain design lessons; do not install latest CLI or weaken existing quote-based simulation.",
+      "files": [
+        {
+          "path": "LICENSE",
+          "git_blob_sha": "c3e9546b030a88d3a6c114fc2ceea7835f95e9b7"
+        },
+        {
+          "path": "skills/trading-api/backtest/SKILL.md",
+          "git_blob_sha": "806d1be5e2500cf5066247ce55f9c6c0e2ee7579"
+        },
+        {
+          "path": "skills/trading-api/backtest/reference.md",
+          "git_blob_sha": "27db7ec8ca15f182c1c9cc7837b6e7cc2dffdd7e"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "note_id": "opening_window",
+      "title": "Opening-range definitions must match the code",
+      "kind": "hypothesis",
+      "strategies": [
+        "opening_continuation_30m_v1",
+        "opening_range_15m_shadow_v1"
+      ],
+      "topics": [
+        "opening",
+        "parameters"
+      ],
+      "priority": 1,
+      "summary": "Define an opening range from completed bars and keep its duration fixed before comparison. A different duration is a separate hypothesis, not an interchangeable implementation.",
+      "limitation": "The reviewed LEAN file describes five minutes in its header but sets OpeningSpanInMinutes to 3. Neither that example nor the scanner's 15/30-minute rules establish an edge.",
+      "evidence_status": "method_reference_not_performance",
+      "references": [
+        {
+          "source_id": "quantconnect_lean",
+          "path": "Algorithm.CSharp/OpeningBreakoutAlgorithm.cs"
+        }
+      ]
+    },
+    {
+      "note_id": "volatility_context",
+      "title": "Volatility scaling needs comparable units",
+      "kind": "method",
+      "strategies": [
+        "trend_continuation_20bar_v1",
+        "trend_pullback_reclaim_v1",
+        "session_open_avwap_reclaim_v1"
+      ],
+      "topics": [
+        "volatility",
+        "risk"
+      ],
+      "priority": 2,
+      "summary": "ATR-based sizing can express sensitivity to recent movement. Specify bar frequency, smoothing, warmup and currency before comparing variants.",
+      "limitation": "A reference sizing concept cannot change the scanner's fixed plan or EUR20 planned-risk ceiling. Historical ATR does not bound future gaps.",
+      "evidence_status": "method_reference_not_performance",
+      "references": [
+        {
+          "source_id": "quantconnect_lean",
+          "path": "Algorithm.CSharp/OpeningBreakoutAlgorithm.cs"
+        }
+      ]
+    },
+    {
+      "note_id": "mean_reversion_failure",
+      "title": "A stretched price need not recover",
+      "kind": "hypothesis",
+      "strategies": [
+        "intraday_range_mean_reversion_offline_v1"
+      ],
+      "topics": [
+        "mean_reversion",
+        "regime"
+      ],
+      "priority": 1,
+      "summary": "Treat a return toward a prior mean as a hypothesis conditional on observed range behavior. Test trending periods and structural changes as failure cases.",
+      "limitation": "ADF, Hurst and z-score estimates are diagnostics, not probabilities of profit. Do not import crypto-specific examples or use them to activate the offline prototype.",
+      "evidence_status": "method_reference_not_performance",
+      "references": [
+        {
+          "source_id": "community_trading_skills",
+          "path": "skills/mean-reversion/SKILL.md"
+        }
+      ]
+    },
+    {
+      "note_id": "mean_reversion_horizon",
+      "title": "Reversion horizon must fit the session",
+      "kind": "hypothesis",
+      "strategies": [
+        "intraday_range_mean_reversion_offline_v1"
+      ],
+      "topics": [
+        "mean_reversion",
+        "timing"
+      ],
+      "priority": 2,
+      "summary": "An estimated decay horizon can motivate a separately tested maximum holding period. Fit any such estimate only to information available before the signal.",
+      "limitation": "Short samples and parameter instability can invalidate an estimated half-life. No new fitted horizon or stop has been added to the existing prototype.",
+      "evidence_status": "method_reference_not_performance",
+      "references": [
+        {
+          "source_id": "community_trading_skills",
+          "path": "skills/mean-reversion/SKILL.md"
+        }
+      ]
+    },
+    {
+      "note_id": "calendar_version",
+      "title": "Session rules have versions and exceptions",
+      "kind": "method",
+      "strategies": [
+        "all"
+      ],
+      "topics": [
+        "sessions",
+        "data"
+      ],
+      "priority": 40,
+      "summary": "Use dated exchange-session evidence for holidays, early closes and timezone transitions. Versioned calendar packages can supply offline comparison fixtures.",
+      "limitation": "A packaged schedule is not a live halt feed. Keep the existing provider calendar and freshness gates; this note supplies no current session fact.",
+      "evidence_status": "method_reference_not_performance",
+      "references": [
+        {
+          "source_id": "market_calendars",
+          "path": "README.rst"
+        }
+      ]
+    },
+    {
+      "note_id": "point_in_time",
+      "title": "Availability matters as much as event time",
+      "kind": "validation",
+      "strategies": [
+        "all"
+      ],
+      "topics": [
+        "data",
+        "leakage"
+      ],
+      "priority": 10,
+      "summary": "Track when information occurred and when the system could observe it. Preserve original provider, corporate-action convention, revisions and universe membership.",
+      "limitation": "A historical timestamp alone does not prove contemporaneous availability. Missing archived revisions or delisted instruments remain coverage limitations.",
+      "evidence_status": "method_reference_not_performance",
+      "references": [
+        {
+          "source_id": "quant_research_skill",
+          "path": "references/data-contract.md"
+        }
+      ]
+    },
+    {
+      "note_id": "walk_forward",
+      "title": "Evaluate later dates after earlier dates",
+      "kind": "validation",
+      "strategies": [
+        "all"
+      ],
+      "topics": [
+        "validation",
+        "splits"
+      ],
+      "priority": 20,
+      "summary": "Use chronological training and later test windows. Keep transformations and parameter selection inside the training period, then record each untouched test period.",
+      "limitation": "Portfolio cross-validation examples need adaptation to event-time scanner data. Split creation is not a performance test or proof of statistical independence.",
+      "evidence_status": "method_reference_not_performance",
+      "references": [
+        {
+          "source_id": "skfolio",
+          "path": "docs/user_guide/model_selection.rst"
+        }
+      ]
+    },
+    {
+      "note_id": "label_purging",
+      "title": "Remove labels that were not known in time",
+      "kind": "validation",
+      "strategies": [
+        "all"
+      ],
+      "topics": [
+        "validation",
+        "leakage"
+      ],
+      "priority": 21,
+      "summary": "Exclude training labels whose outcome horizon overlaps the test decision or whose result arrived too late. Keep same-session groups together and declare any gap.",
+      "limitation": "A fixed row gap can miss delayed labels. The new local auditor checks outcome bounds and receipt clocks; its configured gap counts observed dates.",
+      "evidence_status": "method_reference_not_performance",
+      "references": [
+        {
+          "source_id": "skfolio",
+          "path": "docs/user_guide/model_selection.rst"
+        }
+      ]
+    },
+    {
+      "note_id": "future_sentinel",
+      "title": "Check whether future rows change old features",
+      "kind": "validation",
+      "strategies": [
+        "all"
+      ],
+      "topics": [
+        "leakage",
+        "testing"
+      ],
+      "priority": 22,
+      "summary": "Compare a historical feature snapshot with and without data unavailable at that time. Whole-sample averages, negative shifts and revised inputs deserve explicit checks.",
+      "limitation": "A passing comparison covers only exercised signals and inputs. Multi-asset coupling can require a joint-universe test; this is not a complete leakage certificate.",
+      "evidence_status": "method_reference_not_performance",
+      "references": [
+        {
+          "source_id": "freqtrade",
+          "path": "docs/lookahead-analysis.md"
+        }
+      ]
+    },
+    {
+      "note_id": "signal_fill",
+      "title": "Separate the signal clock from the fill clock",
+      "kind": "method",
+      "strategies": [
+        "all"
+      ],
+      "topics": [
+        "execution",
+        "costs"
+      ],
+      "priority": 30,
+      "summary": "Specify when a completed signal becomes available and what later observable price can support a simulated fill. Record conflicts when a bar touches both stop and target.",
+      "limitation": "A next-open OHLC proxy is not a quote-backed broker fill. Retain the scanner's quote-quality and unresolved-exit policies rather than import another engine's assumptions.",
+      "evidence_status": "method_reference_not_performance",
+      "references": [
+        {
+          "source_id": "alpaca_skills",
+          "path": "skills/trading-api/backtest/SKILL.md"
+        }
+      ]
+    },
+    {
+      "note_id": "feed_costs",
+      "title": "Compare results under the same feed and costs",
+      "kind": "method",
+      "strategies": [
+        "all"
+      ],
+      "topics": [
+        "execution",
+        "costs",
+        "data"
+      ],
+      "priority": 31,
+      "summary": "Bind each experiment to its feed, adjustment mode, commissions, spread, slippage and FX assumptions. Preserve these with the raw-input fingerprint.",
+      "limitation": "A broker-specific fee or fill example cannot establish actual Trading 212 execution costs. Existing simulated outcomes retain their original assumptions.",
+      "evidence_status": "method_reference_not_performance",
+      "references": [
+        {
+          "source_id": "alpaca_skills",
+          "path": "skills/trading-api/backtest/SKILL.md"
+        }
+      ]
+    },
+    {
+      "note_id": "dependent_trials",
+      "title": "Many setups can represent very few sessions",
+      "kind": "validation",
+      "strategies": [
+        "all"
+      ],
+      "topics": [
+        "validation",
+        "uncertainty"
+      ],
+      "priority": 23,
+      "summary": "Record every tried variant and assess dependence by session and shared exposure. Keep rejected, unfilled and unresolved cases visible alongside closed outcomes.",
+      "limitation": "Repeated alerts on the same stock/day are correlated. More research notes or case rows do not create independent observations, calibrated confidence or proven returns.",
+      "evidence_status": "method_reference_not_performance",
+      "references": [
+        {
+          "source_id": "quant_research_skill",
+          "path": "references/statistical-validation.md"
+        }
+      ]
+    }
+  ],
+  "execution_policy": "reference_only_no_external_code_execution",
+  "trade_authorized": false,
+  "model_calls": 0
+}
