@@ -1,5 +1,5 @@
 name: Read-only quote feed audit
-# Includes MTCH's gap rejection and historical windows now beyond the delay limit.
+# One bounded current-access probe; historical evidence is not rewritten.
 on:
   push:
     branches: [main]
@@ -18,15 +18,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: 75446426e5cd66dba6f0c6b18e1ff8a7924acd14
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Compare reference quotes with available consolidated data
+      - name: Record SIP permission code without provider message text
         env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
-        run: python scripts/audit_nov11_quote_feed.py
+        run: |
+          python - <<'PY'
+          import json, os, runpy, urllib.request
+          from pathlib import Path
+          from datetime import datetime, timezone
+          assert not any(os.environ.get(k) for k in ('OPENAI_API_KEY', 'OPEN_API_KEY', 'TELEGRAM_BOT_TOKEN', 'GH_BUDGET_TOKEN'))
+          audit = runpy.run_path('scripts/audit_nov11_quote_feed.py')
+          headers = {'APCA-API-KEY-ID': os.environ['ALPACA_API_KEY'], 'APCA-API-SECRET-KEY': os.environ['ALPACA_API_SECRET']}
+          opener = urllib.request.build_opener(audit['NoRedirect'])
+          result = audit['get']('quotes/latest', {'symbols': 'SPY,BROS', 'feed': 'sip', 'currency': 'USD'}, opener, headers)
+          result.pop('data', None)
+          report = {'schema_version': 'sip-access-audit-v1', 'as_of': datetime.now(timezone.utc).isoformat(), 'feed': 'sip', 'requests': 1, 'result': result, 'model_calls': 0, 'strategy_input': False, 'trade_authorized': False, 'note': 'Only safe numeric provider code and subscription-word flag are retained. No raw provider message, subscription change, trading quote substitution or historical rewrite.'}
+          output = Path('artifacts/quote-feed-audit.json')
+          output.parent.mkdir(parents=True, exist_ok=True)
+          output.write_text(json.dumps(report, indent=2)+'\n')
+          print(json.dumps(report))
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
