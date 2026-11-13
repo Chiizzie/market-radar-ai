@@ -6316,6 +6316,12 @@
       "reserved": 9203,
       "usage": null
     },
+    "paper-final-v1:7f0c4b77a5adcd65106b0c0062587be3243adee11c58ee85cad9cc107aa7251f:risk_manager": {
+      "actual": null,
+      "day": "2026-11-13",
+      "reserved": 9360,
+      "usage": null
+    },
     "paper-final-v1:7f0c4b77a5adcd65106b0c0062587be3243adee11c58ee85cad9cc107aa7251f:technical_analyst": {
       "actual": null,
       "day": "2026-11-13",
