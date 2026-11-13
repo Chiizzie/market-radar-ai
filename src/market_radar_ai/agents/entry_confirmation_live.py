@@ -190,15 +190,46 @@ class EntryExperiment:
         return report
 
 
+def run_phase(worker, *, mode, duration, prepare_inputs, observer_factory,
+              monotonic=time.monotonic, sleep=time.sleep):
+    """Only the short enrol phase needs a workflow lock. Observers never enrol.
+
+    Overlapping observers read the same ordered immutable source and preserve
+    the first frozen cohort. Their independent quotes retain actual receipts.
+    """
+    if mode not in ('combined', 'enrol', 'observe') or not 1 <= duration <= 360:
+        raise ValueError('bounded_entry_phase_required')
+    start = monotonic()
+    worker.sync()
+    worker.health['startup_seconds'] = round(monotonic()-start,3)
+    if mode != 'observe':
+        inputs, failures, capture_sha = prepare_inputs()
+        worker.enrol(inputs, capture_sha=capture_sha, source_failures=failures)
+    if mode != 'enrol':
+        observer = observer_factory()
+        end = monotonic()+duration
+        while monotonic() < end:
+            tick = monotonic()
+            worker.poll(observer)
+            (worker.root/'worker-health.json').write_text(canonical(worker.health)+'\n')
+            remaining = end-monotonic()
+            if remaining>0:
+                sleep(min(remaining,max(.1,5-(monotonic()-tick))))
+    return worker.close()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for key in ('capture','news','history'):
-        parser.add_argument('--'+key, type=Path, required=True)
+        parser.add_argument('--'+key, type=Path)
+    parser.add_argument('--mode', choices=('combined','enrol','observe'), default='combined')
     parser.add_argument('--output', type=Path, default=Path('artifacts/entry-confirmation'))
     parser.add_argument('--duration', type=int, default=330)
     a = parser.parse_args()
     if not 1 <= a.duration <= 360:
         raise ValueError('bounded_entry_duration')
+    if a.mode != 'observe' and any(getattr(a,k) is None for k in ('capture','news','history')):
+        parser.error('capture, news and history are required for enrolment')
     if any(os.environ.get(k) for k in ('OPENAI_API_KEY','OPEN_API_KEY','TELEGRAM_BOT_TOKEN',
                                        'GH_PAPER_TOKEN','GH_BUDGET_TOKEN')):
         raise ValueError('unneeded_credentials_forbidden')
@@ -212,24 +243,14 @@ def main():
         if path.stat().st_size > limit:
             raise ValueError('entry_input_capacity')
         return json.loads(path.read_text())
-    capture, news = read(a.capture,12_000_000), read(a.news,8_000_000)
-    cache = read(a.history,6_000_000) if a.history.is_file() else {}
+    def prepare_inputs():
+        capture, news = read(a.capture,12_000_000), read(a.news,8_000_000)
+        cache = read(a.history,6_000_000) if a.history.is_file() else {}
+        inputs, failures = prepare(capture,news,cache,env=os.environ,clock=clock)
+        return inputs, failures, digest(capture)
     worker = EntryExperiment(a.output, client=EventClient(os.environ.get('REVIEW_INGEST_SECRET')), clock=clock)
-    start = time.monotonic()
-    worker.sync()
-    worker.health['startup_seconds'] = round(time.monotonic()-start,3)
-    inputs, failures = prepare(capture,news,cache,env=os.environ,clock=clock)
-    worker.enrol(inputs,capture_sha=digest(capture),source_failures=failures)
-    observer = StrategyObserver(os.environ,clock=clock)
-    end = time.monotonic()+a.duration
-    while time.monotonic() < end:
-        tick = time.monotonic()
-        worker.poll(observer)
-        (a.output/'worker-health.json').write_text(canonical(worker.health)+'\n')
-        remaining = end-time.monotonic()
-        if remaining>0:
-            time.sleep(min(remaining,max(.1,5-(time.monotonic()-tick))))
-    report = worker.close()
+    report = run_phase(worker, mode=a.mode, duration=a.duration, prepare_inputs=prepare_inputs,
+                       observer_factory=lambda: StrategyObserver(os.environ,clock=clock))
     print(json.dumps({'state':'entry_confirmation_published','protocol_id':PROTOCOL_ID,
                       'phase':report['phase'],'cohorts':report['cohort_count'],
                       'polls':worker.health['polls'],'error_polls':worker.health['error_polls'],
