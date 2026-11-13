@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 81cced2458813dc0426c71f20da3f85d52a7fa3f
+          ref: 5ca5ffe1354729ddbbb735f8055fd0d50656f6d0
           persist-credentials: false
       - name: Enforce Dublin operating hours before provider calls
         id: window
@@ -156,7 +156,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.review_window.outputs.run == 'true'
         with:
-          ref: 81cced2458813dc0426c71f20da3f85d52a7fa3f
+          ref: 5ca5ffe1354729ddbbb735f8055fd0d50656f6d0
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.review_window.outputs.run == 'true'
@@ -179,6 +179,7 @@ jobs:
           python -m market_radar_ai.agents.scheduled_review --capture artifacts/scheduled/fresh-all-reference-capture.json --evidence artifacts/scheduled/news.json --output artifacts/decision
         env:
           SCHEDULED_REVIEW_MODE: paid
+          AI_BUDGET_ARCHIVE_WRITES: 'true'
           OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
           PAPER_FINAL_VERDICTS: 'true'
           PAPER_COMPARISON_ENABLED: 'true'
@@ -312,7 +313,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 81cced2458813dc0426c71f20da3f85d52a7fa3f
+          ref: 5ca5ffe1354729ddbbb735f8055fd0d50656f6d0
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -327,6 +328,12 @@ jobs:
         run: python -m market_radar_ai.agents.comparison_watcher --duration 330
         env:
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+      - name: Compare IEX and SIP quote coverage without changing observations
+        if: always() && steps.window.outputs.run == 'true' && hashFiles('artifacts/paper-watcher/comparison/worker-health.json') != ''
+        run: python -m market_radar_ai.market_data.quote_source_audit --health artifacts/paper-watcher/comparison/worker-health.json --output artifacts/paper-watcher/comparison/quote-source-report.json
+        env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
       - uses: actions/upload-artifact@v4
