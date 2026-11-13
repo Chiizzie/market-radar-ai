@@ -1,0 +1,42 @@
+{
+  "profile_id": "31cb0c3f4bbcd52fe1c4cf62b4b72fc9113d1ef1368befb4b141c9d00b488b5b",
+  "schema_version": "manual-execution-research-profile-v1",
+  "recorded_at": "2026-11-13T23:21:03.603Z",
+  "source": "User supplied paper capital, daily loss ceiling and manual response range on 13 November 2026.",
+  "status": "offline_test_profile_not_deployed",
+  "currency": "EUR",
+  "timezone": "Europe/Dublin",
+  "account_scope": "trading212_invest",
+  "initial_capital_eur": "1000",
+  "maximum_daily_loss_eur": "50",
+  "maximum_trade_risk_eur": "20",
+  "maximum_combined_open_risk_eur": "40",
+  "maximum_allocation_eur": "500",
+  "maximum_positions": 3,
+  "availability": "all_existing_permitted_trading_hours",
+  "response_range_seconds": {
+    "minimum": 60,
+    "maximum": 300
+  },
+  "tested_response_delays_seconds": [
+    60,
+    180,
+    300
+  ],
+  "primary_response_delay_seconds": 300,
+  "primary_delay_rationale": "Conservative engineering choice within the user's stated range; no probability distribution assumed.",
+  "last_entry_local_time": "22:00",
+  "weekdays_only": true,
+  "intraday_only": true,
+  "entry_expiry_policy": "Preserve original expiry; no extension or use of quotes observed before readiness.",
+  "exit_buffer_seconds": 30,
+  "maximum_quote_age_seconds": 60,
+  "daily_loss_policy": "max(0, -today_net_realized_pnl) + risk_reserved_for_pending_open_and_unresolved_positions + proposed_risk <= 50",
+  "daily_loss_day": "Europe/Dublin calendar date",
+  "daily_halt_policy": "Persist a halt once net realized loss reaches 50; no new admissions for the rest of that Dublin date.",
+  "scope_boundary": "Additional offline gates only. Existing source, eligibility, pricing, spread, sizing, session, duplicate-symbol and exit checks still apply.",
+  "cost_basis": "Declared research cost assumptions until actual broker fee/FX records are reconciled; missing risk components are unknown.",
+  "trade_authorized": false,
+  "runtime_changed": false,
+  "new_model_calls": 0
+}
