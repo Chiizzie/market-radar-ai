@@ -11,7 +11,7 @@ def row(*, fx='0.9', net='-90.15', fees=None):
         'quantity': '1', 'price_native': '100', 'net_eur': net,
         'cost_evidence': extract({'currency': 'EUR', 'fxRate': fx,
             'taxes': fees if fees is not None else [{'name': 'CURRENCY_CONVERSION_FEE',
-                'currency': 'EUR', 'quantity': '0.15', 'chargedAt': NOW.isoformat()}]})}}
+                'currency': 'EUR', 'quantity': '-0.15', 'chargedAt': NOW.isoformat()}]})}}
 
 
 def test_collect_retains_private_fx_fees_and_origin_without_changing_net():
@@ -39,7 +39,7 @@ def test_missing_fee_array_is_not_an_explicit_zero_charge():
     assert reconcile(r) == 'matched'
 
 
-@pytest.mark.parametrize('net', ['-90.15', '-111.26'])
+@pytest.mark.parametrize('net', ['-90.15', '-111.26', '90.15', '111.26'])
 def test_cash_arithmetic_can_match_either_fx_direction_but_not_double_count_fees(net):
     r = row(net=net)
     original = deepcopy(r)
@@ -60,7 +60,7 @@ def test_currency_side_ambiguity_and_non_trade_are_explicit():
 
 
 @pytest.mark.parametrize('change,expected', [
-    ({'currency': 'USD'}, 'unsupported'), ({'quantity': '-0.15'}, 'unsupported'),
+    ({'currency': 'USD'}, 'unsupported'), ({'quantity': '0.15'}, 'unsupported'),
     ({'quantity': None}, 'incomplete'), ({'name': None}, 'incomplete'),
 ])
 def test_unsupported_or_incomplete_fee_data_never_passes(change, expected):
@@ -77,3 +77,23 @@ def test_unsupported_or_incomplete_fee_data_never_passes(change, expected):
 def test_malformed_source_fields_fail_without_becoming_zero(wallet):
     with pytest.raises((ValueError, ArithmeticError)):
         extract(wallet)
+
+
+def test_buy_magnitude_and_sell_cash_use_signed_deductions_without_mutation():
+    buy = row(fx='2', net='50.15')
+    sell = row(fx='2', net='49.85')
+    sell['order']['side'] = 'SELL'
+    sell['fill']['quantity'] = '-1'
+    original = deepcopy([buy, sell])
+    assert [reconcile(r) for r in [buy, sell]] == ['matched', 'matched']
+    assert [buy, sell] == original
+    sell['fill']['net_eur'] = '-49.85'
+    assert reconcile(sell) == 'unsupported'
+
+
+def test_mixed_fee_signs_are_not_silently_netted_as_known_charges():
+    r = row()
+    fee = deepcopy(r['fill']['cost_evidence']['fees'][0])
+    fee['quantity'] = '0.15'
+    r['fill']['cost_evidence']['fees'].append(fee)
+    assert reconcile(r) == 'unsupported'

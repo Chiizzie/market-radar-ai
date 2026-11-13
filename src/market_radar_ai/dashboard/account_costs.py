@@ -67,8 +67,11 @@ def extract(wallet):
 def reconcile(row):
     """Check net cash arithmetic, not execution spread, P/L or fee completeness.
 
-    FX direction is inferred only if one of multiply/divide fits the recorded
-    net cash within EUR0.02. This is not a claimed broker formula or new fee model.
+    Trading 212's observed fee entries are signed cash deductions, while
+    netValue is a positive magnitude for both buys and sells. Infer cash
+    direction from side without changing either stored field. A negative BUY
+    net value is also supported; a negative SELL or positive fee is unresolved.
+    FX direction must uniquely fit within EUR0.02. This is not a full cost model.
     """
     fill, order = row.get('fill'), row['order']
     if fill is None or fill['type'] != 'TRADE':
@@ -82,24 +85,25 @@ def reconcile(row):
     if any(v is None for v in fields):
         return 'incomplete'
     q, price, net = map(Decimal, fields)
-    if q == 0 or price <= 0:
+    if q == 0 or price <= 0 or (order['side'] == 'SELL' and net < 0):
         return 'unsupported'
+    net_cash = -abs(net) if order['side'] == 'BUY' else net
     fees = Decimal(0)
     for fee in evidence['fees']:
         if fee['quantity'] is None or fee['currency'] is None or fee['name'] is None:
             return 'incomplete'
-        if fee['currency'] != 'EUR' or Decimal(fee['quantity']) < 0:
+        if fee['currency'] != 'EUR' or Decimal(fee['quantity']) > 0:
             return 'unsupported'
         fees += Decimal(fee['quantity'])
     gross = abs(q) * price * (1 if order['side'] == 'SELL' else -1)
     if order['currency'] == 'EUR':
-        estimates = [gross - fees]
+        estimates = [gross + fees]
     else:
         if evidence['fx_rate'] is None:
             return 'incomplete'
         fx = Decimal(evidence['fx_rate'])
-        estimates = [gross * fx - fees, gross / fx - fees]
-    matches = sum(abs(value - net) <= TOLERANCE for value in estimates)
+        estimates = [gross * fx + fees, gross / fx + fees]
+    matches = sum(abs(value - net_cash) <= TOLERANCE for value in estimates)
     return 'matched' if matches == 1 else 'ambiguous_fx' if matches > 1 else 'unreconciled'
 
 

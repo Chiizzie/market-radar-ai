@@ -24,7 +24,7 @@ This is **timing and price feasibility only**. It does not create paper fills, e
 
 The existing read-only Invest collector now retains `initiatedFrom`, `walletImpact.fxRate` and each itemized fee's name, currency, amount and charge time. It preserves absent fees as null and an explicit empty list as empty. Net cash and realised P/L are not recalculated or overwritten. All records remain in the owner-bound private account snapshot, under the existing signed ingestion and access controls.
 
-A private arithmetic diagnostic compares reported net cash with gross native value, itemized EUR fees and each possible FX orientation using a declared EUR0.02 tolerance. Outcomes are matched, ambiguous, unreconciled, incomplete, unsupported or non-trade. Both directions matching remains ambiguous. Negative or foreign-currency fee entries are retained but excluded from this diagnostic.
+A private arithmetic diagnostic compares reported net cash with gross native value, itemized EUR fees and each possible FX orientation using a declared EUR0.02 tolerance. The live read-only import established that fee entries are signed negative deductions and `netValue` is a positive magnitude for both buys and sells in the observed records. The diagnostic derives cash direction from order side while preserving every stored value. A signed negative BUY net value is also accepted. Positive fee entries, mixed signs, a negative SELL net value or foreign-currency fees remain unsupported and retained. Outcomes are matched, ambiguous, unreconciled, incomplete, unsupported or non-trade. Both FX directions matching remains ambiguous.
 
 Matching cash arithmetic does **not** establish the broker's full fee formula, spread, slippage or complete round-trip cost. Existing cost scenarios remain assumptions. The diagnostic is intended to identify usable records and unresolved semantics before calibration.
 
@@ -34,7 +34,7 @@ Sources reviewed: [Trading 212 historical order schema](https://docs.trading212.
 
 The runtime is built from the exact current collector/reviewer source `208f4bf5f9f1f403fb977075f0ea33912f4463b0`, adding only the relevant files. The previous research branch's unrelated strategy changes are not promoted. The private importer and its immediate dependencies matched the deployed account source before the change.
 
-Local full suite: **1,669 passed**. Targeted checks cover null versus empty fees, currency/sign/FX ambiguity, unchanged net cash, original expiry, fresh post-response quotes, stop invalidation, source binding, missing clocks and no notification retry after a recording failure. Hosted verification and rollout receipts are recorded in the main handoff once completed.
+Initial local and hosted full suite: **1,669 passed**. The subsequent fee-sign correction adds positive net-value BUY, signed deduction, negative SELL and mixed-sign boundary checks. Targeted checks also cover null versus empty fees, currency/FX ambiguity, unchanged stored net cash, original expiry, fresh post-response quotes, stop invalidation, source binding, missing clocks and no notification retry after a recording failure. Final verification and rollout receipts are recorded in the main handoff.
 
 Deployment order: validate/publish the backward-compatible dashboard contracts; verify a private read-only account import and a separately signed manual report; then update only the account/reviewer pins and add the isolated no-model audit job. Keep the original collector and other research workers pinned.
 
