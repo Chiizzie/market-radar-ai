@@ -1,0 +1,26 @@
+name: Entry worker isolation verification
+on:
+  push:
+    branches: [fix/reliability-entry-20261113]
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 208f4bf5f9f1f403fb977075f0ea33912f4463b0
+          path: candidate
+          persist-credentials: false
+      - run: cp candidate/deploy/runtime-reliability-scheduled.yml .github/workflows/scheduled-scanner.yml
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[dev,market]'
+      - run: python -m pytest -q
+      - run: python -m compileall -q src tests

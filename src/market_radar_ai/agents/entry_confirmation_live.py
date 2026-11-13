@@ -80,6 +80,11 @@ class EntryExperiment:
                     or p.get('protocol') != PROTOCOL or p['evaluation_day'] != self.day
                     or aware(p['as_of']) != at):
                 raise ValueError('entry_report_identity')
+            # Independent observers retain the last actual enrolment screen.
+            # An observation-only report cannot erase or re-date its blockers.
+            screen = p.get('screen')
+            if screen is not None and (self.screen is None or aware(screen['as_of']) > aware(self.screen['as_of'])):
+                self.screen = screen
         else:
             raise ValueError('entry_event_kind')
         self.seen.add(event['event_id'])

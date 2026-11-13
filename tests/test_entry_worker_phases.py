@@ -38,3 +38,16 @@ def test_workflow_serializes_only_enrolment():
     assert '--mode enrol' in enrol and '--mode observe' not in enrol
     assert '--mode observe' in observe and '--duration 330' in observe
     assert 'TRADING212' not in observe and 'OPENAI' not in observe
+
+
+def test_observer_restart_retains_last_enrolment_screen_without_redating(tmp_path):
+    from test_entry_confirmation import NOW,fixture,Events
+    from datetime import timedelta
+    from market_radar_ai.agents.entry_confirmation_live import EntryExperiment
+    events=Events();first=EntryExperiment(tmp_path/'first',client=events,clock=lambda:NOW)
+    first.enrol([fixture()],capture_sha='a'*64)
+    report=first.close()
+    observer=EntryExperiment(tmp_path/'observer',client=events,clock=lambda:NOW+timedelta(seconds=5))
+    observer.sync()
+    assert observer.screen==report['screen']
+    assert observer.close()['screen']==report['screen']
