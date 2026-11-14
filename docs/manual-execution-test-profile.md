@@ -1,8 +1,10 @@
 # Manual execution test profile — 13 November 2026
 
-Status: **frozen profile and offline risk checks complete; timing checks are now connected to a separate prospective audit. Shared-capital portfolio and daily-halt integration remain outstanding.**
+Status: **frozen profile, timing audit, shared-capital replay and persistent daily-halt implementation complete. Production commissioning is in progress; prospective performance evidence starts 16 November.**
 
-Current rollout: [manual timing and private fee evidence](manual-timing-and-cost-evidence.md), [verification receipt](evidence/manual-evidence-deployment-20261113.json). The timing adapter explicitly assumes response 60/180/300 seconds after Telegram server acknowledgement; it does not claim a human read receipt.
+Shared-account implementation: [account rules and limits](manual-shared-portfolio.md), [deployment receipt](evidence/manual-portfolio-deployment-20261114.json). The profile JSON remains frozen. The following describes the original helper separately from the integrated account engine.
+
+Earlier rollout: [manual timing and private fee evidence](manual-timing-and-cost-evidence.md), [verification receipt](evidence/manual-evidence-deployment-20261113.json). The timing adapter explicitly assumes response 60/180/300 seconds after Telegram server acknowledgement; it does not claim a human read receipt.
 
 Charlie supplied these inputs: EUR1,000 paper capital, EUR50 maximum daily loss, available throughout the trading day, and a response to alerts within 1–5 minutes.
 
@@ -32,7 +34,7 @@ The daily clock is Europe/Dublin. The net loss is measured from that day's start
 
 After EUR40 net realised loss, at most EUR10 of additional planned risk remains if none is already reserved. With EUR20 realised loss and EUR20 reserved, a proposed EUR15 risk is blocked. An observed net loss of EUR50 must latch a halt on new admissions for the rest of the day, including if a later close improves net P/L.
 
-These are limits on admission and planned exposure, not a guarantee that gaps or unknown fills cannot exceed them. The new helper consumes a supplied halt latch; a future replay integration must persist it and reconcile the daily ledger. It does not implement a new account ledger or manage exits.
+These are limits on admission and planned exposure, not a guarantee that gaps or unknown fills cannot exceed them. The original helper consumes a supplied halt latch and does not itself manage a ledger or exits. The separate shared-account engine now reconstructs that latch and the daily ledger from complete signed evidence, checks risk again before fills, and retains unresolved reservations.
 
 ## What the delay checks do
 
@@ -60,6 +62,6 @@ The [offline receipt](evidence/manual-execution-profile-20261113.json) records h
 
 ## Next measurable milestone
 
-The separate timing audit now records acknowledgement-based scenarios; private fee/FX retention and cash arithmetic have been commissioned. Next, connect the profile to a separate shared-capital replay, retaining old portfolios, persisting the daily halt and reserving unresolved exposure. Collect later-day clocks and quotes before reporting usable-entry rates. Reconcile full cost assumptions separately: observed fee arithmetic alone does not measure spread or slippage.
+The separate timing audit now records acknowledgement-based scenarios; private fee/FX retention and cash arithmetic have been commissioned. The separate shared-capital replay now integrates the profile, retains old portfolios, persists the daily halt through full reconstruction, and reserves unresolved exposure. Collect later-day clocks and quotes before reporting usable-entry rates. Reconcile full cost assumptions separately: observed fee arithmetic alone does not measure spread or slippage.
 
-No further input from Charlie is needed for those engineering steps. The initial settings and boundary checks are complete; integration and forward performance evidence remain outstanding.
+No further input from Charlie is needed for those engineering steps. The initial settings, boundary checks and shared-account implementation are complete; commissioning and forward performance evidence remain outstanding.

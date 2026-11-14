@@ -1,6 +1,20 @@
 # Market Radar AI: continue here
 
-Last verified: 13 November 2026 at 23:57 Europe/Dublin. Private fee/FX capture and signed timing-report ingestion succeeded on the final tested runtime. Prospective alert and performance evidence begins 16 November. Refresh actual workflow pins and receipts before editing.
+Last verified: 14 November 2026. Shared manual portfolio source and dashboard checks passed; deployment commissioning is in progress. The newest section supersedes older next-step notes. Refresh actual workflow pins and receipts before editing.
+
+## Shared manual paper account: implemented 14 November
+
+Runtime `2859eee9f35d26dcca5f010a10f9ad187d61f44e` adds a separate `Manual shared paper portfolio` workflow, with its own signed experiment `2080e2e70d7380759e1269d0b5603d6533d4e7ddc079cd354451182dc135a13f`. All existing scheduled-scanner and execution/readiness source pins remain unchanged. This is retrospective reference-quote simulation, not broker paper orders.
+
+Nine alternative EUR1,000 accounts compare 60/180/300-second response against three declared cost assumptions. The primary scenario is EUR conversion / 300 seconds. Shared cash and EUR40 open-risk reservations, EUR20 per-trade risk, EUR500 allocation, three positions, preserved setup expiry and Dublin session/cutoff checks apply at reservation and entry. A EUR50 realised daily loss latches a halt until the next Dublin date even if later closes improve P/L. Missing exits or open quote gaps over 60 seconds retain unresolved exposure and block new entries. Complete source/ledger recovery must reproduce the report before every publication.
+
+Prospective evidence begins **16 November 2026**. A Telegram acknowledgement is not human/device receipt; costs and fillability remain assumptions. The daily limit does not guarantee that gap losses cannot exceed EUR50. Original cost assumptions expire **8 December**. No paid model calls, extra messages or broker orders are introduced. Existing historical portfolios stay separate.
+
+Hosted verification: **1,703 backend tests and compilation** ([run 43534968745](https://github.com/Chiizzie/market-radar-ai/actions/runs/43534968745)); **770 dashboard tests and production build** ([run 43534998932](https://github.com/Chiizzie/pixel-perfect-replay-32614/actions/runs/43534998932)). Dashboard source `ebed71e30aa8a8292a176168e10ab92c3a7b0e2c` adds an authenticated **Your manual paper simulation** panel to Performance, with strict ingestion, empty-account validation and sign-out race tests.
+
+Production commissioning is pending. Do not infer a successful publication or a fresh trade from this engineering receipt. See [account rules and limits](manual-shared-portfolio.md), [frozen protocol](manual-portfolio-protocol.json), and [deployment receipt](evidence/manual-portfolio-deployment-20261114.json).
+
+Next: verify the first stored report, then observe later-session manual clocks, quote coverage, unresolved rates and independent outcomes. No further user input is required for commissioning.
 
 ## Manual timing and private cost evidence: deployed 13 November
 

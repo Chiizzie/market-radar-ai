@@ -1,0 +1,56 @@
+{
+  "protocol_id": "2080e2e70d7380759e1269d0b5603d6533d4e7ddc079cd354451182dc135a13f",
+  "protocol": {
+    "version": "manual-shared-portfolio-v1",
+    "since": "2026-11-16",
+    "profile_id": "31cb0c3f4bbcd52fe1c4cf62b4b72fc9113d1ef1368befb4b141c9d00b488b5b",
+    "clock_protocol_id": "b36797c142938dd01cca74855ab641dd51de6d5889d70aba2b780c2725c7cf8c",
+    "source_protocol_id": "eab2d59128f2d320ec2d32e1cd903d2b3d9d17c93f324534c607f640e1b93fd8",
+    "response_delays_seconds": [
+      60,
+      180,
+      300
+    ],
+    "primary_scenario": "eur_conversion:300",
+    "clock_basis": "telegram_server_acknowledgement_not_device_receipt",
+    "risk_timezone": "Europe/Dublin",
+    "cost_model": {
+      "profiles": {
+        "eur_conversion": {
+          "label": "EUR conversion on both legs",
+          "fx_bps": "15",
+          "slippage_bps": "5"
+        },
+        "usd_balance": {
+          "label": "Existing USD balance, no trade conversion",
+          "fx_bps": "0",
+          "slippage_bps": "5"
+        },
+        "stressed": {
+          "label": "EUR conversion, stressed slippage",
+          "fx_bps": "15",
+          "slippage_bps": "20"
+        }
+      },
+      "sec_sale_rate": "0.0000206",
+      "finra_usd_per_share": "0.000195",
+      "fee_schedule_checked": "2026-11-08",
+      "fee_schedule_expires": "2026-12-08",
+      "public_schedule_rechecked": "2026-11-14",
+      "rounding": "each_component_up_to_eur_cent_assumption",
+      "actual_costs_verified": false
+    },
+    "minimum_net_rr": "2",
+    "maximum_spread_bps": "20",
+    "maximum_entry_gap_bps": "20",
+    "maximum_open_quote_gap_seconds": 60,
+    "reservation_policy": "at_durable_alert_and_review_availability_before_manual_response",
+    "sizing": "source_quantity_may_only_decrease_to_20_eur_risk_and_500_eur_allocation",
+    "risk_policy": "realized_daily_loss_plus_all_reservations_and_proposed_risk_at_most_50",
+    "daily_halt": "latched_until_next_dublin_day_cancel_unfilled_reservations",
+    "unresolved": "retain_capital_and_risk_indefinitely_block_all_new_entries",
+    "entry_recheck": "all_current_risk_and_timing_checks_before_every_fill",
+    "source_order": "global_durable_sequence_clamped_to_receipt_time",
+    "scope": "approved_notified_long_USD_stocks_reference_quote_simulation_only"
+  }
+}

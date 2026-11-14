@@ -1,0 +1,32 @@
+{
+  "version": "manual-portfolio-deployment-v1",
+  "experiment_id": "2080e2e70d7380759e1269d0b5603d6533d4e7ddc079cd354451182dc135a13f",
+  "profile_id": "31cb0c3f4bbcd52fe1c4cf62b4b72fc9113d1ef1368befb4b141c9d00b488b5b",
+  "source_commit": "2859eee9f35d26dcca5f010a10f9ad187d61f44e",
+  "prospective_start": "2026-11-16",
+  "scope": "separate shared-capital reference-quote paper replay; no live orders",
+  "paid_model_calls": 0,
+  "extra_notifications": 0,
+  "order_operations": 0,
+  "verification": {
+    "backend_run": 43534968745,
+    "dashboard_run": 43534998932,
+    "backend_tests": 1703,
+    "dashboard_tests": 770,
+    "backend_compile": "passed",
+    "dashboard_build": "passed"
+  },
+  "deployment": {
+    "state": "awaiting_activation"
+  },
+  "limitations": [
+    "Telegram server acknowledgement is not device receipt",
+    "No forward manual-clock trades before 16 November",
+    "Unverified execution-cost/slippage assumptions",
+    "Daily admission limit is not a guaranteed realized-loss cap",
+    "Unresolved exposure retains reservations and blocks new entries",
+    "15-minute retrospective CI replay; scheduling delay possible",
+    "Original cost assumptions expire on 8 December 2026"
+  ],
+  "dashboard_source_commit": "ebed71e30aa8a8292a176168e10ab92c3a7b0e2c"
+}
