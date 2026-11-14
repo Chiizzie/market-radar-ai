@@ -17,7 +17,33 @@
     "dashboard_build": "passed"
   },
   "deployment": {
-    "state": "awaiting_activation"
+    "state": "commissioned",
+    "activation_commit": "7d606a1dffb4d02bee2dad33b65139a1505179d6",
+    "workflow_path": ".github/workflows/manual-portfolio.yml",
+    "workflow_run": 43535313854,
+    "workflow_job": 132262761526,
+    "conclusion": "success",
+    "runtime_commit": "2859eee9f35d26dcca5f010a10f9ad187d61f44e",
+    "restore_verified": true,
+    "artifact": {
+      "id": 14088669096,
+      "name": "manual-portfolio-43535313854",
+      "size_in_bytes": 3312,
+      "url": "https://api.github.com/repos/Chiizzie/market-radar-ai/actions/artifacts/14088669096",
+      "archive_download_url": "https://api.github.com/repos/Chiizzie/market-radar-ai/actions/artifacts/14088669096/zip",
+      "expired": false,
+      "created_at": "2026-11-14T00:36:43Z",
+      "expires_at": "2026-12-14T00:36:42Z",
+      "updated_at": "2026-11-14T00:36:43Z",
+      "digest": "sha256:7a93ee46f57aa15350d0a692036dec27458b885c574ca2b67da56ab9522aa8ed",
+      "workflow_run": {
+        "id": 43535313854,
+        "repository_id": 1442996585,
+        "head_repository_id": 1442996585,
+        "head_branch": "main",
+        "head_sha": "7d606a1dffb4d02bee2dad33b65139a1505179d6"
+      }
+    }
   },
   "limitations": [
     "Telegram server acknowledgement is not device receipt",
@@ -28,5 +54,105 @@
     "15-minute retrospective CI replay; scheduling delay possible",
     "Original cost assumptions expire on 8 December 2026"
   ],
-  "dashboard_source_commit": "ebed71e30aa8a8292a176168e10ab92c3a7b0e2c"
+  "dashboard_source_commit": "ebed71e30aa8a8292a176168e10ab92c3a7b0e2c",
+  "verified_at": "2026-11-14T00:37:00+00:00",
+  "dashboard": {
+    "commit": "ebed71e30aa8a8292a176168e10ab92c3a7b0e2c",
+    "deployment_id": "631eb567-b39e-41e5-bed2-b6de9a3b0513",
+    "url": "https://pixel-perfect-replay-32614.lovable.app/performance",
+    "published_asset": "https://pixel-perfect-replay-32614.lovable.app/assets/performance-Bl1Rqai3.js",
+    "http_status": 200,
+    "panel_marker_found": true,
+    "protocol_marker_found": true,
+    "signed_live_ingestion_verified": true,
+    "visual_browser_review": false
+  },
+  "stored_report": {
+    "clocks": "0",
+    "ledger_sha256": "861fe09f07c2a8e9f47dda95e487c4decba1ffe22b65939ea3c4ccfae3bb1908",
+    "model_calls": "0",
+    "occurred_at": "2026-11-14 00:36:40.539503+00",
+    "received_at": "2026-11-14 00:36:42.357394+00",
+    "scenarios": 9,
+    "seq": 263529,
+    "state": "before_validation_start",
+    "trade_authorized": "false",
+    "as_of": "2026-11-14T00:36:40.539503+00:00",
+    "books": [
+      {
+        "balance_eur": "1000",
+        "closed": 0,
+        "closed_net_pnl_eur": null,
+        "reserved_capital_eur": "0",
+        "scenario": "eur_conversion:60"
+      },
+      {
+        "balance_eur": "1000",
+        "closed": 0,
+        "closed_net_pnl_eur": null,
+        "reserved_capital_eur": "0",
+        "scenario": "eur_conversion:180"
+      },
+      {
+        "balance_eur": "1000",
+        "closed": 0,
+        "closed_net_pnl_eur": null,
+        "reserved_capital_eur": "0",
+        "scenario": "eur_conversion:300"
+      },
+      {
+        "balance_eur": "1000",
+        "closed": 0,
+        "closed_net_pnl_eur": null,
+        "reserved_capital_eur": "0",
+        "scenario": "usd_balance:60"
+      },
+      {
+        "balance_eur": "1000",
+        "closed": 0,
+        "closed_net_pnl_eur": null,
+        "reserved_capital_eur": "0",
+        "scenario": "usd_balance:180"
+      },
+      {
+        "balance_eur": "1000",
+        "closed": 0,
+        "closed_net_pnl_eur": null,
+        "reserved_capital_eur": "0",
+        "scenario": "usd_balance:300"
+      },
+      {
+        "balance_eur": "1000",
+        "closed": 0,
+        "closed_net_pnl_eur": null,
+        "reserved_capital_eur": "0",
+        "scenario": "stressed:60"
+      },
+      {
+        "balance_eur": "1000",
+        "closed": 0,
+        "closed_net_pnl_eur": null,
+        "reserved_capital_eur": "0",
+        "scenario": "stressed:180"
+      },
+      {
+        "balance_eur": "1000",
+        "closed": 0,
+        "closed_net_pnl_eur": null,
+        "reserved_capital_eur": "0",
+        "scenario": "stressed:300"
+      }
+    ],
+    "broker_executable": "false",
+    "costs_verified": "false",
+    "daily_loss_limit_eur": "50",
+    "evaluated_through": "2026-11-14T00:36:40.509509+00:00",
+    "per_trade_risk_eur": "20",
+    "primary_scenario": "eur_conversion:300",
+    "source_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "unchanged_existing_workflows": {
+    "scheduled_scanner_blob": "60f56fc6c899b497ac7e48ba3cbf392b3725abd3",
+    "execution_research_blob": "39056038fe7bb4d9ba87f2c8cdd5515d21870a31"
+  }
 }

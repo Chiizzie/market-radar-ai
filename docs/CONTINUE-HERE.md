@@ -1,6 +1,6 @@
 # Market Radar AI: continue here
 
-Last verified: 14 November 2026. Shared manual portfolio source and dashboard checks passed; deployment commissioning is in progress. The newest section supersedes older next-step notes. Refresh actual workflow pins and receipts before editing.
+Last verified: 14 November 2026 at 00:37 Europe/Dublin. Shared manual portfolio and Performance panel are deployed; the first signed report and complete recovery check succeeded. Prospective evidence begins 16 November. The newest section supersedes older next-step notes. Refresh actual workflow pins and receipts before editing.
 
 ## Shared manual paper account: implemented 14 November
 
@@ -12,9 +12,9 @@ Prospective evidence begins **16 November 2026**. A Telegram acknowledgement is 
 
 Hosted verification: **1,703 backend tests and compilation** ([run 43534968745](https://github.com/Chiizzie/market-radar-ai/actions/runs/43534968745)); **770 dashboard tests and production build** ([run 43534998932](https://github.com/Chiizzie/pixel-perfect-replay-32614/actions/runs/43534998932)). Dashboard source `ebed71e30aa8a8292a176168e10ab92c3a7b0e2c` adds an authenticated **Your manual paper simulation** panel to Performance, with strict ingestion, empty-account validation and sign-out race tests.
 
-Production commissioning is pending. Do not infer a successful publication or a fresh trade from this engineering receipt. See [account rules and limits](manual-shared-portfolio.md), [frozen protocol](manual-portfolio-protocol.json), and [deployment receipt](evidence/manual-portfolio-deployment-20261114.json).
+Production commissioning succeeded in [run 43535313854](https://github.com/Chiizzie/market-radar-ai/actions/runs/43535313854), job 132262761526: exact runtime, full ledger/source restore and signed publication verified; artifact 14088669096 retained for 30 days. Report seq `263529`, as-of `2026-11-14T00:36:40.539503+00:00`, received `00:36:42.357394` Dublin, is correctly `before_validation_start`: zero clocks, nine EUR1,000 balances, zero reservations, no closed results, zero model calls and no execution authorization. The published /performance asset contains the panel and exact protocol, and the live server accepted its strict signed report. This verifies deployment and storage, not market performance; browser visual review was not performed. See [account rules and limits](manual-shared-portfolio.md), [frozen protocol](manual-portfolio-protocol.json), and [deployment receipt](evidence/manual-portfolio-deployment-20261114.json).
 
-Next: verify the first stored report, then observe later-session manual clocks, quote coverage, unresolved rates and independent outcomes. No further user input is required for commissioning.
+Next: observe later-session manual clocks, quote coverage, unresolved rates and independent outcomes. No further input from Charlie is required to begin this frozen paper validation.
 
 ## Manual timing and private cost evidence: deployed 13 November
 
@@ -95,7 +95,7 @@ The user asked to finish the engineering milestones from the earlier chat: revie
 - Collection and comparison runtime: `208f4bf5f9f1f403fb977075f0ea33912f4463b0`. Review, account sync and the manual timing audit: `dbafe2c37e52ecd43fa85f404abd53d069f15995`. Ledger maintenance remains `5ca5ffe1354729ddbbb735f8055fd0d50656f6d0`.
 - Execution/readiness and operations reporting: `839af4f09abc6e7e21daa5bd41c56e587c96b25f`.
 - Strategy runtime: `5002a0e004b89bb9c17895fa6d19d5ce3ed236e6`; entry runtime: `1f777dff0d7ae883cc54e6657a0ece8807c57d09`; method: `889f1a110f9f7ac9d88dbbbc7e9548e8fe00f2c5`; context: `7a518a9b8e8450612a3291e716814c811eba4e67`. Paper watcher remains `3a113a4e8c4e03e9b28799c146db1f1cae6f987a`; account sync uses the manual-evidence runtime above.
-- Dashboard contracts: `a9f8d2436f7e35d10649541c15b326a6a9dff36d`.
+- Dashboard contracts: `ebed71e30aa8a8292a176168e10ab92c3a7b0e2c`; shared manual portfolio runtime: `2859eee9f35d26dcca5f010a10f9ad187d61f44e` in its separate workflow.
 - Earlier reliability runtime deployment: `52a2920c7ffdbc95afe05a60dc5db11e05619b74`. Supplemental quote-permission probe: `a913bb2efd7b2db55fb892bf2d9f22c6d1e8bb8c`.
 - Earlier source CI: [43484084327](https://github.com/Chiizzie/market-radar-ai/actions/runs/43484084327), 1,580 tests plus offline fixtures. Main budget compatibility: 50 tests.
 - Earlier budget deployment verification: [43485677181](https://github.com/Chiizzie/market-radar-ai/actions/runs/43485677181), all eight jobs passed, completed 18:53:11 Dublin.

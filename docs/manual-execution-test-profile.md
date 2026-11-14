@@ -1,6 +1,6 @@
 # Manual execution test profile — 13 November 2026
 
-Status: **frozen profile, timing audit, shared-capital replay and persistent daily-halt implementation complete. Production commissioning is in progress; prospective performance evidence starts 16 November.**
+Status: **frozen profile, timing audit, shared-capital replay and persistent daily-halt implementation complete. Production commissioning succeeded on 14 November; prospective performance evidence starts 16 November.**
 
 Shared-account implementation: [account rules and limits](manual-shared-portfolio.md), [deployment receipt](evidence/manual-portfolio-deployment-20261114.json). The profile JSON remains frozen. The following describes the original helper separately from the integrated account engine.
 
@@ -64,4 +64,4 @@ The [offline receipt](evidence/manual-execution-profile-20261113.json) records h
 
 The separate timing audit now records acknowledgement-based scenarios; private fee/FX retention and cash arithmetic have been commissioned. The separate shared-capital replay now integrates the profile, retains old portfolios, persists the daily halt through full reconstruction, and reserves unresolved exposure. Collect later-day clocks and quotes before reporting usable-entry rates. Reconcile full cost assumptions separately: observed fee arithmetic alone does not measure spread or slippage.
 
-No further input from Charlie is needed for those engineering steps. The initial settings, boundary checks and shared-account implementation are complete; commissioning and forward performance evidence remain outstanding.
+No further input from Charlie is needed for those engineering steps. The initial settings, boundary checks and shared-account implementation are complete; forward performance evidence remains outstanding.
