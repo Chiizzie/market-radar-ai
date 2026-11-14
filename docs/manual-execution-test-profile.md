@@ -1,6 +1,8 @@
 # Manual execution test profile — 13 November 2026
 
-Status: **recorded and checked offline; not deployed into the scheduled scanner**.
+Status: **frozen profile and offline risk checks complete; timing checks are now connected to a separate prospective audit. Shared-capital portfolio and daily-halt integration remain outstanding.**
+
+Current rollout: [manual timing and private fee evidence](manual-timing-and-cost-evidence.md), [verification receipt](evidence/manual-evidence-deployment-20261113.json). The timing adapter explicitly assumes response 60/180/300 seconds after Telegram server acknowledgement; it does not claim a human read receipt.
 
 Charlie supplied these inputs: EUR1,000 paper capital, EUR50 maximum daily loss, available throughout the trading day, and a response to alerts within 1–5 minutes.
 
@@ -46,7 +48,7 @@ New module: `agents/manual_execution_profile.py`. It provides strict profile val
 
 These are additional offline checks. They do not create fills, issue orders, resize a trade, widen a stop or replace eligibility, spread, price-gap, duplicate-symbol, session or exit policies. No network/model/broker code or new dependency was introduced.
 
-**41 targeted tests passed** using synthetic cases. They cover daily loss plus reserved risk, available cash, per-trade and combined limits, retained overnight uncertainty, missing costs, a persisted halt, each delay, exact expiry, stale/future quotes, missing alert receipts, late decisions, Dublin summer time, weekends and profile tampering. The existing production module and workflow remain unchanged; no full-suite or broker-paper performance result is claimed.
+**41 targeted tests passed** using synthetic cases. They cover daily loss plus reserved risk, available cash, per-trade and combined limits, retained overnight uncertainty, missing costs, a persisted halt, each delay, exact expiry, stale/future quotes, missing alert receipts, late decisions, Dublin summer time, weekends and profile tampering. At that initial profile-only milestone, production modules and workflows were unchanged. Subsequent timing/cost integration has separate full-suite and deployment receipts linked above; no broker-paper performance result is claimed.
 
 Reproduce from the source revision recorded in the handoff:
 
@@ -58,6 +60,6 @@ The [offline receipt](evidence/manual-execution-profile-20261113.json) records h
 
 ## Next measurable milestone
 
-Connect this frozen profile to a separate prospective replay, retaining the old portfolios. Before reporting usable-entry rates or cost-adjusted outcomes, obtain an actual alert-receipt clock, persist the daily halt state, reconcile cost assumptions with private Invest fee/FX records, and keep unresolved exposure reserved.
+The separate timing audit now records acknowledgement-based scenarios; private fee/FX retention and cash arithmetic have been commissioned. Next, connect the profile to a separate shared-capital replay, retaining old portfolios, persisting the daily halt and reserving unresolved exposure. Collect later-day clocks and quotes before reporting usable-entry rates. Reconcile full cost assumptions separately: observed fee arithmetic alone does not measure spread or slippage.
 
 No further input from Charlie is needed for those engineering steps. The initial settings and boundary checks are complete; integration and forward performance evidence remain outstanding.

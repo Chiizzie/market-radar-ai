@@ -1,0 +1,69 @@
+{
+  "schema_version": "manual-evidence-deployment-v1",
+  "timezone": "Europe/Dublin",
+  "verified_at": "2026-11-13 23:57:26.90174+00",
+  "scope": "private_cost_capture_and_reference_entry_timing_not_portfolio_execution",
+  "runtime_source": "dbafe2c37e52ecd43fa85f404abd53d069f15995",
+  "runtime_parent": "208f4bf5f9f1f403fb977075f0ea33912f4463b0",
+  "dashboard_source": "a9f8d2436f7e35d10649541c15b326a6a9dff36d",
+  "dashboard_deployment_id": "50c5abaa-920f-4def-b758-a032e0b9c6df",
+  "manual_protocol": "b36797c142938dd01cca74855ab641dd51de6d5889d70aba2b780c2725c7cf8c",
+  "profile_id": "31cb0c3f4bbcd52fe1c4cf62b4b72fc9113d1ef1368befb4b141c9d00b488b5b",
+  "prospective_start": "2026-11-16",
+  "delays_seconds": [
+    60,
+    180,
+    300
+  ],
+  "clock_basis": "telegram_server_acknowledgement_not_device_receipt",
+  "validation": {
+    "local_backend_tests": 1673,
+    "hosted_backend_run": 43530771262,
+    "hosted_backend_job": 132247587558,
+    "dashboard_tests": 750,
+    "dashboard_run": 43529592784,
+    "dashboard_job": 132243687827,
+    "production_build": "passed",
+    "connection_run": 43530798085,
+    "connection_job": 132247678370,
+    "connection_workflow_revision": "659c15b74a6df1384e92a729e36186e35c31229d",
+    "scheduled_config_check": "Only review/account pins, acknowledgement flag and isolated audit job differ"
+  },
+  "private_account": {
+    "generated_at": "2026-11-13 23:57:15.00398+00",
+    "received_at": "2026-11-13 23:57:25.27991+00",
+    "audit_schema": "t212-private-cost-audit-v1",
+    "cost_fields_retained": true,
+    "recorded_trade_cash_arithmetic_reconciled": true,
+    "broker_cost_model_verified": false,
+    "financial_values_or_counts_in_public_receipt": false
+  },
+  "timing_commissioning": {
+    "approved_reviews_without_clock": null,
+    "clocks": 0,
+    "day": "2026-11-13",
+    "model_calls": 0,
+    "occurred_at": "2026-11-13 23:57:25.793295+00",
+    "portfolio_evaluated": false,
+    "received_at": "2026-11-13 23:57:26.90174+00",
+    "schema_version": "manual-alert-audit-v1",
+    "seq": 263528,
+    "source_loaded": false,
+    "state": "before_validation_start"
+  },
+  "new_model_calls": 0,
+  "new_messages": 0,
+  "live_orders": 0,
+  "budgets_changed": false,
+  "limitations": [
+    "No real prospective alert clock yet; collection starts 16 November.",
+    "Telegram acknowledgement is not measured user receipt/read.",
+    "No new shared-capital portfolio, persistent daily halt or P/L replay.",
+    "Fee arithmetic does not validate spread, slippage, full round-trip costs or profitability.",
+    "Existing strategies, histories, guards and other worker pins are preserved."
+  ],
+  "sources": [
+    "https://docs.trading212.com/api/historical-events/orders_1",
+    "https://core.telegram.org/bots/api#sendmessage"
+  ]
+}

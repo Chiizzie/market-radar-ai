@@ -1,6 +1,18 @@
 # Market Radar AI: continue here
 
-Last verified: 13 November 2026; the expanded strategy-routing worker succeeded in the 22:35 scan and reported at 22:36:27 Europe/Dublin. Its 717-case library and pre-validation guard are verified. Active-session coverage and performance remain unverified. Refresh source and production evidence before editing.
+Last verified: 13 November 2026 at 23:57 Europe/Dublin. Private fee/FX capture and signed timing-report ingestion succeeded on the final tested runtime. Prospective alert and performance evidence begins 16 November. Refresh actual workflow pins and receipts before editing.
+
+## Manual timing and private cost evidence: deployed 13 November
+
+Runtime `dbafe2c37e52ecd43fa85f404abd53d069f15995` is based on the exact existing collector/reviewer `208f4bf5f9f1f403fb977075f0ea33912f4463b0`. Only the **review and account-sync** pins move to it; a separate `manual-alert-audit` job uses it. Collector, comparison watcher, paper watcher, strategy/knowledge workers, budgets and histories stay pinned as before. The research branch's unrelated strategy changes are not promoted.
+
+The Invest import now retains fee/FX and order-origin fields privately. Live verification established negative fee deductions and positive BUY/SELL net-value magnitudes; arithmetic derives direction from side without modifying broker values. The corrected import reconciled the observed trade cash arithmetic. Unknown/unsupported fields are retained. This does not verify complete broker costs, spread or slippage. Financial values and counts are excluded from public receipts.
+
+Current stock paper-watch messages gain a separately signed Telegram acknowledgement clock from **16 November 2026**. No human/device read receipt is claimed. The independent report checks fresh reference-quote entry feasibility after 60/180/300 seconds, keeping the original expiry, price/spread/freshness bounds and stop invalidation. It does **not** create fills, evaluate a EUR1,000 shared portfolio, enforce the EUR50 daily halt or claim P/L. No additional messages/models are sent; recording failures never retry delivery.
+
+Final checks: **1,673 backend tests**, **750 dashboard tests**, dashboard production build, signed report ingestion and read-only private import all passed. Dashboard source `a9f8d2436f7e35d10649541c15b326a6a9dff36d` was published; successful live ingestion confirms the new server contracts. Hosted backend [43530771262](https://github.com/Chiizzie/market-radar-ai/actions/runs/43530771262); connection [43530798085](https://github.com/Chiizzie/market-radar-ai/actions/runs/43530798085). Research seq `263528` received 2026-11-13 23:57:26.90174+00: `before_validation_start`, zero clocks, unread source-review count explicitly unknown. This commissions storage, not a real prospective alert or trading result.
+
+See [implementation and limits](manual-timing-and-cost-evidence.md) and [verification receipt](evidence/manual-evidence-deployment-20261113.json). Next: observe qualifying alerts from 16 November and build the separate shared-capital replay with a persistent daily halt, cost assumptions and unresolved-risk reservation. No further user input is needed for those engineering steps.
 
 ## Confirmed manual test profile: 13 November
 
@@ -8,17 +20,17 @@ Charlie supplied **EUR1,000 starting paper capital, EUR50 daily loss ceiling, al
 
 The [test specification](manual-execution-test-profile.md) and [profile JSON](../config/research/manual-execution-20261113.json) preserve EUR20 per-trade risk, the existing EUR40 combined open-risk limit, EUR500 allocation / three reservations, Invest scope, intraday rules and the Dublin 22:00 entry cutoff. Response scenarios are 60/180/300 seconds; 300 is the conservative benchmark, not an assumed probability distribution.
 
-Source revision: [`512ebbfe9fd569b3e48ca5d5bf451c62fee7860f`](https://github.com/Chiizzie/market-radar-ai/commit/512ebbfe9fd569b3e48ca5d5bf451c62fee7860f), branch `research/manual-execution-profile-20261113`. The new module supplies additional **offline** profile/risk/timing gates and 41 passing synthetic boundary tests. It is not integrated into the scheduled scanner or a new fill engine. Existing runtime pins, frozen libraries and portfolio results are unchanged. See [offline receipt](evidence/manual-execution-profile-20261113.json).
+Source revision: [`512ebbfe9fd569b3e48ca5d5bf451c62fee7860f`](https://github.com/Chiizzie/market-radar-ai/commit/512ebbfe9fd569b3e48ca5d5bf451c62fee7860f), branch `research/manual-execution-profile-20261113`. The new module supplies additional **offline** profile/risk/timing gates and 41 passing synthetic boundary tests. That original milestone was offline. Its timing helper is now used by the separate audit above; the risk helper is still awaiting a shared-capital ledger integration. Frozen libraries and existing portfolio results remain unchanged. See [offline receipt](evidence/manual-execution-profile-20261113.json).
 
-The day limit includes net realised loss plus risk reserved for pending/open/unresolved positions. A future integration must persist the daily halt latch, supply dated reconciled state, and use actual alert-receipt evidence. Missing receipt/cost data stays unknown; an expired setup is never extended to accommodate the user's reaction time. The test profile alone does not enforce a live daily stop or establish profitability.
+The day limit includes net realised loss plus risk reserved for pending/open/unresolved positions. A future integration must persist the daily halt latch, supply dated reconciled state, and declare its actual receipt or acknowledgement-proxy assumption. Missing receipt/cost data stays unknown; an expired setup is never extended to accommodate the user's reaction time. The test profile alone does not enforce a live daily stop or establish profitability.
 
-Next: integrate this profile into a separately frozen prospective replay, verify alert-receipt coverage, and reconcile actual Invest fee/FX data. These settings are complete; performance evidence is still pending.
+Next: complete shared-capital replay integration, verify prospective acknowledgement coverage, and validate full execution-cost assumptions. Private fee/FX capture is implemented above. These settings are complete; performance evidence is still pending.
 
 ## Knowledge-first research supplement: 13 November
 
 The user requested more knowledge now, then the inputs needed to improve and build testing later. Added a content-only [primary-source supplement](../knowledge/primary-research-supplement-20261113.json): **12 additional notes / 12 official pages**, 24 notes across both research collections. It is not wired into runtime retrieval or scheduled AI. The existing bank, case libraries, source pins and budgets remain unchanged.
 
-The [requirements brief](knowledge-and-testing-inputs-20261113.md) prioritizes retaining actual Invest fee/FX fields, modelling manual reaction time, verifying historical feed access, and preserving primary catalyst/halt timestamps. The deployed Invest importer already collects fill history; do not request a full CSV or new keys before using that access. Its parser drops `walletImpact.fxRate`, `walletImpact.taxes` and `order.initiatedFrom`. This is a documented future change, not implemented in this content-only turn.
+The [requirements brief](knowledge-and-testing-inputs-20261113.md) prioritizes retaining actual Invest fee/FX fields, modelling manual reaction time, verifying historical feed access, and preserving primary catalyst/halt timestamps. The deployed Invest importer already collects fill history; do not request a full CSV or new keys before using that access. At that content-only milestone its parser dropped `walletImpact.fxRate`, `walletImpact.taxes` and `order.initiatedFrom`. The later manual-evidence rollout above now retains these fields privately.
 
 Those three inputs have now been supplied; use the confirmed manual test profile above. Keep Invest as the initial scope; EUR20 planned per-trade loss, intraday and 22:00 entry cutoff remain. Historical SIP access on this account is unverified: Alpaca's historical FAQ and Paper Only entitlement guidance differ in scope, so a bounded access check should precede any purchase recommendation.
 
@@ -66,11 +78,11 @@ The user asked to finish the engineering milestones from the earlier chat: revie
 - Dashboard source: https://github.com/Chiizzie/pixel-perfect-replay-32614
 - Dashboard: https://pixel-perfect-replay-32614.lovable.app
 - Main workflow: `.github/workflows/scheduled-scanner.yml`; each job has an explicit runtime SHA. Main source is not the deployed runtime and still has pre-existing missing legacy modules.
-- Collection, review and comparison runtime: `208f4bf5f9f1f403fb977075f0ea33912f4463b0`. Ledger maintenance remains `5ca5ffe1354729ddbbb735f8055fd0d50656f6d0`.
+- Collection and comparison runtime: `208f4bf5f9f1f403fb977075f0ea33912f4463b0`. Review, account sync and the manual timing audit: `dbafe2c37e52ecd43fa85f404abd53d069f15995`. Ledger maintenance remains `5ca5ffe1354729ddbbb735f8055fd0d50656f6d0`.
 - Execution/readiness and operations reporting: `839af4f09abc6e7e21daa5bd41c56e587c96b25f`.
-- Strategy runtime: `5002a0e004b89bb9c17895fa6d19d5ce3ed236e6`; entry runtime: `1f777dff0d7ae883cc54e6657a0ece8807c57d09`; method: `889f1a110f9f7ac9d88dbbbc7e9548e8fe00f2c5`; context: `7a518a9b8e8450612a3291e716814c811eba4e67`. Paper watcher/account sync remain `3a113a4e8c4e03e9b28799c146db1f1cae6f987a`.
-- Dashboard contracts: `0210a0133233e0988fb6179c1d7d658d3d1701fb`.
-- Latest runtime deployment: `52a2920c7ffdbc95afe05a60dc5db11e05619b74`. Supplemental quote-permission probe: `a913bb2efd7b2db55fb892bf2d9f22c6d1e8bb8c`.
+- Strategy runtime: `5002a0e004b89bb9c17895fa6d19d5ce3ed236e6`; entry runtime: `1f777dff0d7ae883cc54e6657a0ece8807c57d09`; method: `889f1a110f9f7ac9d88dbbbc7e9548e8fe00f2c5`; context: `7a518a9b8e8450612a3291e716814c811eba4e67`. Paper watcher remains `3a113a4e8c4e03e9b28799c146db1f1cae6f987a`; account sync uses the manual-evidence runtime above.
+- Dashboard contracts: `a9f8d2436f7e35d10649541c15b326a6a9dff36d`.
+- Earlier reliability runtime deployment: `52a2920c7ffdbc95afe05a60dc5db11e05619b74`. Supplemental quote-permission probe: `a913bb2efd7b2db55fb892bf2d9f22c6d1e8bb8c`.
 - Earlier source CI: [43484084327](https://github.com/Chiizzie/market-radar-ai/actions/runs/43484084327), 1,580 tests plus offline fixtures. Main budget compatibility: 50 tests.
 - Earlier budget deployment verification: [43485677181](https://github.com/Chiizzie/market-radar-ai/actions/runs/43485677181), all eight jobs passed, completed 18:53:11 Dublin.
 - Detailed receipts and unresolved limits: [budget rotation and quote feeds](incidents/2026-11-13-budget-rotation-and-quote-feeds.md).
