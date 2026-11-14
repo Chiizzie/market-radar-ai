@@ -1,0 +1,56 @@
+# Replace the runtime placeholder with the exact verified source commit on main.
+name: Manual shared paper portfolio
+on:
+  schedule:
+    # UTC candidates; the job applies the Europe/Dublin weekday window.
+    - cron: '7,22,37,52 7-22 * * 1-5'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/manual-portfolio.yml']
+permissions:
+  contents: read
+concurrency:
+  group: market-radar-ai-manual-portfolio
+  cancel-in-progress: false
+jobs:
+  replay:
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && vars.MANUAL_PORTFOLIO_ENABLED != 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Apply the weekday window or explicit commissioning run
+        id: window
+        run: |
+          python - <<'PY'
+          import os
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          now=datetime.now(ZoneInfo('Europe/Dublin'))
+          allowed=os.environ['GITHUB_EVENT_NAME'] in ('push','workflow_dispatch') or (now.weekday()<5 and 8<=now.hour<23)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('run='+str(allowed).lower()+'\n')
+          PY
+      - uses: actions/checkout@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          ref: __MANUAL_PORTFOLIO_RUNTIME__
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        if: steps.window.outputs.run == 'true'
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e .
+        if: steps.window.outputs.run == 'true'
+      - name: Replay separate accounts and verify complete ledger recovery
+        if: steps.window.outputs.run == 'true'
+        run: python -m market_radar_ai.agents.manual_portfolio --publish
+        env:
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.window.outputs.run == 'true'
+        with:
+          name: manual-portfolio-${{ github.run_id }}
+          path: artifacts/manual-portfolio/
+          retention-days: 30
+          if-no-files-found: error
+

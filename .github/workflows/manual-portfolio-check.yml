@@ -1,0 +1,21 @@
+name: Manual shared portfolio verification
+on:
+  push:
+    branches: [improve/manual-portfolio-20261114]
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[dev,market]'
+      - run: python -m pytest -q
+      - run: python -m compileall -q src tests
+
