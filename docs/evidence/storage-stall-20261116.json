@@ -1,0 +1,102 @@
+{
+  "schema_version": "scanner-storage-incident-v1",
+  "date": "2026-11-16",
+  "timezone": "Europe/Dublin",
+  "scanner_main": "5a38fa098b6961240b90cf104f01c47a42414ee9",
+  "dashboard_source": "ebed71e30aa8a8292a176168e10ab92c3a7b0e2c",
+  "observed_change": "shared_storage_timeouts_from_approximately_20_35",
+  "prior_failures": "quote_quality_gaps_in_comparison_and_one_paper_watcher",
+  "examples": [
+    {
+      "run": 43951305145,
+      "at": "20:35",
+      "failed": [
+        "collect",
+        "account-sync",
+        "comparison-watcher",
+        "entry-confirmation",
+        "method-shadow",
+        "manual-alert-audit"
+      ]
+    },
+    {
+      "run": 43952721305,
+      "job": 133599173712,
+      "error": "storage_timeout",
+      "attempts": 3
+    },
+    {
+      "run": 43952720672,
+      "job": 133599171647,
+      "error": "storage_timeout",
+      "attempts": 3
+    },
+    {
+      "run": 43952720795,
+      "job": 133599171960,
+      "error": "storage_timeout",
+      "attempts": 3
+    }
+  ],
+  "storage_probe": {
+    "source": "58698aeee11312b1a3c814cd8df3c3dde56c41bb",
+    "run": 43954474101,
+    "job": 133605259079,
+    "started_at": "2026-11-16T20:54:12.938741+00:00",
+    "completed_at": "2026-11-16T20:55:29.213373+00:00",
+    "published_app_http_status": 200,
+    "published_app_seconds": 1.084,
+    "signed_reads": [
+      {
+        "after": 9007199254740991,
+        "seconds": 37.592,
+        "attempts": 3,
+        "error": "storage_timeout"
+      },
+      {
+        "after": 318094,
+        "seconds": 37.599,
+        "attempts": 3,
+        "error": "storage_timeout"
+      }
+    ],
+    "model_calls": 0,
+    "notifications_sent": 0,
+    "storage_writes": 0
+  },
+  "database_checks": {
+    "ping_at": "2026-11-16T20:49:48.311256+00:00",
+    "ping": "success",
+    "latest_event_observed": {
+      "seq": 318094,
+      "received_at": "2026-11-16T20:43:16.055895+00:00",
+      "occurred_at": "2026-11-16T20:41:48.367696+00:00"
+    },
+    "activity_snapshot": {
+      "idle_client_connections": 14,
+      "active_queries": 1,
+      "active_query_age_seconds": 0,
+      "observed_lock_waits": 0
+    },
+    "size": {
+      "at": "2026-11-16T20:58:30.459259+00:00",
+      "reported": "778 MB"
+    },
+    "limitations": [
+      "Some database inspection calls returned 504 UNAVAILABLE.",
+      "Size alone does not prove a capacity limit or explain the outage.",
+      "No data-loss conclusion follows from client timeout."
+    ]
+  },
+  "recovery_attempt": {
+    "type": "republish_same_verified_dashboard_revision",
+    "deployment_id": "3ef900b1-8180-48ed-bb3a-924e34df95fb",
+    "initial_status": "pending",
+    "storage_recovery_verified": false
+  },
+  "underlying_cause": "not_yet_established_requires_hosting_runtime_diagnostics",
+  "extra_paid_model_calls": 0,
+  "extra_messages": 0,
+  "order_operations": 0,
+  "trade_authorized": false
+}
