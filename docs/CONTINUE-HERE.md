@@ -1,6 +1,6 @@
 # Market Radar AI: continue here
 
-Last verified: 16 November 2026. Strategy input-capacity repair passed hosted verification; production verification is in progress. The newest section supersedes older next-step notes. Refresh actual workflow pins and receipts before editing.
+Last verified: 16 November 2026 at 15:13 Europe/Dublin. The repaired strategy worker passed the normal 15:10 scan and a separate completed live verification. Automatic paper-account refresh is verified; longer scan observers were still running. The newest section supersedes older next-step notes. Refresh actual workflow pins and receipts before editing.
 
 ## Opening-session error emails: repair 16 November
 
@@ -10,7 +10,7 @@ Routing alone moves from `12e7b42144b693f6ecdb86aac36b04c57c5bb694` to `7b358fb9
 
 The manual paper account had no refresh since its 14 November commissioning report. Its separate workflow now also follows trusted main-scan completions, with the existing timer as fallback. Its runtime, nine alternatives, ledger/risk rules, weekday restrictions and research-only credential remain unchanged. No paid calls, orders or extra messages are introduced.
 
-Production verification is pending. See [incident and repair](incidents/2026-11-16-strategy-routing-input-capacity.md) and [verification receipt](evidence/routing-capacity-repair-20261116.json). Keep the interrupted opening-session evidence; later-data results are still required for performance conclusions.
+Production routing job [133391133394 in scan 43893489530](https://github.com/Chiizzie/market-radar-ai/actions/runs/43893489530/job/133391133394) passed on the exact repaired source: 79 stocks, 474 strategy evaluations, zero missing-source stocks and zero model calls. Separate live verification [43893545990](https://github.com/Chiizzie/market-radar-ai/actions/runs/43893545990) also passed. The longer scan observers were still running at the last check; do not call the entire scan complete. The scan-completion paper trigger succeeded in [43892174663](https://github.com/Chiizzie/market-radar-ai/actions/runs/43892174663), storing fresh nine-account report seq264256 at 15:03:21 Dublin, with zero clocks and no invented outcomes. See [incident and repair](incidents/2026-11-16-strategy-routing-input-capacity.md) and [verification receipt](evidence/routing-capacity-repair-20261116.json). Keep the interrupted opening-session evidence; later-data results are still required for performance conclusions.
 
 ## Shared manual paper account: implemented 14 November
 

@@ -2,7 +2,7 @@
   "version": "routing-input-incident-v1",
   "date": "2026-11-16",
   "timezone": "Europe/Dublin",
-  "state": "hosted_verified_awaiting_production",
+  "state": "repaired_worker_and_paper_refresh_verified",
   "incident": {
     "first_failed_run": 43886450865,
     "first_failure_job": 133366519202,
@@ -34,7 +34,32 @@
     "actual_manifest_reproduced_and_read_exactly": true,
     "all_frozen_strategy_fixtures": "passed",
     "hosted_ci_run": 43891467714,
-    "hosted_ci_conclusion": "success"
+    "hosted_ci_conclusion": "success",
+    "separate_live_run": 43893545990,
+    "separate_live_source_selection_run": 43889064474,
+    "separate_live_scope": "Archived failed selection with fresh bounded reference/history reads, verification artifacts only; no orders, models, alerts or signed ingestion.",
+    "credential_scope": "Existing market/reference API credentials supplied; broker key permissions were not audited. The worker performs read operations only.",
+    "separate_live_conclusion": "success",
+    "separate_live_job": 133390846145,
+    "separate_live_artifact": {
+      "id": 14238965066,
+      "name": "repaired-routing-live-43893545990",
+      "size_in_bytes": 98746,
+      "url": "https://api.github.com/repos/Chiizzie/market-radar-ai/actions/artifacts/14238965066",
+      "archive_download_url": "https://api.github.com/repos/Chiizzie/market-radar-ai/actions/artifacts/14238965066/zip",
+      "expired": false,
+      "created_at": "2026-11-16T15:11:59Z",
+      "expires_at": "2026-12-16T15:11:58Z",
+      "updated_at": "2026-11-16T15:11:59Z",
+      "digest": "sha256:8cedcceb327467c46d493b6bd6fcfbb90ae20bac10acefa87e1fae032e10fac1",
+      "workflow_run": {
+        "id": 43893545990,
+        "repository_id": 1442996585,
+        "head_repository_id": 1442996585,
+        "head_branch": "verify/routing-live-20261116",
+        "head_sha": "42cba3e21f634e42a430921f9fa9e2a7f16d08d9"
+      }
+    }
   },
   "additional_observation": {
     "manual_portfolio_latest_report_seq": 263529,
@@ -48,5 +73,45 @@
     "extra_messages": 0,
     "broker_order_operations": 0
   },
-  "scope": "Operational repair; no performance claim or strategy/risk changes"
+  "scope": "Operational repair; no performance claim or strategy/risk changes",
+  "deployment": {
+    "activation_commit": "23741c91fe1be4325d1f5ddcc2910a47503c1d13",
+    "manual_commission_run": 43891956109,
+    "manual_scan_completion_run": 43892174663,
+    "manual_scan_completion_conclusion": "success",
+    "manual_report": {
+      "clocks": "0",
+      "model_calls": "0",
+      "occurred_at": "2026-11-16 15:03:20.877921+00",
+      "received_at": "2026-11-16 15:03:21.116314+00",
+      "scenarios": 9,
+      "seq": 264256,
+      "state": "no_confirmed_alert_clocks"
+    },
+    "natural_scan_run": 43893489530,
+    "natural_scan_routing_job": 133391133394,
+    "natural_scan_routing_conclusion": "success",
+    "natural_scan_routing_result": {
+      "as_of": "2026-11-16T15:11:23.373212+00:00",
+      "state": "research_prepared",
+      "symbols_evaluated": 79,
+      "strategy_evaluations": 474,
+      "research_pairs": 0,
+      "source_missing_symbols": [],
+      "model_calls": 0,
+      "trade_authorized": false
+    },
+    "natural_scan_routing_artifact": 14238241798,
+    "whole_scan_at_last_job_check": "in_progress; longer observers still running; not claimed wholly successful"
+  },
+  "queue_observation": {
+    "run": 43892582562,
+    "state": "queued_without_jobs_at_2026-11-16T15:10:08+00:00",
+    "later_scan": 43893489530,
+    "later_scan_observed_running": true,
+    "provider_status_checked": "https://www.githubstatus.com/api/v2/summary.json",
+    "github_actions_status": "operational",
+    "scope": "Observed queue delay; no platform-wide outage attribution."
+  },
+  "verified_at": "2026-11-16T15:13:01+00:00"
 }

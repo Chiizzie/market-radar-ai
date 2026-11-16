@@ -48,7 +48,7 @@ Reports retain all counts and balances while showing the latest eight setups and
 
 ## Operation and validation
 
-The separate `Manual shared paper portfolio` workflow runs approximately every 15 minutes on weekdays within 08:00–23:00 Europe/Dublin. Explicit commissioning can run outside that window; prospective admission still starts on 16 November. CI scheduling can be delayed. This is retrospective paper replay, not a continuously hosted order-management service. Only the signed research secret is supplied; no model, broker or Telegram credentials are available to the worker.
+The separate `Manual shared paper portfolio` workflow follows completed main-branch scanner runs on weekdays within 08:00–23:00 Europe/Dublin. An approximately 15-minute timer remains as a fallback. The scan-completion trigger was added on 16 November after the standalone timer produced no fresh report that day; trusted main-branch first attempts only, with existing workflow concurrency. Explicit commissioning can run outside that window; prospective admission still starts on 16 November. CI scheduling can be delayed. This is retrospective paper replay, not a continuously hosted order-management service. See [16 November scheduling verification](incidents/2026-11-16-strategy-routing-input-capacity.md). Only the signed research secret is supplied; no model, broker or Telegram credentials are available to the worker.
 
 The Performance page adds **Your manual paper simulation**, using existing authenticated viewer access. It shows alternative balances, reserved/available cash, daily halts and unresolved exposure. Signing out clears protected cached data, including outstanding requests. Existing research panels and trade gates stay separate.
 
