@@ -1,16 +1,12 @@
 # Market Radar AI: continue here
 
-Last verified: 16 November 2026, evening incident. The shared storage API was still timing out in the independent 20:54–20:55 probe and the normal 20:55 scan. Website HTTP 200 is not data-service health. Same-version dashboard republish was requested but storage recovery is not verified. Current priority is the hosting/data-service stall, not another strategy or notification change. Refresh actual pins, deployment status and receipts before editing.
+Last verified: 16 November 2026, 21:20 Dublin. The shared data API remains unavailable. Hosting controls are now accessible, and PostgreSQL logs confirm statement timeouts while the host's own table/metadata views also fail. One pause/wake recovery request did not establish a restart; automatic approval review blocked a second attempt pending explicit user approval. Do not retry indirectly or claim restored.
 
-## Current incident: shared storage timeouts on 16 November evening
+## Current incident: shared database/service failure
 
-Around 20:35 Dublin, failures spread beyond quote-quality checks into collection delivery, account dashboard delivery, comparison/entry/method observers, manual portfolio, execution/readiness and operational-health reports. Most now fail with `storage_timeout` after three attempts. Multiple jobs share this storage path, producing a cascade of emails.
+The unchanged read-only probe failed again at 21:14–21:15: website HTTP 200, both signed storage reads time out after three attempts. Normal 21:10 scan also failed. No extra model calls, test alerts, orders, upgrades, history changes or strategy changes. Resource panel shows Tiny with no displayed pressure alerts and storage usage unavailable; capacity cause is not proven.
 
-Independent [43954474101](https://github.com/Chiizzie/market-radar-ai/actions/runs/43954474101) proved the website returns HTTP 200 while even a bounded empty signed storage read times out (37.6 seconds / three attempts). It made no model calls, alerts or writes. The 20:55 source scan still failed collection/account sync and skipped dependent review. Database inspection is intermittent; one simple ping and an activity snapshot succeeded, but no underlying capacity or hosting cause is proven.
-
-Requested republish of the unchanged dashboard `ebed71e30aa8a8292a176168e10ab92c3a7b0e2c`, deployment `3ef900b1-8180-48ed-bb3a-924e34df95fb`, initially pending. Do not call it recovered: the subsequent signed-read verification failed. Runtime logs/deployment details are unavailable through the connector, and the browser controls require sign-in. No paid Lovable chat was started.
-
-Read [current incident](incidents/2026-11-16-evening-storage-stall.md) and [exact evidence](evidence/storage-stall-20261116.json). Preserve missing intervals, unknown write outcomes, historical reservations and all trade/quote gates. Obtain hosting/runtime diagnostics, restore and verify the shared data path, then confirm fresh ordinary scan, account and reporting receipts. Earlier stale IEX quote gaps remain a separate issue.
+Read [current incident and recovery approval](incidents/2026-11-16-evening-storage-stall.md) and [exact evidence](evidence/storage-stall-20261116.json). Next: obtain explicit approval for one controlled pause-and-wake attempt, verify the host really resumes, then validate signed storage reads and fresh normal collection/account/report receipts. If the management action cannot complete, project-level provider support is required. Preserve unknown write outcomes, missing quote intervals and historical delivery reservations. The earlier stale IEX quotes remain a separate problem; keep all freshness/risk gates.
 
 ## Further error emails: notification evidence repair 16 November
 

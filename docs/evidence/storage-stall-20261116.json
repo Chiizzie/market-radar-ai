@@ -98,5 +98,99 @@
   "extra_paid_model_calls": 0,
   "extra_messages": 0,
   "order_operations": 0,
-  "trade_authorized": false
+  "trade_authorized": false,
+  "hosting_followup": {
+    "observed_date": "2026-11-16",
+    "timezone": "Europe/Dublin",
+    "authenticated_controls_access": true,
+    "server_logs": "Repeated research-events, snapshot-ingest and account-ingest requests canceled by clients.",
+    "postgres_logs": {
+      "statement_timeouts": true,
+      "examples": [
+        "2026-11-16T20:31:05+00:00",
+        "2026-11-16T21:04:53+00:00"
+      ],
+      "advisory_lock_wait": {
+        "at": "2026-11-16T21:04:47+00:00",
+        "wait_ms": 1267.942
+      },
+      "archive_command_failure_at": "2026-11-16T20:41:08+00:00",
+      "root_cause_not_established": true
+    },
+    "resource_panel": {
+      "instance": "Tiny",
+      "cpu": "Shared",
+      "ram": "Up to 0.5 GB",
+      "region": "Europe (Frankfurt)",
+      "pressure_alerts_last_24h": "None displayed for CPU, memory or disk",
+      "storage_usage": "unavailable",
+      "capacity_cause_proven": false
+    },
+    "database_management": {
+      "table_listing": "Error loading tables and views",
+      "metadata_and_statistics_queries": "504 UNAVAILABLE",
+      "latest_event_observed": {
+        "observed_at": "2026-11-16T21:09:22.629384+00:00",
+        "seq": 318098,
+        "received_at": "2026-11-16T21:04:47.297757+00:00"
+      },
+      "postmaster_started_at": "2026-11-03T19:41:55.979084+00:00",
+      "postmaster_checked_at": "2026-11-16T21:14:33.339104+00:00"
+    },
+    "controlled_restart": {
+      "first_pause_requested_approx": "2026-11-16T21:12:00+00:00",
+      "completion": "unconfirmed",
+      "pause_card_observed": false,
+      "wake_control_observed": false,
+      "second_pause_executed": false,
+      "second_pause_block": "Automatic approval review rejected a repeated production pause because the first completion/wake path was unconfirmed and another pause could prolong disruption.",
+      "current_action": "Await explicit user approval before another pause; do not retry indirectly."
+    },
+    "probe_attempt2": {
+      "run": 43954474101,
+      "job": 133617575833,
+      "schema_version": "storage-recovery-check-v1",
+      "started_at": "2026-11-16T21:14:41.364685+00:00",
+      "model_calls": 0,
+      "notifications_sent": 0,
+      "storage_writes": 0,
+      "trade_authorized": false,
+      "checks": [
+        {
+          "check": "published_app",
+          "http_status": 200,
+          "ok": true,
+          "seconds": 1.138
+        },
+        {
+          "check": "signed_storage_read",
+          "after": 9007199254740991,
+          "ok": false,
+          "error_type": "StorageUnavailable",
+          "code": "storage_timeout",
+          "attempts": 3,
+          "http_status": null,
+          "seconds": 37.598
+        },
+        {
+          "check": "signed_storage_read",
+          "after": 318094,
+          "ok": false,
+          "error_type": "StorageUnavailable",
+          "code": "storage_timeout",
+          "attempts": 3,
+          "http_status": null,
+          "seconds": 37.599
+        }
+      ],
+      "completed_at": "2026-11-16T21:15:57.698887+00:00"
+    },
+    "normal_scan_21_10": {
+      "run": 43957300755,
+      "conclusion": "failure"
+    },
+    "restored": false,
+    "recorded_at": "2026-11-16T21:21:36+00:00",
+    "scanner_main": "4a91d322beba60c735a746bf927d06752a55ee8b"
+  }
 }
