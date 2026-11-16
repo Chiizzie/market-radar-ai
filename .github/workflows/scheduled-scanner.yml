@@ -840,7 +840,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 12e7b42144b693f6ecdb86aac36b04c57c5bb694
+          ref: 7b358fb9fd9d96e8eed77a7a86a605ae82fa453b
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:

@@ -1,6 +1,16 @@
 # Market Radar AI: continue here
 
-Last verified: 14 November 2026 at 00:37 Europe/Dublin. Shared manual portfolio and Performance panel are deployed; the first signed report and complete recovery check succeeded. Prospective evidence begins 16 November. The newest section supersedes older next-step notes. Refresh actual workflow pins and receipts before editing.
+Last verified: 16 November 2026. Strategy input-capacity repair passed hosted verification; production verification is in progress. The newest section supersedes older next-step notes. Refresh actual workflow pins and receipts before editing.
+
+## Opening-session error emails: repair 16 November
+
+Repeated failures beginning 14:30 Dublin come from `strategy-routing`: its catalogue-wide selection file exceeds the old 4 MB guard. The observed file is 4,531,730 bytes / 5,724 symbols. The core collector, review and account-sync jobs passed in the initial three failed scans. This was not a model-budget or broker failure.
+
+Routing alone moves from `12e7b42144b693f6ecdb86aac36b04c57c5bb694` to `7b358fb9fd9d96e8eed77a7a86a605ae82fa453b`. The dedicated bounded manifest reader preserves all original rows and prior observations, validates identity/schema, allows 32 MB with the existing 20,000-symbol ceiling, and leaves all strategy protocols/thresholds and other runtime pins unchanged. Failure artifacts remain available without masking failures. **1,667 tests, compilation, frozen strategy fixtures and exact failed-artifact input replay passed**, including hosted [43891467714](https://github.com/Chiizzie/market-radar-ai/actions/runs/43891467714).
+
+The manual paper account had no refresh since its 14 November commissioning report. Its separate workflow now also follows trusted main-scan completions, with the existing timer as fallback. Its runtime, nine alternatives, ledger/risk rules, weekday restrictions and research-only credential remain unchanged. No paid calls, orders or extra messages are introduced.
+
+Production verification is pending. See [incident and repair](incidents/2026-11-16-strategy-routing-input-capacity.md) and [verification receipt](evidence/routing-capacity-repair-20261116.json). Keep the interrupted opening-session evidence; later-data results are still required for performance conclusions.
 
 ## Shared manual paper account: implemented 14 November
 

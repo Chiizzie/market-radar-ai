@@ -4,6 +4,9 @@ on:
     # UTC candidates; the job applies the Europe/Dublin weekday window.
     - cron: '7,22,37,52 7-22 * * 1-5'
   workflow_dispatch:
+  workflow_run:
+    workflows: ['Scheduled research collection']
+    types: [completed]
   push:
     branches: [main]
     paths: ['.github/workflows/manual-portfolio.yml']
@@ -14,7 +17,16 @@ concurrency:
   cancel-in-progress: false
 jobs:
   replay:
-    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && vars.MANUAL_PORTFOLIO_ENABLED != 'false'
+    # Main-scan completion is the primary trigger; the timer is a fallback.
+    # Never trust a fork/branch run or run unpinned code with the ingest secret.
+    if: >-
+      github.repository == 'Chiizzie/market-radar-ai' &&
+      github.ref == 'refs/heads/main' &&
+      vars.MANUAL_PORTFOLIO_ENABLED != 'false' &&
+      (github.event_name != 'workflow_run' ||
+       (github.event.workflow_run.head_branch == 'main' &&
+        github.event.workflow_run.head_repository.full_name == github.repository &&
+        github.event.workflow_run.run_attempt == 1))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
