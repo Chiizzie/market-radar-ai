@@ -1,0 +1,36 @@
+name: Routing input capacity verification
+on:
+  push:
+    branches: [fix/routing-input-capacity-20261116]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[dev,market]'
+      - run: python -m pytest -q
+      - run: python -m compileall -q src tests scripts/verify_routing_capacity.py
+      - run: python scripts/verify_strategy_routing.py --output artifacts/verification/frozen-routing.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: scheduled-capture-43889064474
+          run-id: 43889064474
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: artifacts/incident-source/
+      - run: python scripts/verify_routing_capacity.py --input-dir artifacts/incident-source --output artifacts/verification/incident-inputs.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: routing-input-verification-${{ github.run_id }}
+          path: artifacts/verification/
+          if-no-files-found: error
+          retention-days: 30

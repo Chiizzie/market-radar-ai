@@ -18,6 +18,36 @@ from .strategy_knowledge import Retriever, summary as library_summary
 from .strategy_pair import prepare as prepare_pair, VALIDATION_START
 from .paper_comparison import aware
 from ..market_data.limits import STOCK_RESEARCH_LIMIT
+from ..market_data.discovery_universe import MAX_SYMBOLS, SYMBOL
+
+# The selection trace covers the whole catalogue, unlike the 80-stock capture.
+# Keep a finite read bound while accommodating 20,000 snapshot/diagnostic rows.
+MANIFEST_MAX_BYTES = 32_000_000
+
+
+def load_manifest(path):
+    if path is None or not path.is_file():
+        return {}
+    with path.open('rb') as stream:
+        raw = stream.read(MANIFEST_MAX_BYTES + 1)
+    if len(raw) > MANIFEST_MAX_BYTES:
+        raise ValueError('routing_manifest_capacity')
+    document = json.loads(raw)
+    if (not isinstance(document, dict)
+            or document.get('schema_version') != 'stock-selection-trace-v1'
+            or document.get('trade_authorized') is not False
+            or not isinstance(document.get('symbols'), list)):
+        raise ValueError('routing_manifest_shape')
+    if len(document['symbols']) > MAX_SYMBOLS:
+        raise ValueError('routing_manifest_symbol_capacity')
+    seen = set()
+    for row in document['symbols']:
+        symbol = row.get('symbol') if isinstance(row, dict) else None
+        if not isinstance(symbol, str) or not SYMBOL.fullmatch(symbol) or symbol in seen:
+            raise ValueError('routing_manifest_symbol_identity')
+        seen.add(symbol)
+    # Preserve every original row, including prior observations for competitors.
+    return document
 
 
 def permitted(now):
@@ -86,13 +116,7 @@ def evaluate_batch(inputs,library,*,now,include_offline=False):
         'note':'Multiple strategies on one stock are overlapping alternatives, not independent positions. No outcomes inferred from qualification.'}
 
 
-def main():
-    p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--capture',type=Path,required=True);p.add_argument('--news',type=Path,required=True)
-    p.add_argument('--discovery',type=Path);p.add_argument('--manifest',type=Path)
-    p.add_argument('--library',type=Path,default=Path('knowledge/strategy-library-20261113.json'))
-    p.add_argument('--output',type=Path,required=True)
-    args=p.parse_args();args.output.mkdir(parents=True,exist_ok=True);now=datetime.now(UTC)
+def run(args, now):
     library=bounded_json(args.library,10_000_000)
     if not permitted(now):
         # Still verify the installed library without market/provider/model access.
@@ -101,12 +125,34 @@ def main():
     else:
         capture=bounded_json(args.capture,4_000_000);feed=bounded_json(args.news,2_000_000)
         discovery=bounded_json(args.discovery,4_000_000) if args.discovery and args.discovery.is_file() else {}
-        manifest=bounded_json(args.manifest,4_000_000) if args.manifest and args.manifest.is_file() else {}
+        manifest=load_manifest(args.manifest)
         sources,at,coverage=collect_inputs(capture,feed,discovery,manifest,env=os.environ,clock=lambda:datetime.now(UTC))
         (args.output/'frozen-inputs.json').write_text(canonical({'as_of':at.isoformat(),'inputs':sources,'coverage':coverage})+'\n')
         result=evaluate_batch(sources,library,now=at);result['coverage']=coverage;result['state']='research_prepared'
         pairs=result.pop('pairs');(args.output/'paired-inputs.json').write_text(canonical(pairs)+'\n')
     (args.output/'report.json').write_text(canonical(result)+'\n')
+    return result
+
+
+def main():
+    p=argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--capture',type=Path,required=True);p.add_argument('--news',type=Path,required=True)
+    p.add_argument('--discovery',type=Path);p.add_argument('--manifest',type=Path)
+    p.add_argument('--library',type=Path,default=Path('knowledge/strategy-library-20261113.json'))
+    p.add_argument('--output',type=Path,required=True)
+    args=p.parse_args();args.output.mkdir(parents=True,exist_ok=True);now=datetime.now(UTC)
+    health={'as_of':now.isoformat(),'routing_protocol_id':PROTOCOL_ID,
+            'model_calls':0,'trade_authorized':False}
+    try:
+        result=run(args,now)
+    except Exception as exc:
+        # Retain a diagnostic artifact even when failure precedes all results.
+        # Raw exception text can contain provider data; details stay in job logs.
+        health.update(state='failed',error_type=type(exc).__name__)
+        (args.output/'health.json').write_text(canonical(health)+'\n')
+        raise
+    health.update(state='completed',result_state=result['state'])
+    (args.output/'health.json').write_text(canonical(health)+'\n')
     print(canonical({k:v for k,v in result.items() if k not in ('rows','library')}))
 
 
