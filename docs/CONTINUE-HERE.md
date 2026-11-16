@@ -1,6 +1,16 @@
 # Market Radar AI: continue here
 
-Last verified: 16 November 2026 at 15:13 Europe/Dublin. The repaired strategy worker passed the normal 15:10 scan and a separate completed live verification. Automatic paper-account refresh is verified; longer scan observers were still running. The newest section supersedes older next-step notes. Refresh actual workflow pins and receipts before editing.
+Last verified: 16 November 2026 at 17:12 Europe/Dublin. Alert delivery repair passed 1,690 hosted tests and a read-only Telegram bot/chat check. Review pin is updated; a normal scheduled send on the repaired source still needs verification. The earlier routing fix holds. Real quote gaps remain visible. The newest section supersedes older next-step notes. Refresh actual workflow pins and receipts before editing.
+
+## Further error emails: notification evidence repair 16 November
+
+The 15:15, 16:45 and 16:55 review runs reached dashboard acknowledgement but raised a generic Telegram error. The old code hid whether rendering, transport, acknowledgement validation or delivery-ledger confirmation failed. Historical alert receipt is unknown; do not retry these reviews, clear reserved notifications or fabricate manual timing clocks.
+
+Only review moves from `dbafe2c37e52ecd43fa85f404abd53d069f15995` to `bb3731f50a77972e547402f5c23e719e201ca973`. The repair preserves completed-review and delivery receipts, records safe failure stages/statuses, distinguishes confirmed Telegram delivery from failed bookkeeping, and allows only one pre-send connection-timeout retry with a renewed expiry check. All ambiguous sends remain non-retryable. Account sync, manual alert audit and every other runtime pin stay unchanged.
+
+Hosted [43915423138](https://github.com/Chiizzie/market-radar-ai/actions/runs/43915423138) passed 1,690 tests and compilation. A read-only bot/chat check returned HTTP 200 for both methods at 17:10:58; it sent no messages and called no models. Two exact failed archives passed offline delivery replay. This establishes current bot/chat access and regression coverage, not historical delivery or future notification success.
+
+Separate observer failures rejected real stale IEX quotes, including recovered gaps of 35–65 seconds and unresolved GERN/RAL gaps in the 16:50 run. Fresh symbols continued independently. Keep quote freshness and the existing 30-second recovery allowance unchanged. The 17:00 whole scan succeeded; intermittent data gaps are not resolved by that result. See [incident and validation](incidents/2026-11-16-alert-delivery-and-quote-gaps.md).
 
 ## Opening-session error emails: repair 16 November
 
