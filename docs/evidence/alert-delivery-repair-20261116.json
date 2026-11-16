@@ -1,0 +1,117 @@
+{
+  "schema_version": "alert-delivery-repair-evidence-v1",
+  "incident_date": "2026-11-16",
+  "timezone": "Europe/Dublin",
+  "source_parent": "dbafe2c37e52ecd43fa85f404abd53d069f15995",
+  "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+  "activation_commit": "bf04048187072279b0372dad897463c9b6c067a3",
+  "changed_runtime_jobs": [
+    "review"
+  ],
+  "local_tests_passed": 1690,
+  "hosted_verification": {
+    "run_id": 43915423138,
+    "offline_job": 133468128926,
+    "tests_passed": 1690,
+    "compilation": "passed",
+    "readonly_job": 133468664452,
+    "telegram_get_me_http_status": 200,
+    "telegram_get_chat_http_status": 200,
+    "model_calls": 0,
+    "notifications_sent": 0
+  },
+  "production_verification": {
+    "run_id": 43916423204,
+    "job_id": 133472504388,
+    "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+    "result": "success",
+    "review_state": "paper_decision_completed",
+    "verdict": "NO_ACTION",
+    "blockers": [
+      "entry_gap_exceeds_20bps",
+      "reference_spread_exceeds_20bps"
+    ],
+    "dashboard": "paper_archive_delivery_confirmed",
+    "telegram": "paper_notification_confirmed",
+    "notification_ledger": "confirmed",
+    "telegram_attempts": 1,
+    "request_started_at": "2026-11-16T17:18:27.836556+00:00",
+    "acknowledged_at": "2026-11-16T17:18:28.357852+00:00",
+    "manual_evidence": "no_stock_watch_clock",
+    "ordinary_scheduled_model_calls": 8,
+    "diagnostic_model_calls": 0,
+    "artifact_id": 14250111675,
+    "artifact_sha256": "5bf626477da0fa9397bbf2b1d020069a3d5e1f53972842c6a31fd847f7488ec4",
+    "other_jobs_at_snapshot": [
+      {
+        "name": "comparison-watcher",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "name": "entry-confirmation",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "name": "paper-watcher",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "account-sync",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "collect",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "method-shadow",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "name": "knowledge-shadow",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "strategy-routing",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "review",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "market-context",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "strategy-experiment",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "name": "entry-enrol",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "historical_failed_delivery_runs": [
+    43894347930,
+    43910970383,
+    43912751179
+  ],
+  "historical_send_root_cause": "not_recoverable_from_old_generic_exception",
+  "historical_notification_reservations": "preserved_no_retry",
+  "quote_gaps": "separate_unresolved_data_quality_limitation_no_threshold_changes",
+  "trade_authorized": false
+}
