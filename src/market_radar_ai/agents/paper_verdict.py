@@ -476,7 +476,19 @@ def run_pipeline(document, feed, *, client, root, refresh, deliver, clock, enabl
         save('paper-tracking.json', tracker.report(now=clock()))
     archive=export_archive(packet,audit,decision)
     save("dashboard-archive.json",archive)
-    receipt=deliver(archive)
+    from ..dashboard.paper_final_delivery import PaperDeliveryError
+    try:
+        receipt=deliver(archive)
+    except Exception as exc:
+        receipt=(exc.receipt if isinstance(exc,PaperDeliveryError) else
+                 {'dashboard':'not_confirmed','telegram':'not_confirmed','trade_authorized':False,
+                  'failure':{'stage':'delivery','reason':'delivery_failed_closed'},
+                  'automatic_paid_retry':False,'notification_retry_allowed':False})
+        save('delivery.json',receipt)
+        save('status.json',{'state':'paper_decision_delivery_failed','model_calls':8,
+             'verdict':decision['verdict'],'trade_authorized':False,'requires_attention':True,
+             'failure':receipt['failure'],'automatic_paid_retry':False})
+        raise
     save('delivery.json',receipt)
     status={'state':'paper_decision_completed','model_calls':8,
             'verdict':decision['verdict'],'trade_authorized':False}

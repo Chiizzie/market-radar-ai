@@ -1,0 +1,44 @@
+name: Alert delivery repair verification
+on:
+  push:
+    branches: [fix/alert-delivery-20261116]
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[dev,market]'
+      - run: python -m pytest -q
+      - run: python -m compileall -q src tests scripts
+  readonly-connectivity:
+    needs: offline
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e .
+      - name: Check current bot and chat access without sending a message
+        run: python scripts/verify_telegram_readonly.py
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: telegram-readonly-${{ github.run_id }}
+          path: artifacts/telegram-readonly.json
+          if-no-files-found: error
+          retention-days: 30
