@@ -1,0 +1,65 @@
+name: Read-only storage recovery check
+on:
+  push:
+    branches: [verify/storage-recovery-20261116]
+permissions:
+  contents: read
+jobs:
+  storage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: bb3731f50a77972e547402f5c23e719e201ca973
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e .
+      - name: Verify published app and signed storage reads without writes
+        env:
+          REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+        run: |
+          python - <<'PY'
+          import json,os,time
+          from datetime import datetime,timezone
+          from pathlib import Path
+          import requests
+          from market_radar_ai.agents.comparison_live import EventClient
+          base='https://pixel-perfect-replay-32614.lovable.app'
+          report={'schema_version':'storage-recovery-check-v1','started_at':datetime.now(timezone.utc).isoformat(),
+                  'model_calls':0,'notifications_sent':0,'storage_writes':0,'trade_authorized':False,'checks':[]}
+          tick=time.monotonic()
+          try:
+              reply=requests.get(base,timeout=(5,12),allow_redirects=False)
+              report['checks'].append({'check':'published_app','http_status':reply.status_code,'ok':reply.status_code==200,
+                  'seconds':round(time.monotonic()-tick,3)})
+          except requests.RequestException as exc:
+              report['checks'].append({'check':'published_app','ok':False,'error_type':type(exc).__name__,
+                  'seconds':round(time.monotonic()-tick,3)})
+          client=EventClient(os.environ['REVIEW_INGEST_SECRET'])
+          for cursor in (9007199254740991,318094):
+              tick=time.monotonic()
+              try:
+                  page=client.read('eab2d59128f2d320ec2d32e1cd903d2b3d9d17c93f324534c607f640e1b93fd8','2026-11-16',cursor)
+                  report['checks'].append({'check':'signed_storage_read','after':cursor,'ok':True,
+                      'events':len(page['events']),'next':page['next'],'seconds':round(time.monotonic()-tick,3)})
+              except Exception as exc:
+                  report['checks'].append({'check':'signed_storage_read','after':cursor,'ok':False,
+                      'error_type':type(exc).__name__,'code':getattr(exc,'diagnostic_code','validation_failure'),
+                      'attempts':getattr(exc,'attempts',None),'http_status':getattr(exc,'http_status',None),
+                      'seconds':round(time.monotonic()-tick,3)})
+          report['completed_at']=datetime.now(timezone.utc).isoformat()
+          path=Path('artifacts/storage-recovery.json');path.parent.mkdir(parents=True,exist_ok=True)
+          path.write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report))
+          raise SystemExit(0 if all(x['ok'] for x in report['checks']) else 1)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: storage-recovery-${{ github.run_id }}
+          path: artifacts/storage-recovery.json
+          if-no-files-found: error
+          retention-days: 30
