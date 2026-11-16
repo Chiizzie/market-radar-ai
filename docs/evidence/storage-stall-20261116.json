@@ -192,5 +192,95 @@
     "restored": false,
     "recorded_at": "2026-11-16T21:21:36+00:00",
     "scanner_main": "4a91d322beba60c735a746bf927d06752a55ee8b"
+  },
+  "approved_recovery_followup": {
+    "recorded_at": "2026-11-16T21:45:00+00:00",
+    "user_approval_received": true,
+    "second_pause_submitted": false,
+    "wake_request_submitted": false,
+    "paused_page_observed_approx": "2026-11-16T21:24:00+00:00",
+    "wake_disabled_reason": "Project can be woken up in a few minutes",
+    "database_query_while_paused": {
+      "error_code": "INVALID_ARGUMENT",
+      "message": "Database is possibly not accessible at the moment"
+    },
+    "management_table_listing_returned_approx": "2026-11-16T21:41:00+00:00",
+    "postmaster_check": {
+      "observed_at": "2026-11-16 21:41:51.646821+00",
+      "started_at": "2026-11-03 19:41:55.979084+00"
+    },
+    "latest_event_query_after_management_recovery": {
+      "error_code": "UNAVAILABLE",
+      "http_status": 504
+    },
+    "completed_restart_established": false,
+    "probe_attempt3": {
+      "run": 43954474101,
+      "job": 133633988979,
+      "conclusion": "failure",
+      "schema_version": "storage-recovery-check-v1",
+      "started_at": "2026-11-16T21:42:17.264186+00:00",
+      "model_calls": 0,
+      "notifications_sent": 0,
+      "storage_writes": 0,
+      "trade_authorized": false,
+      "checks": [
+        {
+          "check": "published_app",
+          "http_status": 200,
+          "ok": true,
+          "seconds": 0.513
+        },
+        {
+          "check": "signed_storage_read",
+          "after": 9007199254740991,
+          "ok": false,
+          "error_type": "StorageUnavailable",
+          "code": "storage_timeout",
+          "attempts": 3,
+          "http_status": null,
+          "seconds": 37.586
+        },
+        {
+          "check": "signed_storage_read",
+          "after": 318094,
+          "ok": false,
+          "error_type": "StorageUnavailable",
+          "code": "storage_timeout",
+          "attempts": 3,
+          "http_status": null,
+          "seconds": 37.603
+        }
+      ],
+      "completed_at": "2026-11-16T21:43:32.967062+00:00"
+    },
+    "normal_scan_21_40": {
+      "run": 43962413493,
+      "failed": [
+        "collect",
+        "account-sync",
+        "comparison-watcher",
+        "manual-alert-audit"
+      ],
+      "entry_confirmation": "session-skipped; not recovery proof"
+    },
+    "renewed_pause": {
+      "attempted_after_user_approval": true,
+      "executed": false,
+      "block": "Automatic approval review rejected a duplicate production database pause because an earlier pause request occurred and repetition risked another outage.",
+      "bypassed": false,
+      "modal_canceled": true
+    },
+    "support": {
+      "draft_path": "docs/incidents/2026-11-16-lovable-support-draft.md",
+      "prepared": true,
+      "sent": false,
+      "requires_separate_send_instruction": true
+    },
+    "data_service_restored": false,
+    "extra_paid_model_calls": 0,
+    "extra_notifications": 0,
+    "order_operations": 0,
+    "runtime_changes": false
   }
 }

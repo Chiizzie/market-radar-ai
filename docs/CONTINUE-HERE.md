@@ -1,12 +1,14 @@
 # Market Radar AI: continue here
 
-Last verified: 16 November 2026, 21:20 Dublin. The shared data API remains unavailable. Hosting controls are now accessible, and PostgreSQL logs confirm statement timeouts while the host's own table/metadata views also fail. One pause/wake recovery request did not establish a restart; automatic approval review blocked a second attempt pending explicit user approval. Do not retry indirectly or claim restored.
+Last verified: 16 November 2026, 21:45 Dublin. The shared data API remains unavailable. The user approved the additional pause/wake recovery; the original operation briefly showed Project paused with Wake up disabled, then the management page returned. PostgreSQL still reports its original start time, and signed reads continue to time out. Automatic approval review blocked the renewed pause as a duplicate despite the user's approval. No second pause was submitted.
 
 ## Current incident: shared database/service failure
 
-The unchanged read-only probe failed again at 21:14–21:15: website HTTP 200, both signed storage reads time out after three attempts. Normal 21:10 scan also failed. No extra model calls, test alerts, orders, upgrades, history changes or strategy changes. Resource panel shows Tiny with no displayed pressure alerts and storage usage unavailable; capacity cause is not proven.
+The unchanged read-only probe [attempt 3](https://github.com/Chiizzie/market-radar-ai/actions/runs/43954474101/job/133633988979) failed again at 21:42–21:43: website HTTP 200, both signed storage reads time out after three attempts. Normal 21:40 collection, account sync, comparison and manual audit also failed. Management-table visibility is not evidence of restored service or a completed restart.
 
-Read [current incident and recovery approval](incidents/2026-11-16-evening-storage-stall.md) and [exact evidence](evidence/storage-stall-20261116.json). Next: obtain explicit approval for one controlled pause-and-wake attempt, verify the host really resumes, then validate signed storage reads and fresh normal collection/account/report receipts. If the management action cannot complete, project-level provider support is required. Preserve unknown write outcomes, missing quote intervals and historical delivery reservations. The earlier stale IEX quotes remain a separate problem; keep all freshness/risk gates.
+Read [current incident](incidents/2026-11-16-evening-storage-stall.md) and [exact evidence](evidence/storage-stall-20261116.json). A [Lovable support report](incidents/2026-11-16-lovable-support-draft.md) is prepared in the authenticated support form, not sent. The next separate approval is permission to send that report; do not re-request the already granted restart approval or bypass the automatic execution block.
+
+Recovery must be followed by successful signed reads and fresh ordinary collection/account/report receipts. Preserve unknown write outcomes, missing quote intervals, unresolved simulated exposure and historical delivery reservations. Earlier stale IEX quotes remain a separate issue. No paid diagnostic models, test alerts, orders, upgrades, runtime changes or history edits occurred; all freshness/risk gates remain intact.
 
 ## Further error emails: notification evidence repair 16 November
 

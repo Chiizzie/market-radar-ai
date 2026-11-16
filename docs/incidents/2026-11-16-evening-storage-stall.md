@@ -1,5 +1,19 @@
 # Evening storage stall — 16 November 2026
 
+## Approved recovery follow-up at 21:45 Dublin — data service still unavailable
+
+The user explicitly approved one further controlled pause-and-wake attempt. At the start of this follow-up, the previously prepared Pause control was disabled: settings said the database was being paused. Around 21:24 the Database page displayed **Project paused** and a disabled **Wake up** button whose explanation was **Project can be woken up in a few minutes**. An ordinary click could not proceed while disabled; no forced click or alternate endpoint was used. The connector returned `Database is possibly not accessible at the moment`. No new pause or wake request was submitted during that state.
+
+By 21:41 the table listing returned and settings again exposed Pause. This was only management-page recovery: at 21:41:51 PostgreSQL still reported start time **2026-11-03 19:41:55.979084+00**, and the subsequent latest-event query returned **504 UNAVAILABLE**. No completed restart is established.
+
+The unchanged independent probe [attempt 3 / job 133633988979](https://github.com/Chiizzie/market-radar-ai/actions/runs/43954474101/job/133633988979) failed from **21:42:17 to 21:43:32**. Website HTTP 200 took 0.513 seconds; the two signed reads timed out after three attempts each, in 37.586 and 37.603 seconds. Zero model calls, notifications, storage writes or orders. Normal [21:40 scan 43962413493](https://github.com/Chiizzie/market-radar-ai/actions/runs/43962413493) also failed collection, account sync, comparison and manual audit. Entry confirmation was session-skipped; its green job does not establish data-service restoration.
+
+Once Pause was available, the approved renewed submission was attempted. **Automatic approval review rejected it before execution**, describing a duplicate production pause after the earlier request and a risk of prolonging disruption. This rejection occurred despite the user's explicit approval; do not imply the user withheld approval. No second pause was submitted, and the confirmation modal was canceled. Do not bypass this block through another interface.
+
+A [concrete support report](2026-11-16-lovable-support-draft.md) is prepared in the authenticated Lovable support form, **not sent**. It includes project identity, safe technical errors/timestamps, the lifecycle observations and the public independent-verification links. It asks the provider to preserve all data and does not authorize removal, rollback or an instance upgrade. [Prepared form screenshot](../evidence/20261116-lovable-support-draft.jpg).
+
+Next: obtain the separate instruction to send this support report, since the user's restart approval does not itself authorize contacting another party. Then follow the provider recovery through and require successful signed reads and fresh ordinary collection/account/report receipts. No extra paid model calls, test alerts, orders, runtime changes, history edits, budget changes or relaxed quote gates were introduced.
+
 ## Hosting follow-up at 21:20 Dublin — recovery remains blocked
 
 Authenticated hosting controls are now accessible. Server logs show client-canceled requests across the research, snapshot and account endpoints. PostgreSQL logs show repeated statement timeouts (including 21:04:53) and an advisory write-lock wait at 21:04:47. An archive-command failure is also present at 20:41:08; its causal role is unproven. The database's own table listing fails, and index, statistics and archiver inspection requests return 504 UNAVAILABLE. This establishes a database/service problem beyond the Python scanner, but not its underlying resource or provider cause.
