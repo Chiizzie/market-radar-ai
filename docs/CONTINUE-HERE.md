@@ -1,6 +1,6 @@
 # Market Radar AI: continue here
 
-Last verified: 17 November 2026, 18:33 Dublin. Today's shared data path is responding; the 18:20 ordinary scan completed all 13 jobs. Recent failure emails came from comparison quote-quality checks, while collection, account sync, reviews and the approved-plan watcher passed. The cause/time of last night's data-service recovery and a completed restart remain unproven. The support draft was not sent.
+Last verified: 17 November 2026, 20:50 Dublin. Shared storage failed again after 20:00; the 20:25 collection-failed Telegram was an unconfirmed dashboard delivery. Live recovery is NOT established. Read [current incident and deployed repair](incidents/2026-11-17-storage-stall-and-history-cache.md) before using earlier healthy-run evidence. Added downstream failure guards and authenticated history checkpoints; no trade rules, risk limits or budgets changed.
 
 ## Current work: case learning and quote evidence
 

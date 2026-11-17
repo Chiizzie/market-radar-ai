@@ -631,7 +631,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 5002a0e004b89bb9c17895fa6d19d5ce3ed236e6
+          ref: 7a41b7da4a31ac8223b14ea5b7bf2fd06c71d67b
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -650,6 +650,16 @@ jobs:
         with:
           name: market-context-${{ github.run_id }}
           path: artifacts/context-source/
+      - name: Select the immutable event-cache partition
+        id: checkpoint_date
+        if: steps.window.outputs.run == 'true'
+        run: echo "day=$(date -u +%F)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache/restore@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          path: .scanner-cache/research-checkpoints/
+          key: research-prefix-v1-strategy-${{ steps.checkpoint_date.outputs.day }}-${{ github.run_id }}-strategy
+          restore-keys: research-prefix-v1-strategy-${{ steps.checkpoint_date.outputs.day }}-
       - name: Observe frozen volume risk and cost variants without AI or alerts
         if: steps.window.outputs.run == 'true'
         run: >-
@@ -664,6 +674,12 @@ jobs:
           TRADING212_API_KEY: ${{ secrets.TRADING212_API_KEY }}
           TRADING212_API_SECRET: ${{ secrets.TRADING212_API_SECRET }}
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+          RESEARCH_EVENT_CHECKPOINT_DIR: .scanner-cache/research-checkpoints
+      - uses: actions/cache/save@v4
+        if: always() && steps.window.outputs.run == 'true' && hashFiles('.scanner-cache/research-checkpoints/*.cache') != ''
+        with:
+          path: .scanner-cache/research-checkpoints/
+          key: research-prefix-v1-strategy-${{ steps.checkpoint_date.outputs.day }}-${{ github.run_id }}-strategy
       - uses: actions/upload-artifact@v4
         if: always() && steps.window.outputs.run == 'true'
         with:
@@ -701,7 +717,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 1f777dff0d7ae883cc54e6657a0ece8807c57d09
+          ref: 354a61581c8bffbe1b4210b9c971bc8fcf7be621
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -720,6 +736,16 @@ jobs:
         with:
           name: market-context-${{ github.run_id }}
           path: artifacts/context-source/
+      - name: Select the immutable event-cache partition
+        id: checkpoint_date
+        if: steps.window.outputs.run == 'true'
+        run: echo "day=$(date -u +%F)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache/restore@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          path: .scanner-cache/research-checkpoints/
+          key: research-prefix-v1-entry-${{ steps.checkpoint_date.outputs.day }}-${{ github.run_id }}-enrol
+          restore-keys: research-prefix-v1-entry-${{ steps.checkpoint_date.outputs.day }}-
       - name: Freeze paired entry setups under the short enrolment lock
         if: steps.window.outputs.run == 'true'
         run: >-
@@ -735,6 +761,12 @@ jobs:
           TRADING212_API_KEY: ${{ secrets.TRADING212_API_KEY }}
           TRADING212_API_SECRET: ${{ secrets.TRADING212_API_SECRET }}
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+          RESEARCH_EVENT_CHECKPOINT_DIR: .scanner-cache/research-checkpoints
+      - uses: actions/cache/save@v4
+        if: always() && steps.window.outputs.run == 'true' && hashFiles('.scanner-cache/research-checkpoints/*.cache') != ''
+        with:
+          path: .scanner-cache/research-checkpoints/
+          key: research-prefix-v1-entry-${{ steps.checkpoint_date.outputs.day }}-${{ github.run_id }}-enrol
       - uses: actions/upload-artifact@v4
         if: always() && steps.window.outputs.run == 'true'
         with:
@@ -768,7 +800,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 1f777dff0d7ae883cc54e6657a0ece8807c57d09
+          ref: 354a61581c8bffbe1b4210b9c971bc8fcf7be621
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -776,6 +808,16 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -e '.[market]'
         if: steps.window.outputs.run == 'true'
+      - name: Select the immutable event-cache partition
+        id: checkpoint_date
+        if: steps.window.outputs.run == 'true'
+        run: echo "day=$(date -u +%F)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache/restore@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          path: .scanner-cache/research-checkpoints/
+          key: research-prefix-v1-entry-${{ steps.checkpoint_date.outputs.day }}-${{ github.run_id }}-observe
+          restore-keys: research-prefix-v1-entry-${{ steps.checkpoint_date.outputs.day }}-
       - name: Observe paired entry confirmation without AI or alerts
         if: steps.window.outputs.run == 'true'
         run: >-
@@ -786,6 +828,12 @@ jobs:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+          RESEARCH_EVENT_CHECKPOINT_DIR: .scanner-cache/research-checkpoints
+      - uses: actions/cache/save@v4
+        if: always() && steps.window.outputs.run == 'true' && hashFiles('.scanner-cache/research-checkpoints/*.cache') != ''
+        with:
+          path: .scanner-cache/research-checkpoints/
+          key: research-prefix-v1-entry-${{ steps.checkpoint_date.outputs.day }}-${{ github.run_id }}-observe
       - uses: actions/upload-artifact@v4
         if: always() && steps.window.outputs.run == 'true'
         with:
