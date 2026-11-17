@@ -44,3 +44,11 @@ Exact failure-journal replay:
 ## Still required
 
 Inspect a completed natural run at the new pins. Verify fresh snapshot and account receipt timestamps and successful signed storage reads. Confirm cache restore/save receipts on a later restart. Do not declare recovery from a green HTML page or skipped jobs. Do not rerun ambiguous collection/review delivery or reset notification ledgers. The blocked prior database pause must not be retried through another mechanism. Provider diagnosis remains necessary if the data service stays unavailable.
+
+## 20:55 update
+
+Deployment a3aec0a1b75154d48e6b234d4c09cb82f91f3f59 is on main; a fresh file read confirmed both new source pins and all three checkpoint configurations.
+
+Probe attempt 5, job 134357972033, succeeded at 20:50:20, but the two empty signed reads took 21.890 s and 17.170 s, so this is intermittent availability rather than normal performance. The 20:50 ordinary scan 44173478333 still failed snapshot delivery at 20:51:33 (job 134358504722); account sync also failed. Its paid review and downstream rebuilds skipped as intended.
+
+The last snapshot verified through SQL at approximately 20:51 was generated at 20:21:05.859042 and received at 20:21:08.289643. A subsequent combined snapshot/account timestamp query returned UNAVAILABLE; no fresh account receipt was established. Do not treat this earlier snapshot as live.
