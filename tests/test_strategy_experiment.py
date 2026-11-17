@@ -267,3 +267,35 @@ def test_report_bounds_preserve_aggregate_counts(tmp_path):
     assert r['cohort_count']==40 and len(r['rows'])+r['rows_omitted']==400
     assert len(json.dumps(r).encode())<180000
     assert all(sum(v['states'].values())==40 for v in r['variants'].values())
+
+
+def test_authenticated_checkpoint_resumes_tail_and_still_requires_storage(tmp_path,monkeypatch):
+    client=Events();client.secret='offline-checkpoint-test-secret-'*2
+    monkeypatch.setenv('RESEARCH_EVENT_CHECKPOINT_DIR',str(tmp_path/'cache'))
+    first=StrategyExperiment(tmp_path/'one',client=client,clock=lambda:NOW)
+    first.enrol([fixture()],capture_sha='a'*64)
+    expected=deepcopy(first.cohorts); cursor=first.cursor
+    calls=[];read=client.read
+    def recorded(experiment,day,after):
+        calls.append(after);return read(experiment,day,after)
+    client.read=recorded
+    resumed=StrategyExperiment(tmp_path/'two',client=client,clock=lambda:NOW)
+    assert resumed.cursor==cursor and resumed.cohorts==expected
+    resumed.sync();assert calls==[cursor]
+    assert resumed.journal.read_bytes()==first.journal.read_bytes()
+    client.fail=True
+    with pytest.raises(RuntimeError,match='storage_failed'):resumed.sync()
+
+
+def test_checkpoint_retains_validated_progress_at_restore_deadline(tmp_path,monkeypatch):
+    import market_radar_ai.agents.strategy_experiment_live as live
+    client=Events();client.secret='offline-checkpoint-test-secret-'*2
+    seed=StrategyExperiment(tmp_path/'seed',client=client,clock=lambda:NOW)
+    seed.enrol([fixture()],capture_sha='a'*64)
+    monkeypatch.setenv('RESEARCH_EVENT_CHECKPOINT_DIR',str(tmp_path/'cache'))
+    worker=StrategyExperiment(tmp_path/'deadline',client=client,clock=lambda:NOW)
+    clock=iter([0,91]);monkeypatch.setattr(live.time,'monotonic',lambda:next(clock))
+    with pytest.raises(ValueError,match='strategy_restore_capacity'):worker.sync()
+    assert worker.cursor>0
+    recovered=StrategyExperiment(tmp_path/'recovered',client=client,clock=lambda:NOW)
+    assert recovered.cursor==worker.cursor and recovered.cohorts==worker.cohorts

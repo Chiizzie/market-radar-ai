@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 
 import requests
 from .candidate_packages import canonical, digest
+from .research_checkpoint import configured_checkpoint
 from .comparison_live import EventClient, envelope, event_id
 from .paper_comparison import aware
 from .paper_outcomes import Quote
@@ -32,6 +33,8 @@ class StrategyExperiment:
         self.health={'polls':0,'quotes_received':0,'error_polls':0,'maximum_poll_gap_seconds':0,
                      'capacity_deferred':0,'model_calls':0}
         self.last_poll=None
+        self.checkpoint=configured_checkpoint(client,PROTOCOL_ID,self.day)
+        if self.checkpoint:self.cursor=self.checkpoint.restore(self.apply)
 
     def apply(self,event):
         if event['event_id'] in self.seen:return
@@ -74,6 +77,7 @@ class StrategyExperiment:
                 if type(event['seq']) is not int or event['seq']<=self.cursor:raise ValueError('strategy_event_order')
                 self.apply(event);self.cursor=event['seq']
             if page['next']!=self.cursor:raise ValueError('strategy_cursor_mismatch')
+            if self.checkpoint:self.checkpoint.save(self.journal,self.cursor)
             if len(self.source)>100000 or self.journal.stat().st_size>75_000_000 or time.monotonic()-start>90:
                 raise ValueError('strategy_restore_capacity')
         else:raise ValueError('strategy_page_capacity')
