@@ -1,0 +1,238 @@
+{
+  "schema_version": "development-case-intake-v1",
+  "recorded_date": "2026-11-17",
+  "timezone": "Europe/Dublin",
+  "scope": "offline_development_only",
+  "runtime_active": false,
+  "ongoing_validation_library_modified": false,
+  "selection_note": "Three same-session examples selected for comparative development; this is not an unbiased performance sample.",
+  "privacy": "Only scanner-generated setup evidence is included. Actual account fills, quantities, balances, returns and user messages are not included.",
+  "outcomes": "No broker or simulated outcome labels are supplied in this public intake.",
+  "cases": [
+    {
+      "case_id": "setup-20261117-hun",
+      "symbol": "HUN",
+      "source": {
+        "archive_id": "cde4be97b787a46f237e4e7c04ab0c5042ef9dc1cf74192dae3068b2323f759a",
+        "packet_id": "639a5fa61b79ca3da111d7aa1d3d2e8cd28d54925aab789d9582f89691b896bf",
+        "assembled_at": "2026-11-17T16:26:49.130582+00:00",
+        "approved_at": "2026-11-17T16:27:33.461636+00:00",
+        "dashboard_received_at": "2026-11-17 16:27:39.282171+00",
+        "runtime": "bb3731f50a77972e547402f5c23e719e201ca973",
+        "prompt_revision": "paper-compact-evidence-20261113-v2",
+        "source_ids": [
+          "market:76189e8926db342dad9cd1738af6acfe6aeca2bef306293252bcba1ec4189d62",
+          "news:487f360c05cfa806107c41cee40ab59f844275c14de6a248d78653324e42834a",
+          "calendar:83f71fa961ff1e6003f7b85f22c63635e53b0d22b1a6c2ceb05fa1b4919d9ec6",
+          "news_check:12e921f0d328aeb553d838959006cc2634223bf4f5b7ecd59e2536dcf3a897dc"
+        ]
+      },
+      "strategy_id": "trend_continuation_20bar_v1",
+      "technical_checks": {
+        "breakout_trigger_native": "9.27927",
+        "close_above_rolling_vwap": true,
+        "currency": "USD",
+        "momentum_20_bars_pct": "0.053995680345572354211663100",
+        "note": "Rolling 20-bar VWAP, not full-session VWAP. Measurements are not a buy signal. Separate chart-led continuation: recent volume at least its earlier baseline; a completed news risk check is required, a fresh positive headline is not.",
+        "relative_volume_5_vs_15": "6.923914380612621478656661334",
+        "rolling_20_bar_vwap": "9.246410225420377704641664032",
+        "state": "MEASURED",
+        "stop_native": "9.21",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "thesis_basis": "chart_led",
+        "trigger_state": "WAITING_FOR_TRIGGER"
+      },
+      "authoritative_plan": {
+        "assumed_round_trip_cost_bps": "40",
+        "assumed_round_trip_cost_eur": "1.992031857375693936068849386",
+        "assumptions": "Fictional EUR 500 allocation and assumed 40 bps round-trip costs. Not account funds or verified fees. Tick and quantity increments are unverified.",
+        "currency": "EUR",
+        "entry_buffer_bps": "10",
+        "entry_eur": "8.421865185748596868963155544",
+        "exit_by": "2026-11-17T20:55:00+00:00",
+        "expires_at": "2026-11-17T16:30:33.461636+00:00",
+        "fx_rate": "0.9075999713068589306015619272",
+        "fx_source": "yahoo_finance:EURUSD=X:5m",
+        "invalidation": "Cancel if stop breaks before entry or any evidence expires. Exchange-session exit still needs verification.",
+        "loss_note": "EUR 20 is planned loss under fixed stop fill and FX assumptions; gaps and slippage can increase actual loss.",
+        "native_currency": "USD",
+        "paper_capital_eur": "500",
+        "planned_loss_eur": "5.709674698903484348231907347",
+        "quantity": "59.132740",
+        "schema_version": "conditional-eur-paper-scenario-v1",
+        "stop_eur": "8.358995735736170750840385350",
+        "symbol": "HUN",
+        "target_eur": "8.648666468002432267636253798",
+        "trade_authorized": false,
+        "trigger": "Conditional break above prior five-bar high plus 10 bps; never enter after expiry."
+      },
+      "comparison_role": "development_example",
+      "numeric_policy": "Derive native levels from authoritative plan/FX; model narrative prices are not authoritative."
+    },
+    {
+      "case_id": "setup-20261117-csgp",
+      "symbol": "CSGP",
+      "source": {
+        "archive_id": "96c201a982ea8c9fa22a7d07e0477ff93da1e3ee1fc7eefdcab43bdfd4fbb4c7",
+        "packet_id": "7251403cb29581138a1d5a8cc0e07304b1cbed12beb846b287ef46f086b6dd56",
+        "assembled_at": "2026-11-17T16:51:47.781703+00:00",
+        "approved_at": "2026-11-17T16:52:25.858562+00:00",
+        "dashboard_received_at": "2026-11-17 16:52:29.349657+00",
+        "runtime": "bb3731f50a77972e547402f5c23e719e201ca973",
+        "prompt_revision": "paper-compact-evidence-20261113-v2",
+        "source_ids": [
+          "market:8038263f777f7dbe3920d120e60b16acf4cbde0712515ca15cf59d2f65577065",
+          "news:5d742e6839b9ef51bc8e923d213c592608524e001e29216d3492336d7f32bc23",
+          "calendar:0661b9fc014ad5eb64a1c6d356dc234302a0d9a75e8ca862ea980ad813da0e41",
+          "news_check:47c0d958fb80b419e8b8dddfdd753a36bf662187bfe6ebfa2a14cdb01107985d"
+        ]
+      },
+      "strategy_id": "trend_continuation_20bar_v1",
+      "technical_checks": {
+        "breakout_trigger_native": "30.95092",
+        "close_above_rolling_vwap": true,
+        "currency": "USD",
+        "momentum_20_bars_pct": "0.357142857142857142857142900",
+        "note": "Rolling 20-bar VWAP, not full-session VWAP. Measurements are not a buy signal. Separate chart-led continuation: recent volume at least its earlier baseline; a completed news risk check is required, a fresh positive headline is not.",
+        "relative_volume_5_vs_15": "2.386924209241374358237891789",
+        "rolling_20_bar_vwap": "30.62691902933845190013462896",
+        "state": "MEASURED",
+        "stop_native": "30.765",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "thesis_basis": "chart_led",
+        "trigger_state": "WAITING_FOR_TRIGGER"
+      },
+      "authoritative_plan": {
+        "assumed_round_trip_cost_bps": "40",
+        "assumed_round_trip_cost_eur": "1.992031819000334125279126435",
+        "assumptions": "Fictional EUR 500 allocation and assumed 40 bps round-trip costs. Not account funds or verified fees. Tick and quantity increments are unverified.",
+        "currency": "EUR",
+        "entry_buffer_bps": "10",
+        "entry_eur": "28.09105410392088621233449508",
+        "exit_by": "2026-11-17T20:55:00+00:00",
+        "expires_at": "2026-11-17T16:55:25.858562+00:00",
+        "fx_rate": "0.9075999713068589306015619272",
+        "fx_source": "yahoo_finance:EURUSD=X:5m",
+        "invalidation": "Cancel if stop breaks before entry or any evidence expires. Exchange-session exit still needs verification.",
+        "loss_note": "EUR 20 is planned loss under fixed stop fill and FX assumptions; gaps and slippage can increase actual loss.",
+        "native_currency": "USD",
+        "paper_capital_eur": "500",
+        "planned_loss_eur": "4.983530583726407862117120097",
+        "quantity": "17.728347",
+        "schema_version": "conditional-eur-paper-scenario-v1",
+        "stop_eur": "27.92231311725551499995705269",
+        "symbol": "CSGP",
+        "target_eur": "28.76562872649867927163739380",
+        "trade_authorized": false,
+        "trigger": "Conditional break above prior five-bar high plus 10 bps; never enter after expiry."
+      },
+      "comparison_role": "development_example",
+      "numeric_policy": "Derive native levels from authoritative plan/FX; model narrative prices are not authoritative."
+    },
+    {
+      "case_id": "setup-20261117-vfc",
+      "symbol": "VFC",
+      "source": {
+        "archive_id": "314f2f4ff02fac5899061eefe34e4caafed56d1f2cea57fb47816e2889633fba",
+        "packet_id": "0ce06662f9e7f540dbda4d643b5a39eebef7494579f6f502193f66ccb3b0eb2c",
+        "assembled_at": "2026-11-17T17:22:05.501113+00:00",
+        "approved_at": "2026-11-17T17:22:48.519177+00:00",
+        "dashboard_received_at": "2026-11-17 17:22:52.337533+00",
+        "runtime": "bb3731f50a77972e547402f5c23e719e201ca973",
+        "prompt_revision": "paper-compact-evidence-20261113-v2",
+        "source_ids": [
+          "market:2ec510e8c6256ad4196047efafb28ee98ca8baf12a09ecd4f8c4952a6991aaf8",
+          "news:62de67afd48bcac303fa66750afbc7c231177c9fa8d29539335b067ca1537559",
+          "news:baf92a57c103750dc21a7589d4a1816231b4b40641de62fa2df20da96abb6ca8",
+          "news:565b86fc1264d6e71db74d6418465fcaa5776812ffa25b371c527a740acbd949",
+          "news:a42a2cb67f3df529b9bc11167bb43ff91c13a856958868ef1de9a67fd6ee3e5e",
+          "news:157b122cd856daac376ada88ccd7257f83ef1cd00a9b45268c4df9f1cb1e7caf",
+          "calendar:f72d66f1db47619d371309b6d1631f5e6b9e6277ebb980fc0650224465862ad4",
+          "news_check:165308ed0d194ad6d8f37993288605d44965e2915b31501b40a95b468537a8c2"
+        ]
+      },
+      "strategy_id": "trend_continuation_20bar_v1",
+      "technical_checks": {
+        "breakout_trigger_native": "20.635615",
+        "close_above_rolling_vwap": true,
+        "currency": "USD",
+        "momentum_20_bars_pct": "1.904055390702274975272007900",
+        "note": "Rolling 20-bar VWAP, not full-session VWAP. Measurements are not a buy signal. Separate chart-led continuation: recent volume at least its earlier baseline; a completed news risk check is required, a fresh positive headline is not.",
+        "relative_volume_5_vs_15": "2.491529990838378213304111951",
+        "rolling_20_bar_vwap": "20.38348075872514287022770913",
+        "state": "MEASURED",
+        "stop_native": "20.445",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "thesis_basis": "chart_led",
+        "trigger_state": "WAITING_FOR_TRIGGER"
+      },
+      "authoritative_plan": {
+        "assumed_round_trip_cost_bps": "40",
+        "assumed_round_trip_cost_eur": "1.992031798058965640142363223",
+        "assumptions": "Fictional EUR 500 allocation and assumed 40 bps round-trip costs. Not account funds or verified fees. Tick and quantity increments are unverified.",
+        "currency": "EUR",
+        "entry_buffer_bps": "10",
+        "entry_eur": "18.72682097526679221090962824",
+        "exit_by": "2026-11-17T20:55:00+00:00",
+        "expires_at": "2026-11-17T17:25:48.519177+00:00",
+        "fx_rate": "0.9075000175796452982336425758",
+        "fx_source": "yahoo_finance:EURUSD=X:5m",
+        "invalidation": "Cancel if stop breaks before entry or any evidence expires. Exchange-session exit still needs verification.",
+        "loss_note": "EUR 20 is planned loss under fixed stop fill and FX assumptions; gaps and slippage can increase actual loss.",
+        "native_currency": "USD",
+        "paper_capital_eur": "500",
+        "planned_loss_eur": "6.592223519834761218511805651",
+        "quantity": "26.593299",
+        "schema_version": "conditional-eur-paper-scenario-v1",
+        "stop_eur": "18.55383785941584812238682246",
+        "symbol": "VFC",
+        "target_eur": "19.29750905867188189448615534",
+        "trade_authorized": false,
+        "trigger": "Conditional break above prior five-bar high plus 10 bps; never enter after expiry."
+      },
+      "comparison_role": "development_example",
+      "numeric_policy": "Derive native levels from authoritative plan/FX; model narrative prices are not authoritative."
+    }
+  ],
+  "deduplication": {
+    "later_hun_archive": "70b49aad98a46bf56b310f3f7deb1b47e71dc64e0f4fb985ddd2614f6af35417",
+    "treatment": "Retain separately if needed; do not substitute it for the earlier setup or count it as an independent same-symbol success."
+  },
+  "hypotheses": [
+    {
+      "id": "failed-breakout-exit",
+      "question": "Does an exit after two consecutive completed five-minute closes below the original trigger improve net results versus the existing stop/target/session baseline?",
+      "status": "untested",
+      "controls": [
+        "Both bars must begin after actual or explicitly simulated entry.",
+        "Observe an eligible quote after the second close; never execute at a historical candle close.",
+        "Keep hard stops, targets, expiry and session cutoff fixed.",
+        "Compare all eligible setups, including winners cut early and unresolved quotes."
+      ]
+    },
+    {
+      "id": "extension-and-follow-through",
+      "question": "Do pre-entry 20-bar momentum, distance from rolling VWAP and subsequent volume persistence distinguish continuation from failed breakouts?",
+      "status": "untested",
+      "controls": [
+        "No threshold fitted to these three cases is promoted.",
+        "The recent 5-vs-15-bar volume ratio is not time-of-day adjusted.",
+        "Do not call rolling VWAP full-session VWAP."
+      ]
+    }
+  ],
+  "validation": {
+    "use": "development only; hold out later dates before a changed policy is evaluated",
+    "required_metrics": [
+      "cost-adjusted expectancy",
+      "maximum favourable excursion",
+      "maximum adverse excursion",
+      "premature exits from eventual winners",
+      "missing/unresolved intervals",
+      "day/regime clustered uncertainty"
+    ],
+    "active_policy_changes": [],
+    "paid_model_calls": 0,
+    "trade_authorized": false
+  }
+}

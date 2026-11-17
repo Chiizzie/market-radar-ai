@@ -1,14 +1,18 @@
 # Market Radar AI: continue here
 
-Last verified: 16 November 2026, 21:45 Dublin. The shared data API remains unavailable. The user approved the additional pause/wake recovery; the original operation briefly showed Project paused with Wake up disabled, then the management page returned. PostgreSQL still reports its original start time, and signed reads continue to time out. Automatic approval review blocked the renewed pause as a duplicate despite the user's approval. No second pause was submitted.
+Last verified: 17 November 2026, 18:33 Dublin. Today's shared data path is responding; the 18:20 ordinary scan completed all 13 jobs. Recent failure emails came from comparison quote-quality checks, while collection, account sync, reviews and the approved-plan watcher passed. The cause/time of last night's data-service recovery and a completed restart remain unproven. The support draft was not sent.
 
-## Current incident: shared database/service failure
+## Current work: case learning and quote evidence
 
-The unchanged read-only probe [attempt 3](https://github.com/Chiizzie/market-radar-ai/actions/runs/43954474101/job/133633988979) failed again at 21:42–21:43: website HTTP 200, both signed storage reads time out after three attempts. Normal 21:40 collection, account sync, comparison and manual audit also failed. Management-table visibility is not evidence of restored service or a completed restart.
+Read [today's audit](incidents/2026-11-17-case-review-and-quote-gaps.md). Failures at 16:15, 17:45, 18:10 and 18:15 involved stale OPRA/OCTV/GLBE quotes and future-dated PTON/CSX quote observations. Preserve gaps and freshness gates; do not widen thresholds or mask failures. Exact future-clock offsets are not retained, so diagnosis needs sanitized provider/receipt/evaluation clocks.
 
-Read [current incident](incidents/2026-11-16-evening-storage-stall.md) and [exact evidence](evidence/storage-stall-20261116.json). A [Lovable support report](incidents/2026-11-16-lovable-support-draft.md) is prepared in the authenticated support form, not sent. The next separate approval is permission to send that report; do not re-request the already granted restart approval or bypass the automatic execution block.
+Added [HUN, CSGP and VFC development cases](../knowledge/development-cases-20261117.json) from original scanner evidence. Actual private fills and returns are not in the public repository. These are offline development examples; current libraries, validation cohorts, prompts and runtime pins are unchanged. Compare a predeclared two-completed-close failed-breakout exit against the baseline on later data, including winners cut early. Do not learn solely from selected winners or relabel old cases.
 
-Recovery must be followed by successful signed reads and fresh ordinary collection/account/report receipts. Preserve unknown write outcomes, missing quote intervals, unresolved simulated exposure and historical delivery reservations. Earlier stale IEX quotes remain a separate issue. No paid diagnostic models, test alerts, orders, upgrades, runtime changes or history edits occurred; all freshness/risk gates remain intact.
+The existing holding monitor's failed-breakout condition means two completed five-minute closes below the original trigger after entry, not merely below the user's purchase price. It may warn before a hard stop. It places no sell orders.
+
+Current configured daily AI headroom was EUR0.146377 against EUR0.15 required at 18:21. This is distinct from quote failures. No extra model calls, budget changes, orders, notification retries or historical rewrites were made.
+
+Historical hosting evidence remains in [16 November incident](incidents/2026-11-16-evening-storage-stall.md). Do not send the [support draft](incidents/2026-11-16-lovable-support-draft.md) without a user instruction or repeat the blocked pause through another mechanism.
 
 ## Further error emails: notification evidence repair 16 November
 
