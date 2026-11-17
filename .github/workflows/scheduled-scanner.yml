@@ -400,7 +400,7 @@ jobs:
 
   method-shadow:
     needs: collect
-    if: ${{ always() && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.METHOD_SHADOW_ENABLED != 'false' }}
+    if: ${{ always() && needs.collect.result == 'success' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.METHOD_SHADOW_ENABLED != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     permissions:
@@ -874,7 +874,7 @@ jobs:
   # Independent entry-feasibility audit; no model, alert, quote-provider or order calls.
   manual-alert-audit:
     needs: [collect, review, comparison-watcher]
-    if: ${{ always() && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.MANUAL_ALERT_AUDIT_ENABLED != 'false' }}
+    if: ${{ always() && needs.collect.result == 'success' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.MANUAL_ALERT_AUDIT_ENABLED != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 6
     continue-on-error: true
@@ -918,3 +918,4 @@ jobs:
           path: artifacts/manual-alert-evidence/report.json
           retention-days: 30
           if-no-files-found: error
+

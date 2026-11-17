@@ -26,7 +26,8 @@ jobs:
       (github.event_name != 'workflow_run' ||
        (github.event.workflow_run.head_branch == 'main' &&
         github.event.workflow_run.head_repository.full_name == github.repository &&
-        github.event.workflow_run.run_attempt == 1))
+        github.event.workflow_run.run_attempt == 1 &&
+        github.event.workflow_run.conclusion == 'success'))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -64,4 +65,5 @@ jobs:
           path: artifacts/manual-portfolio/
           retention-days: 30
           if-no-files-found: error
+
 

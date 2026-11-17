@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   research:
-    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && vars.EXECUTION_RESEARCH_ENABLED != 'false'
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && vars.EXECUTION_RESEARCH_ENABLED != 'false' && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -82,3 +82,4 @@ jobs:
           path: artifacts/execution-research/
           retention-days: 30
           if-no-files-found: error
+
