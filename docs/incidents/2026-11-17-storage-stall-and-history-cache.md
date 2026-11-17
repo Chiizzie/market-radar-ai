@@ -52,3 +52,7 @@ Deployment a3aec0a1b75154d48e6b234d4c09cb82f91f3f59 is on main; a fresh file rea
 Probe attempt 5, job 134357972033, succeeded at 20:50:20, but the two empty signed reads took 21.890 s and 17.170 s, so this is intermittent availability rather than normal performance. The 20:50 ordinary scan 44173478333 still failed snapshot delivery at 20:51:33 (job 134358504722); account sync also failed. Its paid review and downstream rebuilds skipped as intended.
 
 The last snapshot verified through SQL at approximately 20:51 was generated at 20:21:05.859042 and received at 20:21:08.289643. A subsequent combined snapshot/account timestamp query returned UNAVAILABLE; no fresh account receipt was established. Do not treat this earlier snapshot as live.
+
+## First deployed runtime check, 20:56
+
+Natural scan 44174328022 runs deployment a3aec0a1b75154d48e6b234d4c09cb82f91f3f59. Entry observation job 134361505398 checked out the repaired source and reached the new cache restore step. Its first cache is correctly absent; the authoritative bootstrap read then failed with storage_timeout after three attempts at 20:56:08. No checkpoint could be created before the first successful page. Account sync and comparison also failed. The cache repair is installed and proven offline, but cannot make an unavailable authoritative store healthy or establish a complete live bootstrap. Provider-side recovery/diagnosis remains the blocker.
