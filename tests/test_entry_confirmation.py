@@ -183,3 +183,35 @@ def test_fixture_export(tmp_path):
               quote(c,D(p['target_usd']),seconds=11)]
     report=build_report(w,NOW+timedelta(seconds=12))
     assert report['comparison']['adequate_coverage_pairs']==1
+
+
+def test_authenticated_checkpoint_resumes_tail_and_still_requires_storage(tmp_path,monkeypatch):
+    client=Events();client.secret='offline-checkpoint-test-secret-'*2
+    monkeypatch.setenv('RESEARCH_EVENT_CHECKPOINT_DIR',str(tmp_path/'cache'))
+    first=EntryExperiment(tmp_path/'one',client=client,clock=lambda:NOW)
+    first.enrol([fixture()],capture_sha='a'*64)
+    expected=deepcopy(first.cohorts); cursor=first.cursor
+    calls=[];read=client.read
+    def recorded(experiment,day,after):
+        calls.append(after);return read(experiment,day,after)
+    client.read=recorded
+    resumed=EntryExperiment(tmp_path/'two',client=client,clock=lambda:NOW)
+    assert resumed.cursor==cursor and resumed.cohorts==expected
+    resumed.sync();assert calls==[cursor]
+    assert resumed.journal.read_bytes()==first.journal.read_bytes()
+    client.fail=True
+    with pytest.raises(RuntimeError,match='storage_failed'):resumed.sync()
+
+
+def test_checkpoint_retains_validated_progress_at_restore_deadline(tmp_path,monkeypatch):
+    import market_radar_ai.agents.entry_confirmation_live as live
+    client=Events();client.secret='offline-checkpoint-test-secret-'*2
+    seed=EntryExperiment(tmp_path/'seed',client=client,clock=lambda:NOW)
+    seed.enrol([fixture()],capture_sha='a'*64)
+    monkeypatch.setenv('RESEARCH_EVENT_CHECKPOINT_DIR',str(tmp_path/'cache'))
+    worker=EntryExperiment(tmp_path/'deadline',client=client,clock=lambda:NOW)
+    clock=iter([0,91]);monkeypatch.setattr(live.time,'monotonic',lambda:next(clock))
+    with pytest.raises(ValueError,match='entry_restore_capacity'):worker.sync()
+    assert worker.cursor>0
+    recovered=EntryExperiment(tmp_path/'recovered',client=client,clock=lambda:NOW)
+    assert recovered.cursor==worker.cursor and recovered.cohorts==worker.cohorts

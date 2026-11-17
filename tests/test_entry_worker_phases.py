@@ -32,7 +32,8 @@ def test_workflow_serializes_only_enrolment():
     from pathlib import Path
     text=Path('.github/workflows/scheduled-scanner.yml').read_text()
     enrol=text.split('  entry-enrol:')[1].split('  entry-confirmation:')[0]
-    observe=text.split('  entry-confirmation:')[1]
+    import re
+    observe=re.split(r'(?m)^  [a-z][a-z-]+:',text.split('  entry-confirmation:')[1],maxsplit=1)[0]
     assert 'concurrency:' in enrol and 'cancel-in-progress: false' in enrol
     assert 'concurrency:' not in observe and 'needs:' not in observe
     assert '--mode enrol' in enrol and '--mode observe' not in enrol
