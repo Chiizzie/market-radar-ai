@@ -1,0 +1,98 @@
+{
+  "schema_version": "historical-reconciliation-evidence-v1",
+  "as_of_dublin": "2026-11-18T19:13:43.561669+00:00",
+  "execution_run_id": 44377351786,
+  "execution_artifact_id": 14462630884,
+  "execution_artifact_digest": "sha256:4cc6b0acebb6fe6ae5393147f2847b10fd60301376971c64e7741e5b60fc63d8",
+  "execution_source_sha256": "291a1decc8340c466a372839082756c2267a9c791048243fbc847d3b296ebcb3",
+  "source_events": 156725,
+  "setups": 1288,
+  "exception_rows": 71,
+  "unique_setups_with_unresolved_exits": 60,
+  "exit_rows_by_reason": {
+    "exit_quote_quality_unresolved": 55,
+    "no_observed_exit_by_deadline": 10
+  },
+  "exit_rows_by_book_type": {
+    "unresolved_outcome": 2,
+    "independent_outcome_unresolved": 63
+  },
+  "unconfirmed_telegram_delivery": [
+    {
+      "candidate_id": "stocks:BCE",
+      "run_id": 43894347930,
+      "job_id": 133394266990,
+      "artifact_id": 14238626769,
+      "artifact_digest": "sha256:77960b810e24c17a7703f0f4b8c75be1902543c67ce1d066ef01013651c136aa",
+      "packet_id": "d6fc78656400e54016146d6f8577c3a2ec5f77ab993636658887beac6a1c3b02",
+      "status": "original_telegram_delivery_unconfirmed",
+      "receipt_clock": null
+    },
+    {
+      "candidate_id": "stocks:KVYO",
+      "run_id": 43910970383,
+      "job_id": 133453224884,
+      "artifact_id": 14247383240,
+      "artifact_digest": "sha256:114d185d2a15089e8d2cca16d4317fcb596a98ad0fd16e21a66bd7cd46407b09",
+      "packet_id": "ce0177394d2e1e77ae4bb46e9e7ae1dec3ab81af2179226ea1da2d44849d6362",
+      "status": "original_telegram_delivery_unconfirmed",
+      "receipt_clock": null
+    },
+    {
+      "candidate_id": "stocks:PATH",
+      "run_id": 43912751179,
+      "job_id": 133459529067,
+      "artifact_id": 14249211806,
+      "artifact_digest": "sha256:23aebede65df425ee4da813d6810076366747a9ccc6922cd1dcdf452f2252312",
+      "packet_id": "c3f64fe8b9b9696b68c9d83fee5ff958024f02522f536eee5a41ba947651a67b",
+      "status": "original_telegram_delivery_unconfirmed",
+      "receipt_clock": null
+    },
+    {
+      "candidate_id": "stocks:STNE",
+      "run_id": 43911873542,
+      "job_id": 133456230526,
+      "artifact_id": 14247988166,
+      "artifact_digest": "sha256:5799e36c2d1967e223d1b5f005439371a644c9ccf02b2f37d188b8b179855e6d",
+      "packet_id": "31efa202739fd297ce2e204b67ffbbfa3639a9e0df232daf38f95457ca1e632b",
+      "status": "original_telegram_delivery_unconfirmed",
+      "receipt_clock": null
+    }
+  ],
+  "budget_source_commit": "817ae326483caed5f439e0ca87d557bf01682118",
+  "budget_manifest_blob": "2c92ebf0e7615822684d442a5c7f22e81dca1136",
+  "review_cost_checks": [
+    {
+      "candidate_id": "stocks:NU",
+      "run_id": 43470097138,
+      "job_id": 132040139588,
+      "artifact_id": 14060561730,
+      "artifact_digest": "sha256:3e053821ef167056d0f6171a5fc177477461af48bfad549de855c644aabd3038",
+      "packet_id": "01f217bf2653315061439cb1ef0da1250413e0bec58594f2ff8dbe49b0336bd9",
+      "attempted_stages": 8,
+      "settled_stages": 7,
+      "settled_microeur": 56345,
+      "unsettled_stages": [
+        "conclusion"
+      ],
+      "unsettled_reserved_microeur": 13275,
+      "status": "partial_actual_cost"
+    },
+    {
+      "candidate_id": "stocks:RRC",
+      "run_id": 43463395764,
+      "job_id": 132016608602,
+      "artifact_id": 14057238130,
+      "artifact_digest": "sha256:c5e1792312fb6ea8070de532c4c0efb1a1bfe6b69db91f5b2a3ef2cd5dfb88bf",
+      "packet_id": "ba6390bb83038827a41b4087a64544385524e9807d6b7211e736016616524207",
+      "attempted_stages": 6,
+      "settled_stages": 6,
+      "settled_microeur": 35779,
+      "unsettled_stages": [],
+      "unsettled_reserved_microeur": 0,
+      "status": "settled_for_all_attempted_stages"
+    }
+  ],
+  "economic_source_rewritten": false,
+  "trade_authorized": false
+}

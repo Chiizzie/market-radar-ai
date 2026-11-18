@@ -56,7 +56,7 @@ jobs:
         env:
           EXECUTION_SOURCE_VERSION: guarded-v2
         run: |
-          args=(--execution artifacts/evidence-intake/execution --contexts artifacts/evidence-intake/contexts.json --output artifacts/performance)
+          args=(--execution artifacts/evidence-intake/execution --contexts artifacts/evidence-intake/contexts.json --intake artifacts/evidence-intake/intake.json --output artifacts/performance)
           if test -f artifacts/evidence-intake/manual/report.json; then
             args+=(--manual artifacts/evidence-intake/manual)
           fi

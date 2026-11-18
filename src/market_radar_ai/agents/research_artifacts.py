@@ -29,6 +29,10 @@ API = 'https://api.github.com/repos/' + REPO
 CAPTURE_FILES = {'discovery-selection.json', 'qualification.json', 'paper-review-packets.json', 'run-diagnostics.json'}
 MAX_ZIP = 350_000_000
 MAX_MEMBER = 250_000_000
+EXPORT_STEPS = {
+    'execution': 'Reconstruct cost scenarios and shared portfolios from durable evidence',
+    'manual': 'Replay separate accounts and verify complete ledger recovery',
+}
 
 
 def zip_members(raw, names):
@@ -284,7 +288,7 @@ class GitHubReader:
                         'X-GitHub-Api-Version': '2022-11-28'}
 
     def get(self, path, *, params=None, binary=False):
-        if not re.fullmatch(r'/(runs(?:/\d+/artifacts)?|artifacts/\d+/zip|workflows/performance-intelligence.yml/runs)', path):
+        if not re.fullmatch(r'/(runs(?:/\d+/(?:artifacts|attempts/\d+/jobs))?|artifacts/\d+/zip|workflows/performance-intelligence\.yml/runs)', path):
             raise ValueError('research_actions_read_only')
         for attempt in range(3):
             try:
@@ -321,6 +325,18 @@ class GitHubReader:
 
     def artifacts(self, run):
         return self.get('/runs/' + str(run['id']) + '/artifacts', params={'per_page': 100})['artifacts']
+
+    def export_receipt(self, run, target):
+        attempt = run.get('run_attempt', 1)
+        jobs = self.get(f"/runs/{run['id']}/attempts/{attempt}/jobs", params={'per_page': 100})['jobs']
+        for job in jobs:
+            if job.get('run_id') != run['id'] or job.get('run_attempt') != attempt:
+                continue
+            for step in job.get('steps', []):
+                if step['name'] == EXPORT_STEPS[target] and step['conclusion'] == 'success':
+                    return {'job_id': job['id'], 'export_completed_at': step['completed_at'],
+                            'job_completed_at': job['completed_at']}
+        return {}
 
     def previous_runs(self):
         runs = self.get('/workflows/performance-intelligence.yml/runs',
@@ -437,11 +453,27 @@ def collect(reader, runs, bank, output, *, maximum_new_artifacts=120, catch_up_d
     for name, prefix, target in [('Execution research and readiness', 'execution-research-', 'execution'),
                                   ('Manual shared paper portfolio', 'manual-portfolio-', 'manual')]:
         for run in ordered:
-            if run['name'] != name or run['conclusion'] != 'success':
+            if (run['name'] != name or run['status'] != 'completed'
+                    or run['conclusion'] not in ('success', 'failure')):
                 continue
-            candidates = [a for a in artifacts(run) if a['name'].startswith(prefix) and not a['expired']]
+            candidates = [a for a in artifacts(run) if a['name'] == prefix + str(run['id']) and not a['expired']]
             if not candidates:
                 continue  # An out-of-window green run may have no report.
+            receipt = {}
+            if run['conclusion'] == 'failure':
+                key = f"{run['id']}:{run.get('run_attempt', 1)}:{target}"
+                receipt = bank.get('export_step_receipt', key)
+                if receipt is None:
+                    receipt = reader.export_receipt(run, target)
+                    bank.put('export_step_receipt', key, receipt)
+                if not receipt:
+                    continue
+                # Artifacts belong to a run ID across reruns. Only use one uploaded
+                # after this attempt's successful producer and before its job ended.
+                candidates = [a for a in candidates if a.get('digest') and
+                    aware(receipt['export_completed_at']) <= aware(a['created_at']) <= aware(receipt['job_completed_at'])]
+                if not candidates:
+                    continue
             artifact = max(candidates, key=lambda a: a['created_at'])
             files = zip_members(reader.download(artifact), {'report.json', 'source-events.jsonl.gz', 'ledger.json.gz'})
             required = {'report.json', 'source-events.jsonl.gz'} | ({'ledger.json.gz'} if target == 'manual' else set())
@@ -450,7 +482,8 @@ def collect(reader, runs, bank, output, *, maximum_new_artifacts=120, catch_up_d
             dest = output / target; dest.mkdir(exist_ok=True)
             for filename, raw in files.items():
                 (dest / filename).write_bytes(raw)
-            sources[target] = {'run_id': run['id'], 'artifact_id': artifact['id'], 'digest': artifact.get('digest')}
+            sources[target] = {'run_id': run['id'], 'artifact_id': artifact['id'], 'digest': artifact.get('digest'),
+                               'workflow_conclusion': run['conclusion'], **receipt}
             break
     (output / 'contexts.json').write_text(canonical(list(bank.rows('context'))) + '\n')
     (output / 'experiments.json').write_text(json.dumps(summarize_latest(bank.rows('frozen')), indent=2) + '\n')
