@@ -177,7 +177,7 @@ class LiveComparison:
         elif kind == 'cost': store.record_cost(p['key'], settled_microeur=p['settled_microeur'],
                               held_microeur=p['held_microeur'], complete=p['complete'], now=now)
 
-    def sync(self):
+    def sync(self, *, through_event_ids=None):
         with self.lock:
             started = time.monotonic(); pages = events = 0; read_seconds = apply_seconds = 0
             try:
@@ -186,7 +186,10 @@ class LiveComparison:
                     page = self.client.read(self.experiment, self.day, self.cursor)
                     read_seconds += time.monotonic() - tick
                     pages += 1
-                    if not page['events']: return
+                    if not page['events']:
+                        if through_event_ids and not through_event_ids.issubset(self.seen):
+                            raise ValueError('comparison_acknowledged_event_missing')
+                        return
                     cursor = self.cursor
                     for event in page['events']:
                         if type(event['seq']) is not int or event['seq'] <= cursor:
@@ -207,6 +210,10 @@ class LiveComparison:
                     self.cursor = cursor
                     events += len(pending)
                     apply_seconds += time.monotonic() - tick
+                    if through_event_ids and through_event_ids.issubset(self.seen):
+                        # The entire returned page has been validated and persisted.
+                        # The next poll and final report still independently read the tail.
+                        return
                 raise ValueError('comparison_sync_capacity')
             finally:
                 elapsed = time.monotonic() - started
@@ -315,8 +322,11 @@ class LiveComparison:
                 events.append(envelope('quote', {'candidate_id': candidate,
                     'quote': quote.model_dump(mode='json'), 'source': observation['source'],
                     'received_at': received.isoformat()}, received))
-            self.client.append(self.experiment, events)
-            self.sync()
+            if events:
+                self.client.append(self.experiment, events)
+                self.sync(through_event_ids={event_id(self.experiment, row) for row in events})
+            elif selected:
+                self.sync()
             self.health['polls'] += 1
             self.health['quotes_received'] += len(events)
             self.health['error_polls'] += bool(failures)

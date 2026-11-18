@@ -12,6 +12,7 @@ on:
     paths: ['.github/workflows/manual-portfolio.yml']
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: market-radar-ai-manual-portfolio
   cancel-in-progress: false
@@ -27,19 +28,46 @@ jobs:
        (github.event.workflow_run.head_branch == 'main' &&
         github.event.workflow_run.head_repository.full_name == github.repository &&
         github.event.workflow_run.run_attempt == 1 &&
-        github.event.workflow_run.conclusion == 'success'))
+        contains(fromJSON('["success","failure"]'), github.event.workflow_run.conclusion)))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Apply the weekday window or explicit commissioning run
         id: window
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           python - <<'PY'
-          import os
+          import json, os, subprocess
           from datetime import datetime
           from zoneinfo import ZoneInfo
           now=datetime.now(ZoneInfo('Europe/Dublin'))
-          allowed=os.environ['GITHUB_EVENT_NAME'] in ('push','workflow_dispatch') or (now.weekday()<5 and 8<=now.hour<23)
+          event=os.environ['GITHUB_EVENT_NAME']
+          allowed=event in ('push','workflow_dispatch') or (now.weekday()<5 and 8<=now.hour<23)
+          if event=='workflow_run':
+              with open(os.environ['GITHUB_EVENT_PATH']) as source:
+                  parent=json.load(source)['workflow_run']
+              dispatched=datetime.fromisoformat(parent['created_at'].replace('Z','+00:00'))
+              allowed=allowed and 5 <= dispatched.minute % 15 < 10 and 0 <= (now-dispatched).total_seconds() < 1200
+          if allowed and event in ('schedule','workflow_run'):
+              # A recent real export satisfies a duplicate timer/scan trigger.
+              # A green window-only job or a failed read never suppresses a report.
+              api='repos/'+os.environ['GITHUB_REPOSITORY']+'/actions/'
+              def get(path):
+                  response=subprocess.run(['gh','api',api+path],capture_output=True,check=True,timeout=8)
+                  return json.loads(response.stdout)
+              try:
+                  runs=get('workflows/manual-portfolio.yml/runs?branch=main&status=success&per_page=8')
+                  for run in runs['workflow_runs']:
+                      ended=datetime.fromisoformat(run['updated_at'].replace('Z','+00:00'))
+                      if not 0 <= (now-ended).total_seconds() < 600: continue
+                      artifacts=get('runs/'+str(run['id'])+'/artifacts')['artifacts']
+                      name='manual-portfolio-'+str(run['id'])
+                      if any(a['name']==name and not a['expired'] for a in artifacts):
+                          allowed=False
+                          break
+              except (subprocess.SubprocessError,OSError,ValueError,KeyError):
+                  print('GitHub freshness check unavailable; using the scheduled report window.')
           with open(os.environ['GITHUB_OUTPUT'],'a') as f:
               f.write('run='+str(allowed).lower()+'\n')
               f.write('day='+now.astimezone(ZoneInfo('UTC')).date().isoformat()+'\n')

@@ -58,6 +58,44 @@ def test_durable_baseline_before_review_rejection_and_restore(tmp_path, monkeypa
     assert all(e['experiment_id']!=s.experiment for e in client.events if e['kind']=='setup_report')
 
 
+def test_idle_poll_reads_once_and_active_poll_validates_its_durable_quote(tmp_path,monkeypatch):
+    worker,packet,_,clock,_,client=environment(tmp_path,monkeypatch)
+    read=client.read; reads=[]
+    def counted(experiment,day,after):
+        reads.append(after)
+        return read(experiment,day,after)
+    client.read=counted
+    worker.poll()
+    assert reads==[0] and worker.health['quotes_received']==0
+    worker.enrol(packet,now=clock[0])
+    reads.clear();clock[0]+=timedelta(seconds=1)
+    worker.poll()
+    assert len(reads)==2 and worker.health['last_sync']['pages']==1
+    assert client.events[-1]['event_id'] in worker.seen
+    client.append=lambda experiment,rows: None
+    clock[0]+=timedelta(seconds=1)
+    with pytest.raises(ValueError,match='acknowledged_event_missing'):
+        worker.poll()
+    assert worker.health['quotes_received']==1
+
+
+def test_receipt_bound_read_leaves_concurrent_later_pages_for_full_sync(tmp_path,monkeypatch):
+    first,packet,_,clock,_,client=environment(tmp_path,monkeypatch)
+    first.enrol(packet,now=clock[0])
+    for _ in range(2):
+        clock[0]+=timedelta(seconds=1);first.poll()
+    events=client.events.copy()
+    def pages(experiment,day,after):
+        page=[e for e in events if e['seq']>after][:1]
+        return {'events':page,'next':page[-1]['seq'] if page else after}
+    client.read=pages
+    second=LiveComparison(tmp_path/'separate',client=client,clock=lambda:clock[0])
+    second.sync(through_event_ids={events[1]['event_id']})
+    assert second.cursor==events[1]['seq'] and events[2]['event_id'] not in second.seen
+    second.sync()
+    assert second.seen==first.seen and second.store.report(now=clock[0])==first.store.report(now=clock[0])
+
+
 def test_unreviewed_cohort_survives_writer_restart(tmp_path,monkeypatch):
     s,p,_,t,price,client=environment(tmp_path,monkeypatch)
     s.enrol(p,now=t[0]);t[0]+=timedelta(seconds=2)

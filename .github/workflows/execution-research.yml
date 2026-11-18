@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   research:
-    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && vars.EXECUTION_RESEARCH_ENABLED != 'false' && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository))
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && vars.EXECUTION_RESEARCH_ENABLED != 'false' && (github.event_name != 'workflow_run' || (contains(fromJSON('["success","failure"]'), github.event.workflow_run.conclusion) && github.event.workflow_run.run_attempt == 1 && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -27,7 +27,7 @@ jobs:
         id: window
         run: |
           python - <<'PY'
-          import os
+          import json, os
           from datetime import datetime, timezone
           from zoneinfo import ZoneInfo
           now=datetime.now(timezone.utc)
@@ -36,6 +36,11 @@ jobs:
           event=os.environ['GITHUB_EVENT_NAME']
           allowed=event in ('push','workflow_dispatch') or (d.weekday()<5 and 8<=d.hour<23)
           if event=='schedule': allowed=allowed and (d.hour==8 or n.hour==9)
+          if event=='workflow_run':
+              with open(os.environ['GITHUB_EVENT_PATH']) as source:
+                  parent=json.load(source)['workflow_run']
+              dispatched=datetime.fromisoformat(parent['created_at'].replace('Z','+00:00'))
+              allowed=allowed and dispatched.minute % 15 < 5 and 0 <= (now-dispatched).total_seconds() < 1200
           with open(os.environ['GITHUB_OUTPUT'],'a') as f:
               f.write('run='+str(allowed).lower()+'\n')
               f.write('day='+now.astimezone(ZoneInfo('UTC')).date().isoformat()+'\n')
