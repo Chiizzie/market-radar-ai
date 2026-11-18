@@ -1,7 +1,7 @@
-name: Read-only storage recovery check
+name: Read-only signed storage path check
 on:
   push:
-    branches: [verify/storage-recovery-20261116]
+    branches: [verify/storage-path-20261118]
 permissions:
   contents: read
 jobs:
@@ -26,7 +26,7 @@ jobs:
           from datetime import datetime,timezone
           from pathlib import Path
           import requests
-          from market_radar_ai.agents.comparison_live import EventClient
+          from market_radar_ai.agents.comparison_live import EventClient, StorageUnavailable
           base='https://pixel-perfect-replay-32614.lovable.app'
           report={'schema_version':'storage-recovery-check-v1','started_at':datetime.now(timezone.utc).isoformat(),
                   'model_calls':0,'notifications_sent':0,'storage_writes':0,'trade_authorized':False,'checks':[]}
@@ -39,7 +39,19 @@ jobs:
               report['checks'].append({'check':'published_app','ok':False,'error_type':type(exc).__name__,
                   'seconds':round(time.monotonic()-tick,3)})
           client=EventClient(os.environ['REVIEW_INGEST_SECRET'])
-          for cursor in (9007199254740991,318094):
+          # A signed read with a negative cursor is rejected by the deployed
+          # request schema before the route creates a database client.
+          tick=time.monotonic()
+          validation={'check':'signed_route_before_storage','ok':False}
+          try:
+              client.request({'action':'read','experiment_id':'eab2d59128f2d320ec2d32e1cd903d2b3d9d17c93f324534c607f640e1b93fd8',
+                              'day':'2026-11-16','after':-1})
+          except StorageUnavailable as exc:
+              validation.update(ok=exc.http_status==422,http_status=exc.http_status,
+                                attempts=exc.attempts,code=exc.diagnostic_code)
+          validation['seconds']=round(time.monotonic()-tick,3)
+          report['checks'].append(validation)
+          for cursor in (9007199254740991,):
               tick=time.monotonic()
               try:
                   page=client.read('eab2d59128f2d320ec2d32e1cd903d2b3d9d17c93f324534c607f640e1b93fd8','2026-11-16',cursor)
