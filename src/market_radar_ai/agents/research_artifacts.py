@@ -253,6 +253,7 @@ class EvidenceBank:
         snapshots = [{field: row[field] for field in summary_fields} for row in self.rows('capture')]
         runs = list(self.rows('run'))
         deliveries = list(self.rows('capture_delivery'))
+        exit_archives = list(self.rows('outage_exit_reference'))
         covered = {(s['run_id'], s['attempt']) for s in snapshots}
         missing = [r['id'] for r in runs if (r['id'], r['attempt']) not in covered]
         return {'schema_version': 'evidence-intake-summary-v1', 'completed_scanner_attempts': len(runs),
@@ -261,6 +262,8 @@ class EvidenceBank:
             'incomplete_capture_artifacts': [s['artifact_id'] for s in snapshots if s['missing_files']],
             'discovery_candidate_observations': sum(s['discovery_observations'] for s in snapshots),
             'qualification_observations': sum(s['qualified_observations'] for s in snapshots),
+            'outage_exit_reference_artifacts': len(exit_archives),
+            'outage_exit_reference_observations': sum(len(a['report']['quotes']) for a in exit_archives),
             'delivery_recovery': {
                 'client_states': dict(Counter(d['client_state'] for d in deliveries)),
                 'outbound_bodies': dict(Counter(d['body_state'] for d in deliveries)),
@@ -378,8 +381,9 @@ def collect(reader, runs, bank, output, *, maximum_new_artifacts=120, catch_up_d
         attempt = run.get('run_attempt', 1)
         bank.put('run', f"{run['id']}:{attempt}", {k: run[k] for k in ('id', 'head_sha', 'created_at', 'conclusion')} | {'attempt': attempt})
         for artifact in artifacts(run):
-            kind = 'capture' if artifact['name'] == 'scheduled-capture-' + str(run['id']) else \
-                   'context' if artifact['name'] == 'market-context-' + str(run['id']) else None
+            kind = {'scheduled-capture-' + str(run['id']): 'capture',
+                    'market-context-' + str(run['id']): 'context',
+                    'comparison-exit-observations-' + str(run['id']): 'outage_exit_reference'}.get(artifact['name'])
             if not kind or artifact['expired']:
                 continue
             expiry = aware(artifact['expires_at']) if artifact.get('expires_at') else None
@@ -406,7 +410,8 @@ def collect(reader, runs, bank, output, *, maximum_new_artifacts=120, catch_up_d
             if expiry is not None and expiry <= urgent_by:
                 urgent_pending.append(expiry)
             continue
-        names = CAPTURE_FILES | {'opening-session.json'} if kind == 'capture' else {'report.json'}
+        names = {'capture': CAPTURE_FILES | {'opening-session.json'}, 'context': {'report.json'},
+                 'outage_exit_reference': {'outage-exit-evidence.json'}}[kind]
         raw = reader.download(artifact)
         files = zip_members(raw, names)
         downloaded += 1
@@ -415,6 +420,13 @@ def collect(reader, runs, bank, output, *, maximum_new_artifacts=120, catch_up_d
                 bank.put(kind, artifact['id'], capture_snapshot(files, run=run, artifact=artifact))
             if not bank.has('capture_delivery', artifact['id']):
                 retain_delivery(bank, raw, files, run=run, artifact=artifact)
+        elif kind == 'outage_exit_reference':
+            from .outage_exit_evidence import verified
+            report = verified(json.loads(files['outage-exit-evidence.json']))
+            if not artifact.get('digest') or report['day'] != run['created_at'][:10]:
+                raise ValueError('outage_exit_artifact_binding')
+            bank.put(kind, artifact['id'], {'report': report, 'artifact_id': artifact['id'],
+                'artifact_digest': artifact['digest'], 'run_id': run['id']})
         elif 'report.json' in files:
             report = json.loads(files['report.json'])
             bank.put(kind, artifact['id'], {'report': report, 'sha256': digest(report),

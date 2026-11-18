@@ -144,6 +144,29 @@ def test_intake_skips_empty_success_and_records_failed_capture_gap(tmp_path):
     bank.close()
 
 
+def test_unconfirmed_deadline_archive_is_indexed_separately_and_idempotently(tmp_path):
+    from market_radar_ai.agents.paper_comparison import protocol_for_day
+    observation = {'schema_version': 'outage-exit-reference-v1', 'scope': 'code_only_open_in_authenticated_prefix',
+        'experiment_id': digest(protocol_for_day('2026-11-18')), 'day':'2026-11-18', 'source_cursor':100,
+        'eligible_packets':1, 'polls':1, 'failure_count':0, 'quotes':[], 'trade_authorized':False,
+        'model_calls':0, 'applied_to_ledger':False}
+    content = zipped({'outage-exit-evidence.json':json.dumps({'report': observation, 'sha256':digest(observation)})})
+    evidence = {**ARTIFACT, 'id':123, 'name':'comparison-exit-observations-10',
+                'digest':'sha256:' + hashlib.sha256(content).hexdigest()}
+    run = {**RUN, 'conclusion':'failure'}
+    portfolio = {**RUN, 'id':12, 'name':'Execution research and readiness'}
+    original = {**ARTIFACT, 'id':124, 'name':'execution-research-12'}
+    reader = SimpleNamespace(artifacts=lambda r:[evidence if r['id']==run['id'] else original],
+        download=lambda a:content if a['id']==123 else zipped({'report.json':'{}','source-events.jsonl.gz':gzip.compress(b'')}))
+    bank = EvidenceBank(tmp_path/'bank.sqlite')
+    for name in ('first','again'):
+        sources = collect(reader,[run,portfolio],bank,tmp_path/name)
+        assert sources['execution']['artifact_id']==124
+        assert bank.get('outage_exit_reference',123)['report']==observation
+        assert bank.summary()['outage_exit_reference_artifacts']==1
+    bank.close()
+
+
 def test_failed_workflow_recovers_only_export_that_completed_in_the_same_attempt(tmp_path, monkeypatch):
     from market_radar_ai.agents.research_artifacts import EXPORT_STEPS
     base = {**RUN, 'name': 'Execution research and readiness', 'id': 20}
