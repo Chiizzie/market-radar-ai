@@ -76,6 +76,25 @@ def run_stage(module, args):
                           timeout=240, check=False).returncode
 
 
+def store_opening(output, doc, feed, discovery, observed_at, *, unconfirmed=False):
+    from .opening_brief import build
+    from ..market_data.opening_discovery import phase
+    window = phase(observed_at)
+    if not window:
+        return None
+    try:
+        qualification = json.loads((output/'qualification.json').read_text())
+        brief = build(doc, feed, qualification, discovery, now=observed_at)
+    except (OSError, ValueError, KeyError, TypeError, ArithmeticError, AttributeError):
+        brief = {'schema_version': 'opening-session-brief-v1', 'as_of': observed_at.isoformat(),
+                 'window': window, 'state': 'opening_evidence_unavailable',
+                 'model_calls': 0, 'trade_authorized': False}
+    if unconfirmed:
+        brief['dashboard_delivery'] = 'unconfirmed'
+    write_json(output/'opening-session.json', brief)
+    return brief
+
+
 def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.utc),
               run=run_stage, delivery=None, stock_symbols=None, crypto_symbols=None):
     started = clock()
@@ -244,11 +263,23 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         stage(label, module, ['--capture', enriched, '--evidence', news, '--output', path], path)
     if delivery is None:
         delivery = partial(deliver, snapshot_path=output/'dashboard.json')
+    broad_scan = stock_symbols is None and crypto_symbols is None
     try:
         receipt = delivery(json.loads(enriched.read_text()), env=env, clock=clock,
                            evidence=json.loads(news.read_text()))
     except SnapshotDeliveryError as exc:
         write_json(output/'delivery.json', exc.receipt)
+        if broad_scan and exc.receipt.get('generated_at_dublin'):
+            # This is the clock on the exact outbound snapshot. A late timeout
+            # cannot move the opening observation or turn it into a delivery.
+            try:
+                at = datetime.fromisoformat(exc.receipt['generated_at_dublin'])
+                from ..market_data.opening_discovery import phase
+                if at.tzinfo is not None and phase(at):
+                    store_opening(output, json.loads(enriched.read_text()), json.loads(news.read_text()),
+                                  discovery, at, unconfirmed=True)
+            except (OSError, TypeError, ValueError):
+                print('Opening archive unavailable for the unconfirmed capture.', file=sys.stderr)
         raise
     write_json(output/'delivery.json', receipt)
     feed, doc = json.loads(news.read_text()), json.loads(enriched.read_text())
@@ -268,20 +299,9 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
               'evidence_collection_started_at': cache['collection_started_at'] if cache else started.isoformat(),
               'failures': failed, 'target_interval_seconds': 300, 'model_calls': 0,
               'trade_authorized': False, 'stock_discovery': discovery,'crypto_discovery':crypto_discovery}
-    if stock_symbols is None and crypto_symbols is None:
-        from .opening_brief import build
-        from ..market_data.opening_discovery import phase
-        observed_at = clock()
-        if phase(observed_at):
-            try:
-                qualification = json.loads((output/'qualification.json').read_text())
-                brief = build(doc, feed, qualification, discovery, now=observed_at)
-            except (ValueError, KeyError, TypeError, ArithmeticError, AttributeError):
-                # Missing optional preparation must not erase a delivered capture.
-                brief = {'schema_version': 'opening-session-brief-v1', 'as_of': observed_at.isoformat(),
-                         'window': phase(observed_at), 'state': 'opening_evidence_unavailable',
-                         'model_calls': 0, 'trade_authorized': False}
-            write_json(output/'opening-session.json', brief)
+    if broad_scan:
+        brief = store_opening(output, doc, feed, discovery, clock())
+        if brief is not None:
             report['opening_session'] = brief
     write_json(output/'collection-report.json', report)
     return report

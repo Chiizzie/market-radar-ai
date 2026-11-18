@@ -310,3 +310,35 @@ def test_unconfirmed_write_keeps_capture_and_receipt_and_blocks_review(tmp_path,
     receipt = json.loads((output/'delivery.json').read_text())
     assert receipt == failure.receipt and (output/'dashboard.json').is_file()
     assert not review_can_continue({'delivery': receipt})
+
+
+def test_unconfirmed_opening_is_saved_at_original_clock_and_never_authorizes_review(tmp_path, monkeypatch):
+    from market_radar_ai.dashboard.run_diagnostics import build_report, markdown
+    from market_radar_ai.dashboard.snapshot_delivery import SnapshotDeliveryError
+    from market_radar_ai.dashboard.scheduled_collection import review_can_continue
+    at = datetime(2026, 11, 18, 13, 46, tzinfo=timezone.utc)
+    later = at + timedelta(minutes=2)
+    def brief(doc, feed, qualification, discovery, *, now):
+        assert now == at
+        return {'schema_version': 'opening-session-brief-v1', 'as_of': now.isoformat(), 'window': 'premarket',
+                'state': 'observed', 'preparation': [{'symbol': 'NVDA'}], 'trade_authorized': False}
+    monkeypatch.setattr('market_radar_ai.dashboard.opening_brief.build', brief)
+    failure = SnapshotDeliveryError({'snapshot_id': 'b'*64, 'generated_at_dublin': at.isoformat(),
+                                   'trade_authorized': False}, 'read_timeout')
+    def deliver(*args, **kwargs):
+        raise failure
+    with pytest.raises(SnapshotDeliveryError) as error:
+        run_cycle(env=ENV, output=tmp_path/'out', cache_path=tmp_path/'cache.json', clock=lambda: later,
+                  run=fake_stages([]), delivery=deliver)
+    assert error.value is failure
+    folder = tmp_path/'out'
+    saved = json.loads((folder/'opening-session.json').read_text())
+    assert saved['as_of'] == at.isoformat() and saved['dashboard_delivery'] == 'unconfirmed'
+    assert not (folder/'collection-report.json').exists()
+    receipt = json.loads((folder/'delivery.json').read_text())
+    assert not review_can_continue({'delivery': receipt})
+    report = build_report(folder, now=later)
+    assert 'NVDA' in markdown(report) and 'Dashboard acknowledgement unconfirmed' in markdown(report)
+    saved['as_of'] = later.isoformat()
+    (folder/'opening-session.json').write_text(json.dumps(saved))
+    assert build_report(folder, now=later)['unconfirmed_opening_capture'] is None
