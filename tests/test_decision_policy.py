@@ -52,3 +52,13 @@ def test_model_cannot_hide_broker_problem_by_omitting_issues():
     result=decide(case,[],[],final)
     assert result['research_disposition']=='NO_ACTION' and not result['decision_consistent']
     assert result['mandatory_blocks']==['broker_unverified']
+
+
+@pytest.mark.parametrize('day', [7,8])
+def test_weekend_is_blocked_even_with_fresh_verified_inputs(day):
+    now=datetime(2026,11,day,15,tzinfo=timezone.utc)
+    facts=deepcopy(CASE['facts'])
+    facts['observed_at']=now.isoformat()
+    facts['broker_verified_until']=(now+timedelta(hours=1)).isoformat()
+    facts['plan']['exit_by']=(now+timedelta(hours=1)).isoformat()
+    assert mandatory_blocks(PolicyFacts.model_validate(facts),now)==['time_rule']

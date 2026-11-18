@@ -30,6 +30,9 @@ def run(*, env, output, duration=330, interval=5, clock=lambda: datetime.now(tim
             # recovered data gap, and cannot consume the whole worker window.
             health['startup_state']='restoring'
             try:
+                if env.get('RESEARCH_CHECKPOINT_DIR'):
+                    from .comparison_checkpoint import restore
+                    restore(comparison, env['RESEARCH_CHECKPOINT_DIR'], env.get('REVIEW_INGEST_SECRET'))
                 comparison.sync()
             except (RuntimeError,ValueError,KeyError,TypeError):
                 health['startup_state']='failed'
@@ -61,7 +64,11 @@ def run(*, env, output, duration=330, interval=5, clock=lambda: datetime.now(tim
             (output/'worker-health.json').write_text(json.dumps(health,indent=2)+'\n')
             remaining=end-monotonic()
             if remaining>0: sleep(min(remaining,max(.1,interval-(monotonic()-tick))))
-        if comparison is not None: comparison.close()
+        if comparison is not None:
+            comparison.close()
+            if env.get('RESEARCH_CHECKPOINT_DIR'):
+                from .comparison_checkpoint import save
+                save(comparison, env['RESEARCH_CHECKPOINT_DIR'], env.get('REVIEW_INGEST_SECRET'))
     except (RuntimeError,ValueError,KeyError,TypeError) as exc:
         health['error_polls']+=1; record_failure(health,exc,clock())
     health['completed_at']=clock().isoformat()

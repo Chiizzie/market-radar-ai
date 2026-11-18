@@ -175,7 +175,11 @@ def main():
     args=parser.parse_args()
     doc=json.loads(args.capture.read_text())
     symbols=[r['requested_symbol'] for r in doc['captures'] if r['market']=='stocks']
-    doc['stock_reference_checks']=collect(symbols,env=os.environ)
+    # The collector has just validated this catalogue. Reuse only that bounded
+    # metadata; FX, clock and quotes are always fetched again. Re-requesting the
+    # same account-wide catalogue here can hit its rate limit and delay review.
+    doc['stock_reference_checks']=collect(symbols,env=os.environ,
+        catalogue_record=doc.get('stock_reference_checks'))
     args.output.write_text(json.dumps(doc,indent=2)+'\n')
 
 if __name__=='__main__': main()

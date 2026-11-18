@@ -1,0 +1,1257 @@
+{
+  "schema_version": "runtime-source-restoration-v1",
+  "base_main": "46553ed69d069b63e31bca1cf2f62ae0b3c68ded",
+  "live_workflows_changed": false,
+  "files": [
+    {
+      "path": "deploy/knowledge-shadow-job.yml",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "2cf0eddc5469ac6d9cdec77c62da6def3704dcf4"
+    },
+    {
+      "path": "deploy/strategy-routing-job.yml",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "9370fa649367032738be7eb35e438e7a861a92c0"
+    },
+    {
+      "path": "docs/dashboard/nvda-reviewed-plan-2026-11-03.json",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "a4c07d7227d781c8a535bf11092e2b57969b6f6c"
+    },
+    {
+      "path": "docs/evaluations/nvda-trial-2026-11-03.json",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "cf17479b43ec8050ca5da173f43dfa4de1237032"
+    },
+    {
+      "path": "knowledge/library-20261113.json",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "3f9215336e5c6c7ed7b9b86e9851d1b9045e3913"
+    },
+    {
+      "path": "knowledge/strategy-library-20261113.json",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "451abbcb29f0dcca55e900d5406b957fce699cb1"
+    },
+    {
+      "path": "scripts/verify_telegram_readonly.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "3ce5463f697bce4fc02399956b80a5858fe49fcd"
+    },
+    {
+      "path": "src/market_radar_ai/agents/alpaca_paper_rehearsal.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "d627888ff8e0586b1c8f5f40a0121bb760879740"
+    },
+    {
+      "path": "src/market_radar_ai/agents/candidate_packages.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "1716de3df0bb75a4f06acf4da78394898499c7ab"
+    },
+    {
+      "path": "src/market_radar_ai/agents/candidate_plan.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "768b8611a77795c983bf996ed376bdb5b19c30ca"
+    },
+    {
+      "path": "src/market_radar_ai/agents/candidate_review.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "15aff0dc53717202bd2da2cea5d78197cd9eef99"
+    },
+    {
+      "path": "src/market_radar_ai/agents/chart_news.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "00d21770212d32f5fcac96d1e588a2252f86578b"
+    },
+    {
+      "path": "src/market_radar_ai/agents/comparison_checkpoint.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "03d19ec91a9d0d85b57f595218489e6e613a436f"
+    },
+    {
+      "path": "src/market_radar_ai/agents/comparison_live.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "7fa23e1b15527cf7e5f623f527944b2a728a3e78"
+    },
+    {
+      "path": "src/market_radar_ai/agents/comparison_watcher.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "0e28e5e7f55a07b8a917e6392c2cfd36bebafd86"
+    },
+    {
+      "path": "src/market_radar_ai/agents/competitor_shadow.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "674c595c988ed326b2692b918fd6dfbe474f1d3a"
+    },
+    {
+      "path": "src/market_radar_ai/agents/conditional_revalidation.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "452bafeba650f0460e9adb292c34a0d3049c5c42"
+    },
+    {
+      "path": "src/market_radar_ai/agents/context_packages.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "e13f6e6aca8efd42856533765bb0bd1d5755fd3a"
+    },
+    {
+      "path": "src/market_radar_ai/agents/cost_scenarios.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "b5ff831a7aba9cf6eac5aa5b60f3da2d6cefe884"
+    },
+    {
+      "path": "src/market_radar_ai/agents/crypto_news_input.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "e2cee078b2383e961488d20d5f0df1f241673dcd"
+    },
+    {
+      "path": "src/market_radar_ai/agents/decision_evidence.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "6975cb94f1cabc100ad8c113960d6731fd7259ff"
+    },
+    {
+      "path": "src/market_radar_ai/agents/decision_policy.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "69afda0a58477f91c2324bb9521560c707da9bfa"
+    },
+    {
+      "path": "src/market_radar_ai/agents/early_opening.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "7a84dc68a28f331a7f054f401c045264243e99cb"
+    },
+    {
+      "path": "src/market_radar_ai/agents/early_screening.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "98c5c6c18359c8eb696f880fef717bc0b14cb21c"
+    },
+    {
+      "path": "src/market_radar_ai/agents/entry_confirmation.py",
+      "source_commit": "354a61581c8bffbe1b4210b9c971bc8fcf7be621",
+      "git_blob": "bd964f4283a5fc9c4e1931eca610959bd1126e1d"
+    },
+    {
+      "path": "src/market_radar_ai/agents/entry_confirmation_live.py",
+      "source_commit": "354a61581c8bffbe1b4210b9c971bc8fcf7be621",
+      "git_blob": "41962e199d62a114e9de4dd69959495f3e25f954"
+    },
+    {
+      "path": "src/market_radar_ai/agents/event_archive.py",
+      "source_commit": "839af4f09abc6e7e21daa5bd41c56e587c96b25f",
+      "git_blob": "b3312337c57c74aa80ac9951f965dbbd373b1e01"
+    },
+    {
+      "path": "src/market_radar_ai/agents/execution_evidence.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "2fb674899f66a4ce1ba4d383ed35e21a647e29bc"
+    },
+    {
+      "path": "src/market_radar_ai/agents/execution_research.py",
+      "source_commit": "839af4f09abc6e7e21daa5bd41c56e587c96b25f",
+      "git_blob": "33ca2da7d1577760a76e5bec065abaf909321304"
+    },
+    {
+      "path": "src/market_radar_ai/agents/github_candidate_review.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "e340908c29e3dd08703aabe4618c039ae25e9389"
+    },
+    {
+      "path": "src/market_radar_ai/agents/github_live_research.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "8087c9f0ea520f57a191a413efc0006bc24e032b"
+    },
+    {
+      "path": "src/market_radar_ai/agents/github_paper_tracking.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "71b0455f0ff4289c3e6ea9e5af53173ab3023735"
+    },
+    {
+      "path": "src/market_radar_ai/agents/github_plan_review.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "a16f211fdfaa40d759ccd40b370abe8b02bc44ec"
+    },
+    {
+      "path": "src/market_radar_ai/agents/knowledge_build.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "62491ccdfc0dfad655ae0fc8f69f942a9b4592e7"
+    },
+    {
+      "path": "src/market_radar_ai/agents/knowledge_cases.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "6dacab4bb4ed49cc1555fc802f16d232c8754cd5"
+    },
+    {
+      "path": "src/market_radar_ai/agents/knowledge_compare.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "d9816fcc92a22a867c903b9e5c85b80a536c6f91"
+    },
+    {
+      "path": "src/market_radar_ai/agents/knowledge_pair.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "405dab617f8ad92018dd16c8d0a3e06119c3cb94"
+    },
+    {
+      "path": "src/market_radar_ai/agents/knowledge_playbooks.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "62aae7a7a08e2eba2730d05d3036e450be7fe04e"
+    },
+    {
+      "path": "src/market_radar_ai/agents/knowledge_shadow.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "84473746969b395e66f347803b59e56376a403ac"
+    },
+    {
+      "path": "src/market_radar_ai/agents/live_prompts.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "b62cfbfd25711c31cf6474237e0a479fe5e71efe"
+    },
+    {
+      "path": "src/market_radar_ai/agents/live_research.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "7d7cd0bfb9205a23d0966c472cf94f357565ed35"
+    },
+    {
+      "path": "src/market_radar_ai/agents/manual_alert_evidence.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "3d0674f947acb6e2636c18bf7c4dbf93f0132acc"
+    },
+    {
+      "path": "src/market_radar_ai/agents/manual_execution_profile.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "344ad260d2e46dd8237257331605bc7f0bf7e151"
+    },
+    {
+      "path": "src/market_radar_ai/agents/manual_portfolio.py",
+      "source_commit": "2859eee9f35d26dcca5f010a10f9ad187d61f44e",
+      "git_blob": "8d1c88c5f9c63b0c36cf0ddb64c9e48a0661034b"
+    },
+    {
+      "path": "src/market_radar_ai/agents/mean_reversion.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "17dd2e2b8f5dd3527e9bb587db5e5b137431133a"
+    },
+    {
+      "path": "src/market_radar_ai/agents/method_scenarios.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "1d09e0994c8e2813d3e6f8bb425e2517fa7202be"
+    },
+    {
+      "path": "src/market_radar_ai/agents/method_shadow.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "f4e5b0e0517e062891766a49a8657bedaad27f15"
+    },
+    {
+      "path": "src/market_radar_ai/agents/openai_pilot.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "8bfc436b6efbf833d585e73b4f40310656d67c7a"
+    },
+    {
+      "path": "src/market_radar_ai/agents/paper_planner.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "d6770b989d53fcc61943f5552af9dac607d44556"
+    },
+    {
+      "path": "src/market_radar_ai/agents/paper_rehearsal.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "e3ffb7abfb2b7fbc3e454dffbedf28540e68d1fd"
+    },
+    {
+      "path": "src/market_radar_ai/agents/paper_review_prompts.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "8b6f2e974ad82ab47b48613ef79cce3d815dd3c6"
+    },
+    {
+      "path": "src/market_radar_ai/agents/paper_verdict.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "e091c76216b1ae777b6dbac0627f53b781646214"
+    },
+    {
+      "path": "src/market_radar_ai/agents/plan_review.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "6ec56d90dcef56c5ecd1b23d6339f7098c570d43"
+    },
+    {
+      "path": "src/market_radar_ai/agents/qualification.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "05c7e6c7ccc22d767f701fa300c31a658bff0ba0"
+    },
+    {
+      "path": "src/market_radar_ai/agents/research_checkpoint.py",
+      "source_commit": "7a41b7da4a31ac8223b14ea5b7bf2fd06c71d67b",
+      "git_blob": "c673f352298f1ec80e9e9e294ad849f4f441a005"
+    },
+    {
+      "path": "src/market_radar_ai/agents/research_views.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "f6cd6e8b173818a0ca9374de2800d4455845ac63"
+    },
+    {
+      "path": "src/market_radar_ai/agents/scheduled_review.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "1c11fe71a1f35fe532de1dba3c4ed9c1e1663c17"
+    },
+    {
+      "path": "src/market_radar_ai/agents/session_briefing.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "7a1b91669a40a65b1db5d131f6361bbc5b96a43c"
+    },
+    {
+      "path": "src/market_radar_ai/agents/session_report.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "b740dc5f1990cc6df5e49d744fe56cad4c9a403a"
+    },
+    {
+      "path": "src/market_radar_ai/agents/setup_checks.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "77317957e02c6c5fcddba5e3afc831fddc410907"
+    },
+    {
+      "path": "src/market_radar_ai/agents/strategy_diagnostics.py",
+      "source_commit": "7a41b7da4a31ac8223b14ea5b7bf2fd06c71d67b",
+      "git_blob": "e091d602ea0049cbc62299e8dc733ef452deab0e"
+    },
+    {
+      "path": "src/market_radar_ai/agents/strategy_experiment.py",
+      "source_commit": "354a61581c8bffbe1b4210b9c971bc8fcf7be621",
+      "git_blob": "157355d24824d8d4bbdfbe9adee06d162b95f052"
+    },
+    {
+      "path": "src/market_radar_ai/agents/strategy_experiment_live.py",
+      "source_commit": "7a41b7da4a31ac8223b14ea5b7bf2fd06c71d67b",
+      "git_blob": "4fad8b9e275259f6b4da9db314d308cdd8fe4e59"
+    },
+    {
+      "path": "src/market_radar_ai/agents/strategy_knowledge.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "10331061cc1aa15cf1a0f1ee0947ca29cd103a0a"
+    },
+    {
+      "path": "src/market_radar_ai/agents/strategy_knowledge_build.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "a1ac4ddfc8161735b300b872fc030d1bb8d9f7db"
+    },
+    {
+      "path": "src/market_radar_ai/agents/strategy_pair.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "8b6eb5f73782f9f086bf2d905b6894953a8c60cf"
+    },
+    {
+      "path": "src/market_radar_ai/agents/strategy_registry.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "4e5a01f9654555740d9ed7f67289841c40d5afff"
+    },
+    {
+      "path": "src/market_radar_ai/agents/strategy_routing_live.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "93f3f8e6fa06c2da068fe1bd38dd47dfd345a9d2"
+    },
+    {
+      "path": "src/market_radar_ai/agents/trade_evaluation.py",
+      "source_commit": "839af4f09abc6e7e21daa5bd41c56e587c96b25f",
+      "git_blob": "b882b236e356857eeb4d2a4cb3a951fe1aa88d77"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/account_costs.py",
+      "source_commit": "dbafe2c37e52ecd43fa85f404abd53d069f15995",
+      "git_blob": "8eea50029bd554265e47e4e252b32c5bdd2a6453"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/account_sync.py",
+      "source_commit": "dbafe2c37e52ecd43fa85f404abd53d069f15995",
+      "git_blob": "4c303e544d8818e75289e7d3cd275e18db7d5f26"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/briefing.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "9daa7fe37ff5fd4c0c17b29e6a0135eda84e05a3"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/candidate_delivery.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "4b6c1dc5c3a997c2736780a92cef922620d9e3a8"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/charts.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "31c7297b9524d3e345b15a2634770d657e324e6d"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/collection_schedule.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "2ff369e0103e69a10e1c21598e353d4b7577ed60"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/cross_scanner_audit.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "05d536bf6a3036e968cf671213d76337525a1731"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/diagnostics.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "663450b290addfc3d0da05666521cdb519122801"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/discovery_coverage.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "69a1138e6a0e6911cc72488767060df1f68f8f95"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/evidence.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "916340efa304ad11d8777ea3ec445eb5505c67e4"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/execution_readiness.py",
+      "source_commit": "839af4f09abc6e7e21daa5bd41c56e587c96b25f",
+      "git_blob": "0a805fc90c16105e0c6c34c5eb77c6d420cc4702"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/export.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "5fb75b18b9d7b7cc8be942762d0e3c811f83f257"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/fresh_notification.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "3691b5d10b1669eaf6573cb7daad4ad7176f3b72"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/lovable_delivery.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "706616f2e8cf9dcd844fce5bcae3ac913e20d5b0"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/missed_moves.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "4f82c58573c332f6f35e77956b456153f303d612"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/notification.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "a8b9852e1fee452a2c387b0ad0de2654cb98a4f9"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/paper_final_delivery.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "32327df7f0c92fac6371634d974c15e0b9acffcf"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/plan_review.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "98ccbafb4f1377eb665c2d2b5318bbe1a8e9cd1a"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/run_diagnostics.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "c998bd1ae39b19f2e5f4f6b37afdc6a6e71dd341"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/scanner_operations.py",
+      "source_commit": "839af4f09abc6e7e21daa5bd41c56e587c96b25f",
+      "git_blob": "988aee168cf816d1140ddf8ec471d4d0942101cd"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/scheduled_notification.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "65f37c1fa832e694aba94c9e732ff08258d56b4a"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/snapshot_delivery.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "93c4ff267af041abadd19dfaff686da42d14a287"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/telegram_check.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "a8a5939c1fa01b40fb78167bb8955ceea1376e92"
+    },
+    {
+      "path": "src/market_radar_ai/dashboard/telegram_report.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "05fb00702b45e6e554ffe3b574224c1b2d43936b"
+    },
+    {
+      "path": "src/market_radar_ai/evidence/alpaca_news.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "8e81e36858e28d5d2432b822a44cc3666bb09f8c"
+    },
+    {
+      "path": "src/market_radar_ai/evidence/combine.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "71230a37d535d5df5aae9e4873a72fbc0934a8f3"
+    },
+    {
+      "path": "src/market_radar_ai/evidence/crypto_feed.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "e1ed98cc7dae71addbb4aa8602c2d479627e7765"
+    },
+    {
+      "path": "src/market_radar_ai/evidence/earnings_calendar.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "d2325c3fbe26c413402df92103a9dc36e47181dd"
+    },
+    {
+      "path": "src/market_radar_ai/evidence/public_feed.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "f5576980cc024a9b4079e23e51dd8d459ec7c813"
+    },
+    {
+      "path": "src/market_radar_ai/evidence/scanner_feed.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "9bbc55c7fe5ef459a7c9515a80e46d932351873e"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/alpaca_check.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "deb9caad525b8e1da1df136331ebc605f5924a5f"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/anchored_vwap.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "f44a8e9dd095d1e3a6a7b9092cac0eee15267644"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/broker_check.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "7dc1393fba50713c25654109e55fe381771927b4"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/broker_eligibility.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "88376a94ab928d748b54c39af6943f67ffdfb8fc"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/capture.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "8fa11b1c8743c90c953561f56dd6e6f667d1f88e"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/capture_shortlist.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "ad8a77ea0c81b0850881b8bfd1cf888e4a762b87"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/catalyst_links.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "c2f175bd358d69b498f283d5c2b95eb39df886c9"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/coverage_lanes.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "3eca090a17e1e2b46a575af8e5400c7c20b800f0"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/crypto_checks.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "90d042492962a1ddb2015e27333e4cf6d4c0d42b"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/crypto_discovery.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "dbd59050d6cd9ac06aef00aaae9416d5436aea43"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/crypto_identities.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "975ed2bd32374c53e65affa25bd4cf6cdeb1c4c1"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/delayed_context.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "6f8cde5861aab5c2cdf842eb2d422dfbe903dc9d"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/discovery_signals.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "1220b4cae97e8c5dabad483a459e889cfe0d1ed6"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/discovery_universe.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "f613edcecbc5742d390ecd9c5e8f860608066d90"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/limits.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "1a8f9b09fec3a439741ca2004434f76973272653"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/market_context.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "f10ed2928f1ac75dd506703ed343932ad9ac4b6a"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/providers/alpaca.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "0c8baba2282723d4cdfe7b09f5cfafd1329b24ce"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/providers/alpaca_batch.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "8102fa7da894535a550590f8c9bf88e78544d12c"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/providers/kraken.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "273d1c6712d5920d72e15f8537c5ae18ecc2013f"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/providers/robinhood.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "b32a1cdf3a209c5781fd7e1524fb83848412008a"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/pullback.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "dbf4d74887564499d3ced34691e12a776acb0ac1"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/quote_source_audit.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "313dc29432fcc01cb663c7297a9c0d157805ca91"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/readiness.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "b17e93e35aa527da7aa89a32e57565e10a1868e0"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/reference_quotes.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "844c70b28de656869d5b132574cd218a78974d51"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/screener.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "31317d225a284eeae56d2756dc9f9ddf86bf7917"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/session_calendar.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "bccb6c5575ac903a8e78e80e317fc185b5494fac"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/stock_checks.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "579973a5d26a923c9ce8c2da298a9283d47e5b6d"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/stock_context.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "ac1d18de7be70a6acc5e186971ae038431089a84"
+    },
+    {
+      "path": "src/market_radar_ai/market_data/strategy_window.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "96efc7b6cb034181a5e8fc12abee43ca28c4de0c"
+    },
+    {
+      "path": "src/market_radar_ai/risk.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "df86b99b1fe68f952d87c2044b1d3e6440e08a1d"
+    },
+    {
+      "path": "tests/fixtures/ash-2026-11-06-yahoo-replay.json",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "7fdbdc9615bdb96a2520f75b6223e643ce6b137c"
+    },
+    {
+      "path": "tests/fixtures/candidate-review-archive-v1.json",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "35042762f2b8b6847127fdd8089f58c298c87359"
+    },
+    {
+      "path": "tests/fixtures/candidate-review-enriched-v1.json",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "90a6b36d4ed15422e260f4866daa53c3f19b51e0"
+    },
+    {
+      "path": "tests/fixtures/candidate-review-v2-synthetic.json",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "362d604a5cde4e7930f599756ef5237a4b89b91a"
+    },
+    {
+      "path": "tests/fixtures/live_crypto_trial.json",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "4c64fabef6c35149857e99d8514c0e68fcf4617d"
+    },
+    {
+      "path": "tests/fixtures/manual-portfolio.synthetic.json",
+      "source_commit": "2859eee9f35d26dcca5f010a10f9ad187d61f44e",
+      "git_blob": "ed017671d97b91446cd61c9545f6aaa88243535c"
+    },
+    {
+      "path": "tests/fixtures/strategy-experiment-producer.json",
+      "source_commit": "7a41b7da4a31ac8223b14ea5b7bf2fd06c71d67b",
+      "git_blob": "6896abd6f86b342eab034038dd3f2a80d1a30404"
+    },
+    {
+      "path": "tests/test_account_costs.py",
+      "source_commit": "dbafe2c37e52ecd43fa85f404abd53d069f15995",
+      "git_blob": "fb429b1c28f701a8a0486b12bd5d4a6125b5e311"
+    },
+    {
+      "path": "tests/test_account_sync.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "9288c0f7853cfd661277db4a041bc0ebd24be74c"
+    },
+    {
+      "path": "tests/test_alpaca_check.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "f59dad76c2174519dbdeda845aa28deb06524fdf"
+    },
+    {
+      "path": "tests/test_alpaca_news.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "68a35280612cd80becfbb526f0237d4c5366801f"
+    },
+    {
+      "path": "tests/test_alpaca_paper_rehearsal.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "1e091d24547a08fe99a6166ab80f8bb6ac4052b3"
+    },
+    {
+      "path": "tests/test_alpaca_provider.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "b61519ccdd27b22866ba278254bb8cdd2940e67d"
+    },
+    {
+      "path": "tests/test_broader_discovery.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "a09537feb7cb832dc640b60205ca1d129fb5926c"
+    },
+    {
+      "path": "tests/test_broker_check.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "5c5b1f7079d0cbd8b6d0cb7bcaa341b1b5e51044"
+    },
+    {
+      "path": "tests/test_broker_eligibility.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "515f802eac0be4b2bd3a2211922466ea5d4ddb5b"
+    },
+    {
+      "path": "tests/test_candidate_delivery.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "616bc6cd7e450612fdaf29537646c603f85ce5b3"
+    },
+    {
+      "path": "tests/test_candidate_packages.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "af48e66dd8fc04c4a61c44e03ac69ed04cec20ed"
+    },
+    {
+      "path": "tests/test_candidate_plan.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "325e1ed68ffac81a4aa02174f00560a50aa77d3c"
+    },
+    {
+      "path": "tests/test_candidate_review.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "1b6d4808f8c52ffb4583ef560355ca1be74cc482"
+    },
+    {
+      "path": "tests/test_capture_connectivity.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "5bbebbeaf22c4595ff1d5bf87bd4c802717eb555"
+    },
+    {
+      "path": "tests/test_capture_shortlist.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "bdf3cd7d10487a883e18d54ff8810141bd97c821"
+    },
+    {
+      "path": "tests/test_catalogue_reuse.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "07cfc94ea355d8a66f7b44f24eaeab22ea789394"
+    },
+    {
+      "path": "tests/test_catalyst_links.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "ef8f62e3069a83bf2f8ed650ecb8cb0ef59002b4"
+    },
+    {
+      "path": "tests/test_chart_diagnostics.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "7b7ea1eb1a01a0095f349039a6a1547b657d7c9e"
+    },
+    {
+      "path": "tests/test_collection_notification.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "90a1aa33754816e54dc7d3e68ee7e52256ab7036"
+    },
+    {
+      "path": "tests/test_comparison_checkpoint.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "55d1cac90921cdda43448f7f74a87a5b80deb957"
+    },
+    {
+      "path": "tests/test_comparison_live.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "72ae132463f131cadfcdcc9b4be952534fecafb9"
+    },
+    {
+      "path": "tests/test_competitor_shadow.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "7139ef48f63abecbf0565ee0c8219b2f44edfda4"
+    },
+    {
+      "path": "tests/test_conditional_policy_v3.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "57946fb90159902bb204fccc3f5bf6d61625d606"
+    },
+    {
+      "path": "tests/test_cost_scenarios.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "dce4762e27f471bda9d4c2e1cd6e281109aa2085"
+    },
+    {
+      "path": "tests/test_cross_scanner_audit.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "5c3241167e54e24363d00f78b5871e105442579f"
+    },
+    {
+      "path": "tests/test_crypto_capture_budget.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "d4c893e2c91f36855185ab98371068f28fe51376"
+    },
+    {
+      "path": "tests/test_crypto_news_input.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "b2c1d60158dc23d946da7114774402b84d783ebd"
+    },
+    {
+      "path": "tests/test_crypto_research_replay.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "665a209b4204aef2df7988f2c9022d3c2e989d83"
+    },
+    {
+      "path": "tests/test_current_scanner_jobs.py",
+      "source_commit": "839af4f09abc6e7e21daa5bd41c56e587c96b25f",
+      "git_blob": "5e7e83c9e177263599f4d531e1ef938c5627c4b2"
+    },
+    {
+      "path": "tests/test_dashboard_api_budget.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "76ad01b9e62241afb05defda47fee67320a429d9"
+    },
+    {
+      "path": "tests/test_dashboard_briefing.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "9a77d1ccd3b9cc5bb18d8e748ed21c5ee3d7e9f0"
+    },
+    {
+      "path": "tests/test_dashboard_charts.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "f0ce83e38812a8bd216aa815ccc4d6ca5a40270c"
+    },
+    {
+      "path": "tests/test_dashboard_diagnostics.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "561ae32496002fb9b50c9ff3fd67a5db02bb262a"
+    },
+    {
+      "path": "tests/test_decision_evidence.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "40dc339976cac624c26e69622b3e9fd6bb5582bc"
+    },
+    {
+      "path": "tests/test_decision_policy.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "47978f5e5b4b40b41b25a1a4230a26929a87ad14"
+    },
+    {
+      "path": "tests/test_delayed_context.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "1b4eb9201ac5e5ea054856924659f6008e65998e"
+    },
+    {
+      "path": "tests/test_delivery_ledger.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "4bb3f66d21bf38a9f818a9c70a417ace7addbc0e"
+    },
+    {
+      "path": "tests/test_discovery.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "75c69ecf90a6b2a1882be165a9d282efd44f8951"
+    },
+    {
+      "path": "tests/test_discovery_signals.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "4369987971dd4e545d4b24b12abe5c279146bb43"
+    },
+    {
+      "path": "tests/test_discovery_universe.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "550efdde88aae5d416d36b9b378aebc5a22f08a2"
+    },
+    {
+      "path": "tests/test_early_screening.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "da197703036b41a9c50dc755a1cb63331834de10"
+    },
+    {
+      "path": "tests/test_earnings_calendar.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "a302cfa5ced9dc58889dcafad66fb3383fdb2ab3"
+    },
+    {
+      "path": "tests/test_entry_confirmation.py",
+      "source_commit": "354a61581c8bffbe1b4210b9c971bc8fcf7be621",
+      "git_blob": "8f8d18bc24ea34803d7d905eb7149fa2bd3643f8"
+    },
+    {
+      "path": "tests/test_entry_worker_phases.py",
+      "source_commit": "354a61581c8bffbe1b4210b9c971bc8fcf7be621",
+      "git_blob": "28512bab6a1f5e6b227c9bcb69f0906d9e29c7e2"
+    },
+    {
+      "path": "tests/test_event_archive.py",
+      "source_commit": "839af4f09abc6e7e21daa5bd41c56e587c96b25f",
+      "git_blob": "c663ec16dc07a19fa1ec4a9b7e5e1642d1a30b13"
+    },
+    {
+      "path": "tests/test_event_timestamps.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "042d89879139629679cf2514c1bea9d17ed46a92"
+    },
+    {
+      "path": "tests/test_evidence_enrichment.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "4cb7c9e96ca25b494744b4f232e3955e022647ef"
+    },
+    {
+      "path": "tests/test_execution_evidence.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "6cf12b159fd0ad0793d45ac42d31e3db6cfd6abe"
+    },
+    {
+      "path": "tests/test_execution_readiness.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "bcbf7c55a3a557afa69b78ff42961c2e8d5eae7e"
+    },
+    {
+      "path": "tests/test_execution_research.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "0980c44d5ca1c13d7180cad580be3547c5393c73"
+    },
+    {
+      "path": "tests/test_fresh_notification.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "56b22fffb3ef03f8c6c99d3ad29b92eb6ff861c4"
+    },
+    {
+      "path": "tests/test_github_paper_tracking.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "df6b9e4dbfc0dc8aaa16264651e4454ec9675f07"
+    },
+    {
+      "path": "tests/test_github_plan_review.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "2a9780ba1190e390218c5aae1a37a187a4306db1"
+    },
+    {
+      "path": "tests/test_knowledge_retrieval.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "90610d5e545604c92296bcd5e231647f8f3809e2"
+    },
+    {
+      "path": "tests/test_live_research.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "368fe9e2b783c46018f1d75227fa6867ba0a4560"
+    },
+    {
+      "path": "tests/test_live_synthesis.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "c9bd1e661e7800755c4de3c96051e8e7934f1545"
+    },
+    {
+      "path": "tests/test_lovable_delivery.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "8a5640258d80561fa5567daae298567fa86771b6"
+    },
+    {
+      "path": "tests/test_manual_alert_evidence.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "d4fe0c0dc4ec7c75097affc0397d619da53bd1d5"
+    },
+    {
+      "path": "tests/test_manual_execution_profile.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "d26cf3d78115352d1ce203aeaf2be8cfa216d983"
+    },
+    {
+      "path": "tests/test_manual_portfolio.py",
+      "source_commit": "2859eee9f35d26dcca5f010a10f9ad187d61f44e",
+      "git_blob": "d8f512cdcf87673cb030f240c3ff63ce75c0c1cb"
+    },
+    {
+      "path": "tests/test_market_context.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "8017ecfcde86d4aac7e9fc155a5d90f3082d78de"
+    },
+    {
+      "path": "tests/test_method_shadow.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "8f5d2a5c5f6177b916457d1e245287fe810079de"
+    },
+    {
+      "path": "tests/test_notification.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "6309cc6f2133f448cabf67dc5602521e79049f24"
+    },
+    {
+      "path": "tests/test_openai_pilot.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "fe52d341c9deaf4e31a22a74cb10c108633e0a7b"
+    },
+    {
+      "path": "tests/test_opening_and_crypto.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "d2097a9f3ae130fc01038ddca1044e1174656fa3"
+    },
+    {
+      "path": "tests/test_opening_improvements.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "85ddaa30ed83d754c056b604ca20786181955270"
+    },
+    {
+      "path": "tests/test_paper_comparison.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "d055693550b93909da6df5077e84f24be5fa93d5"
+    },
+    {
+      "path": "tests/test_paper_delivery_failures.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "b5f68910764653e3dd0e7cccefdb2d1524e34b93"
+    },
+    {
+      "path": "tests/test_paper_dispatch_warmup.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "360ad92115b1b99d9529dd6d63070a1e1a2c8088"
+    },
+    {
+      "path": "tests/test_paper_lifecycle_acceptance.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "ce56d395751014247a41ba0fc758ae2e6cfbaa6f"
+    },
+    {
+      "path": "tests/test_paper_observer.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "dc5a8a211f7cace9188aa136ad75aeb1a72becb3"
+    },
+    {
+      "path": "tests/test_paper_outcomes.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "ab52c2516d6b2800bc48e9c2547e380a4dba0c48"
+    },
+    {
+      "path": "tests/test_paper_planner.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "ecfea5e0f0fa7c9154bbcead23d6654e249ad596"
+    },
+    {
+      "path": "tests/test_paper_review_prompts.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "43c2b4be15836c1e14448c8be1c4a58ce0ad4ff2"
+    },
+    {
+      "path": "tests/test_paper_tracking.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "5dd9590952ce10ba20719e6b1ff557355c3a7f4e"
+    },
+    {
+      "path": "tests/test_paper_verdict.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "bc650724c093b3edca465a4cefdb08db5f30e919"
+    },
+    {
+      "path": "tests/test_parallel_paper_review.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "ca5ee7cf69b6ceb4d17b48f583fe6634454a2516"
+    },
+    {
+      "path": "tests/test_parallel_pilot_budget.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "865d7826aebface598b12e424d74081f17fe6560"
+    },
+    {
+      "path": "tests/test_partial_collection_routing.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "a0ec79c94395f1f2bcf0dab955a7b8488bf8ea7c"
+    },
+    {
+      "path": "tests/test_plan_review.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "2fb21ec431d38468b0ef4029b89e64b32e1b1e82"
+    },
+    {
+      "path": "tests/test_public_feed.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "210c9828662755665c62f491316b32924f4a8d93"
+    },
+    {
+      "path": "tests/test_pullback_strategy.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "155efc8df5a4337455e31565428eb15e38a2f225"
+    },
+    {
+      "path": "tests/test_qualification.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "4790b877b8312bd9396b4ed36094215653014492"
+    },
+    {
+      "path": "tests/test_quote_source_audit.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "f641daf3026cf2dd258a39aa8fdd639da360a3d9"
+    },
+    {
+      "path": "tests/test_release_acceptance.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "00caa7bd5d978e6fd74ad074935a5ce717b6d2b5"
+    },
+    {
+      "path": "tests/test_research_checkpoint.py",
+      "source_commit": "7a41b7da4a31ac8223b14ea5b7bf2fd06c71d67b",
+      "git_blob": "1118c78e551196f1902a2455f363ac63dfc51565"
+    },
+    {
+      "path": "tests/test_research_readiness.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "a56ae2a46e653745e9bf51a85ee8d7f65fec3888"
+    },
+    {
+      "path": "tests/test_research_views.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "3e511ea20584f23fa5efebd3253ddfbad4acf9e8"
+    },
+    {
+      "path": "tests/test_review_export.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "43d70f3f19c87c9f2db644e39f29e7d5bd8dbe3c"
+    },
+    {
+      "path": "tests/test_review_reliability_nov13.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "e8d573aabfca5cacb8eb0b13e0ab5a33d9b9159b"
+    },
+    {
+      "path": "tests/test_risk.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "3bf7686d248f735b6e383155a96dc98be4690b70"
+    },
+    {
+      "path": "tests/test_routing_input_capacity.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "8d44f38b164072c14c5b232c29537aa66c22788e"
+    },
+    {
+      "path": "tests/test_run_diagnostics.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "f15a0bae676527f4b4b362bfce344d2ae3f4ed5b"
+    },
+    {
+      "path": "tests/test_scanner_audit_repairs.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "47b274cdbb551d502c109c21848181732d6906d9"
+    },
+    {
+      "path": "tests/test_scanner_news.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "3c6fd28d263376e05ab008f9cfb4048145e66435"
+    },
+    {
+      "path": "tests/test_scanner_operations.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "40e8e64cb092b9de79099f4a1d96656e5686d79c"
+    },
+    {
+      "path": "tests/test_scheduled_collection.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "515290567f89fabf3113f32b49d6f1364f5dfe37"
+    },
+    {
+      "path": "tests/test_scheduled_notification.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "9d48fc2673959e38eb28a6acead90cba3f6faca1"
+    },
+    {
+      "path": "tests/test_session_briefing.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "434d7e7a0d6d2ae047c67ab5812e725c15adde36"
+    },
+    {
+      "path": "tests/test_session_calendar.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "e7c3f3fe454ad75d7481fd1daa19fd33ad952191"
+    },
+    {
+      "path": "tests/test_session_report.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "70cad94786abad4787a1430b73f00fff7f3ff088"
+    },
+    {
+      "path": "tests/test_setup_checks.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "5725c994d79ee92490f2ca36a6bcbb99a4070cf5"
+    },
+    {
+      "path": "tests/test_snapshot_delivery.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "dc03993f5fa1f48950a38e9d7eddad0a2f322b05"
+    },
+    {
+      "path": "tests/test_stock_checks.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "df2cc47e400236b4e812c7988624044fb9471bb0"
+    },
+    {
+      "path": "tests/test_stock_context.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "40bf4f0e65218c14ad16237e3c250a932ca540a8"
+    },
+    {
+      "path": "tests/test_storage_idempotence.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "43d00f2ca160c097111a2c9b70876f7a83bd5e13"
+    },
+    {
+      "path": "tests/test_strategy_diagnostics.py",
+      "source_commit": "7a41b7da4a31ac8223b14ea5b7bf2fd06c71d67b",
+      "git_blob": "2faaf7792ec3c75482e1d5f9b1f0208b9c3ff124"
+    },
+    {
+      "path": "tests/test_strategy_experiment.py",
+      "source_commit": "7a41b7da4a31ac8223b14ea5b7bf2fd06c71d67b",
+      "git_blob": "9420e3706dc8ba21ab4d53f9417a7b24bc178259"
+    },
+    {
+      "path": "tests/test_strategy_routing.py",
+      "source_commit": "7b358fb9fd9d96e8eed77a7a86a605ae82fa453b",
+      "git_blob": "990ef6bf8cdb56b657621c05e02e69b20b0d85dd"
+    },
+    {
+      "path": "tests/test_telegram_check.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "7e0210955648c82cf74878de8124f6e3107eeb70"
+    },
+    {
+      "path": "tests/test_telegram_report.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "561cddb5e715aaad2682b096ad0d6df797dd2154"
+    },
+    {
+      "path": "tests/test_trade_evaluation.py",
+      "source_commit": "839af4f09abc6e7e21daa5bd41c56e587c96b25f",
+      "git_blob": "ea152ea11eea06d0654c114e677bef600837b1ae"
+    },
+    {
+      "path": "tests/test_watcher_reliability.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "0e078d85e616eeb5e3f8e9a3889222d7b1d847be"
+    },
+    {
+      "path": "tests/test_wide_capacity.py",
+      "source_commit": "bb3731f50a77972e547402f5c23e719e201ca973",
+      "git_blob": "d65f1b3db5c308aacfc0efaa3395f4c212a10605"
+    }
+  ]
+}

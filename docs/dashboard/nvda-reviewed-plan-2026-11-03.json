@@ -1,0 +1,284 @@
+{
+  "schema_version": "paper-review-dashboard-v1",
+  "mode": "HISTORICAL_PAPER_REVIEW",
+  "trade_authorized": false,
+  "live_orders_enabled": false,
+  "snapshot_id": "6b394a20dea07b460d9a4afe1e8fd69e17fc9de52f7e195d608b4bc80d1d650b",
+  "evaluated_at": "2026-11-03T17:23:40.489307+00:00",
+  "review_completed_at": "2026-11-03T17:24:34.275024+00:00",
+  "expires_at": "2026-11-03T17:28:40.489307+00:00",
+  "expired": false,
+  "plan": {
+    "symbol": "NVDA",
+    "broker_instrument_id": "NVDA_US_EQ",
+    "currency": "EUR",
+    "native_currency": "USD",
+    "strategy": "conditional_prior_five_bar_breakout",
+    "entry_eur": "186.5984035026914850257587338",
+    "stop_eur": "185.7855915397052744500398097",
+    "target1_eur": "190.4632082706962039975056868",
+    "target2_eur": "192.0224138476931805133276458",
+    "native_entry_usd": "208.91",
+    "native_stop_usd": "208.00",
+    "quantity": "2.668875",
+    "planned_loss_eur": "4.161324784307805698664330920",
+    "assumed_round_trip_cost_eur": "1.992031256592982948392487363",
+    "assumed_round_trip_cost_bps": "40",
+    "paper_capital_eur": "500",
+    "target_basis": "Projected net two/three R under fixed cost and FX assumptions; not observed resistance.",
+    "fx_rate": "0.8931999593255061271636529311",
+    "fx_source": "yahoo_finance:EURUSD=X:5m",
+    "fx_observed_at": "2026-11-03T17:15:00+00:00",
+    "expires_at": "2026-11-03T17:28:40.489307+00:00",
+    "exit_by": "2026-11-03T21:00:00+00:00",
+    "invalidation": "Cancel if stop is breached before entry, evidence expires, or any blocker remains unresolved.",
+    "loss_note": "Planned loss assumes stop-price fill; gaps, slippage and FX movement can increase actual loss.",
+    "market_source": "alpaca_iex",
+    "market_observed_at": "2026-11-03T17:15:00+00:00"
+  },
+  "assumptions_note": "EUR 500 fictional paper allocation; 40 bps assumed round-trip costs. Neither is an account balance or verified broker fee.",
+  "input_blockers": [
+    "account_specific_eligibility_not_verified",
+    "live_bid_ask_and_costs_not_verified",
+    "exchange_calendar_not_verified",
+    "independent_catalyst_review_pending",
+    "six_agent_plan_review_not_run",
+    "iex_limited_market_coverage"
+  ],
+  "review_status": "COMPLETED_UNAPPROVED",
+  "reviews": [
+    {
+      "snapshot_id": "6b394a20dea07b460d9a4afe1e8fd69e17fc9de52f7e195d608b4bc80d1d650b",
+      "stage": "opportunity_hunter",
+      "verdict": "REJECT",
+      "rationale": "Plan is not tradable while account eligibility, executable costs, and exchange calendar remain unverified. IEX-only pricing and pending catalyst review leave the breakout hypothesis insufficiently supported.",
+      "source_ids": [
+        "catalogue:454decb7104440a85fc43dfb63c57d04c6cf95126efcd2792ab43edcf13b1c21",
+        "fx:6cde0a58e72d23c07e0d41f63dcb3a5ecf6e6519a63660735eaba9bfbf1497d1",
+        "market:bc89d7dc3b806dc133494b66b91f4594a0532420992e2d47800c1027cec80cb0",
+        "plan:7f19efd10f39489e9cc0e80836cc887a4eefc221bac175babf4aba981d7997c8"
+      ],
+      "acknowledged_blockers": [
+        "account_specific_eligibility_not_verified",
+        "live_bid_ask_and_costs_not_verified",
+        "exchange_calendar_not_verified",
+        "independent_catalyst_review_pending",
+        "six_agent_plan_review_not_run",
+        "iex_limited_market_coverage"
+      ],
+      "concerns": [
+        "IEX-only quote may not match executable NBBO or Trading 212 pricing.",
+        "Targets are projections, not observed resistance or support.",
+        "Catalyst evidence is mixed and still unreviewed."
+      ],
+      "reviewed_stages": [],
+      "trade_authorized": false
+    },
+    {
+      "snapshot_id": "6b394a20dea07b460d9a4afe1e8fd69e17fc9de52f7e195d608b4bc80d1d650b",
+      "stage": "technical_analyst",
+      "verdict": "MORE_EVIDENCE_REQUIRED",
+      "rationale": "The setup is directionally coherent on fresh NVDA data and a tight bid-ask, but it rests on IEX-only coverage, assumed costs, and no verified account/exchange eligibility. The breakout logic and stop/targets are hypothetical until the blockers and execution data are cleared.",
+      "source_ids": [
+        "catalogue:454decb7104440a85fc43dfb63c57d04c6cf95126efcd2792ab43edcf13b1c21",
+        "fx:6cde0a58e72d23c07e0d41f63dcb3a5ecf6e6519a63660735eaba9bfbf1497d1",
+        "market:bc89d7dc3b806dc133494b66b91f4594a0532420992e2d47800c1027cec80cb0",
+        "plan:7f19efd10f39489e9cc0e80836cc887a4eefc221bac175babf4aba981d7997c8"
+      ],
+      "acknowledged_blockers": [
+        "account_specific_eligibility_not_verified",
+        "live_bid_ask_and_costs_not_verified",
+        "exchange_calendar_not_verified",
+        "independent_catalyst_review_pending",
+        "six_agent_plan_review_not_run",
+        "iex_limited_market_coverage"
+      ],
+      "concerns": [
+        "Targets are projections, not observed resistance.",
+        "IEX-only data may miss better executable pricing.",
+        "Eligibility and calendar status are unresolved."
+      ],
+      "reviewed_stages": [],
+      "trade_authorized": false
+    },
+    {
+      "snapshot_id": "6b394a20dea07b460d9a4afe1e8fd69e17fc9de52f7e195d608b4bc80d1d650b",
+      "stage": "news_analyst",
+      "verdict": "MORE_EVIDENCE_REQUIRED",
+      "rationale": "News flow is mixed: NVDA has supportive product/partnership items, but also China-restriction headlines and broader tech weakness. With catalysts unverified and execution data limited, the setup is only hypothetical.",
+      "source_ids": [
+        "catalogue:454decb7104440a85fc43dfb63c57d04c6cf95126efcd2792ab43edcf13b1c21",
+        "market:bc89d7dc3b806dc133494b66b91f4594a0532420992e2d47800c1027cec80cb0",
+        "plan:7f19efd10f39489e9cc0e80836cc887a4eefc221bac175babf4aba981d7997c8"
+      ],
+      "acknowledged_blockers": [
+        "account_specific_eligibility_not_verified",
+        "live_bid_ask_and_costs_not_verified",
+        "exchange_calendar_not_verified",
+        "independent_catalyst_review_pending",
+        "six_agent_plan_review_not_run",
+        "iex_limited_market_coverage"
+      ],
+      "concerns": [
+        "Catalysts are unverified and news is conflicting.",
+        "IEX-only coverage may miss executable prices and depth.",
+        "Account eligibility and exchange timing are not confirmed."
+      ],
+      "reviewed_stages": [],
+      "trade_authorized": false
+    },
+    {
+      "snapshot_id": "6b394a20dea07b460d9a4afe1e8fd69e17fc9de52f7e195d608b4bc80d1d650b",
+      "stage": "devils_advocate",
+      "verdict": "REJECT",
+      "rationale": "The setup is only hypothetically coherent, but it relies on unverified eligibility, IEX-only prices, and unresolved blocker status. News is unvetted as catalyst evidence, so the projected breakout and targets are not robust enough to justify a trade.",
+      "source_ids": [
+        "catalogue:454decb7104440a85fc43dfb63c57d04c6cf95126efcd2792ab43edcf13b1c21",
+        "fx:6cde0a58e72d23c07e0d41f63dcb3a5ecf6e6519a63660735eaba9bfbf1497d1",
+        "market:bc89d7dc3b806dc133494b66b91f4594a0532420992e2d47800c1027cec80cb0",
+        "plan:7f19efd10f39489e9cc0e80836cc887a4eefc221bac175babf4aba981d7997c8"
+      ],
+      "acknowledged_blockers": [
+        "account_specific_eligibility_not_verified",
+        "live_bid_ask_and_costs_not_verified",
+        "exchange_calendar_not_verified",
+        "independent_catalyst_review_pending",
+        "six_agent_plan_review_not_run",
+        "iex_limited_market_coverage"
+      ],
+      "concerns": [
+        "IEX-only quotes are not executable NBBO, so fill and cost assumptions are uncertain.",
+        "Account eligibility and exact instrument permission are unverified.",
+        "News items are unverified catalysts and may not support the breakout thesis."
+      ],
+      "reviewed_stages": [],
+      "trade_authorized": false
+    },
+    {
+      "snapshot_id": "6b394a20dea07b460d9a4afe1e8fd69e17fc9de52f7e195d608b4bc80d1d650b",
+      "stage": "risk_manager",
+      "verdict": "MORE_EVIDENCE_REQUIRED",
+      "rationale": "Coherent as a hypothetical NVDA breakout paper, but execution is not verifiable with IEX-only pricing and unresolved account/venue eligibility. Cost, calendar, and catalyst checks remain open, so it is not tradable.",
+      "source_ids": [
+        "catalogue:454decb7104440a85fc43dfb63c57d04c6cf95126efcd2792ab43edcf13b1c21",
+        "fx:6cde0a58e72d23c07e0d41f63dcb3a5ecf6e6519a63660735eaba9bfbf1497d1",
+        "market:bc89d7dc3b806dc133494b66b91f4594a0532420992e2d47800c1027cec80cb0",
+        "plan:7f19efd10f39489e9cc0e80836cc887a4eefc221bac175babf4aba981d7997c8"
+      ],
+      "acknowledged_blockers": [
+        "account_specific_eligibility_not_verified",
+        "live_bid_ask_and_costs_not_verified",
+        "exchange_calendar_not_verified",
+        "independent_catalyst_review_pending",
+        "six_agent_plan_review_not_run",
+        "iex_limited_market_coverage"
+      ],
+      "concerns": [
+        "Targets are projections, not observed levels.",
+        "IEX-only coverage may miss executable prices.",
+        "Eligibility and calendar remain unverified."
+      ],
+      "reviewed_stages": [],
+      "trade_authorized": false
+    },
+    {
+      "snapshot_id": "6b394a20dea07b460d9a4afe1e8fd69e17fc9de52f7e195d608b4bc80d1d650b",
+      "stage": "final_decision",
+      "verdict": "MORE_EVIDENCE_REQUIRED",
+      "rationale": "Plan is hypothetically coherent, but execution cannot be validated with unresolved eligibility, venue coverage, calendar, and cost blockers. Fresh quotes and bars exist, yet IEX-only pricing and pending catalyst review leave the setup untradable.",
+      "source_ids": [
+        "catalogue:454decb7104440a85fc43dfb63c57d04c6cf95126efcd2792ab43edcf13b1c21",
+        "fx:6cde0a58e72d23c07e0d41f63dcb3a5ecf6e6519a63660735eaba9bfbf1497d1",
+        "market:bc89d7dc3b806dc133494b66b91f4594a0532420992e2d47800c1027cec80cb0",
+        "plan:7f19efd10f39489e9cc0e80836cc887a4eefc221bac175babf4aba981d7997c8"
+      ],
+      "acknowledged_blockers": [
+        "account_specific_eligibility_not_verified",
+        "live_bid_ask_and_costs_not_verified",
+        "exchange_calendar_not_verified",
+        "independent_catalyst_review_pending",
+        "six_agent_plan_review_not_run",
+        "iex_limited_market_coverage"
+      ],
+      "concerns": [
+        "Targets are projections; costs are assumed, not executed.",
+        "IEX-only market data is limited and not consolidated.",
+        "Account eligibility and exchange calendar are unverified."
+      ],
+      "reviewed_stages": [],
+      "trade_authorized": false
+    },
+    {
+      "snapshot_id": "6b394a20dea07b460d9a4afe1e8fd69e17fc9de52f7e195d608b4bc80d1d650b",
+      "stage": "debate",
+      "verdict": "MORE_EVIDENCE_REQUIRED",
+      "rationale": "All six peer reports are internally aligned that the paper setup is only hypothetical: fresh IEX quotes exist, but executable costs, eligibility, calendar, and catalyst review are unresolved. IEX-only coverage and projected targets keep this untradable for now.",
+      "source_ids": [
+        "catalogue:454decb7104440a85fc43dfb63c57d04c6cf95126efcd2792ab43edcf13b1c21",
+        "fx:6cde0a58e72d23c07e0d41f63dcb3a5ecf6e6519a63660735eaba9bfbf1497d1",
+        "market:bc89d7dc3b806dc133494b66b91f4594a0532420992e2d47800c1027cec80cb0",
+        "plan:7f19efd10f39489e9cc0e80836cc887a4eefc221bac175babf4aba981d7997c8"
+      ],
+      "acknowledged_blockers": [
+        "account_specific_eligibility_not_verified",
+        "live_bid_ask_and_costs_not_verified",
+        "exchange_calendar_not_verified",
+        "independent_catalyst_review_pending",
+        "six_agent_plan_review_not_run",
+        "iex_limited_market_coverage"
+      ],
+      "concerns": [
+        "IEX-only data may not match executable NBBO or broker pricing.",
+        "Targets are projections, not observed resistance/support.",
+        "Catalyst evidence remains unverified and mixed."
+      ],
+      "reviewed_stages": [
+        "opportunity_hunter",
+        "technical_analyst",
+        "news_analyst",
+        "devils_advocate",
+        "risk_manager",
+        "final_decision"
+      ],
+      "trade_authorized": false
+    },
+    {
+      "snapshot_id": "6b394a20dea07b460d9a4afe1e8fd69e17fc9de52f7e195d608b4bc80d1d650b",
+      "stage": "conclusion",
+      "verdict": "MORE_EVIDENCE_REQUIRED",
+      "rationale": "Peers are aligned that this is only hypothetical: fresh IEX quotes exist, but executable costs, eligibility, calendar, and catalyst review remain unresolved. That leaves the projected breakout and targets untradable, despite apparent short-term coherence.",
+      "source_ids": [
+        "catalogue:454decb7104440a85fc43dfb63c57d04c6cf95126efcd2792ab43edcf13b1c21",
+        "fx:6cde0a58e72d23c07e0d41f63dcb3a5ecf6e6519a63660735eaba9bfbf1497d1",
+        "market:bc89d7dc3b806dc133494b66b91f4594a0532420992e2d47800c1027cec80cb0",
+        "plan:7f19efd10f39489e9cc0e80836cc887a4eefc221bac175babf4aba981d7997c8"
+      ],
+      "acknowledged_blockers": [
+        "account_specific_eligibility_not_verified",
+        "live_bid_ask_and_costs_not_verified",
+        "exchange_calendar_not_verified",
+        "independent_catalyst_review_pending",
+        "six_agent_plan_review_not_run",
+        "iex_limited_market_coverage"
+      ],
+      "concerns": [
+        "IEX-only data may not match executable NBBO or broker pricing.",
+        "Targets are projections, not observed support/resistance.",
+        "Catalysts remain unverified and mixed."
+      ],
+      "reviewed_stages": [
+        "opportunity_hunter",
+        "technical_analyst",
+        "news_analyst",
+        "devils_advocate",
+        "risk_manager",
+        "final_decision",
+        "debate"
+      ],
+      "trade_authorized": false
+    }
+  ],
+  "final_verdict": "MORE_EVIDENCE_REQUIRED",
+  "estimated_review_cost_eur": "0.057291",
+  "notice": "Historical review only. Completion is not trade approval; evidence and model reasoning require review."
+}
