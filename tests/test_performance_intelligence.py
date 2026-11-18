@@ -254,3 +254,19 @@ def test_manual_export_validates_late_pages_without_using_them_at_the_earlier_cu
     write()
     with pytest.raises(ValueError, match='manual_clock_source_binding'):
         manual_evidence(tmp_path)
+
+def test_export_coverage_observes_real_valuation_and_capture_clocks():
+    from market_radar_ai.agents.performance_intelligence import export_coverage
+    report = {'as_of': '2026-11-18T19:13:43+00:00', 'manual': {'as_of': '2026-11-18T21:30:00+00:00'}}
+    intake = {'last_capture_at': '2026-11-18T22:00:00Z',
+              'sources': {'execution': {'run_id': 1, 'workflow_conclusion': 'failure', 'job_id': 10}}}
+    rows = export_coverage(report, intake)['sources']
+    assert rows['execution']['state'] == 'over_30m_behind_capture'
+    assert rows['execution']['seconds_behind_capture'] == 9977
+    assert rows['execution']['export_job_id'] == 10
+    assert rows['manual']['state'] == 'within_30m_of_capture'
+    report['manual'] = None
+    assert export_coverage(report, {})['sources']['manual']['state'] == 'valuation_unavailable'
+    assert export_coverage(report, {})['sources']['execution']['state'] == 'capture_reference_unavailable'
+    report['as_of'] = '2026-11-18T22:00:10+00:00'
+    assert export_coverage(report, intake)['sources']['execution']['seconds_behind_capture'] == 0

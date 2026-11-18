@@ -598,6 +598,24 @@ def write_projection(path, events, report, rows, books):
             db.execute('INSERT INTO exceptions VALUES(?,?,?)', (r['kind'], r['setup_id'], canonical(r)))
 
 
+def export_coverage(report, intake):
+    latest = intake.get('last_capture_at')
+    result = {'latest_capture_artifact_at': latest, 'sources': {}}
+    for name, valuation in [('execution', report['as_of']), ('manual', (report.get('manual') or {}).get('as_of'))]:
+        source = intake.get('sources', {}).get(name, {})
+        lag = max(0, (aware(latest) - aware(valuation)).total_seconds()) if latest and valuation else None
+        if valuation is None:
+            state = 'valuation_unavailable'
+        elif lag is None:
+            state = 'capture_reference_unavailable'
+        else:
+            state = 'over_30m_behind_capture' if lag > 1800 else 'within_30m_of_capture'
+        result['sources'][name] = {'valuation_at': valuation, 'seconds_behind_capture': lag, 'state': state,
+            'run_id': source.get('run_id'), 'workflow_conclusion': source.get('workflow_conclusion'),
+            'export_job_id': source.get('job_id')}
+    return result
+
+
 def markdown(report):
     def eur(value):
         return 'unknown' if value is None else f'€{number(value):.4f}'
@@ -648,6 +666,21 @@ def markdown(report):
                 fields = [phase, delay+'s', result['alerts'], result['recheck_states'].get('fresh_bid_recross', 0),
                           result['control']['closed'], result['fresh']['closed'], eur(result['fresh']['closed_net_pnl_eur'])]
                 lines.append('| ' + ' | '.join(map(str, fields)) + ' |')
+    if 'export_coverage' in report:
+        coverage = report['export_coverage']
+        lines += ['', '## Portfolio export coverage', '',
+                  'Latest scanner capture artifact (Dublin) ' +
+                  (aware(coverage['latest_capture_artifact_at']).astimezone(ZONE).isoformat() if coverage['latest_capture_artifact_at'] else 'unknown'),
+                  '', '| Portfolio source | Valued through (Dublin) | Minutes behind latest capture | Workflow result |',
+                  '|---|---|---:|---|']
+        for name, row in coverage['sources'].items():
+            at = aware(row['valuation_at']).astimezone(ZONE).isoformat() if row['valuation_at'] else 'unknown'
+            lag = row['seconds_behind_capture']
+            minutes = f'{lag / 60:.1f}' if lag is not None else 'unknown'
+            result = row['workflow_conclusion'] or 'unknown'
+            if row['export_job_id']:
+                result += f" (successful export in job {row['export_job_id']})"
+            lines.append(f'| {name} | {at} | {minutes} | {result} |')
     return '\n'.join(lines) + '\n'
 
 
@@ -656,6 +689,7 @@ def main():
     parser.add_argument('--execution', type=Path, required=True, help='Directory containing report.json and source-events.jsonl.gz')
     parser.add_argument('--manual', type=Path)
     parser.add_argument('--contexts', type=Path, help='JSON list of report, sha256 and proven available_at')
+    parser.add_argument('--intake', type=Path, help='Capture inventory and portfolio source receipts for coverage reporting')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     if args.output.exists():
@@ -665,6 +699,8 @@ def main():
     contexts = json.loads(args.contexts.read_text()) if args.contexts else []
     with read_archive(args.execution / 'source-events.jsonl.gz') as events:
         report, rows, books = build(events, execution, contexts=contexts, manual=manual)
+        if args.intake:
+            report['export_coverage'] = export_coverage(report, json.loads(args.intake.read_text()))
         args.output.mkdir(parents=True)
         write_projection(args.output / 'performance.sqlite', events, report, rows, books)
         (args.output / 'performance.json').write_text(json.dumps(report, indent=2) + '\n')

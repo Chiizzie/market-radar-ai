@@ -144,6 +144,58 @@ def test_intake_skips_empty_success_and_records_failed_capture_gap(tmp_path):
     bank.close()
 
 
+def test_failed_workflow_recovers_only_export_that_completed_in_the_same_attempt(tmp_path, monkeypatch):
+    from market_radar_ai.agents.research_artifacts import EXPORT_STEPS
+    base = {**RUN, 'name': 'Execution research and readiness', 'id': 20}
+    later = {**base, 'id': 21, 'conclusion': 'failure', 'run_attempt': 2, 'created_at': '2026-11-18T19:08:45Z'}
+    wrong = {**later, 'id': 22, 'created_at': '2026-11-18T20:00:00Z'}
+    stopped = {**later, 'id': 23, 'conclusion': 'cancelled', 'created_at': '2026-11-18T21:00:00Z'}
+    events = zipped({'report.json': '{}', 'source-events.jsonl.gz': gzip.compress(b'')})
+    checksum = 'sha256:' + hashlib.sha256(events).hexdigest()
+    def artifact(run, number, at):
+        return {**ARTIFACT, 'id': number, 'name': f"execution-research-{run['id']}",
+                'digest': checksum, 'created_at': at}
+    reader = GitHubReader('test')
+    listings = {21: [artifact(later, 211, '2026-11-18T19:03:00Z'),
+                     artifact(later, 212, '2026-11-18T19:17:36Z')],
+                22: [artifact(wrong, 221, '2026-11-18T20:07:00Z')]}
+    monkeypatch.setattr(reader, 'artifacts', lambda run: listings[run['id']])
+    downloads = []
+    def download(item):
+        downloads.append(item['id'])
+        return events
+    monkeypatch.setattr(reader, 'download', download)
+    queries = []
+    def jobs(path, **kwargs):
+        queries.append(path)
+        run_id = int(path.split('/')[2])
+        step = {'name': EXPORT_STEPS['execution'], 'conclusion': 'success', 'completed_at': '2026-11-18T19:16:15Z'}
+        return {'jobs': [{'id': 123, 'run_id': run_id, 'run_attempt': 2 if run_id == 21 else 1,
+                          'completed_at': '2026-11-18T19:17:38Z', 'steps': [step]}]}
+    monkeypatch.setattr(reader, 'get', jobs)
+    bank = EvidenceBank(tmp_path / 'bank.sqlite')
+    for directory in ('first','second'):
+        sources = collect(reader, [base, later, wrong, stopped], bank, tmp_path / directory)
+        assert sources['execution'] == {'run_id': 21, 'artifact_id': 212, 'digest': checksum,
+            'workflow_conclusion': 'failure', 'job_id': 123, 'export_completed_at': '2026-11-18T19:16:15Z',
+            'job_completed_at': '2026-11-18T19:17:38Z'}
+    assert queries == ['/runs/22/attempts/2/jobs','/runs/21/attempts/2/jobs']
+    assert downloads == [212, 212]
+    bank.close()
+
+
+@pytest.mark.parametrize('step_name,result', [
+    ('Replay separate accounts and verify complete ledger recovery', 'failure'),
+    ('Replay separate accounts and verify complete ledger recovery', 'skipped'),
+    ('Check operational readiness without paid AI or orders', 'success'),
+])
+def test_failed_manual_export_needs_a_successful_ledger_step(step_name, result, monkeypatch):
+    reader = GitHubReader('test')
+    monkeypatch.setattr(reader, 'get', lambda *args, **kwargs: {'jobs': [{'run_id': 1, 'run_attempt': 1,
+        'steps': [{'name': step_name, 'conclusion': result}]}]})
+    assert reader.export_receipt({'id': 1}, 'manual') == {}
+
+
 def test_workflow_has_no_trading_provider_notification_or_model_secrets():
     text = Path('.github/workflows/performance-intelligence.yml').read_text()
     assert 'secrets.' not in text and 'contents: write' not in text
