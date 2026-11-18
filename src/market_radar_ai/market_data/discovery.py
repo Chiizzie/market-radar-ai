@@ -70,12 +70,16 @@ def catalogue_selection(activity, universe, now, *, limit, evidence=None):
     return leaders + rotated[:slots]
 
 
-def discover(*, env, now, fallback, session=None, universe_cache_path=None):
+def discover(*, env, now, fallback, session=None, universe_cache_path=None, opening_news=()):
     if now.tzinfo is None:
         raise ValueError('aware_clock_required')
     transport = session or requests.Session()
     groups, sources, failures = [], [], []
     broad = env.get('ENABLE_BROAD_DISCOVERY') == 'true'
+    from .opening_discovery import POLICY, chart_priority, phase
+    window = phase(now) if broad else None
+    opening_charts = {}
+    opening_route = None
     screen_limit = STOCK_SCREEN_LIMIT if broad else 100
     research_limit = STOCK_RESEARCH_LIMIT-1 if broad else 19
     snapshots = None
@@ -177,19 +181,30 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
                     checked=capture_result(result,now=datetime.now(timezone.utc))['payload']
                     reasons = sorted({i.get('code', 'quality_check_failed') for i in checked.get('quality_issues', [])})
                     from .chart_diagnostics import describe
-                    return symbol,checked['quality_passed_at_capture'],technical_priority(result),reasons,describe(result,checked,now=datetime.now(timezone.utc),expected_symbol=symbol)
+                    usable = checked['quality_passed_at_capture']
+                    score = technical_priority(result)
+                    opening_score = None
+                    if usable and window in ('opening_range', 'opening_continuation') and getattr(result, 'candles', None):
+                        try:
+                            opening_score = chart_priority(result, symbol, window, score)
+                        except (ValueError, TypeError, KeyError, ArithmeticError, AttributeError):
+                            # A missing opening preference cannot invalidate an ordinary chart.
+                            opening_score = None
+                    return symbol,usable,score,reasons,describe(result,checked,now=datetime.now(timezone.utc),expected_symbol=symbol),opening_score
                 except Exception:
                     # A provider failure is an unavailable observation, not a
                     # reason to abort unrelated symbols or expose raw errors.
-                    return symbol, False, (False, 0), ['provider_or_validation_unavailable'], {'category':'provider_or_validation_exception'}
+                    return symbol, False, (False, 0), ['provider_or_validation_unavailable'], {'category':'provider_or_validation_exception'},None
             # Independent sessions per worker; four requests in flight at most.
             with ThreadPoolExecutor(max_workers=4) as executor:
-                for symbol,usable,score,reasons,diagnostic in executor.map(check,ordered):
+                for symbol,usable,score,reasons,diagnostic,opening_score in executor.map(check,ordered):
                     chart_diagnostics[symbol]=diagnostic
                     screening['checked']+=1
                     technical_reasons[symbol] = reasons if usable else (reasons or ['unusable_completed_bars'])
                     if usable:
                         candidates.append(symbol);priority[symbol]=score
+                        if opening_score is not None:
+                            opening_charts[symbol] = opening_score
                     else:screening['rejected'].append(symbol)
         else:
             # Pre-open selection prepares news/calendars only. No technical
@@ -200,6 +215,21 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
             if broad:
                 from .coverage_lanes import select_details
                 selected,detail_lanes=select_details(candidates,sector_leaders,now,research_limit,related)
+                if window in ('opening_range', 'opening_continuation'):
+                    # Keep the old allocation for later comparisons. Spend only the
+                    # existing ten technical slots on opening candidates.
+                    recent = set(opening_news) if window == 'opening_continuation' else set()
+                    ordered_charts = sorted(opening_charts, key=lambda s: (s not in recent, -opening_charts[s], s))
+                    baseline = selected
+                    selected, detail_lanes = select_details(candidates, sector_leaders, now, research_limit, related,
+                        opening_priority=ordered_charts, opening_lane=window)
+                    opening_route = {'policy': POLICY, 'window': window, 'as_of': now.isoformat(),
+                        'baseline_symbols': baseline, 'routed_symbols': selected,
+                        'chart_matches': len(opening_charts), 'charted_with_prior_news': len(recent & opening_charts.keys()),
+                        'baseline_chart_matches': len(set(baseline) & opening_charts.keys()),
+                        'routed_chart_matches': len(set(selected) & opening_charts.keys()),
+                        'routed_symbols_with_chart_match': [s for s in selected if s in opening_charts],
+                        'technical_slot_limit': 10}
             else:
                 _,selected=select([candidates],now,limit=research_limit)
         else:
@@ -256,14 +286,19 @@ def discover(*, env, now, fallback, session=None, universe_cache_path=None):
     if broad:
         coverage['provider_unmapped'] = len(provider_unmapped) if universe else 0
     from .chart_diagnostics import summarize
+    policy = ('liquid_core_sector_movers_technical_and_rotation_v2' if broad else 'fresh_leaders_and_catalogue_rotation_every_5_minutes')
+    policy = f'{policy}_screen_{screen_limit}_enrich_{research_limit}'
+    if opening_route:
+        policy += '+' + POLICY
     return {'chart_quality_summary':summarize(manifest),'schema_version':'stock-discovery-v2','retrieved_at':now.isoformat(),
             'status':'partial' if failures else 'ok','sources':sources,'failures':failures,
             'scope':'catalogue_and_fresh_activity_not_full_exchange_scan' if universe else 'provider_activity_and_movers_not_full_exchange_scan',
             'discovered_count':len(ranked),'selected_symbols':selected,
             'deferred_symbols':[s for s in pool if s not in selected],
-            'selection_policy':f'liquid_core_sector_movers_technical_and_rotation_v2_screen_{screen_limit}_enrich_{research_limit}' if broad else f'fresh_leaders_and_catalogue_rotation_every_5_minutes_screen_{screen_limit}_enrich_{research_limit}',
+            'selection_policy':policy,
             'snapshot_coverage':{k:v for k,v in snapshots.items() if k not in ('ranked_symbols','symbol_evidence','checkpoint')} if snapshots else None,
             'selection_manifest': manifest, 'catalyst_links': catalyst_links,
+            **({'opening_route': opening_route} if opening_route else {}),
             'universe':universe, 'coverage':coverage,
             'candidate_pool_symbols':pool,
             'screening':screening,'fallback_used':fallback_used,
