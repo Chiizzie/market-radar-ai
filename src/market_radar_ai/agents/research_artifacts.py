@@ -244,7 +244,9 @@ class EvidenceBank:
             yield row
 
     def summary(self):
-        snapshots = list(self.rows('capture'))
+        summary_fields = ('run_id', 'attempt', 'artifact_id', 'missing_files', 'artifact_created_at',
+                          'discovery_observations', 'qualified_observations')
+        snapshots = [{field: row[field] for field in summary_fields} for row in self.rows('capture')]
         runs = list(self.rows('run'))
         deliveries = list(self.rows('capture_delivery'))
         covered = {(s['run_id'], s['attempt']) for s in snapshots}
@@ -334,12 +336,14 @@ class GitHubReader:
         return raw
 
 
-def collect(reader, runs, bank, output, *, maximum_new_artifacts=120):
+def collect(reader, runs, bank, output, *, maximum_new_artifacts=120, catch_up_deadline=None):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     ordered = sorted(runs, key=lambda r: (r['created_at'], r['id']), reverse=True)
     artifacts_by_run = {}
     pending, downloaded = [], 0
+    queue = []
+    started = datetime.now(UTC)
 
     def artifacts(run):
         if run['id'] not in artifacts_by_run:
@@ -362,7 +366,8 @@ def collect(reader, runs, bank, output, *, maximum_new_artifacts=120):
                    'context' if artifact['name'] == 'market-context-' + str(run['id']) else None
             if not kind or artifact['expired']:
                 continue
-            if artifact.get('expires_at') and aware(artifact['expires_at']) <= datetime.now(UTC):
+            expiry = aware(artifact['expires_at']) if artifact.get('expires_at') else None
+            if expiry is not None and expiry <= started:
                 continue
             indexed = bank.has(kind, artifact['id'])
             # Backfill previously indexed failed attempts without altering the
@@ -371,23 +376,34 @@ def collect(reader, runs, bank, output, *, maximum_new_artifacts=120):
                               and not bank.has('capture_delivery', artifact['id']))
             if indexed and not needs_delivery:
                 continue
-            if downloaded >= maximum_new_artifacts:
-                pending.append(artifact['id']); continue
-            names = CAPTURE_FILES | {'opening-session.json'} if kind == 'capture' else {'report.json'}
-            raw = reader.download(artifact)
-            files = zip_members(raw, names)
-            downloaded += 1
-            if kind == 'capture':
-                if not indexed:
-                    bank.put(kind, artifact['id'], capture_snapshot(files, run=run, artifact=artifact))
-                if needs_delivery:
-                    retain_delivery(bank, raw, files, run=run, artifact=artifact)
-            elif 'report.json' in files:
-                report = json.loads(files['report.json'])
-                bank.put(kind, artifact['id'], {'report': report, 'sha256': digest(report),
-                    # GitHub's creation time proves availability conservatively.
-                    'available_at': max(aware(artifact['created_at']), aware(report['as_of'])).isoformat(),
-                    'artifact_id': artifact['id'], 'artifact_digest': artifact.get('digest')})
+            queue.append((expiry, run, artifact, kind, indexed))
+    # Expiring archives take precedence. Stable sorting keeps newest-first
+    # intake for other sources, including older inventories without an expiry.
+    urgent_by = started + timedelta(hours=36)
+    queue.sort(key=lambda item: min(item[0], urgent_by) if item[0] else urgent_by)
+    urgent_pending = []
+    for expiry, run, artifact, kind, indexed in queue:
+        if downloaded >= maximum_new_artifacts and (
+                catch_up_deadline is None or time.monotonic() >= catch_up_deadline
+                or downloaded >= 8 * maximum_new_artifacts):
+            pending.append(artifact['id'])
+            if expiry is not None and expiry <= urgent_by:
+                urgent_pending.append(expiry)
+            continue
+        names = CAPTURE_FILES | {'opening-session.json'} if kind == 'capture' else {'report.json'}
+        raw = reader.download(artifact)
+        files = zip_members(raw, names)
+        downloaded += 1
+        if kind == 'capture':
+            if not indexed:
+                bank.put(kind, artifact['id'], capture_snapshot(files, run=run, artifact=artifact))
+            if not bank.has('capture_delivery', artifact['id']):
+                retain_delivery(bank, raw, files, run=run, artifact=artifact)
+        elif 'report.json' in files:
+            report = json.loads(files['report.json'])
+            bank.put(kind, artifact['id'], {'report': report, 'sha256': digest(report),
+                'available_at': max(aware(artifact['created_at']), aware(report['as_of'])).isoformat(),
+                'artifact_id': artifact['id'], 'artifact_digest': artifact.get('digest')})
     # Frozen experiments already export their complete journals. Recover one
     # latest usable report per day/experiment; keep older snapshots in the bank.
     from .frozen_evaluation import evaluate, summarize_latest
@@ -441,6 +457,8 @@ def collect(reader, runs, bank, output, *, maximum_new_artifacts=120):
     (output / 'intake.json').write_text(json.dumps({'sources': sources,
         'performance_source_status': 'available' if 'execution' in sources else 'execution_source_missing',
         'new_artifacts_indexed': downloaded,
+        'pending_within_36_hours': len(urgent_pending),
+        'next_pending_expiry': min(urgent_pending).isoformat() if urgent_pending else None,
         'frozen_artifacts_read': frozen_downloads,
         'pending_artifact_ids': pending, 'state': 'backfill_pending' if pending else 'available_artifacts_indexed',
         **bank.summary()}, indent=2) + '\n')
@@ -478,6 +496,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=Path('artifacts/evidence-intake'))
     parser.add_argument('--day', default=datetime.now(UTC).astimezone(ZoneInfo('Europe/Dublin')).date().isoformat())
+    parser.add_argument('--after-close-backfill', action='store_true',
+                        help='Use spare after-close time for bounded reads of existing GitHub evidence.')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     reader = GitHubReader(os.environ.get('GH_TOKEN'))
@@ -500,7 +520,9 @@ def main():
                 completed_dates.append(date.isoformat())
         current_ids = {r['id'] for r in runs}
         runs += [r['run'] for r in bank.rows('inventory') if r['run']['id'] not in current_ids]
-        sources = collect(reader, runs, bank, args.output)
+        after_close = datetime.now(ZoneInfo('America/New_York')).hour >= 16
+        catch_up = time.monotonic() + 12 * 60 if args.after_close_backfill and after_close else None
+        sources = collect(reader, runs, bank, args.output, catch_up_deadline=catch_up)
         # Mark a date complete only after its run inventories were retained.
         # A mid-intake failure must not strand unvisited historical runs.
         for date in completed_dates:

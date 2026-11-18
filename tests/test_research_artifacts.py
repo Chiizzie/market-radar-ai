@@ -1,4 +1,5 @@
 from copy import deepcopy
+from datetime import UTC, datetime, timedelta
 import gzip
 import hashlib
 from io import BytesIO
@@ -168,6 +169,31 @@ def test_bounded_backfill_resumes_without_erasing_or_redownloading_history(tmp_p
     collect(reader, [execution, RUN], bank, tmp_path / 'third')
     assert calls.count(11) == 1 and bank.summary()['capture_snapshots'] == 1
     assert bank.summary()['missing_capture_run_ids'] == []
+    bank.close()
+
+
+@pytest.mark.parametrize('deadline,expected', [(None, 1), (0, 1), (float('inf'), 8)])
+def test_expiry_priority_bounded_after_close_and_resume(tmp_path, deadline, expected):
+    now = datetime.now(UTC)
+    runs = [{**RUN, 'id': n, 'created_at': (now + timedelta(seconds=n-20)).isoformat()}
+            for n in range(1, 11)]
+    artifacts = {r['id']: {**ARTIFACT, 'id': r['id'], 'name': f"scheduled-capture-{r['id']}",
+                     'expires_at': (now + timedelta(hours=r['id'])).isoformat()} for r in runs}
+    seen = []
+    def download(a):
+        seen.append(a['id'])
+        return zipped(capture())
+    reader = SimpleNamespace(artifacts=lambda r: [artifacts[r['id']]], download=download)
+    bank = EvidenceBank(tmp_path/'bank.sqlite')
+    with pytest.raises(ValueError, match='no_completed_execution_evidence'):
+        collect(reader, runs, bank, tmp_path, maximum_new_artifacts=1, catch_up_deadline=deadline)
+    assert seen == list(range(1, expected+1))
+    summary = json.loads((tmp_path/'intake.json').read_text())
+    assert summary['pending_within_36_hours'] == 10-expected
+    assert summary['next_pending_expiry'] == artifacts[expected+1]['expires_at']
+    with pytest.raises(ValueError, match='no_completed_execution_evidence'):
+        collect(reader, runs, bank, tmp_path)
+    assert seen == list(range(1, 11)) and bank.summary()['capture_snapshots'] == 10
     bank.close()
 
 
