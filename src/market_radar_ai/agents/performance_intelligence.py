@@ -508,6 +508,7 @@ def build(events, execution, *, contexts=(), manual=None):
 def manual_evidence(directory):
     """Reproduce the existing manual ledger byte-for-byte before using metrics."""
     from . import manual_portfolio
+    from .fresh_breakout import FreshBreakout
     from .manual_alert_evidence import EXPERIMENT as CLOCK_ID, PROFILE_PATH, validate_clock
     from .paper_comparison import GUARDED_PROTOCOL
     directory = Path(directory)
@@ -546,8 +547,9 @@ def manual_evidence(directory):
         # frozen replay below supplies outcomes at the earlier valuation time.
         validate_projection(comparison, now=published, protocol=GUARDED_PROTOCOL)
         ledgers = []
-        actual = manual_portfolio.replay(events, now=cutoff,
-            profile=json.loads(PROFILE_PATH.read_text()), ledger_output=ledgers)
+        profile = json.loads(PROFILE_PATH.read_text())
+        breakout = FreshBreakout(profile)
+        actual = manual_portfolio.replay(events, now=cutoff, profile=profile, ledger_output=ledgers, shadow=breakout)
         # The producer deliberately stamps publication time after the replay.
         # Outcomes remain bound to evaluated_through, never to that later clock.
         actual.update(as_of=report['as_of'], evaluation_day=aware(report['as_of']).date().isoformat())
@@ -562,6 +564,7 @@ def manual_evidence(directory):
         'costs_verified': report['costs_verified'], 'clocks': clocks, 'clock_available_at': clock_available_at,
         'source_events': report['source_events'], 'processed_events': report['processed_events'],
         'source_rows_deferred_after_cutoff': deferred,
+        'fresh_breakout': breakout.report(),
         'books': [{'scenario': b['scenario'], 'rows': list(b['rows'].values()),
             'metrics': closed_metrics(list(b['rows'].values())),
             'uncertainty': day_bootstrap(list(b['rows'].values()))} for b in ledgers]}
@@ -635,6 +638,16 @@ def markdown(report):
         delays = ' / '.join(str(n) for n in stats['response_before_expiry'].values())
         lines.append('| ' + ' | '.join([day, *clocks, str(stats['acknowledged_before_20_bars']), delays]) + ' |')
     lines.append(report['stock_session_timing']['response_scope'])
+    experiment = (report.get('manual') or {}).get('fresh_breakout')
+    if experiment:
+        lines += ['', '## Fresh breakout after manual response', '',
+                  '| Period | Response | Watches | New confirmations | Control closes | Fresh closes | Fresh net EUR |',
+                  '|---|---:|---:|---:|---:|---:|---:|']
+        for phase, pairs in experiment['phases'].items():
+            for delay, result in pairs.items():
+                fields = [phase, delay+'s', result['alerts'], result['recheck_states'].get('fresh_bid_recross', 0),
+                          result['control']['closed'], result['fresh']['closed'], eur(result['fresh']['closed_net_pnl_eur'])]
+                lines.append('| ' + ' | '.join(map(str, fields)) + ' |')
     return '\n'.join(lines) + '\n'
 
 
