@@ -159,7 +159,11 @@ class MethodShadow:
                 failures.append('stale_method_quote'); continue
             events.append(envelope('quote',{'candidate_id':mapping[o['packet_id']],
                 'quote':q.model_dump(mode='json'),'source':o['source'],'received_at':received.isoformat()},received))
-        self.client.append(self.experiment,events); self.sync()
+        # The start of every poll already reads the authoritative tail. An
+        # idle worker did no quote work and has nothing new to reconcile.
+        if decisions:
+            self.client.append(self.experiment, events)
+            self.sync()
         self.health['polls']+=1; self.health['quotes_received']+=len(events)
         self.health['error_polls']+=bool(failures)
 
