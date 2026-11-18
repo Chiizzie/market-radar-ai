@@ -117,7 +117,10 @@ def main():
         kind='backup_report'
     else:report=health(github,now=now);kind='ops_report'
     args.output.parent.mkdir(parents=True,exist_ok=True);args.output.write_text(json.dumps(report,indent=2)+'\n')
-    EventClient(os.environ.get('REVIEW_INGEST_SECRET')).append(EXPERIMENT,[envelope(kind,report,now)])
+    # Every run archives its full health report. A timed-out write can still
+    # hold the partition lock when an immediate retry reaches the database.
+    client = EventClient(os.environ.get('REVIEW_INGEST_SECRET'), retry_appends=kind != 'ops_report')
+    client.append(EXPERIMENT,[envelope(kind,report,now)])
     print(json.dumps({'state':kind+'_recorded','source_status':report.get('source_status','upload_confirmed'),
                       'model_calls':0,'trade_authorized':False}))
 
