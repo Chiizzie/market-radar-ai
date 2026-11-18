@@ -3,7 +3,7 @@ import json
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from .comparison_live import EventClient, LiveComparison
+from .comparison_live import EventClient, LiveComparison, StorageUnavailable
 from .paper_observer import ReferenceObserver
 from .paper_watcher import allowed
 from .watcher_diagnostics import record_failure, recovered_quote_gaps
@@ -34,11 +34,24 @@ def run(*, env, output, duration=330, interval=5, clock=lambda: datetime.now(tim
                     from .comparison_checkpoint import restore
                     restore(comparison, env['RESEARCH_CHECKPOINT_DIR'], env.get('REVIEW_INGEST_SECRET'))
                 comparison.sync()
-            except (RuntimeError,ValueError,KeyError,TypeError):
+            except (RuntimeError,ValueError,KeyError,TypeError) as exc:
                 health['startup_state']='failed'
+                health['startup_sync_seconds']=monotonic()-start
+                transient = isinstance(exc, StorageUnavailable) and (
+                    exc.diagnostic_code in ('storage_timeout', 'storage_transport')
+                    or (exc.diagnostic_code == 'storage_http' and exc.http_status in (429,500,502,503,504)))
+                if transient:
+                    from .outage_exit_evidence import record
+                    try:
+                        evidence = record(comparison, clock=clock, monotonic=monotonic, sleep=sleep,
+                            end=end, interval=interval, in_scope=lambda at: allowed(env,at))
+                        if evidence is not None:
+                            health['outage_exit_evidence'] = evidence
+                    except (OSError,RuntimeError,ValueError,KeyError,TypeError):
+                        health['outage_exit_evidence'] = {'state': 'reference_archive_unavailable'}
                 raise
             finally:
-                health['startup_sync_seconds']=monotonic()-start
+                health.setdefault('startup_sync_seconds',monotonic()-start)
                 health['comparison']=dict(comparison.health)
             health['startup_state']='slow' if health['startup_sync_seconds']>15 else 'ready'
             if health['startup_sync_seconds']>15: health['requires_attention']=True

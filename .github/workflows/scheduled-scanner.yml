@@ -315,7 +315,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 31e2358e6435ecdefe11a215a961bc4be1f61a68
+          ref: f6a517c96bd812b5b3e2acb21f6f0e1487c81460
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -359,6 +359,15 @@ jobs:
             artifacts/paper-watcher/comparison/*health.json
           retention-days: 7
           if-no-files-found: warn
+
+      - name: Retain independently observed deadline references
+        if: always() && steps.window.outputs.run == 'true' && hashFiles('artifacts/paper-watcher/comparison/outage-exit-evidence.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: comparison-exit-observations-${{ github.run_id }}
+          path: artifacts/paper-watcher/comparison/outage-exit-evidence.json
+          retention-days: 90
+          if-no-files-found: error
 
       - name: Prepare end-of-day comparison recovery export
         if: always() && steps.window.outputs.run == 'true'
