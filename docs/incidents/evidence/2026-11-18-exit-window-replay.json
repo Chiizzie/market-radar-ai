@@ -19,7 +19,22 @@
         "stocks:CMG",
         "stocks:MARA",
         "stocks:NKE"
-      ]
+      ],
+      "preceding_dispatch": {
+        "run_id": 43953020682,
+        "artifact_id": 14269316045,
+        "artifact_digest": "sha256:a74d489f26bd358da952dea5c04a1115be32aa390a9d75a3f81d5aa104f95ed8",
+        "worker_start": "2026-11-16T20:45:40.761279+00:00",
+        "checkpoint_events": 19629,
+        "checkpoint_cursor": 317413,
+        "standby_ends": "2026-11-16T20:55:40.761279+00:00",
+        "matched": [
+          "stocks:ALM",
+          "stocks:CMG",
+          "stocks:MARA",
+          "stocks:NKE"
+        ]
+      }
     },
     "2026-11-17": {
       "run_id": 44173478333,
@@ -38,11 +53,30 @@
       ],
       "outside_window_or_unknown": [
         "stocks:GFS"
-      ]
+      ],
+      "preceding_dispatch": {
+        "run_id": 44172618037,
+        "artifact_id": 14368910574,
+        "artifact_digest": "sha256:67e572a9dcb2c0ea0ba39d4a19cfa4075d5fc3dae5958278e71ba1de9ee73617",
+        "worker_start": "2026-11-17T20:45:43.000541+00:00",
+        "checkpoint_events": 30477,
+        "checkpoint_cursor": 397661,
+        "standby_ends": "2026-11-17T20:55:43.000541+00:00",
+        "matched": [
+          "stocks:AAPL",
+          "stocks:DBX",
+          "stocks:FRSH",
+          "stocks:OCTV",
+          "stocks:PTON"
+        ]
+      }
     }
   },
   "case_count": 10,
   "eligible_for_observation_in_original_scheduled_window": 5,
   "historical_fills_or_exits_created": 0,
-  "trade_authorized": false
+  "trade_authorized": false,
+  "eligible_in_regular_or_preceding_dispatch": 9,
+  "scheduled_maximum_standby_seconds": 270,
+  "preceding_dispatch_maximum_batches": 3
 }

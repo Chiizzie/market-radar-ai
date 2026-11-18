@@ -15,7 +15,8 @@ from test_comparison_live import environment
 from test_scheduled_collection import ENV
 
 
-def test_startup_outage_retains_guarded_deadline_references_without_appending(tmp_path, monkeypatch):
+@pytest.mark.parametrize('ahead,duration,standby,batches', [(39,46,0,7),(559,330,270,3)])
+def test_startup_outage_retains_guarded_deadline_references_without_appending(tmp_path, monkeypatch, ahead, duration, standby, batches):
     worker, packet, _, t, _, client = environment(tmp_path, monkeypatch)
     worker.enrol(packet, now=t[0])
     t[0] += timedelta(seconds=1)
@@ -28,7 +29,7 @@ def test_startup_outage_retains_guarded_deadline_references_without_appending(tm
     journal = (worker.root/'comparison-events.jsonl').read_bytes()
     source = Mock()
     source.read.side_effect = StorageUnavailable('storage_timeout', 3)
-    clock_start = deadline - timedelta(seconds=39)
+    clock_start = deadline - timedelta(seconds=ahead)
     seconds = [0.]
     def clock():
         return clock_start + timedelta(seconds=seconds[0])
@@ -44,13 +45,17 @@ def test_startup_outage_retains_guarded_deadline_references_without_appending(tm
     observer.fetch.side_effect = fetch
     cold = LiveComparison(target, client=source, observer=observer, clock=clock)
     report = run(env={**ENV, 'RESEARCH_CHECKPOINT_DIR':str(tmp_path/'prefix'), 'REVIEW_INGEST_SECRET':secret},
-        output=target, duration=46, interval=5, clock=clock, monotonic=lambda:seconds[0], sleep=sleep, factory=lambda:cold)
+        output=target, duration=duration, interval=5, exit_standby_seconds=standby, clock=clock,
+        monotonic=lambda:seconds[0], sleep=sleep, factory=lambda:cold)
     assert report['critical_failure'] and report['startup_state']=='failed' and report['polls']==report['quotes_received']==0
-    assert report['outage_exit_evidence']=={'polls':7,'references':7,'failure_count':0}
+    assert report['outage_exit_evidence']=={'polls':batches,'references':batches,'failure_count':0}
     source.append.assert_not_called()
     assert len(client.events)==seen and (target/'comparison-events.jsonl').read_bytes()==journal
     document=json.loads((target/'outage-exit-evidence.json').read_text())
     result=verified(document)
+    if standby:
+        assert result['sampling']=='preceding_dispatch'
+        assert [(deadline-aware(row['received_at'])).total_seconds() for row in result['quotes']]==[28,18,8]
     assert result['source_cursor']==worker.cursor and result['applied_to_ledger'] is False
     assert all(x['spread_quality']=='within_guard' and x['packet_id']==packet['packet_id'] for x in result['quotes'])
     for key, value in [('received_at',(deadline+timedelta(seconds=1)).isoformat()),('source','other'),('spread_quality','wide')]:

@@ -22,6 +22,8 @@ def verified(document):
             or type(report['polls']) is not int or not 1 <= report['polls'] <= 7
             or type(report['eligible_packets']) is not int or report['eligible_packets'] < 1
             or type(report['failure_count']) is not int or report['failure_count'] < 0
+            or report.get('sampling','ordinary_window') not in ('ordinary_window','preceding_dispatch')
+            or (report.get('sampling') == 'preceding_dispatch' and report['polls'] > 3)
             or not isinstance(report['quotes'],list) or len(report['quotes']) > 40 * report['polls']):
         raise ValueError('invalid_outage_exit_evidence')
     seen = set()
@@ -59,7 +61,7 @@ def upcoming(worker, now, remaining):
                   key=lambda d: (aware(d['plan']['exit_by']), d['packet_id']))
 
 
-def record(worker, *, clock, monotonic, sleep, end, interval, in_scope):
+def record(worker, *, clock, monotonic, sleep, end, interval, in_scope, ordinary_end=None):
     """A signed checkpoint is a historical prefix. Its instruments can supply research references only."""
     now = aware(clock())
     remaining = end - monotonic()
@@ -70,20 +72,28 @@ def record(worker, *, clock, monotonic, sleep, end, interval, in_scope):
     if not decisions:
         return None
     window = timedelta(seconds=worker.protocol['exit_window_seconds'])
+    first_window = aware(decisions[0]['plan']['exit_by']) - window
+    standby = ordinary_end is not None and (first_window - now).total_seconds() >= max(0, ordinary_end - monotonic())
+    # A preceding dispatch can cover a late next runner. Offset its three
+    # samples from the regular cadence and stay inside the same hard window.
+    offset = timedelta(seconds=2 if standby else 0)
+    cadence = max(10 if standby else 5, interval)
+    maximum_polls = 3 if standby else 7
     path = worker.root / 'outage-exit-evidence.json'
     report = {'schema_version': 'outage-exit-reference-v1', 'day': worker.day, 'experiment_id': worker.experiment,
               'source_cursor': worker.cursor, 'scope': 'code_only_open_in_authenticated_prefix',
               'eligible_packets': len(decisions), 'polls': 0, 'failure_count': 0, 'quotes': [],
+              'sampling': 'preceding_dispatch' if standby else 'ordinary_window',
               'trade_authorized': False, 'model_calls': 0, 'applied_to_ledger': False}
     seen = set()
-    while monotonic() < end and report['polls'] < 7:
+    while monotonic() < end and report['polls'] < maximum_polls:
         now = aware(clock())
         if not in_scope(now) or now.date().isoformat() != worker.day:
             break
         pending = [d for d in decisions if now <= aware(d['plan']['exit_by'])]
         if not pending:
             break
-        wait = (aware(pending[0]['plan']['exit_by']) - window - now).total_seconds()
+        wait = (aware(pending[0]['plan']['exit_by']) - window + offset - now).total_seconds()
         if wait > 0:
             sleep(min(wait, max(0, end - monotonic())))
             continue
@@ -109,5 +119,7 @@ def record(worker, *, clock, monotonic, sleep, end, interval, in_scope):
         staged = path.with_suffix('.tmp')
         staged.write_text(canonical({'report': report, 'sha256': digest(report)}) + '\n')
         staged.replace(path)
-        sleep(min(max(0, end - monotonic()), max(.1, max(5, interval) - (monotonic() - started))))
+        if report['polls'] == maximum_polls:
+            break
+        sleep(min(max(0, end - monotonic()), max(.1, cadence - (monotonic() - started))))
     return {'polls': report['polls'], 'references': len(report['quotes']), 'failure_count': report['failure_count']}
