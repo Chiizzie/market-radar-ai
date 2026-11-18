@@ -14,6 +14,7 @@ from tempfile import TemporaryDirectory
 
 from .candidate_packages import canonical, digest
 from .event_archive import EventArchive
+from .comparison_checkpoint import sync_report_day
 from .comparison_live import EventClient, LiveComparison, envelope
 from .paper_comparison import PROTOCOL as LEGACY_SOURCE_PROTOCOL, GUARDED_PROTOCOL, aware
 from .observation_policy import GUARDED
@@ -306,9 +307,9 @@ def collect(client, *, now, root, diagnostics=None):
             worker = LiveComparison(Path(root) / day, client=client, day=day, clock=lambda: now, protocol=SOURCE_PROTOCOL)
             if worker.experiment != SOURCE_PROTOCOL_ID:
                 raise ValueError('execution_source_protocol_mismatch')
-            worker.sync()  # Existing signed receipt, immutable identity and review validation.
+            prefix_stats = sync_report_day(worker, now.date().isoformat(), write_closed=True)
             if diagnostics is not None:
-                diagnostics.append({'day':day,**worker.health['initial_sync']})
+                diagnostics.append({'day':day,**worker.health['initial_sync'],**prefix_stats})
             path = worker.root / 'comparison-events.jsonl'
             if path.exists():
                 with path.open() as source:

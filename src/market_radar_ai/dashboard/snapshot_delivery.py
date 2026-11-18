@@ -14,6 +14,16 @@ ENDPOINT = 'https://pixel-perfect-replay-32614.lovable.app/api/public/snapshots/
 MAX_BYTES = 2 * 1024 * 1024
 
 
+class SnapshotDeliveryError(RuntimeError):
+    """Safe receipt for an ambiguous write. The same snapshot must not be resent."""
+    def __init__(self, receipt, reason, *, status=None):
+        self.receipt = {**receipt, 'state': 'scanner_snapshot_delivery_unconfirmed', 'reason': reason}
+        if status is not None:
+            self.receipt['http_status'] = status
+        detail = str(status) if status is not None else reason
+        super().__init__(f'Scanner dashboard acknowledgement unconfirmed ({detail}); inspect the saved receipt.')
+
+
 def deliver(capture, *, env, clock, evidence=None, session=None):
     from .collection_schedule import scheduled_scope
     now = clock()
@@ -36,22 +46,33 @@ def deliver(capture, *, env, clock, evidence=None, session=None):
     snapshot_id = hashlib.sha256(body).hexdigest()
     timestamp = str(int(now.timestamp()))
     signature = hmac.new(secret.encode(), timestamp.encode()+b'.'+body, hashlib.sha256).hexdigest()
+    receipt = {'state': 'scanner_snapshot_delivery_confirmed', 'snapshot_id': snapshot_id,
+               'coverage': snapshot['coverage'], 'generated_at_dublin': snapshot['generated_at_dublin'],
+               'expires_at_epoch': snapshot['expires_at_epoch'], 'trade_authorized': False}
     try:
         response = (session or requests).post(ENDPOINT, data=body,
             headers={'Content-Type': 'application/json; charset=utf-8',
                      'X-Timestamp': timestamp, 'X-Signature': 'sha256='+signature},
             timeout=(10, 30), allow_redirects=False)
-        if response.status_code != 200:
-            raise ValueError()
+    except requests.ConnectTimeout:
+        raise SnapshotDeliveryError(receipt, 'connect_timeout') from None
+    except requests.ReadTimeout:
+        raise SnapshotDeliveryError(receipt, 'read_timeout') from None
+    except (requests.Timeout, TimeoutError):
+        raise SnapshotDeliveryError(receipt, 'timeout') from None
+    except requests.ConnectionError:
+        raise SnapshotDeliveryError(receipt, 'connection_error') from None
+    except requests.RequestException:
+        raise SnapshotDeliveryError(receipt, 'transport_error') from None
+    if response.status_code != 200:
+        raise SnapshotDeliveryError(receipt, 'http_status', status=response.status_code)
+    try:
         result = response.json()
-        if result.get('ok') is not True or result.get('snapshot_id') != snapshot_id:
-            raise ValueError()
-    except Exception:
-        raise RuntimeError('Scanner delivery unconfirmed; inspect storage before retry.') from None
-    return {'state': 'scanner_snapshot_delivery_confirmed', 'snapshot_id': snapshot_id,
-            'coverage': snapshot['coverage'], 'generated_at_dublin': snapshot['generated_at_dublin'],
-            'expires_at_epoch': snapshot['expires_at_epoch'],
-            'trade_authorized': False}
+    except ValueError:
+        raise SnapshotDeliveryError(receipt, 'invalid_json') from None
+    if not isinstance(result, dict) or result.get('ok') is not True or result.get('snapshot_id') != snapshot_id:
+        raise SnapshotDeliveryError(receipt, 'acknowledgement_mismatch')
+    return receipt
 
 
 def main():

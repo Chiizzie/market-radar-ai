@@ -40,12 +40,14 @@ jobs:
           from zoneinfo import ZoneInfo
           now=datetime.now(ZoneInfo('Europe/Dublin'))
           allowed=os.environ['GITHUB_EVENT_NAME'] in ('push','workflow_dispatch') or (now.weekday()<5 and 8<=now.hour<23)
-          with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('run='+str(allowed).lower()+'\n')
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write('run='+str(allowed).lower()+'\n')
+              f.write('day='+now.astimezone(ZoneInfo('UTC')).date().isoformat()+'\n')
           PY
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 2859eee9f35d26dcca5f010a10f9ad187d61f44e
+          ref: 71b514221835f09fc541d43b98b3ab3781a91dac
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -53,10 +55,29 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -e .
         if: steps.window.outputs.run == 'true'
+      - name: Restore validated past-day comparison events
+        id: closed_history
+        uses: actions/cache/restore@v4
+        if: steps.window.outputs.run == 'true'
+        continue-on-error: true
+        with:
+          path: .scanner-cache/report-closed-history
+          key: report-closed-history-v1-${{ steps.window.outputs.day }}
+          restore-keys: report-closed-history-v1-
+      - name: Restore the current watcher prefix
+        uses: actions/cache/restore@v4
+        if: steps.window.outputs.run == 'true'
+        continue-on-error: true
+        with:
+          path: .scanner-cache/comparison-prefix
+          key: comparison-prefix-v1-${{ steps.window.outputs.day }}-${{ github.run_id }}
+          restore-keys: comparison-prefix-v1-${{ steps.window.outputs.day }}-
       - name: Replay separate accounts and verify complete ledger recovery
         if: steps.window.outputs.run == 'true'
         run: python -m market_radar_ai.agents.manual_portfolio --publish
         env:
+          REPORT_CLOSED_HISTORY_DIR: .scanner-cache/report-closed-history
+          REPORT_LIVE_PREFIX_DIR: .scanner-cache/comparison-prefix
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
       - uses: actions/upload-artifact@v4
         if: always() && steps.window.outputs.run == 'true'

@@ -10,7 +10,7 @@ import sys
 
 from .collection_schedule import scheduled_scope, collection_window
 from .evidence import export_evidence
-from .snapshot_delivery import deliver
+from .snapshot_delivery import SnapshotDeliveryError, deliver
 from ..evidence.earnings_calendar import CalendarCapture
 from ..market_data.limits import STOCK_RESEARCH_LIMIT, CRYPTO_RESEARCH_LIMIT
 from ..market_data.crypto_identities import ASSETS
@@ -241,8 +241,12 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
     ):
         path = output/name
         stage(label, module, ['--capture', enriched, '--evidence', news, '--output', path], path)
-    receipt = delivery(json.loads(enriched.read_text()), env=env, clock=clock,
-                       evidence=json.loads(news.read_text()))
+    try:
+        receipt = delivery(json.loads(enriched.read_text()), env=env, clock=clock,
+                           evidence=json.loads(news.read_text()))
+    except SnapshotDeliveryError as exc:
+        write_json(output/'delivery.json', exc.receipt)
+        raise
     write_json(output/'delivery.json', receipt)
     feed, doc = json.loads(news.read_text()), json.loads(enriched.read_text())
     failed = [k for k, v in stages.items() if v == 'failed']
@@ -313,9 +317,12 @@ def main():
     from .collection_notification import operational_notice as notify
     try:
         result = run_cycle(env=os.environ, output=args.output, cache_path=args.cache)
-    except Exception:
+    except Exception as exc:
+        failure = {'state': 'failed'}
+        if isinstance(exc, SnapshotDeliveryError):
+            failure['delivery'] = exc.receipt
         try:
-            receipt = notify({'state':'failed'}, env=os.environ, clock=lambda: datetime.now(timezone.utc))
+            receipt = notify(failure, env=os.environ, clock=lambda: datetime.now(timezone.utc))
             write_json(args.output/'collection-notification.json', receipt)
         except Exception:
             print('Collection failure notification unavailable; inspect run logs.')

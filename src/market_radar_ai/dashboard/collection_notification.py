@@ -19,7 +19,9 @@ def notify(report, *, env, clock, ledger=None, session=None):
     if not scheduled_scope(env,now):raise ValueError('collection_notice_scope')
     token,chat=env.get('TELEGRAM_BOT_TOKEN',''),env.get('TELEGRAM_CHAT_ID','')
     if not token or not chat.lstrip('-').isdigit():raise ValueError('telegram_secrets_missing_or_invalid')
-    delivered=report.get('delivery',{}).get('state')=='scanner_snapshot_delivery_confirmed'
+    delivery = report.get('delivery', {})
+    delivered = delivery.get('state') == 'scanner_snapshot_delivery_confirmed'
+    unconfirmed = delivery.get('state') == 'scanner_snapshot_delivery_unconfirmed'
     opening_text = []
     if delivered and report.get('opening_session'):
         from .opening_brief import lines as opening_lines, waiting_for_opening_update
@@ -44,11 +46,20 @@ def notify(report, *, env, clock, ledger=None, session=None):
            ('Final AI review is enabled only for qualified setups. This update used no AI.'
             if env.get('AI_FINAL_REVIEW_ENABLED')=='true' else
             'Paid AI is paused. This is a free operational update, not a trade call.')]
-    if delivered:
-        if opening_text:
-            lines[0] = 'ℹ️ OPENING UPDATE — paper research'
-            lines.extend(opening_text)
-        for market,counts in report['delivery'].get('coverage',{}).items():
+    if unconfirmed:
+        reason = delivery.get('reason')
+        if reason in ('connect_timeout', 'read_timeout', 'timeout'):
+            detail = 'Dashboard acknowledgement timed out.'
+        elif reason == 'http_status':
+            detail = f"Dashboard returned HTTP {delivery['http_status']}."
+        else:
+            detail = 'Dashboard acknowledgement could not be verified.'
+        lines[3] = f'Market data collected. {detail} Paper review skipped for this scan.'
+    if opening_text:
+        lines[0] = 'ℹ️ OPENING UPDATE — paper research'
+        lines.extend(opening_text)
+    if delivered or unconfirmed:
+        for market,counts in delivery.get('coverage',{}).items():
             lines.append(f"{market.title()}: {counts['current']}/{counts['attempted']} current; {counts['unusable_or_stale']} unavailable/stale.")
     lines+=['Status updates: at most one success and one failure notice per hour.',
             'https://pixel-perfect-replay-32614.lovable.app/scanner']
