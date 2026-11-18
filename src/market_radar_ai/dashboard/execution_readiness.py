@@ -1,15 +1,19 @@
 """Read-only operational checks. Key presence is never an API-credit claim."""
 import argparse
+from contextlib import ExitStack
 import json
 import os
+import zlib
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from zoneinfo import ZoneInfo
 
 import requests
 from ..agents.candidate_packages import digest
 from ..agents.comparison_live import EventClient, envelope
-from ..agents.execution_research import PROTOCOL as EXECUTION_PROTOCOL, collect
+from ..agents.event_archive import read_archive
+from ..agents.execution_research import PROTOCOL as EXECUTION_PROTOCOL, SOURCE_PROTOCOL_ID, collect
 from ..agents.github_budget import GitHubBudgetStore
 from ..agents.paper_comparison import aware
 from .api_budget import summarize
@@ -28,6 +32,22 @@ def get_json(session, url, *, headers):
             raw.extend(part)
             if len(raw) > 250000: raise ValueError('readiness_response_capacity')
     return json.loads(raw)
+
+
+def same_run_reports(directory, *, now):
+    """Read only this job's completed local export and bind every event to the execution report."""
+    try:
+        report = json.loads((directory/'report.json').read_text())
+        if (report['schema_version'] != 'execution-research-report-v1' or report['dataset_kind'] != 'forward'
+                or report['protocol_id'] != digest(EXECUTION_PROTOCOL) or report['source_protocol_id'] != SOURCE_PROTOCOL_ID
+                or not 0 <= (now-aware(report['as_of'])).total_seconds() <= PROTOCOL['source_report_max_age_seconds']):
+            return None
+        with read_archive(directory/'source-events.jsonl.gz') as events:
+            if events.source_digest() != report['source_sha256'] or len(events) != report['source_events']:
+                return None
+            return [e for e in events if e['kind'] == 'report']
+    except (OSError, EOFError, ValueError, KeyError, TypeError, zlib.error):
+        return None
 
 
 def build(*, now, env, client, session=None, budget_store=None, github=None, source_events=(), receipt_clock=None):
@@ -96,7 +116,7 @@ def build(*, now, env, client, session=None, budget_store=None, github=None, sou
         'pass' if required <= jobs.keys() and all(jobs[k]['conclusion'] == 'success' for k in required) else 'pending',
         'Latest dispatched workflow jobs, including independent comparison and experiment failures; '
         'running, skipped or missing required components remain pending. Run '+str(ops['jobs_run_id'])+'.')
-    reports = [json.loads(e['payload_json']) for e in source_events if e['kind'] == 'report' and aware(e['occurred_at']) <= now]
+    reports = [json.loads(e['payload_json']) for e in (() if source_events is None else source_events) if e['kind'] == 'report' and aware(e['occurred_at']) <= now]
     last = max(reports, key=lambda r: r['as_of'], default=None)
     if last and last.get('cohort_count', 0) and 0 <= (now - aware(last['as_of'])).total_seconds() <= 1200:
         h = last.get('observation_health', {})
@@ -104,6 +124,8 @@ def build(*, now, env, client, session=None, budget_store=None, github=None, sou
         add('observer_under_load', 'pass' if observed else 'pending',
             'Latest worker observed eligible setups without reported >15-second gaps; between-worker coverage remains separate.' if observed else
             'Eligible setups exist but sustained observer coverage is not demonstrated.', last['as_of'])
+    elif source_events is None:
+        add('observer_under_load', 'unavailable', 'This run has no verified execution source for observer coverage.')
     else:
         add('observer_under_load', 'pending', 'No recent populated source cohort proves sustained quote cadence or capacity.')
     receipts = []
@@ -151,15 +173,17 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, default=Path('artifacts/execution-research/readiness.json'))
     p.add_argument('--publish', action='store_true')
+    p.add_argument('--execution-directory', type=Path, help='Reuse the verified source from this workflow run.')
     args = p.parse_args(); now = datetime.now(UTC)
     client = EventClient(os.environ.get('REVIEW_INGEST_SECRET'))
-    from tempfile import TemporaryDirectory
-    with TemporaryDirectory() as scratch: events = collect(client, now=now, root=scratch)
-    now = datetime.now(UTC)
-    try:
+    with ExitStack() as resources:
+        if args.execution_directory is None:
+            scratch = resources.enter_context(TemporaryDirectory())
+            events = resources.enter_context(collect(client, now=now, root=scratch))
+        else:
+            events = same_run_reports(args.execution_directory, now=now)
+        now = datetime.now(UTC)
         report = build(now=now, env=os.environ, client=client, source_events=events, receipt_clock=lambda: datetime.now(UTC))
-    finally:
-        events.close()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + '\n')
     if args.publish: client.append(EXPERIMENT, [envelope('readiness_report', report, now)])
