@@ -16,6 +16,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from .candidate_packages import canonical, digest
+from .comparison_checkpoint import sync_report_day
 from .comparison_live import EventClient, LiveComparison, envelope, event_id
 from .event_archive import EventArchive
 from .execution_research import Book, PROFILES, PROTOCOL as COST_PROTOCOL, estimate, fees, dec, money
@@ -424,7 +425,7 @@ def collect(client, *, now, root, diagnostics):
                 continue
             worker = LiveComparison(Path(root)/day, client=client, day=day,
                 clock=lambda:now, protocol=GUARDED_PROTOCOL)
-            worker.sync()
+            diagnostics[-1].update(sync_report_day(worker, now.date().isoformat()))
             source = worker.root/'comparison-events.jsonl'
             if source.exists():
                 with source.open() as lines:

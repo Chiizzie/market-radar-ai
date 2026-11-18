@@ -123,3 +123,30 @@ def restore(worker, directory, secret):
         temp.unlink(missing_ok=True)
         worker.health['checkpoint_state'] = state
         worker.health['checkpoint_seconds'] = round(time.monotonic()-started,3)
+
+
+def sync_report_day(worker, today, *, write_closed=False):
+    """Restore authenticated history locally, then read the server tail even for closed days."""
+    closed = worker.day < today
+    root = os.environ.get('REPORT_CLOSED_HISTORY_DIR' if closed else 'REPORT_LIVE_PREFIX_DIR')
+    if not root:
+        worker.sync()
+        return {}
+    directory = Path(root) / worker.experiment / worker.day if closed else Path(root)
+    restore(worker, directory, worker.client.secret)
+    restored_cursor = worker.cursor
+    worker.sync()
+    stats = {'prefix_state': worker.health['checkpoint_state'],
+             'prefix_events': worker.health.get('checkpoint_events', 0),
+             'tail_pages': worker.health['initial_sync']['pages'],
+             'tail_events': worker.health['initial_sync']['events']}
+    if closed and write_closed and worker.cursor > restored_cursor:
+        try:
+            stats['closed_prefix_saved'] = save(worker, directory, worker.client.secret)
+        except OSError:
+            stats['closed_prefix_saved'] = False
+        except ValueError as exc:
+            if str(exc) != 'checkpoint_capacity':
+                raise
+            stats['closed_prefix_saved'] = False
+    return stats
