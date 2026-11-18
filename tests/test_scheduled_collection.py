@@ -342,3 +342,17 @@ def test_unconfirmed_opening_is_saved_at_original_clock_and_never_authorizes_rev
     saved['as_of'] = later.isoformat()
     (folder/'opening-session.json').write_text(json.dumps(saved))
     assert build_report(folder, now=later)['unconfirmed_opening_capture'] is None
+
+
+def test_successful_slow_receipt_keeps_original_opening_observation(tmp_path, monkeypatch):
+    at = datetime(2026, 11, 18, 14, 44, 59, tzinfo=timezone.utc)
+    later = at + timedelta(seconds=35)
+    store = []
+    monkeypatch.setattr('market_radar_ai.dashboard.scheduled_collection.store_opening',
+                        lambda output, doc, feed, discovery, observed_at: store.append(observed_at))
+    def acknowledge(*args, **kwargs):
+        return {'state': 'scanner_snapshot_delivery_confirmed', 'generated_at_dublin': at.isoformat(),
+                'acknowledged_at_dublin': later.isoformat(), 'acknowledged_before_expiry': True}
+    run_cycle(env=ENV, output=tmp_path/'out', cache_path=tmp_path/'cache.json', clock=lambda: later,
+              run=fake_stages([]), delivery=acknowledge)
+    assert store == [at]

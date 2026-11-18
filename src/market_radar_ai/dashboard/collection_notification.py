@@ -23,7 +23,8 @@ def notify(report, *, env, clock, ledger=None, session=None):
     delivered = delivery.get('state') == 'scanner_snapshot_delivery_confirmed'
     unconfirmed = delivery.get('state') == 'scanner_snapshot_delivery_unconfirmed'
     opening_text = []
-    if delivered and report.get('opening_session'):
+    late = delivered and delivery.get('acknowledged_before_expiry') is False
+    if delivered and not late and report.get('opening_session'):
         from .opening_brief import lines as opening_lines, waiting_for_opening_update
         try:
             brief = report['opening_session']
@@ -46,6 +47,9 @@ def notify(report, *, env, clock, ledger=None, session=None):
            ('Final AI review is enabled only for qualified setups. This update used no AI.'
             if env.get('AI_FINAL_REVIEW_ENABLED')=='true' else
             'Paid AI is paused. This is a free operational update, not a trade call.')]
+    if late:
+        lines[2] = 'Dashboard capture delivered. Its acknowledgement arrived after expiry.'
+        lines[3] = 'Paper review skipped for this scan.'
     if unconfirmed:
         reason = delivery.get('reason')
         if reason in ('connect_timeout', 'read_timeout', 'timeout'):

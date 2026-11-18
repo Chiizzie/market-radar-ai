@@ -1,4 +1,5 @@
 from copy import deepcopy
+from datetime import UTC, datetime, timedelta
 from market_radar_ai.dashboard.scheduled_collection import review_can_continue
 
 
@@ -24,3 +25,14 @@ def test_no_current_market_or_incomplete_pipeline_cannot_route():
         r=report();r['stages'][key]='failed';assert not review_can_continue(r)
     r=report();r['failures']=['calendar_unavailable'];assert not review_can_continue(r)
     r=report();r['delivery']['state']='unconfirmed';assert not review_can_continue(r)
+
+
+def test_late_confirmations_and_captures_expiring_before_handoff_block_review():
+    original = report()
+    deadline = datetime(2026, 11, 18, 22, 37, tzinfo=UTC)
+    assert not review_can_continue(original, now=deadline)
+    original['delivery'].update(expires_at_epoch=int(deadline.timestamp()), acknowledged_before_expiry=True)
+    assert review_can_continue(original, now=deadline - timedelta(microseconds=1))
+    assert not review_can_continue(original, now=deadline)
+    original['delivery']['acknowledged_before_expiry'] = False
+    assert not review_can_continue(original)

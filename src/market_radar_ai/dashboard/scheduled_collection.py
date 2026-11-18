@@ -300,14 +300,16 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
               'failures': failed, 'target_interval_seconds': 300, 'model_calls': 0,
               'trade_authorized': False, 'stock_discovery': discovery,'crypto_discovery':crypto_discovery}
     if broad_scan:
-        brief = store_opening(output, doc, feed, discovery, clock())
+        captured_at = receipt.get('generated_at_dublin')
+        brief_at = datetime.fromisoformat(captured_at) if captured_at else clock()
+        brief = store_opening(output, doc, feed, discovery, brief_at)
         if brief is not None:
             report['opening_session'] = brief
     write_json(output/'collection-report.json', report)
     return report
 
 
-def review_can_continue(report):
+def review_can_continue(report, *, now=None):
     """Route completed partial captures; per-candidate review still revalidates.
 
     Only a market-data failure may be isolated. Missing stages, failed delivery,
@@ -322,6 +324,11 @@ def review_can_continue(report):
     if stages.get('market') not in ('ok','failed') or set(report.get('failures',[]))-{'market'}:
         return False
     if delivery.get('state')!='scanner_snapshot_delivery_confirmed':return False
+    if delivery.get('acknowledged_before_expiry', True) is not True:
+        return False
+    expiry = delivery.get('expires_at_epoch')
+    if now is not None and (type(expiry) is not int or now.timestamp() >= expiry):
+        return False
     coverage=delivery.get('coverage',{})
     return any(type(coverage.get(m,{}).get('current')) is int and
                coverage[m]['current']>0 for m in ('stocks','crypto'))
@@ -352,7 +359,7 @@ def main():
         raise
     if os.environ.get('GITHUB_OUTPUT'):
         with open(os.environ['GITHUB_OUTPUT'],'a') as output:
-            output.write('review_ready='+str(review_can_continue(result)).lower()+'\n')
+            output.write('review_ready='+str(review_can_continue(result, now=datetime.now(timezone.utc))).lower()+'\n')
     receipt = notify(result, env=os.environ, clock=lambda: datetime.now(timezone.utc))
     write_json(args.output/'collection-notification.json', receipt)
     print(json.dumps(result))

@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import json
 from datetime import timedelta
+from zoneinfo import ZoneInfo
 import pytest
 import requests
 from test_dashboard_cache import capture
@@ -98,3 +99,28 @@ def test_tampered_capture_never_delivered():
     doc=capture();doc['captures'][0]['payload']['provider']='changed';session=Session()
     with pytest.raises(ValueError):deliver(doc, env=ENV, clock=lambda:NOW, session=session)
     assert not session.calls
+
+
+@pytest.mark.parametrize('response_seconds,timely', [(35, True), (60, False), (80, False)])
+def test_slow_acknowledgement_keeps_the_original_expiry_and_exact_receipt(response_seconds, timely):
+    session = Session()
+    readings = iter([NOW, NOW + timedelta(seconds=1), NOW + timedelta(seconds=response_seconds)])
+    result = deliver(capture(), env=ENV, clock=lambda: next(readings), session=session)
+    assert len(session.calls) == 1 and session.calls[0]['timeout'].total == 45
+    assert result['expires_at_epoch'] == int(NOW.timestamp()) + 60
+    assert result['acknowledged_before_expiry'] is timely
+    assert result['acknowledged_at_dublin'] == (NOW + timedelta(seconds=response_seconds)).astimezone(
+        ZoneInfo('Europe/Dublin')).isoformat()
+
+
+def test_local_delay_bounds_the_network_budget_and_expired_requests_never_leave():
+    session = Session()
+    readings = iter([NOW, NOW + timedelta(seconds=54), NOW + timedelta(seconds=56)])
+    receipt = deliver(capture(), env=ENV, clock=lambda: next(readings), session=session)
+    assert receipt['acknowledged_before_expiry']
+    assert session.calls[0]['timeout'].total == 6
+    assert session.calls[0]['timeout'].connect_timeout == 6
+    readings = iter([NOW, NOW + timedelta(seconds=60)])
+    with pytest.raises(SnapshotDeliveryError) as expired:
+        deliver(capture(), env=ENV, clock=lambda: next(readings), session=session)
+    assert expired.value.receipt['reason'] == 'expired_before_send' and len(session.calls) == 1

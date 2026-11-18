@@ -6,8 +6,10 @@ import hmac
 import json
 import os
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import requests
+from urllib3.util import Timeout
 from .export import build_snapshot
 
 ENDPOINT = 'https://pixel-perfect-replay-32614.lovable.app/api/public/snapshots/ingest'
@@ -55,11 +57,16 @@ def deliver(capture, *, env, clock, evidence=None, session=None, snapshot_path=N
     receipt = {'state': 'scanner_snapshot_delivery_confirmed', 'snapshot_id': snapshot_id,
                'coverage': snapshot['coverage'], 'generated_at_dublin': snapshot['generated_at_dublin'],
                'expires_at_epoch': snapshot['expires_at_epoch'], 'trade_authorized': False}
+    # One request, with a bounded connection and at most 45 seconds of the
+    # original 60-second capture lifetime. Always check the real response clock.
+    budget = min(45.0, receipt['expires_at_epoch'] - clock().timestamp())
+    if budget <= 0:
+        raise SnapshotDeliveryError(receipt, 'expired_before_send')
     try:
         response = (session or requests).post(ENDPOINT, data=body,
             headers={'Content-Type': 'application/json; charset=utf-8',
                      'X-Timestamp': timestamp, 'X-Signature': 'sha256='+signature},
-            timeout=(10, 30), allow_redirects=False)
+            timeout=Timeout(total=budget, connect=min(10.0, budget)), allow_redirects=False)
     except requests.ConnectTimeout:
         raise SnapshotDeliveryError(receipt, 'connect_timeout') from None
     except requests.ReadTimeout:
@@ -78,6 +85,9 @@ def deliver(capture, *, env, clock, evidence=None, session=None, snapshot_path=N
         raise SnapshotDeliveryError(receipt, 'invalid_json') from None
     if not isinstance(result, dict) or result.get('ok') is not True or result.get('snapshot_id') != snapshot_id:
         raise SnapshotDeliveryError(receipt, 'acknowledgement_mismatch')
+    acknowledged = clock().astimezone(ZoneInfo('Europe/Dublin'))
+    receipt['acknowledged_at_dublin'] = acknowledged.isoformat()
+    receipt['acknowledged_before_expiry'] = acknowledged.timestamp() < receipt['expires_at_epoch']
     return receipt
 
 
