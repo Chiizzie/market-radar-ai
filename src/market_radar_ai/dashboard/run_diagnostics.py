@@ -167,6 +167,19 @@ def build_report(collection, review=None, *, now, budget_loader=None):
     except (KeyError,ValueError,TypeError):pass
     decision=(read(root/'decision.json',issues) or {}) if phase=='review' else {}
     delivery=read(root/'delivery.json',issues) or {}
+    opening=read(collection/'opening-session.json',issues) or {}
+    retained_opening = None
+    if (phase == 'collection' and opening.get('dashboard_delivery') == 'unconfirmed'
+            and opening.get('trade_authorized') is False
+            and opening.get('schema_version') == 'opening-session-brief-v1'
+            and isinstance(opening.get('as_of'), str) and re.fullmatch(r'[0-9T:.+Z-]{19,40}', opening['as_of'])
+            and opening['as_of'] == delivery.get('generated_at_dublin')
+            and delivery.get('state') == 'scanner_snapshot_delivery_unconfirmed'):
+        picks = opening.get('preparation')
+        retained_opening = {'window': label(opening.get('window')), 'state': label(opening.get('state')),
+                            'as_of': opening['as_of'],
+                            'prepared_symbols': [label(r.get('symbol')) for r in picks[:3] if isinstance(r, dict)]
+                                                if isinstance(picks, list) else []}
     discovery=read(collection/'discovery.json',issues) or {}
     money=spending(packet,status,audit,budget_loader=budget_loader,phase=phase)
     from .missed_moves import explain
@@ -178,7 +191,7 @@ def build_report(collection, review=None, *, now, budget_loader=None):
     return {'schema_version':'internal-run-diagnostics-v1','generated_at_dublin':now.astimezone(ZoneInfo('Europe/Dublin')).isoformat(),
             'phase':phase,'qualification_origin':origin,'qualification_available':bool(q),
             'discovery':discovery_summary(discovery, now=now),
-            'missed_moves':missed,
+            'missed_moves':missed, 'unconfirmed_opening_capture':retained_opening,
             'catalyst_links':routing_report(discovery.get('catalyst_links',{}),manifest,q),
             'coverage':coverage,'candidates':candidates,'blocker_counts':dict(sorted(reasons.items())),
             'blocker_groups':dict(sorted(groups.items())),
@@ -209,6 +222,12 @@ def markdown(report):
            f"Final paper verdict: {report['review']['final_verdict']}; blockers: {', '.join(report['review']['final_blockers']) or 'None recorded'}.",
            f"Dashboard delivery: {report['review']['dashboard_delivery']}; Telegram: {report['review']['telegram_delivery']}.", '']
     money=report['spending']
+    opening = report.get('unconfirmed_opening_capture')
+    if opening:
+        lines.append(f"Opening research archived at {opening['as_of']} ({opening['window']}, {opening['state']}). "
+                     "Dashboard acknowledgement unconfirmed. See opening-session.json in the capture artifact.")
+        if opening['prepared_symbols']:
+            lines.append('Preparation watchlist at capture time: ' + ', '.join(opening['prepared_symbols']) + '.')
     lines.append('AI cost: unavailable; reconciliation required.' if money['settled_estimated_eur'] is None else
                  f"AI cost estimate recorded: EUR {money['settled_estimated_eur']}; unresolved reservation maximum: EUR {money['held_maximum_eur']}.")
     budget=report.get('budget_headroom')
