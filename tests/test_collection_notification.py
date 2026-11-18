@@ -29,3 +29,19 @@ def test_failure_is_not_a_success_and_unknown_delivery_never_retries():
     with pytest.raises(RuntimeError):notify({},env=ENV,clock=lambda:NOW,session=session,ledger=ledger)
     assert session.post.call_args.kwargs['json']['text'].startswith('⚠️ SCANNER FAILURE')
     session.post.assert_called_once();ledger.confirm.assert_not_called()
+
+
+@pytest.mark.parametrize('reason,status,text', [('read_timeout',None,'timed out'), ('http_status',503,'HTTP 503'),
+                                               ('invalid_json',None,'could not be verified')])
+def test_storage_failure_identifies_collection_and_skipped_review(reason, status, text):
+    ledger=Mock()
+    session=Mock()
+    session.post.return_value=Mock(status_code=200,json=lambda:{'ok':True,'result':{'chat':{'id':123},'message_id':1}})
+    result=notify({'delivery':{'state':'scanner_snapshot_delivery_unconfirmed','reason':reason,'http_status':status,
+        'coverage':{'stocks':{'current':80,'attempted':80,'unusable_or_stale':0}}}},
+        env=ENV,clock=lambda:NOW,session=session,ledger=ledger)
+    message=session.post.call_args.kwargs['json']['text']
+    assert result['category']=='failed' and text in message
+    assert 'Market data collected.' in message and 'Paper review skipped' in message and '80/80 current' in message
+    ledger.reserve.assert_called_once()
+    ledger.confirm.assert_called_once()

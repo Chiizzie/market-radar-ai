@@ -3,9 +3,10 @@ import hmac
 import json
 from datetime import timedelta
 import pytest
+import requests
 from test_dashboard_cache import capture
 from test_market_capture import NOW
-from market_radar_ai.dashboard.snapshot_delivery import deliver, ENDPOINT
+from market_radar_ai.dashboard.snapshot_delivery import SnapshotDeliveryError, deliver, ENDPOINT
 
 ENV = dict(GITHUB_REPOSITORY='Chiizzie/market-radar-ai',
     GITHUB_REF='refs/heads/phase-1/market-data-layer', GITHUB_EVENT_NAME='workflow_dispatch',
@@ -19,10 +20,16 @@ class Session:
         ts = kw['headers']['X-Timestamp']
         assert kw['headers']['X-Signature'] == 'sha256='+hmac.new(b'x'*32, ts.encode()+b'.'+kw['data'], hashlib.sha256).hexdigest()
         if self.fault == 'timeout': raise TimeoutError('x'*32)
+        if self.fault == 'read_timeout': raise requests.ReadTimeout('sensitive detail')
+        if self.fault == 'connect_timeout': raise requests.ConnectTimeout('sensitive detail')
+        if self.fault == 'connection_error': raise requests.ConnectionError('sensitive detail')
         fault = self.fault
         class Response:
             status_code = 409 if fault == 'duplicate' else 302 if fault == 'redirect' else 200
-            def json(self): return {'ok': True, 'snapshot_id': 'wrong' if fault == 'identity' else hashlib.sha256(kw['data']).hexdigest()}
+            def json(self):
+                if fault == 'invalid_json': raise ValueError('sensitive detail')
+                if fault == 'invalid_type': return []
+                return {'ok': True, 'snapshot_id': 'wrong' if fault == 'identity' else hashlib.sha256(kw['data']).hexdigest()}
         return Response()
 
 
@@ -45,12 +52,25 @@ def test_old_capture_does_not_become_current():
     assert body['markets']['crypto'][0]['status']=='UNUSABLE_OR_STALE'
 
 
-@pytest.mark.parametrize('fault',['timeout','duplicate','redirect','identity'])
-def test_failed_delivery_never_retries_or_leaks_secret(fault):
+@pytest.mark.parametrize('fault,reason,code', [
+    ('timeout','timeout',None), ('connect_timeout','connect_timeout',None),
+    ('read_timeout','read_timeout',None), ('connection_error','connection_error',None),
+    ('duplicate','http_status',409), ('redirect','http_status',302),
+    ('identity','acknowledgement_mismatch',None), ('invalid_type','acknowledgement_mismatch',None),
+    ('invalid_json','invalid_json',None)])
+def test_failed_delivery_retains_exact_identity_without_retry_or_sensitive_data(fault, reason, code):
     session=Session(fault)
-    with pytest.raises(RuntimeError) as error:
+    with pytest.raises(SnapshotDeliveryError) as error:
         deliver(capture(), env=ENV, clock=lambda:NOW, session=session)
-    assert len(session.calls)==1 and 'x'*32 not in str(error.value)
+    receipt = error.value.receipt
+    assert receipt['state'] == 'scanner_snapshot_delivery_unconfirmed'
+    assert receipt['reason'] == reason and receipt.get('http_status') == code
+    assert len(session.calls) == 1
+    assert receipt['snapshot_id'] == hashlib.sha256(session.calls[0]['data']).hexdigest()
+    assert receipt['coverage'] == json.loads(session.calls[0]['data'])['coverage']
+    details = str(error.value) + json.dumps(receipt)
+    assert 'sensitive detail' not in details and 'x'*32 not in details
+    assert receipt['trade_authorized'] is False
 
 
 @pytest.mark.parametrize('field,value',[('GITHUB_REPOSITORY','Chiizzie/market-radar'),

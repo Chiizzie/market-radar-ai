@@ -101,6 +101,28 @@ def build(original, trace, qualification, *, now, decision=None):
                     'Original signals are neither proof of profit nor instructions for the AI scanner.'}
 
 
+def comparison_details(report, trace):
+    """Explain the local chart selection only for contemporaneous stock comparisons."""
+    if report['timing_status'] == 'not_comparable':
+        return []
+    symbols = {row['symbol']: row for row in (trace or {}).get('symbols', [])}
+    details = []
+    for row in report['rows']:
+        market, symbol = row['candidate_id'].split(':', 1)
+        if market != 'stocks' or symbol not in symbols:
+            continue
+        selected = symbols[symbol]
+        chart = selected.get('chart_diagnostics') or {}
+        details.append({'candidate_id': row['candidate_id'], 'ai_stage': row['ai_stage'],
+                        'discovery_rank': selected.get('discovery_rank'),
+                        'technical_status': selected.get('technical_status'),
+                        'selection_reason': selected.get('selection_reason'),
+                        'chart_category': chart.get('category'),
+                        'missing_internal_intervals': chart.get('missing_internal_intervals'),
+                        'contiguous_tail_bars': chart.get('contiguous_tail_bars')})
+    return details
+
+
 def main():
     import argparse, os
     parser = argparse.ArgumentParser(description=__doc__)
@@ -120,11 +142,15 @@ def main():
         decision = json.loads(decision_path.read_text()) if decision_path.exists() else None
         report = build(original, trace, json.loads(qpath.read_text()), now=now, decision=decision)
         (root/'cross-scanner-audit.json').write_text(json.dumps(report, indent=2)+'\n')
-        EventClient(os.environ.get('REVIEW_INGEST_SECRET')).append(EXPERIMENT, [envelope('audit', report, now)])
-        status = {'state': 'audit_recorded', 'original_signals': report['original_signals'],
-                  'timing_status': report['timing_status']}
     except (requests.RequestException, OSError, RuntimeError, ValueError, KeyError, TypeError):
         status = {'state': 'audit_unavailable', 'original_signals': None}
+    else:
+        status = {'state': 'audit_recorded', 'original_signals': report['original_signals'],
+                  'timing_status': report['timing_status'], 'comparison_details': comparison_details(report, trace)}
+        try:
+            EventClient(os.environ.get('REVIEW_INGEST_SECRET')).append(EXPERIMENT, [envelope('audit', report, now)])
+        except (requests.RequestException, RuntimeError, ValueError, KeyError, TypeError):
+            status['state'] = 'audit_saved_locally_publication_unconfirmed'
     status.update(model_calls=0, original_scanner_modified=False, trade_authorized=False)
     (root/'cross-scanner-status.json').write_text(json.dumps(status)+'\n')
     print(json.dumps(status))
