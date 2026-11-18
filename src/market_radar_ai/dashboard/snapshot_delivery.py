@@ -31,6 +31,32 @@ def snapshot_bytes(snapshot):
     return (json.dumps(snapshot, ensure_ascii=False, separators=(',', ':'))+'\n').encode('utf-8')
 
 
+def verify_uncertain_delivery(receipt, reason, *, env, clock, session, status=None):
+    from .snapshot_receipts import lookup, stored_at, ReceiptUnavailable
+    if env.get('SCANNER_VERIFY_TIMEOUT_RECEIPT') != 'true':
+        raise SnapshotDeliveryError(receipt, reason, status=status) from None
+    started = clock()
+    remaining = receipt['expires_at_epoch'] - started.timestamp()
+    evidence = dict(receipt)
+    if remaining >= 2:
+        try:
+            row, = lookup([receipt['snapshot_id']], secret=env['REVIEW_INGEST_SECRET'],
+                          now=started, session=session, seconds=min(8.0, remaining))
+            finished = clock().astimezone(ZoneInfo('Europe/Dublin'))
+            received = stored_at(row, receipt)
+            if (received is not None and row['recovered_from_archive'] is not True
+                    and started <= finished and received <= finished):
+                return {**receipt, 'confirmation_source': 'stored_receipt', 'original_transport': reason,
+                        'stored_at': row['received_at'], 'acknowledged_at_dublin': finished.isoformat(),
+                        'acknowledged_before_expiry': finished.timestamp() < receipt['expires_at_epoch']}
+            evidence['receipt_lookup'] = 'absent' if row['state'] == 'absent' else 'identity_or_time_unverified'
+        except ReceiptUnavailable:
+            evidence['receipt_lookup'] = 'unavailable'
+    else:
+        evidence['receipt_lookup'] = 'insufficient_time'
+    raise SnapshotDeliveryError(evidence, reason, status=status) from None
+
+
 def deliver(capture, *, env, clock, evidence=None, session=None, snapshot_path=None):
     from .collection_schedule import scheduled_scope
     now = clock()
@@ -67,15 +93,16 @@ def deliver(capture, *, env, clock, evidence=None, session=None, snapshot_path=N
     budget = min(45.0, receipt['expires_at_epoch'] - clock().timestamp())
     if budget <= 0:
         raise SnapshotDeliveryError(receipt, 'expired_before_send')
+    transport = session or requests
     try:
-        response = (session or requests).post(ENDPOINT, data=body,
+        response = transport.post(ENDPOINT, data=body,
             headers={'Content-Type': 'application/json; charset=utf-8',
                      'X-Timestamp': timestamp, 'X-Signature': 'sha256='+signature},
             timeout=Timeout(total=budget, connect=min(10.0, budget)), allow_redirects=False)
     except requests.ConnectTimeout:
         raise SnapshotDeliveryError(receipt, 'connect_timeout') from None
     except requests.ReadTimeout:
-        raise SnapshotDeliveryError(receipt, 'read_timeout') from None
+        return verify_uncertain_delivery(receipt, 'read_timeout', env=env, clock=clock, session=transport)
     except (requests.Timeout, TimeoutError):
         raise SnapshotDeliveryError(receipt, 'timeout') from None
     except requests.ConnectionError:
@@ -83,6 +110,9 @@ def deliver(capture, *, env, clock, evidence=None, session=None, snapshot_path=N
     except requests.RequestException:
         raise SnapshotDeliveryError(receipt, 'transport_error') from None
     if response.status_code != 200:
+        if response.status_code == 409:
+            return verify_uncertain_delivery(receipt, 'http_status', env=env, clock=clock,
+                                             session=transport, status=409)
         raise SnapshotDeliveryError(receipt, 'http_status', status=response.status_code)
     try:
         result = response.json()
