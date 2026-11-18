@@ -6,7 +6,10 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['.github/workflows/dashboard-delivery-recovery.yml']
+    paths:
+      - .github/workflows/dashboard-delivery-recovery.yml
+      - src/market_radar_ai/dashboard/snapshot_recovery.py
+      - src/market_radar_ai/dashboard/snapshot_receipts.py
 permissions:
   contents: read
   actions: read

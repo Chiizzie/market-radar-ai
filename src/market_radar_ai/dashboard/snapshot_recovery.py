@@ -16,11 +16,20 @@ from .snapshot_delivery import ENDPOINT, MAX_BYTES
 from .snapshot_receipts import ReceiptUnavailable, lookup, signed_headers, stored_at
 
 
+def failure(phase, reason, checked, started, ended, status=None):
+    details = {'phase': phase, 'reason': reason, 'ids_requested': checked,
+               'elapsed_seconds': round(max(0, (ended - started).total_seconds()), 3)}
+    if status is not None:
+        details['http_status'] = status
+    return details
+
+
 def restore_batch(bank, *, secret, session, clock, limit):
     if type(limit) is not int or not 1 <= limit <= 32:
         raise ValueError('invalid_archive_batch_size')
     result = {'state': 'complete', 'candidates': 0, 'already_stored': 0, 'missing_observed': 0,
-              'verified': [], 'pending': [], 'unverified': [], 'model_calls': 0, 'trade_authorized': False}
+              'verified': [], 'pending': [], 'unverified': [], 'unchecked': 0, 'failures': [],
+              'model_calls': 0, 'trade_authorized': False}
     pending = {}
     now = clock()
     for row in bank.rows('capture_delivery'):
@@ -33,12 +42,18 @@ def restore_batch(bank, *, secret, session, clock, limit):
     keys = sorted(pending, key=lambda k: (pending[k]['expires_at_epoch'], k), reverse=True)
     result['candidates'] = len(keys)
     missing = []
-    for start in range(0, len(keys), 32):
-        group = keys[start:start + 32]
+    # Keep the signed request under typical 2 KiB proxy URI limits even after percent encoding.
+    for start in range(0, len(keys), 16):
+        group = keys[start:start + 16]
+        started = clock()
         try:
-            receipts = lookup(group, secret=secret, now=clock(), session=session, seconds=30)
-        except ReceiptUnavailable:
+            receipts = lookup(group, secret=secret, now=started, session=session, seconds=60)
+        except ReceiptUnavailable as exc:
             result['state'] = 'storage_unavailable'
+            result['unchecked'] = len(keys) - start
+            result['missing_observed'] = len(missing)
+            result['pending'] = missing
+            result['failures'].append(failure('initial_lookup', exc.reason, len(group), started, clock(), exc.status))
             return result
         for row in receipts:
             key = row['snapshot_id']
@@ -62,7 +77,8 @@ def restore_batch(bank, *, secret, session, clock, limit):
             result['unverified'].append(key)
             continue
         attempted.append(key)
-        headers = signed_headers(secret, clock(), b'scanner-snapshot-archive-v1\n' + body)
+        started = clock()
+        headers = signed_headers(secret, started, b'scanner-snapshot-archive-v1\n' + body)
         try:
             response = session.put(ENDPOINT, data=body,
                 headers={**headers, 'Content-Type': 'application/json; charset=utf-8'},
@@ -70,19 +86,35 @@ def restore_batch(bank, *, secret, session, clock, limit):
             if response.status_code == 409:
                 continue  # Another ingest may have won. Verify the stored identity below.
             if response.status_code in (400, 422):
+                result['failures'].append(failure('archive_write', 'http_status', 1, started, clock(), response.status_code))
                 result['unverified'].append(key)
                 continue
-            ack = response.json() if response.status_code == 200 else {}
-            if not isinstance(ack, dict) or ack.get('ok') is not True or ack.get('state') != 'archived' or ack.get('snapshot_id') != key:
+            if response.status_code != 200:
+                result['failures'].append(failure('archive_write', 'http_status', 1, started, clock(), response.status_code))
                 break
-        except (requests.RequestException, TimeoutError, ValueError):
+            ack = response.json()
+            if not isinstance(ack, dict) or ack.get('ok') is not True or ack.get('state') != 'archived' or ack.get('snapshot_id') != key:
+                result['failures'].append(failure('archive_write', 'invalid_acknowledgement', 1, started, clock()))
+                break
+        except (requests.RequestException, TimeoutError, ValueError) as exc:
+            if isinstance(exc, requests.ConnectTimeout):
+                reason = 'connect_timeout'
+            elif isinstance(exc, (requests.ReadTimeout, TimeoutError)):
+                reason = 'read_timeout'
+            elif isinstance(exc, ValueError):
+                reason = 'invalid_acknowledgement'
+            else:
+                reason = 'transport_error'
+            result['failures'].append(failure('archive_write', reason, 1, started, clock()))
             break  # A lost response may still commit. Verify before any further writes.
     if attempted:
+        started = clock()
         try:
-            observed = lookup(attempted, secret=secret, now=clock(), session=session, seconds=30)
-        except ReceiptUnavailable:
+            observed = lookup(attempted, secret=secret, now=started, session=session, seconds=60)
+        except ReceiptUnavailable as exc:
             result['state'] = 'storage_unavailable'
             result['pending'] = missing
+            result['failures'].append(failure('readback', exc.reason, len(attempted), started, clock(), exc.status))
             return result
         for row in observed:
             key = row['snapshot_id']
@@ -128,7 +160,7 @@ def main():
     report.update(source_bank_run=source_run, checked_at_dublin=clock().astimezone(ZoneInfo('Europe/Dublin')).isoformat())
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + '\n')
-    print(json.dumps({k: len(v) if isinstance(v, list) else v for k, v in report.items()}))
+    print(json.dumps({k: len(v) if isinstance(v, list) and k != 'failures' else v for k, v in report.items()}))
     return int(report['state'] not in ('complete', 'more_pending'))
 
 
