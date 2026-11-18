@@ -1,5 +1,6 @@
 from copy import deepcopy
 import gzip
+import hashlib
 from io import BytesIO
 import json
 from pathlib import Path
@@ -10,7 +11,8 @@ import pytest
 
 from market_radar_ai.agents.candidate_packages import digest
 from market_radar_ai.agents.research_artifacts import (CAPTURE_FILES, EvidenceBank, GitHubReader,
-    capture_snapshot, collect, restore_previous_bank, zip_members)
+    capture_snapshot, collect, restore_previous_bank, retain_delivery, zip_members)
+from market_radar_ai.dashboard.snapshot_delivery import snapshot_bytes
 
 
 def zipped(files):
@@ -197,3 +199,110 @@ def test_optional_opening_evidence_survives_intake_without_reclassifying_older_c
     files['opening-session.json']=json.dumps({**brief,'trade_authorized':True}).encode()
     with pytest.raises(ValueError,match='opening_capture_scope'):
         capture_snapshot(files,run=RUN,artifact=ARTIFACT)
+
+
+def recovery_inputs():
+    clock = {'generated_at_dublin': '2026-11-18T20:01:10+00:00',
+             'expires_at_epoch': 1795032130, 'coverage': {}}
+    snapshot = {'schema_version': '1.0', 'mode': 'RESEARCH_ONLY', 'live_orders_enabled': False, **clock}
+    wire = snapshot_bytes(snapshot)
+    receipt = {'state': 'scanner_snapshot_delivery_unconfirmed', 'trade_authorized': False,
+               'snapshot_id': hashlib.sha256(wire).hexdigest(), **clock}
+    packet = {'candidate_id': 'stocks:TEST', 'assembled_at': clock['generated_at_dublin'], 'live_trade_authorized': False}
+    files = capture() | {'dashboard.json': wire, 'delivery.json': json.dumps(receipt).encode(),
+        'paper-review-packets.json': json.dumps({'trade_authorized': False,
+            'packets': [{'packet_id': digest(packet), 'packet': packet}]}).encode()}
+    return files, snapshot, receipt, packet
+
+
+def test_recovery_is_exact_additive_and_survives_missing_portfolio_source(tmp_path):
+    files, _, receipt, packet = recovery_inputs()
+    raw = zipped(files)
+    run = {**RUN, 'conclusion': 'failure'}
+    bank = EvidenceBank(tmp_path/'bank.sqlite')
+    old = capture_snapshot({k: files[k] for k in CAPTURE_FILES}, run=run, artifact=ARTIFACT)
+    bank.put('capture', ARTIFACT['id'], old)
+    downloads = []
+    def download(artifact):
+        downloads.append(artifact['id'])
+        return raw
+    reader = SimpleNamespace(artifacts=lambda r: [ARTIFACT], download=download)
+    for _ in range(2):
+        with pytest.raises(ValueError, match='no_completed_execution_evidence'):
+            collect(reader, [run], bank, tmp_path/'intake')
+    meta = bank.get('capture_delivery', ARTIFACT['id'])
+    assert downloads == [ARTIFACT['id']] and bank.get('capture', ARTIFACT['id']) == old
+    assert meta['client_state'] == 'unconfirmed' and meta['body_state'] == 'archived_exact'
+    assert bank.get('recovery_snapshot', receipt['snapshot_id']).encode() == files['dashboard.json']
+    assert meta['packet_ids'] == [digest(packet)] and bank.get('recovery_packet', digest(packet)) == packet
+    summary = json.loads((tmp_path/'intake/intake.json').read_text())
+    assert summary['performance_source_status'] == 'execution_source_missing'
+    assert summary['delivery_recovery']['unique_packets_preserved'] == 1
+    assert not (tmp_path/'intake/execution/report.json').exists()
+    bank.close()
+
+
+@pytest.mark.parametrize('match', [True, False])
+def test_legacy_reconstruction_requires_original_clock_and_exact_hash(tmp_path, monkeypatch, match):
+    files, snapshot, receipt, _ = recovery_inputs()
+    files['dashboard.json'] = json.dumps({**snapshot, 'generated_at_dublin': '2026-11-18T20:01:09+00:00'}).encode()
+    files.update({'enriched-capture.json': b'{"capture":1}', 'news.json': b'{"news":2}'})
+    def rebuild(capture, *, now, evidence):
+        assert now.isoformat() == receipt['generated_at_dublin']
+        assert capture == {'capture': 1} and evidence == {'news': 2}
+        return snapshot if match else {**snapshot, 'different': True}
+    monkeypatch.setattr('market_radar_ai.dashboard.export.build_snapshot', rebuild)
+    bank = EvidenceBank(tmp_path/'bank.sqlite')
+    retain_delivery(bank, zipped(files), files, run=RUN, artifact=ARTIFACT)
+    meta = bank.get('capture_delivery', ARTIFACT['id'])
+    assert meta['body_state'] == ('reconstructed_exact' if match else 'unverified')
+    assert bank.has('recovery_snapshot', receipt['snapshot_id']) is match
+    assert ('local_export_sha256' in meta) is (not match)
+    bank.close()
+
+
+def test_malformed_legacy_capture_falls_back_to_its_original_display_export(tmp_path):
+    files, _, receipt, packet = recovery_inputs()
+    files['dashboard.json'] += b'\n'
+    files.update({'enriched-capture.json': b'[]', 'news.json': b'{}'})
+    bank = EvidenceBank(tmp_path/'bank.sqlite')
+    retain_delivery(bank, zipped(files), files, run=RUN, artifact=ARTIFACT)
+    meta = bank.get('capture_delivery', ARTIFACT['id'])
+    assert meta['client_state'] == 'unconfirmed' and meta['body_state'] == 'unverified'
+    assert not bank.has('recovery_snapshot', receipt['snapshot_id'])
+    assert bank.get('recovery_export', meta['local_export_sha256']).encode() == files['dashboard.json']
+    assert meta['packet_ids'] == [digest(packet)]
+    bank.close()
+
+
+@pytest.mark.parametrize('receipt,state', [(None,'receipt_missing'), (b'not JSON','invalid_receipt'),
+                                          (b'{"state":"unexpected"}','invalid_receipt')])
+def test_missing_or_bad_receipt_retains_only_local_export_and_packet_evidence(tmp_path, receipt, state):
+    files, _, _, packet = recovery_inputs()
+    if receipt is None:
+        files.pop('delivery.json')
+    else:
+        files['delivery.json'] = receipt
+    bank = EvidenceBank(tmp_path/'bank.sqlite')
+    retain_delivery(bank, zipped(files), files, run=RUN, artifact=ARTIFACT)
+    meta = bank.get('capture_delivery', ARTIFACT['id'])
+    assert meta['client_state'] == state and meta['body_state'] == 'unavailable'
+    assert meta['packet_ids'] == [digest(packet)] and 'snapshot_id' not in meta
+    assert bank.get('recovery_export', meta['local_export_sha256']).encode() == files['dashboard.json']
+    assert list(bank.rows('recovery_snapshot')) == []
+    bank.close()
+
+
+def test_confirmed_delivery_has_no_outage_body_or_packet_and_wrong_scope_never_archives(tmp_path):
+    files, _, receipt, packet = recovery_inputs()
+    bank = EvidenceBank(tmp_path/'bank.sqlite')
+    confirmed = {**receipt, 'state': 'scanner_snapshot_delivery_confirmed'}
+    files['delivery.json'] = json.dumps(confirmed).encode()
+    retain_delivery(bank, zipped(files), files, run=RUN, artifact=ARTIFACT)
+    assert bank.get('capture_delivery', ARTIFACT['id'])['client_state'] == 'confirmed'
+    assert not bank.has('recovery_packet', digest(packet)) and list(bank.rows('recovery_snapshot')) == []
+    files.pop('delivery.json')
+    files['dashboard.json'] = b'{"schema_version":"1.0","mode":"RESEARCH_ONLY","live_orders_enabled":true}'
+    retain_delivery(bank, zipped(files), files, run=RUN, artifact={**ARTIFACT, 'id': 12})
+    assert 'local_export_sha256' not in bank.get('capture_delivery', 12)
+    bank.close()

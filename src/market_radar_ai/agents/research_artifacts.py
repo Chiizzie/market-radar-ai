@@ -51,6 +51,17 @@ def zip_members(raw, names):
     return result
 
 
+def verified_packets(document):
+    if document.get('trade_authorized') is not False:
+        raise ValueError('research_capture_scope')
+    if not isinstance(document.get('packets'), list):
+        raise ValueError('packet_capture_schema')
+    for item in document['packets']:
+        if digest(item['packet']) != item['packet_id']:
+            raise ValueError('candidate_packet_hash')
+    return document['packets']
+
+
 def capture_snapshot(files, *, run, artifact):
     """Lossless funnel states, grouped to avoid repeating thousands of deferrals.
 
@@ -68,8 +79,6 @@ def capture_snapshot(files, *, run, artifact):
         raise ValueError('discovery_capture_schema')
     if qualification is not None and (qualification.get('schema_version') != 'free-qualification-v1' or not isinstance(qualification.get('candidates'), list)):
         raise ValueError('qualification_capture_schema')
-    if packets is not None and not isinstance(packets.get('packets'), list):
-        raise ValueError('packet_capture_schema')
     groups = defaultdict(list)
     seen = set()
     dimensions = ('snapshot_status', 'selection_reason', 'screen_lane', 'technical_status',
@@ -85,12 +94,9 @@ def capture_snapshot(files, *, run, artifact):
     qualified = [{k: row.get(k) for k in fields} for row in (qualification or {}).get('candidates', [])]
     if len({r['candidate_id'] for r in qualified}) != len(qualified):
         raise ValueError('duplicate_qualified_candidate')
-    links = []
-    for p in (packets or {}).get('packets', []):
-        if digest(p['packet']) != p['packet_id']:
-            raise ValueError('candidate_packet_hash')
-        links.append({'packet_id': p['packet_id'], 'candidate_id': p['packet']['candidate_id'],
-                      'assembled_at': p['packet']['assembled_at']})
+    packet_rows = verified_packets(packets) if packets is not None else []
+    links = [{'packet_id': p['packet_id'], 'candidate_id': p['packet']['candidate_id'],
+              'assembled_at': p['packet']['assembled_at']} for p in packet_rows]
     diagnostics = documents.get('run-diagnostics.json', {})
     opening = {}
     if 'opening-session.json' in files:
@@ -111,6 +117,87 @@ def capture_snapshot(files, *, run, artifact):
         'discovery_observations': len(seen), 'qualified_observations': len(qualified),
         'missing_files': sorted(CAPTURE_FILES - set(documents)),
         'trade_authorized': False, 'model_calls': 0}
+
+
+def research_snapshot(body):
+    if body is None:
+        return None
+    try:
+        snapshot = json.loads(body.decode('utf-8'))
+    except (UnicodeError, ValueError):
+        return None
+    if (not isinstance(snapshot, dict) or snapshot.get('schema_version') != '1.0'
+            or snapshot.get('mode') != 'RESEARCH_ONLY' or snapshot.get('live_orders_enabled') is not False):
+        return None
+    return snapshot
+
+
+def recover_request(raw, receipt, archived):
+    """Return exact request bytes only when the collector's fingerprint agrees."""
+    from ..dashboard.export import build_snapshot
+    from ..dashboard.snapshot_delivery import MAX_BYTES, snapshot_bytes
+    expected = receipt['snapshot_id']
+    if archived is not None and hashlib.sha256(archived).hexdigest() == expected:
+        body, source = archived, 'archived_exact'
+    else:
+        inputs = zip_members(raw, {'enriched-capture.json', 'news.json'})
+        try:
+            snapshot = build_snapshot(json.loads(inputs['enriched-capture.json']),
+                now=aware(receipt['generated_at_dublin']), evidence=json.loads(inputs['news.json']))
+            body = snapshot_bytes(snapshot)
+        except (ValueError, KeyError, TypeError, ArithmeticError, AttributeError, IndexError):
+            # A malformed legacy input cannot establish the original request.
+            return None, 'unverified'
+        if hashlib.sha256(body).hexdigest() != expected:
+            return None, 'unverified'
+        source = 'reconstructed_exact'
+    snapshot = research_snapshot(body)
+    if (len(body) > MAX_BYTES or snapshot is None
+            or any(snapshot.get(k) != receipt[k] for k in ('generated_at_dublin', 'expires_at_epoch', 'coverage'))):
+        return None, 'unverified'
+    return body.decode('utf-8'), source
+
+
+def retain_delivery(bank, raw, files, *, run, artifact):
+    parts = zip_members(raw, {'delivery.json', 'dashboard.json'})
+    archived = parts.get('dashboard.json')
+    meta = {'run_id': run['id'], 'attempt': run.get('run_attempt', 1), 'artifact_id': artifact['id'],
+            'artifact_digest': artifact.get('digest'), 'client_state': 'receipt_missing',
+            'body_state': 'unavailable', 'packet_ids': None, 'trade_authorized': False}
+    states = {'scanner_snapshot_delivery_confirmed': 'confirmed',
+              'scanner_snapshot_delivery_unconfirmed': 'unconfirmed'}
+    receipt = None
+    if 'delivery.json' in parts:
+        meta['client_state'] = 'invalid_receipt'
+        try:
+            receipt = json.loads(parts['delivery.json'])
+        except (UnicodeError, ValueError):
+            pass
+    if (isinstance(receipt, dict) and isinstance(receipt.get('state'), str) and receipt['state'] in states
+            and receipt.get('trade_authorized') is False and isinstance(receipt.get('coverage'), dict)
+            and isinstance(receipt.get('generated_at_dublin'), str) and type(receipt.get('expires_at_epoch')) is int
+            and isinstance(receipt.get('snapshot_id'), str) and re.fullmatch('[0-9a-f]{64}', receipt['snapshot_id'])):
+        meta.update(client_state=states[receipt['state']], snapshot_id=receipt['snapshot_id'],
+                    generated_at_dublin=receipt['generated_at_dublin'], expires_at_epoch=receipt['expires_at_epoch'])
+        if meta['client_state'] == 'confirmed':
+            meta['body_state'] = 'not_requested'
+        else:
+            body, meta['body_state'] = recover_request(raw, receipt, archived)
+            if body is not None:
+                bank.put('recovery_snapshot', receipt['snapshot_id'], body)
+    if meta['body_state'] in {'unavailable', 'unverified'} and research_snapshot(archived) is not None:
+        # This is the original display export, with its own clock and hash.
+        # It is not evidence of which bytes the server received.
+        export_id = hashlib.sha256(archived).hexdigest()
+        bank.put('recovery_export', export_id, archived.decode('utf-8'))
+        meta['local_export_sha256'] = export_id
+    if meta['client_state'] != 'confirmed' and 'paper-review-packets.json' in files:
+        packets = verified_packets(json.loads(files['paper-review-packets.json']))
+        for packet in packets:
+            bank.put('recovery_packet', packet['packet_id'], packet['packet'])
+        meta['packet_ids'] = [p['packet_id'] for p in packets]
+    # Write last, so a retry completes any interrupted body or packet archive.
+    bank.put('capture_delivery', artifact['id'], meta)
 
 
 class EvidenceBank:
@@ -159,6 +246,7 @@ class EvidenceBank:
     def summary(self):
         snapshots = list(self.rows('capture'))
         runs = list(self.rows('run'))
+        deliveries = list(self.rows('capture_delivery'))
         covered = {(s['run_id'], s['attempt']) for s in snapshots}
         missing = [r['id'] for r in runs if (r['id'], r['attempt']) not in covered]
         return {'schema_version': 'evidence-intake-summary-v1', 'completed_scanner_attempts': len(runs),
@@ -167,6 +255,13 @@ class EvidenceBank:
             'incomplete_capture_artifacts': [s['artifact_id'] for s in snapshots if s['missing_files']],
             'discovery_candidate_observations': sum(s['discovery_observations'] for s in snapshots),
             'qualification_observations': sum(s['qualified_observations'] for s in snapshots),
+            'delivery_recovery': {
+                'client_states': dict(Counter(d['client_state'] for d in deliveries)),
+                'outbound_bodies': dict(Counter(d['body_state'] for d in deliveries)),
+                'local_exports_preserved': sum('local_export_sha256' in d for d in deliveries),
+                'packet_occurrences_preserved': sum(len(d['packet_ids'] or []) for d in deliveries),
+                'unique_packets_preserved': self.db.execute(
+                    "SELECT count(*) FROM records WHERE kind='recovery_packet'").fetchone()[0]},
             'first_capture_at': min((s['artifact_created_at'] for s in snapshots), default=None),
             'last_capture_at': max((s['artifact_created_at'] for s in snapshots), default=None),
             'full_historical_coverage_established': False,
@@ -257,27 +352,6 @@ def collect(reader, runs, bank, output, *, maximum_new_artifacts=120):
             artifacts_by_run[run['id']] = saved['artifacts']
         return artifacts_by_run[run['id']]
 
-    sources = {}
-    for name, prefix, target in [('Execution research and readiness', 'execution-research-', 'execution'),
-                                  ('Manual shared paper portfolio', 'manual-portfolio-', 'manual')]:
-        for run in ordered:
-            if run['name'] != name or run['conclusion'] != 'success':
-                continue
-            candidates = [a for a in artifacts(run) if a['name'].startswith(prefix) and not a['expired']]
-            if not candidates:
-                continue  # An out-of-window green run may have no report.
-            artifact = max(candidates, key=lambda a: a['created_at'])
-            files = zip_members(reader.download(artifact), {'report.json', 'source-events.jsonl.gz', 'ledger.json.gz'})
-            required = {'report.json', 'source-events.jsonl.gz'} | ({'ledger.json.gz'} if target == 'manual' else set())
-            if not required <= set(files):
-                raise ValueError('incomplete_' + target + '_artifact')
-            dest = output / target; dest.mkdir(exist_ok=True)
-            for filename, raw in files.items():
-                (dest / filename).write_bytes(raw)
-            sources[target] = {'run_id': run['id'], 'artifact_id': artifact['id'], 'digest': artifact.get('digest')}
-            break
-    if 'execution' not in sources:
-        raise ValueError('no_completed_execution_evidence')
     for run in ordered:
         if run['name'] != 'Scheduled research collection' or run['status'] != 'completed':
             continue
@@ -286,17 +360,28 @@ def collect(reader, runs, bank, output, *, maximum_new_artifacts=120):
         for artifact in artifacts(run):
             kind = 'capture' if artifact['name'] == 'scheduled-capture-' + str(run['id']) else \
                    'context' if artifact['name'] == 'market-context-' + str(run['id']) else None
-            if not kind or artifact['expired'] or bank.has(kind, artifact['id']):
+            if not kind or artifact['expired']:
                 continue
             if artifact.get('expires_at') and aware(artifact['expires_at']) <= datetime.now(UTC):
+                continue
+            indexed = bank.has(kind, artifact['id'])
+            # Backfill previously indexed failed attempts without altering the
+            # original funnel record. New captures share the same ZIP download.
+            needs_delivery = (kind == 'capture' and (not indexed or run['conclusion'] != 'success')
+                              and not bank.has('capture_delivery', artifact['id']))
+            if indexed and not needs_delivery:
                 continue
             if downloaded >= maximum_new_artifacts:
                 pending.append(artifact['id']); continue
             names = CAPTURE_FILES | {'opening-session.json'} if kind == 'capture' else {'report.json'}
-            files = zip_members(reader.download(artifact), names)
+            raw = reader.download(artifact)
+            files = zip_members(raw, names)
             downloaded += 1
             if kind == 'capture':
-                bank.put(kind, artifact['id'], capture_snapshot(files, run=run, artifact=artifact))
+                if not indexed:
+                    bank.put(kind, artifact['id'], capture_snapshot(files, run=run, artifact=artifact))
+                if needs_delivery:
+                    retain_delivery(bank, raw, files, run=run, artifact=artifact)
             elif 'report.json' in files:
                 report = json.loads(files['report.json'])
                 bank.put(kind, artifact['id'], {'report': report, 'sha256': digest(report),
@@ -332,12 +417,35 @@ def collect(reader, runs, bank, output, *, maximum_new_artifacts=120):
                 continue
             bank.put('frozen', artifact['id'], evaluate(files, kind))
             selected.add(key)
+    sources = {}
+    for name, prefix, target in [('Execution research and readiness', 'execution-research-', 'execution'),
+                                  ('Manual shared paper portfolio', 'manual-portfolio-', 'manual')]:
+        for run in ordered:
+            if run['name'] != name or run['conclusion'] != 'success':
+                continue
+            candidates = [a for a in artifacts(run) if a['name'].startswith(prefix) and not a['expired']]
+            if not candidates:
+                continue  # An out-of-window green run may have no report.
+            artifact = max(candidates, key=lambda a: a['created_at'])
+            files = zip_members(reader.download(artifact), {'report.json', 'source-events.jsonl.gz', 'ledger.json.gz'})
+            required = {'report.json', 'source-events.jsonl.gz'} | ({'ledger.json.gz'} if target == 'manual' else set())
+            if not required <= set(files):
+                raise ValueError('incomplete_' + target + '_artifact')
+            dest = output / target; dest.mkdir(exist_ok=True)
+            for filename, raw in files.items():
+                (dest / filename).write_bytes(raw)
+            sources[target] = {'run_id': run['id'], 'artifact_id': artifact['id'], 'digest': artifact.get('digest')}
+            break
     (output / 'contexts.json').write_text(canonical(list(bank.rows('context'))) + '\n')
     (output / 'experiments.json').write_text(json.dumps(summarize_latest(bank.rows('frozen')), indent=2) + '\n')
-    (output / 'intake.json').write_text(json.dumps({'sources': sources, 'new_artifacts_indexed': downloaded,
+    (output / 'intake.json').write_text(json.dumps({'sources': sources,
+        'performance_source_status': 'available' if 'execution' in sources else 'execution_source_missing',
+        'new_artifacts_indexed': downloaded,
         'frozen_artifacts_read': frozen_downloads,
         'pending_artifact_ids': pending, 'state': 'backfill_pending' if pending else 'available_artifacts_indexed',
         **bank.summary()}, indent=2) + '\n')
+    if 'execution' not in sources:
+        raise ValueError('no_completed_execution_evidence')
     return sources
 
 

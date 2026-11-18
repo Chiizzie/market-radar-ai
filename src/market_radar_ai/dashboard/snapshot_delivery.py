@@ -24,6 +24,11 @@ class SnapshotDeliveryError(RuntimeError):
         super().__init__(f'Scanner dashboard acknowledgement unconfirmed ({detail}); inspect the saved receipt.')
 
 
+def snapshot_bytes(snapshot):
+    """The UTF-8 representation whose SHA-256 identifies a scanner request."""
+    return (json.dumps(snapshot, ensure_ascii=False, separators=(',', ':'))+'\n').encode('utf-8')
+
+
 def deliver(capture, *, env, clock, evidence=None, session=None, snapshot_path=None):
     from .collection_schedule import scheduled_scope
     now = clock()
@@ -40,7 +45,7 @@ def deliver(capture, *, env, clock, evidence=None, session=None, snapshot_path=N
     snapshot = build_snapshot(capture, now=now, evidence=evidence)
     if not any(snapshot['markets'].values()):
         raise ValueError('empty_capture_not_deliverable')
-    body = (json.dumps(snapshot, ensure_ascii=False, separators=(',', ':'))+'\n').encode('utf-8')
+    body = snapshot_bytes(snapshot)
     if len(body) > MAX_BYTES:
         raise ValueError('snapshot_too_large')
     if snapshot_path is not None:
