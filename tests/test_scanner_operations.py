@@ -36,3 +36,28 @@ def test_backup_receipt_requires_actual_nonexpired_matching_upload():
     assert r['upload_confirmed'] and not r['restore_of_this_archive_tested']
     data['expired']=True
     with pytest.raises(ValueError):backup_receipt(github,artifact_id=9,manifest=manifest,family='comparison',now=NOW)
+
+
+@pytest.mark.parametrize('backup', [False, True])
+def test_health_uses_one_write_but_backup_receipts_keep_retries(tmp_path, monkeypatch, backup):
+    import json
+    import sys
+    from unittest.mock import Mock
+    from market_radar_ai.dashboard import scanner_operations as ops
+    report = {'source_status': 'received'}
+    client = Mock()
+    monkeypatch.setattr(ops, 'EventClient', client)
+    monkeypatch.setattr(ops, 'GitHubRead', Mock())
+    monkeypatch.setattr(ops, 'health', Mock(return_value=report))
+    monkeypatch.setattr(ops, 'backup_receipt', Mock(return_value=report))
+    monkeypatch.setenv('REVIEW_INGEST_SECRET', 's'*32)
+    output = tmp_path/'report.json'
+    args = ['health', '--output', str(output)]
+    if backup:
+        manifest = tmp_path/'manifest.json'
+        manifest.write_text('{}')
+        args.extend(['--artifact-id', '9', '--family', 'method', '--manifest', str(manifest)])
+    monkeypatch.setattr(sys, 'argv', args)
+    ops.main()
+    assert json.loads(output.read_text()) == report
+    client.assert_called_once_with('s'*32, retry_appends=backup)

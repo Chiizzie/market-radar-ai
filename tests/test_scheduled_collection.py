@@ -295,16 +295,18 @@ def test_discovery_counts_follow_actual_collection_cap_without_counting_fallback
         assert sum(final['selection_reason_counts'].values())==len(pool)
 
 
-def test_unconfirmed_write_keeps_capture_and_receipt_and_blocks_review(tmp_path):
+def test_unconfirmed_write_keeps_capture_and_receipt_and_blocks_review(tmp_path, monkeypatch):
     from market_radar_ai.dashboard.snapshot_delivery import SnapshotDeliveryError
     from market_radar_ai.dashboard.scheduled_collection import review_can_continue
     failure = SnapshotDeliveryError({'snapshot_id': 'a'*64, 'trade_authorized': False}, 'read_timeout')
     def delivery(*args, **kwargs):
+        assert kwargs['snapshot_path'] == output/'dashboard.json'
         raise failure
     output = tmp_path/'out'
+    monkeypatch.setattr('market_radar_ai.dashboard.scheduled_collection.deliver', delivery)
     with pytest.raises(SnapshotDeliveryError):
         run_cycle(env=ENV, output=output, cache_path=tmp_path/'cache.json', clock=lambda:NOW,
-                  run=fake_stages([]), delivery=delivery)
+                  run=fake_stages([]))
     receipt = json.loads((output/'delivery.json').read_text())
     assert receipt == failure.receipt and (output/'dashboard.json').is_file()
     assert not review_can_continue({'delivery': receipt})

@@ -24,6 +24,16 @@ def test_commit_then_timeout_retries_without_duplicate_or_new_receipt():
     assert next(iter(saved.values()))['received_at']=='2026-11-13T15:00:01+00:00'
 
 
+@pytest.mark.parametrize('action,count', [('append', 1), ('read', 3)])
+def test_locally_archived_health_can_suppress_write_retries_only(action, count):
+    session = Mock()
+    session.post.side_effect = requests.ReadTimeout('lost acknowledgement')
+    client = EventClient('s'*32, session=session, sleep=Mock(), retry_appends=False)
+    with pytest.raises(StorageUnavailable) as failure:
+        client.request({'action': action})
+    assert session.post.call_count == failure.value.attempts == count
+
+
 @pytest.mark.parametrize('status',[400,401,403,404])
 def test_permanent_append_failures_are_not_retried(status):
     session=Mock();session.post.return_value=response(status)

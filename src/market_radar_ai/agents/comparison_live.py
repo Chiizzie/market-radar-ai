@@ -53,10 +53,12 @@ class StorageUnavailable(RuntimeError):
 
 
 class EventClient:
-    def __init__(self, secret, *, clock=lambda: datetime.now(UTC), session=None, sleep=time.sleep):
+    def __init__(self, secret, *, clock=lambda: datetime.now(UTC), session=None, sleep=time.sleep,
+                 retry_appends=True):
         if not isinstance(secret, str) or len(secret) < 32:
             raise ValueError('comparison_storage_not_configured')
         self.sleep = sleep
+        self.retry_appends = retry_appends
         self.secret = secret
         self.clock = clock
         self.session = session or requests.Session()
@@ -69,7 +71,8 @@ class EventClient:
         # content hash and uses ON CONFLICT DO NOTHING. Retry these exact bytes,
         # including the original event clocks, if the acknowledgement is lost.
         # Only the authentication timestamp/signature is refreshed.
-        attempts = 3 if body.get('action') in ('read', 'append') else 1
+        action = body.get('action')
+        attempts = 3 if action == 'read' or (action == 'append' and self.retry_appends) else 1
         for attempt in range(1, attempts + 1):
             timestamp = str(int(self.clock().timestamp()))
             signature = hmac.new(self.secret.encode(), f'{timestamp}.{raw}'.encode(), hashlib.sha256).hexdigest()
