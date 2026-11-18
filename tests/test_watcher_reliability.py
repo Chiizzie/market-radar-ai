@@ -28,13 +28,14 @@ def test_auth_and_validation_not_retried(status):
     assert session.post.call_count==1 and error.value.http_status==status
 
 
-def test_unknown_write_ack_never_retried_and_diagnostics_sanitized():
+def test_unknown_write_ack_retries_exact_envelope_and_sanitizes_diagnostics():
     session=Mock();session.post.side_effect=requests.Timeout('private-token-and-provider-body')
     with pytest.raises(StorageUnavailable) as error:
-        EventClient('s'*32,session=session).request({'action':'append'})
-    assert session.post.call_count==1
+        EventClient('s'*32,session=session,sleep=Mock()).request({'action':'append'})
+    assert session.post.call_count==3
+    assert len({call.kwargs['data'] for call in session.post.call_args_list}) == 1
     health={};record_failure(health,error.value,Clock().now())
-    assert health['last_failure']=={'code':'storage_timeout','attempts':1}
+    assert health['last_failure']=={'code':'storage_timeout','attempts':3}
     assert 'private-token' not in json.dumps(health)+str(error.value)
 
 

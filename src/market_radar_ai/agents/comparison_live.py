@@ -65,7 +65,11 @@ class EventClient:
         raw = canonical({'version': 'research-events-v1', **body})
         if len(raw.encode()) > 2 * 1024 * 1024:
             raise ValueError('comparison_transport_capacity')
-        attempts = 3 if body.get('action') == 'read' else 1
+        # Append is idempotent: the server keys immutable envelopes by their
+        # content hash and uses ON CONFLICT DO NOTHING. Retry these exact bytes,
+        # including the original event clocks, if the acknowledgement is lost.
+        # Only the authentication timestamp/signature is refreshed.
+        attempts = 3 if body.get('action') in ('read', 'append') else 1
         for attempt in range(1, attempts + 1):
             timestamp = str(int(self.clock().timestamp()))
             signature = hmac.new(self.secret.encode(), f'{timestamp}.{raw}'.encode(), hashlib.sha256).hexdigest()
@@ -349,6 +353,12 @@ class LiveComparison:
             # Reports have a bounded summary; detailed immutable events remain the
             # recoverable source. Never truncate a cohort and call it complete.
             from .research_views import append_publication, comparison_rows
+            from .decision_evidence import build, bounded, PROTOCOL_ID as EVIDENCE_PROTOCOL
+            evidence=build(self.store,report)
+            (self.root/'decision-evidence-report.json').write_text(json.dumps(evidence,indent=2)+'\n')
+            # A separate audit partition cannot alter the source experiment or
+            # arm observations. No extra model, quote, notification or order calls.
+            self.client.append(EVIDENCE_PROTOCOL,[envelope('audit',bounded(evidence),self.clock())])
             append_publication(self.client,self.experiment,report,comparison_rows(report),clock=self.clock)
             self.sync()
             return report

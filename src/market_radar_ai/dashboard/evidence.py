@@ -1,4 +1,5 @@
 """Allowlisted evidence projection; feed health is separate from article age."""
+from ..market_data.limits import EVIDENCE_ITEM_LIMIT
 from datetime import datetime
 from ..evidence.news import EvidenceItem
 
@@ -19,7 +20,7 @@ def export_evidence(feed, *, now):
     if stamp.tzinfo is None or stamp>now:
         raise ValueError('Invalid evidence retrieval time')
     rows=feed['items']
-    if not isinstance(rows,list) or len(rows)>50:
+    if not isinstance(rows,list) or len(rows)>EVIDENCE_ITEM_LIMIT:
         raise ValueError('Invalid evidence count')
     items=[]
     for row in rows:

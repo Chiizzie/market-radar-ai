@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 
 from .models import ProviderResult
 from .quality import validate_candles
+from .limits import STOCK_RESEARCH_LIMIT, CRYPTO_RESEARCH_LIMIT
 
 
 def capture_result(result: ProviderResult, *, now: datetime, limit: int = 60) -> dict:
@@ -48,21 +49,24 @@ def capture_result(result: ProviderResult, *, now: datetime, limit: int = 60) ->
 
 
 def capture_markets(stock_symbols, crypto_pairs, *, stock_fetch, crypto_fetch,
-                    now=None, clock=monotonic, per_market_limit=10, cache=None) -> dict:
+                    now=None, clock=monotonic, per_market_limit=10, cache=None,
+                    stock_provider='yahoo_finance') -> dict:
     """Stocks first; separate quotas prevent either market starving the other."""
-    if not 1 <= per_market_limit <= 20:
-        raise ValueError("Per-market limit must be 1..20")
+    if not 1 <= per_market_limit <= STOCK_RESEARCH_LIMIT:
+        raise ValueError("Per-market research capacity exceeded")
     captures, coverage = [], {}
     for market, symbols, fetch in (("stocks", stock_symbols, stock_fetch),
                                    ("crypto", crypto_pairs, crypto_fetch)):
         unique = list(dict.fromkeys(s.strip().upper() for s in symbols if s.strip()))
-        selected = unique[:per_market_limit]
+        limit=min(per_market_limit, STOCK_RESEARCH_LIMIT if market=='stocks' else CRYPTO_RESEARCH_LIMIT)
+        selected = unique[:limit]
         successful = 0
         fresh = 0
+        not_requested = 0
         for symbol in selected:
             start = clock()
             try:
-                provider_name = 'yahoo_finance' if market == 'stocks' else 'kraken'
+                provider_name = stock_provider if market == 'stocks' else 'kraken'
                 check_time = now or datetime.now(timezone.utc)
                 result = cache.get(provider_name, symbol, now=check_time) if cache else None
                 cache_hit = result is not None
@@ -82,6 +86,10 @@ def capture_markets(stock_symbols, crypto_pairs, *, stock_fetch, crypto_fetch,
                     ValidationIssue(code="requested_symbol_mismatch", message="Unexpected symbol in provider response", symbol=symbol)]})
             if cache is not None and not cache_hit:
                 cache.put(provider_name, symbol, result, now=now or datetime.now(timezone.utc))
+            not_requested += int(
+                market == 'stocks' and result.provider == 'alpaca_iex'
+                and result.status == 'ok' and not result.candles
+                and {i.code for i in result.issues} in ({'regular_session_not_started'}, {'regular_session_warmup'}))
             elapsed = max(0, clock() - start)
             captured = capture_result(result, now=now or datetime.now(timezone.utc))
             captured.update(market=market, requested_symbol=symbol, cache_hit=cache_hit,
@@ -90,21 +98,64 @@ def capture_markets(stock_symbols, crypto_pairs, *, stock_fetch, crypto_fetch,
             successful += int(result.status == "ok" and bool(result.candles))
             fresh += int(captured["payload"]["quality_passed_at_capture"])
         coverage[market] = dict(requested=len(unique), attempted=len(selected),
-            successful=successful, quality_passed=fresh,
-            deferred=unique[per_market_limit:])
+            successful=successful, quality_passed=fresh, not_requested=not_requested,
+            deferred=unique[limit:])
     return {"format_version": 2, "purpose": "historical_research_replay_not_live_signal",
             "coverage_scope": "explicit_requested_symbols_not_full_market",
             "coverage": coverage, "captures": captures}
+
+
+def connectivity_exit_code(document):
+    # A valid empty series is a data gap, not a failed HTTP/provider connection.
+    rows=document['captures']
+    for market in {c.get('market','unknown') for c in rows}:
+        group=[c['payload'] for c in rows if c.get('market','unknown')==market]
+        expected_wait = {'regular_session_not_started', 'regular_session_warmup'}
+        # Isolated provider/symbol gaps remain visible and blocked; a whole
+        # market outage still fails the workflow. Broader discovery must not
+        # discard 69 healthy captures because one illiquid pair is unavailable.
+        healthy=any(p['provider_status']=='ok' and p.get('candles') for p in group)
+        waiting=all(p['provider_status']=='ok' and any(i['code'] in expected_wait for i in p.get('quality_issues',[])) for p in group)
+        if group and not healthy and not waiting:return 1
+    return 0
+
+
+def capture_crypto_bounded(pairs, *, fetch):
+    """Two requests at a time; stop after a fully failed pair of requests.
+
+    Unattempted pairs are explicit errors, never cached or fabricated prices.
+    The production fetch uses one attempt with a five-second request timeout.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+    from .models import ValidationIssue
+    results={}
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        for offset in range(0,len(pairs),2):
+            batch=pairs[offset:offset+2]
+            values=list(executor.map(fetch,batch))
+            results.update(zip(batch,values))
+            if all(r.status!='ok' for r in values):
+                for pair in pairs[offset+len(batch):]:
+                    results[pair]=ProviderResult(provider='kraken',
+                        retrieved_at=datetime.now(timezone.utc),status='error',
+                        issues=[ValidationIssue(code='provider_circuit_open',symbol=pair,
+                            message='Not requested after consecutive provider failures; no price available')])
+                break
+    return results
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--stocks", nargs="+", default=["MSFT", "AAPL", "NVDA"])
-    parser.add_argument("--crypto", nargs="+", default=["XBTEUR", "ETHEUR"])
+    parser.add_argument("--crypto", nargs="*", default=["XBTEUR", "ETHEUR"])
+    parser.add_argument('--stock-provider', choices=['yahoo_finance', 'alpaca_iex'], default='yahoo_finance')
+    parser.add_argument('--per-market-limit', type=int, default=10)
     parser.add_argument('--universe', type=Path, help='JSON object with stocks and crypto symbol lists')
     parser.add_argument('--queue-db', type=Path, help='Persistent fair scan queue; required with --universe')
     args = parser.parse_args()
+    if not 1<=args.per_market_limit<=STOCK_RESEARCH_LIMIT:
+        parser.error('Per-market research capacity exceeded')
     if bool(args.universe) != bool(args.queue_db):
         parser.error('--universe and --queue-db must be supplied together')
     selection = None
@@ -123,9 +174,24 @@ def main() -> None:
         args.crypto = selection['crypto']['selected']
     from .providers.kraken import KrakenProvider
     from .providers.yahoo import YahooFinanceProvider
+    if args.stock_provider == 'alpaca_iex':
+        from .providers.alpaca import AlpacaIexProvider
+        import os
+        if os.environ.get('ENABLE_BROAD_DISCOVERY') == 'true':
+            from .providers.alpaca_batch import fetch_histories
+            results=fetch_histories(list(dict.fromkeys(args.stocks))[:args.per_market_limit],env=os.environ)
+            stock_fetch=results.__getitem__
+        else:
+            stock_fetch = AlpacaIexProvider().fetch_history
+    else:
+        stock_fetch = lambda symbol: YahooFinanceProvider().fetch_history(symbol, period="1d", interval="5m")
+    pairs=list(dict.fromkeys(args.crypto))[:min(args.per_market_limit,CRYPTO_RESEARCH_LIMIT)]
+    def fetch_pair(pair):
+        return KrakenProvider(timeout=5,attempts=1).fetch_ohlc(pair,interval_minutes=5)
+    crypto_results=capture_crypto_bounded(pairs,fetch=fetch_pair)
     document = capture_markets(args.stocks, args.crypto,
-        stock_fetch=lambda symbol: YahooFinanceProvider().fetch_history(symbol, period="1d", interval="5m"),
-        crypto_fetch=lambda pair: KrakenProvider().fetch_ohlc(pair, interval_minutes=5))
+        stock_fetch=stock_fetch, stock_provider=args.stock_provider, per_market_limit=args.per_market_limit,
+        crypto_fetch=crypto_results.__getitem__)
     if selection is not None:
         document['queue_selection'] = selection
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -138,7 +204,7 @@ def main() -> None:
             "provider_status": p["provider_status"], "candles_saved": p["candles_saved"],
             "quality_passed": p["quality_passed_at_capture"], "issues": p["quality_issues"]}))
     # Report provider failures as a failing connectivity check, preserving the evidence first.
-    return int(any(c["attempted"] != c["successful"] for c in document["coverage"].values()))
+    return connectivity_exit_code(document)
 
 
 if __name__ == "__main__":

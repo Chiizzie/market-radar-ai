@@ -3,18 +3,18 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 from zoneinfo import ZoneInfo
-from pydantic import AwareDatetime, Field
+from pydantic import AwareDatetime, Field, StrictBool
 from .paper_team import Frozen, PaperPlan
 
 
 class PolicyFacts(Frozen):
     asset_class: Literal['equity','crypto']
     broker: Literal['trading212_invest','robinhood_europe']
-    broker_verified: bool
+    broker_verified: StrictBool
     broker_verified_until: AwareDatetime
     observed_at: AwareDatetime
     currency: str
-    completed_candles: bool
+    completed_candles: StrictBool
     plan: PaperPlan
 
 
@@ -31,7 +31,7 @@ def mandatory_blocks(facts: PolicyFacts, now: datetime):
         blocks.append('stale_or_incomplete_data')
     if facts.currency!='EUR': blocks.append('currency_mismatch')
     if facts.plan.planned_loss>Decimal('20'): blocks.append('excess_planned_risk')
-    if (local.hour>=22 or exit_at<=local or exit_at.date()!=local.date()
+    if (local.weekday()>=5 or local.hour>=22 or exit_at<=local or exit_at.date()!=local.date()
             or exit_at>exit_at.replace(hour=22,minute=0,second=0,microsecond=0)):
         blocks.append('time_rule')
     return blocks

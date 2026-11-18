@@ -85,3 +85,44 @@ def test_source_selector_rejects_arbitrary_endpoints():
     from market_radar_ai.evidence.public_feed import fetch_feed
     with pytest.raises(ValueError): fetch_feed(source='https://example.com')
     with pytest.raises(ValueError): fetch_feed(issuer=True, source='nvidia')
+
+
+def test_transport_retry_is_bounded_and_records_recovery(monkeypatch):
+    from market_radar_ai.evidence import public_feed as module
+    results=iter([{'status':'error','reason':'transport_error'}, {'status':'ok','items':[]}])
+    monkeypatch.setattr(module,'_fetch_feed_once',lambda *a,**kw:next(results))
+    result=module.fetch_feed(source='nvidia')
+    assert result['status']=='ok' and len(result['fetch_attempts'])==2
+
+
+def test_http_error_never_retried(monkeypatch):
+    from market_radar_ai.evidence import public_feed as module
+    calls=[]
+    def fetch(*a,**kw):
+        calls.append(1)
+        return {'status':'error','reason':'http_error','http_status':429}
+    monkeypatch.setattr(module,'_fetch_feed_once',fetch)
+    assert module.fetch_feed()['status']=='error'
+    assert len(calls)==1
+
+
+def test_transport_failure_stops_after_two_attempts(monkeypatch):
+    from market_radar_ai.evidence import public_feed as module
+    calls=[]
+    def fetch(*a,**kw):
+        calls.append(1)
+        return {'status':'error','reason':'transport_error'}
+    monkeypatch.setattr(module,'_fetch_feed_once',fetch)
+    assert module.fetch_feed()['status']=='error'
+    assert len(calls)==2
+
+
+def test_feed_connection_budget_allows_slow_handshake():
+    from market_radar_ai.evidence.public_feed import fetch_feed
+    class SlowSession:
+        def get(self,url,**kwargs):
+            assert kwargs['timeout']==(15,20)
+            assert kwargs['allow_redirects'] is False
+            assert kwargs['stream'] is True
+            return Response(200,feed(''))
+    assert fetch_feed(SlowSession(),source='nvidia')['status']=='ok'

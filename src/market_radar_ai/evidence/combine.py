@@ -1,10 +1,11 @@
 """Combine validated feeds without hiding source failures or refreshing timestamps."""
 from ..dashboard.evidence import export_evidence
+from ..market_data.limits import STOCK_RESEARCH_LIMIT, EVIDENCE_ITEM_LIMIT
 
 
 def combine_feeds(feeds, *, now):
-    if not 1 <= len(feeds) <= 10:
-        raise ValueError('Supply one to ten feeds')
+    if not 1 <= len(feeds) <= STOCK_RESEARCH_LIMIT+4:
+        raise ValueError('combined_feed_capacity_exceeded')
     sources, items, seen = [], [], set()
     rejected = []
     for index, feed in enumerate(feeds):
@@ -16,6 +17,10 @@ def combine_feeds(feeds, *, now):
             'scope':validated['scope'],'retrieved_at':validated.get('retrieved_at'),
             'validated_item_count':len(validated['items']),
             'query_symbol':feed.get('query_symbol') if isinstance(feed,dict) else None})
+        if isinstance(feed, dict) and feed.get('scope') == 'PUBLISHER_TAGGED_STOCK_NEWS_PARTIAL':
+            sources[-1].update(response_item_count=feed.get('response_item_count'),
+                rejected_item_count=len(feed.get('rejected', [])),
+                validated_evidence_ids=[i['evidence_id'] for i in validated['items']])
         if validated['status'] not in ('ok','partial'):
             continue
         for item in validated['items']:
@@ -25,7 +30,7 @@ def combine_feeds(feeds, *, now):
             items.append(item)
     from datetime import datetime
     items.sort(key=lambda i:datetime.fromisoformat(i['published_at']),reverse=True)
-    deferred=max(0,len(items)-50)
+    deferred=max(0,len(items)-EVIDENCE_ITEM_LIMIT)
     good=[s for s in sources if s['status'] in ('ok','partial')]
     # Oldest contributing retrieval prevents aggregation from refreshing old data.
     from datetime import datetime
@@ -33,7 +38,7 @@ def combine_feeds(feeds, *, now):
     status=('error' if not good else 'partial' if rejected or deferred or any(s['status']!='ok' for s in sources) else 'ok')
     return {'schema_version':'1.0','provider':'combined_evidence','scope':'MIXED_RESEARCH_LEADS',
         'status':status,'retrieved_at':retrieved.isoformat(),'sources':sources,
-        'items':items[:50],'rejected':rejected,'deferred':deferred,
+        'items':items[:EVIDENCE_ITEM_LIMIT],'rejected':rejected,'deferred':deferred,
         'coverage_complete':False,'trade_authorized':False}
 
 
