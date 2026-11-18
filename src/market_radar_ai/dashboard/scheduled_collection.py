@@ -1,6 +1,7 @@
 """One bounded scheduled capture; original evidence timestamps, no AI or orders."""
 import argparse
 from datetime import datetime, timezone
+from functools import partial
 import hashlib
 import json
 import os
@@ -76,7 +77,7 @@ def run_stage(module, args):
 
 
 def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.utc),
-              run=run_stage, delivery=deliver, stock_symbols=None, crypto_symbols=None):
+              run=run_stage, delivery=None, stock_symbols=None, crypto_symbols=None):
     started = clock()
     if not scheduled_scope(env, started):
         raise ValueError('scheduled_collection_scope_or_window_invalid')
@@ -241,6 +242,8 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
     ):
         path = output/name
         stage(label, module, ['--capture', enriched, '--evidence', news, '--output', path], path)
+    if delivery is None:
+        delivery = partial(deliver, snapshot_path=output/'dashboard.json')
     try:
         receipt = delivery(json.loads(enriched.read_text()), env=env, clock=clock,
                            evidence=json.loads(news.read_text()))

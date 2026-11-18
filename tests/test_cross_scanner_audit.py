@@ -1,4 +1,5 @@
 from datetime import datetime, UTC, timedelta
+import pytest
 from market_radar_ai.dashboard.cross_scanner_audit import build
 
 NOW = datetime(2026,11,6,18,50,tzinfo=UTC)
@@ -36,7 +37,12 @@ def test_code_blocker_and_actual_ai_rejection_are_distinct():
     assert build(old,trace,q,now=NOW,decision=d)['rows'][0]['ai_stage']=='ai_review_no_action'
 
 
-def test_unconfirmed_journal_write_keeps_local_gap_evidence(tmp_path, monkeypatch):
+@pytest.mark.parametrize('delivery_state,expected,attempts', [
+    (None, 'audit_saved_locally_publication_unconfirmed', 1),
+    ('scanner_snapshot_delivery_confirmed', 'audit_saved_locally_publication_unconfirmed', 1),
+    ('scanner_snapshot_delivery_unconfirmed', 'audit_saved_locally_publication_deferred', 0),
+])
+def test_unconfirmed_journal_write_keeps_local_gap_evidence(tmp_path, monkeypatch, delivery_state, expected, attempts):
     import json
     import sys
     from unittest.mock import Mock
@@ -47,6 +53,8 @@ def test_unconfirmed_journal_write_keeps_local_gap_evidence(tmp_path, monkeypatc
     old['generated_at'] = q['evaluated_at'] = datetime.now(UTC).isoformat()
     (tmp_path/'discovery-selection.json').write_text(json.dumps(trace))
     (tmp_path/'qualification.json').write_text(json.dumps(q))
+    if delivery_state:
+        (tmp_path/'delivery.json').write_text(json.dumps({'state': delivery_state}))
     monkeypatch.setattr(audit,'fetch_original',lambda:old)
     client = Mock()
     client.append.side_effect = RuntimeError('storage_timeout')
@@ -56,7 +64,8 @@ def test_unconfirmed_journal_write_keeps_local_gap_evidence(tmp_path, monkeypatc
     report = json.loads((tmp_path/'cross-scanner-audit.json').read_text())
     status = json.loads((tmp_path/'cross-scanner-status.json').read_text())
     assert report['original_signals'] == status['original_signals'] == 1
-    assert status['state'] == 'audit_saved_locally_publication_unconfirmed'
+    assert status['state'] == expected
+    assert client.append.call_count == attempts
     details = status['comparison_details'][0]
     assert details['discovery_rank'] == 19 and details['contiguous_tail_bars'] == 8
     assert details['missing_internal_intervals'] == 5 and details['chart_category'] == 'gapped_iex_history'

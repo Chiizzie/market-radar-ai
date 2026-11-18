@@ -24,7 +24,7 @@ class SnapshotDeliveryError(RuntimeError):
         super().__init__(f'Scanner dashboard acknowledgement unconfirmed ({detail}); inspect the saved receipt.')
 
 
-def deliver(capture, *, env, clock, evidence=None, session=None):
+def deliver(capture, *, env, clock, evidence=None, session=None, snapshot_path=None):
     from .collection_schedule import scheduled_scope
     now = clock()
     manual = (env.get('GITHUB_REPOSITORY') == 'Chiizzie/market-radar-ai'
@@ -43,6 +43,12 @@ def deliver(capture, *, env, clock, evidence=None, session=None):
     body = (json.dumps(snapshot, ensure_ascii=False, separators=(',', ':'))+'\n').encode('utf-8')
     if len(body) > MAX_BYTES:
         raise ValueError('snapshot_too_large')
+    if snapshot_path is not None:
+        # The capture export was rendered at an earlier clock. Archive the
+        # actual request body before sending so a lost receipt is reconcilable.
+        temporary = snapshot_path.with_suffix('.tmp')
+        temporary.write_bytes(body)
+        temporary.replace(snapshot_path)
     snapshot_id = hashlib.sha256(body).hexdigest()
     timestamp = str(int(now.timestamp()))
     signature = hmac.new(secret.encode(), timestamp.encode()+b'.'+body, hashlib.sha256).hexdigest()
