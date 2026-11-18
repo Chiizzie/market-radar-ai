@@ -1,5 +1,6 @@
 """Read-only GitHub run health and verified backup-upload receipts. No model access."""
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -104,6 +105,51 @@ def backup_receipt(github, *, artifact_id, manifest, family, now):
         'upload_confirmed':True,'restore_of_this_archive_tested':False,'model_calls':0}
 
 
+def deferred_health_publication(report, run_id, capture_dir, now):
+    """Space secondary writes only after a proven primary read timeout."""
+    if not run_id or not capture_dir or str(report.get('jobs_run_id')) != run_id:
+        return None
+    if not report.get('jobs_complete') or not any(
+        job['name'] == 'collect' and job['conclusion'] == 'failure' for job in report['jobs']
+    ):
+        return None
+    runs = report['runs']
+    parent = next((row for row in runs if str(row['run_id']) == run_id), None)
+    if not parent or parent['conclusion'] != 'failure':
+        return None
+    dispatched = datetime.fromisoformat(at(parent['created_at'])).astimezone(UTC)
+    quarter = dispatched.replace(minute=dispatched.minute // 15 * 15, second=0, microsecond=0)
+    if not 0 <= (now - dispatched).total_seconds() < 1200:
+        return None
+    # A missing or delayed dispatch must never eliminate the first reporting
+    # opportunity of a quarter. Use the real GitHub history, not a cron slot.
+    if not any(row['conclusion'] in ('success', 'failure') and
+               quarter <= datetime.fromisoformat(at(row['created_at'])) < dispatched for row in runs):
+        return None
+    try:
+        directory = Path(capture_dir)
+        with (directory / 'delivery.json').open('rb') as source:
+            raw_receipt = source.read(8193)
+        if len(raw_receipt) > 8192:
+            return None
+        receipt = json.loads(raw_receipt)
+        if (not isinstance(receipt, dict) or receipt.get('state') != 'scanner_snapshot_delivery_unconfirmed'
+                or receipt.get('reason') != 'read_timeout' or receipt.get('trade_authorized') is not False):
+            return None
+        generated = datetime.fromisoformat(at(receipt['generated_at_dublin']))
+        if not dispatched <= generated <= now:
+            return None
+        with (directory / 'dashboard.json').open('rb') as captured:
+            fingerprint = hashlib.file_digest(captured, 'sha256').hexdigest()
+        if fingerprint != receipt.get('snapshot_id'):
+            return None
+    except (OSError, TypeError, ValueError, KeyError, AttributeError):
+        return None
+    return {'state': 'health_publication_deferred', 'reason': 'primary_dashboard_read_timeout',
+            'run_id': parent['run_id'], 'snapshot_id': fingerprint, 'as_of': now.isoformat(),
+            'report_archived_locally': True, 'model_calls': 0, 'trade_authorized': False}
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output',type=Path,default=Path('artifacts/scanner-health/report.json'))
@@ -117,6 +163,13 @@ def main():
         kind='backup_report'
     else:report=health(github,now=now);kind='ops_report'
     args.output.parent.mkdir(parents=True,exist_ok=True);args.output.write_text(json.dumps(report,indent=2)+'\n')
+    if kind == 'ops_report':
+        deferred = deferred_health_publication(report, os.getenv('HEALTH_TIMEOUT_RUN_ID'),
+                                               os.getenv('HEALTH_CAPTURE_DIR'), now)
+        if deferred:
+            args.output.with_name('publication.json').write_text(json.dumps(deferred, indent=2) + '\n')
+            print(json.dumps(deferred))
+            raise SystemExit('Health report saved. Dashboard publication deferred after confirmed primary timeout.')
     # Every run archives its full health report. A timed-out write can still
     # hold the partition lock when an immediate retry reaches the database.
     client = EventClient(os.environ.get('REVIEW_INGEST_SECRET'), retry_appends=kind != 'ops_report')
