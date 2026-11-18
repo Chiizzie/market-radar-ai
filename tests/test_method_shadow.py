@@ -84,6 +84,35 @@ def environment(tmp_path):
     return w,t,price,events
 
 
+@pytest.mark.parametrize('options', [{}, {'early_opening': True}, {'competitor': True}])
+def test_idle_worker_reads_once_per_poll_and_still_detects_storage_failure(tmp_path, options):
+    from unittest.mock import Mock
+    storage = MemoryEvents()
+    client = Mock(wraps=storage)
+    worker = MethodShadow(tmp_path, client=client, clock=lambda: NOW, **options)
+    for _ in range(53):
+        worker.poll()
+    assert client.read.call_count == worker.health['polls'] == 53
+    client.append.assert_not_called()
+    storage.fail = True
+    with pytest.raises(RuntimeError, match='storage_unavailable'):
+        worker.poll()
+    assert worker.health['polls'] == 53
+
+
+def test_next_poll_observes_an_enrolment_from_another_worker(tmp_path):
+    worker, clock, price, storage = environment(tmp_path)
+    worker.poll()
+    writer = MethodShadow(tmp_path/'writer', client=storage, clock=lambda: clock[0])
+    assert writer.enrol(fixture(), now=clock[0]) == []
+    plan = next(iter(writer.cohorts.values()))['plan']
+    price[0] = plan['entry_eur']
+    clock[0] += timedelta(seconds=2)
+    worker.poll()
+    assert worker.outcomes(clock[0])[0]['state'] == 'open_simulation'
+    assert worker.health['quotes_received'] == 1
+
+
 def test_enrol_fill_exit_restore_and_same_day_no_retry(tmp_path):
     w,t,price,events=environment(tmp_path); i=fixture()
     assert w.enrol(i,now=t[0])==[]
