@@ -203,6 +203,9 @@ class ManualBook(Book):
                     row.update(state='invalidated', reason='stop_crossed_before_entry')
                     self.note(row, now)
                     continue
+                confirmation = row.get('fresh_confirmation_observed_at')
+                if confirmation is not None and (observed <= aware(confirmation) or bid < dec(plan['entry_eur'])):
+                    continue
                 gate = timing_gate(self.settings, delay_seconds=self.delay, as_of=now,
                     alert_received_at=row['acknowledged_at'], decision_available_at=row['at'],
                     quote_observed_at=observed, quote_received_at=now,
@@ -288,7 +291,7 @@ def bind(clock, review):
     return body, decision['plan']
 
 
-def replay(events, *, now, profile, dataset_kind='forward', ledger_output=None):
+def replay(events, *, now, profile, dataset_kind='forward', ledger_output=None, shadow=None):
     """Production inputs first pass LiveComparison and clock validators in collect.
 
     now is a fixed evaluation watermark taken BEFORE remote reads, preventing
@@ -327,6 +330,8 @@ def replay(events, *, now, profile, dataset_kind='forward', ledger_output=None):
         used += 1
         for book in books:
             book.advance(at)
+        if shadow is not None:
+            shadow.advance(at)
         p = json.loads(event['payload_json'])
         if p.get('dataset_kind') != 'forward' or p.get('trade_authorized') is not False:
             raise ValueError('manual_portfolio_source_scope')
@@ -361,18 +366,24 @@ def replay(events, *, now, profile, dataset_kind='forward', ledger_output=None):
                             stop_crosses[pending]=max(stop_crosses.get(pending,observed),observed)
                 for book in books:
                     book.quote(p['candidate_id'],p['quote'],at)
+                if shadow is not None:
+                    shadow.quote(p['candidate_id'], p['quote'], at)
         if key is not None and key in clocks and key in reviews and key not in admitted:
             c, ca = clocks[key]; r, ra = reviews[key]
             body, plan = bind(c,r)
             crossed=key in stop_crosses and stop_crosses[key]>=aware(c['acknowledged_at'])
             for book in books:
                 book.admit_alert(c,body,plan,max(ca,ra),known_stop_cross=crossed)
+            if shadow is not None:
+                shadow.admit(c, body, plan, max(ca,ra), known_stop_cross=crossed)
             admitted.add(key)
             awaiting_by_symbol[body['candidate_id']].discard(key)
             if len(admitted) > 20000:
                 raise ValueError('manual_portfolio_cohort_capacity')
     for book in books:
         book.advance(now)
+    if shadow is not None:
+        shadow.advance(now)
     ledgers = [b.snapshot() for b in books]
     if ledger_output is not None:
         ledger_output.extend(ledgers)

@@ -85,6 +85,59 @@ def test_frozen_separate_profile_and_nine_independent_accounts():
     assert r['state']=='no_confirmed_alert_clocks'
 
 
+def test_paired_fresh_recross_requires_post_response_bid_and_a_distinct_fill_quote():
+    from market_radar_ai.agents.fresh_breakout import FreshBreakout
+    rows=[]
+    alert(rows,expires_at=(NOW+timedelta(seconds=175)).isoformat())
+    for second in (45,90,135,180):
+        quote(rows,second,'99.90','100.00')
+    quote(rows,185,'100.01','100.05')
+    quote(rows,186,'100.01','100.05',observed=NOW+timedelta(seconds=185))
+    quote(rows,187,'99.99','100.05')
+    quote(rows,188,'100.01','100.05')
+    quote(rows,191,'110.1','110.2')
+    shadow=FreshBreakout(PROFILE)
+    original=evaluate(rows,210)
+    assert evaluate(rows,210,shadow=shadow)==original
+    report=shadow.report()['phases']
+    case=report['development']['180']['cases'][0]
+    assert case['recheck']=='fresh_bid_recross' and case['control']['state']=='blocked'
+    assert case['confirmation_at']==(NOW+timedelta(seconds=185)).isoformat()
+    assert case['fresh']['entry_at']==(NOW+timedelta(seconds=188)).isoformat()
+    assert case['fresh']['state']=='closed' and D(case['fresh']['net_pnl_eur'])>0
+    assert report['validation']['180']['alerts']==0
+
+
+@pytest.mark.parametrize('quotes,reason', [
+    ([(25,'98.9','99')], 'original_stop_observed'),
+    ([(40,'110.1','110.15')], 'original_target_observed'),
+    ([(61,'100','100.1')], 'quote_coverage_unknown'),
+    ([(45,'99.9','100'),(90,'99.9','100'),(135,'99.9','100'),(179,'99.9','100'),
+      (180,'100.05','100.1'),(190,'100.05','100.1'),(230,'100.05','100.1')],
+     'window_closed_without_confirmation')])
+def test_fresh_shadow_keeps_gaps_touches_and_pre_response_quotes_out(quotes,reason):
+    from market_radar_ai.agents.fresh_breakout import FreshBreakout
+    rows=[];alert(rows,expires_at=(NOW+timedelta(seconds=175)).isoformat())
+    for second,bid,ask in quotes: quote(rows,second,bid,ask)
+    shadow=FreshBreakout(PROFILE);evaluate(rows,245,shadow=shadow)
+    pair=shadow.report()['phases']['development']['180']
+    assert pair['alerts']==1 and pair['recheck_states']=={reason:1}
+    assert pair['fresh']['closed_net_pnl_eur'] is None
+
+
+def test_fresh_validation_starts_independently_and_keeps_an_unexpired_plan():
+    from market_radar_ai.agents.fresh_breakout import FreshBreakout
+    at=NOW+timedelta(days=3)
+    rows=[];alert(rows);alert(rows,at=at)
+    shadow=FreshBreakout(PROFILE)
+    replay(rows,now=at+timedelta(seconds=2),profile=PROFILE,shadow=shadow)
+    result=shadow.report()
+    for phase in ('development','validation'):
+        r=result['phases'][phase]['300']
+        assert r['alerts']==1 and r['control']==r['fresh']
+        assert r['cases'][0]['recheck']=='original_window_available'
+
+
 def test_latency_preserves_original_expiry_and_never_reuses_early_quotes():
     rows=[];alert(rows,expires_at=(NOW+timedelta(seconds=240)).isoformat())
     quote(rows,59);quote(rows,60);quote(rows,61,'111','111.1')
