@@ -47,7 +47,7 @@ jobs:
       - name: Read existing research artifacts and preserve candidate history
         id: intake
         if: steps.window.outputs.run == 'true'
-        run: python -m market_radar_ai.agents.research_artifacts
+        run: python -m market_radar_ai.agents.research_artifacts --after-close-backfill
         env:
           GH_TOKEN: ${{ github.token }}
           EXECUTION_SOURCE_VERSION: guarded-v2
