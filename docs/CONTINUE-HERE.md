@@ -1,6 +1,18 @@
 # Market Radar AI: continue here
 
-Last verified: 17 November 2026, 20:56 Dublin. Shared storage failed again after 20:00; the 20:25 collection-failed Telegram was an unconfirmed dashboard delivery. Live recovery is NOT established. Read [current incident and deployed repair](incidents/2026-11-17-storage-stall-and-history-cache.md) before using earlier healthy-run evidence. The 20:55 run reached the new cache code but its initial storage read still timed out. Added downstream failure guards and authenticated history checkpoints; no trade rules, risk limits or budgets changed.
+Latest operational check: **18 November 2026, 15:35 Europe/Dublin**. The 15:25, 15:20 and 15:15 scanner runs succeeded after the source restoration merge. The 14:45 entry observer demonstrably restored its checkpoint and completed 66 polls without errors. The provider root cause of yesterday's storage outage is still unproven; successful runs do not establish continuous quote coverage.
+
+## Highest priority: measured performance and reliability
+
+[Audit/source repair PR #19](https://github.com/Chiizzie/market-radar-ai/pull/19) is merged as `d726e6347d59d43b4be83b832f8731536418e732`. Main now contains the exact deployed components needed for reproducible tests. Existing live workflow pins and ordinary alerts remain unchanged.
+
+Read the [five-milestone implementation ledger](experiments/performance-intelligence-20261118.md) and [verified paper evidence](evidence/performance-intelligence-20261118.json). The full current-protocol execution and manual ledgers reproduce exactly. Independent setups have 78 code-only closes at −€163.109412 and seven AI-reviewed closes at −€22.985947, with substantial unresolved outcomes; these are not shared-account returns. No profitable edge is established.
+
+The independent `Paper performance intelligence` workflow reads existing GitHub artifacts with no model/provider/database/notification credentials. It maintains an additive candidate/context index, resumes bounded backfill, replays frozen alternatives, and produces full-history metrics and exceptions. Inspect its actual latest run before claiming deployment verification. Missing history and failed captures stay explicit.
+
+The holdout is predeclared for **19 November 2026**. Keep the primary manual EUR-conversion/300-second scenario, original source protocols, risk limits and spending limits. Use causal context only; keep before/after-holdout results separate. Brokerage cost verification, missing exits/receipts, provider reliability and sufficient later data remain blockers. Never resend historical alerts, invent exits, reset unresolved capital, silently extend a frozen fee schedule, or enable orders.
+
+Historical incident checkpoint: 17 November, 20:56 Dublin. Storage had failed again after 20:00 and the 20:25 collection-failed Telegram reflected unconfirmed dashboard delivery. The 20:55 run reached the new cache code but its first authoritative read timed out. See [the incident](incidents/2026-11-17-storage-stall-and-history-cache.md); today's observed recovery supersedes that checkpoint, not its root-cause uncertainty.
 
 ## Current work: case learning and quote evidence
 

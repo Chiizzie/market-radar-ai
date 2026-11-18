@@ -1,0 +1,642 @@
+{
+  "schema_version": "performance-intelligence-v1",
+  "as_of_dublin": "2026-11-18T14:49:16.881665+00:00",
+  "source_sha256": "f239796e6935a3c2f3e3794e156e0bbfb4cb6594de7a1f2cbfad501a3ce49762",
+  "source_protocol_id": "eab2d59128f2d320ec2d32e1cd903d2b3d9d17c93f324534c607f640e1b93fd8",
+  "execution_protocol_id": "010dac634261525d61b6e4acf6a822bbae80f3adb0b2565b361b038b39ab1618",
+  "source_events": 127984,
+  "cohorts": 1101,
+  "archive_capacity": {
+    "source_bytes": 120047042,
+    "maximum_bytes": 1000000000,
+    "maximum_events": 1000000,
+    "attention_required": false
+  },
+  "ai_costs": {
+    "attempted_reviews": 74,
+    "not_attempted": 1027,
+    "incomplete_attempts": [
+      "paper-final-attempt-v1:ee1b5d6beee0c93b912532796683c54a6ab5283fb90309845931ad3696800c9e",
+      "paper-final-attempt-v1:fcb7dc3b00300e15c7dd1f18ba5cb6e3675f46f0cf4ae017f7721ab5f042a8e6"
+    ],
+    "recorded_estimated_eur": "3.456410",
+    "complete_total_eur": null,
+    "basis": "recorded_model_estimates_not_provider_invoice"
+  },
+  "prospective_validation": {
+    "status": "blocked",
+    "blockers": [
+      "validation_not_started",
+      "insufficient_closed_sample",
+      "insufficient_independent_sessions",
+      "broker_costs_unverified",
+      "end_to_end_coverage_unverified",
+      "positive_net_expectancy_not_supported"
+    ],
+    "protocol_id": "025d8783383052c5e3edcbfe94138fc2ef26404951a717137fdff382c8b8a0d0",
+    "validation_start": "2026-11-19T00:00:00+00:00",
+    "metrics": {
+      "considered": 0,
+      "states": {},
+      "closed": 0,
+      "wins": 0,
+      "losses": 0,
+      "breakeven": 0,
+      "closed_net_pnl_eur": null,
+      "expectancy_per_closed_trade_eur": null,
+      "profit_factor": null,
+      "profit_factor_status": "no_closed_trades",
+      "win_rate": null,
+      "closed_fees_eur": null,
+      "realized_drawdown_eur": null,
+      "drawdown_scope": "closed_realized_only_not_mark_to_market",
+      "unknown_or_open_outcomes": 0,
+      "profitability_established": false
+    },
+    "uncertainty": {
+      "days_with_closes": 0,
+      "lower_95_eur": null,
+      "upper_95_eur": null,
+      "reason": "fewer_than_two_exit_days"
+    },
+    "trade_authorized": false,
+    "automatic_promotion": false,
+    "profitability_claim": null
+  },
+  "limitations": [
+    "Closed realized P/L only; unobserved exits remain unresolved.",
+    "Alternative portfolios are not additive; instrument fills are reference simulations.",
+    "Broker fees/currency route remain unverified; net values use frozen cost assumptions.",
+    "Missing market context stays unknown; later context is never joined backwards.",
+    "Source enrolment excludes upstream rejections; capture evidence is indexed separately.",
+    "A minimum sample and bootstrap interval cannot by themselves prove a durable edge."
+  ],
+  "execution_books": [
+    {
+      "profile": "eur_conversion",
+      "arm": "code_only",
+      "metrics": {
+        "considered": 1101,
+        "states": {
+          "blocked": 1101
+        },
+        "closed": 0,
+        "wins": 0,
+        "losses": 0,
+        "breakeven": 0,
+        "closed_net_pnl_eur": null,
+        "expectancy_per_closed_trade_eur": null,
+        "profit_factor": null,
+        "profit_factor_status": "no_closed_trades",
+        "win_rate": null,
+        "closed_fees_eur": null,
+        "realized_drawdown_eur": null,
+        "drawdown_scope": "closed_realized_only_not_mark_to_market",
+        "unknown_or_open_outcomes": 0,
+        "profitability_established": false,
+        "net_after_recorded_ai_cost_eur": null
+      },
+      "uncertainty": {
+        "days_with_closes": 0,
+        "lower_95_eur": null,
+        "upper_95_eur": null,
+        "reason": "fewer_than_two_exit_days"
+      }
+    },
+    {
+      "profile": "eur_conversion",
+      "arm": "ai_reviewed",
+      "metrics": {
+        "considered": 51,
+        "states": {
+          "blocked": 51
+        },
+        "closed": 0,
+        "wins": 0,
+        "losses": 0,
+        "breakeven": 0,
+        "closed_net_pnl_eur": null,
+        "expectancy_per_closed_trade_eur": null,
+        "profit_factor": null,
+        "profit_factor_status": "no_closed_trades",
+        "win_rate": null,
+        "closed_fees_eur": null,
+        "realized_drawdown_eur": null,
+        "drawdown_scope": "closed_realized_only_not_mark_to_market",
+        "unknown_or_open_outcomes": 0,
+        "profitability_established": false,
+        "net_after_recorded_ai_cost_eur": null
+      },
+      "uncertainty": {
+        "days_with_closes": 0,
+        "lower_95_eur": null,
+        "upper_95_eur": null,
+        "reason": "fewer_than_two_exit_days"
+      }
+    },
+    {
+      "profile": "usd_balance",
+      "arm": "code_only",
+      "metrics": {
+        "considered": 1101,
+        "states": {
+          "blocked": 1055,
+          "closed": 1,
+          "expired": 37,
+          "invalidated": 7,
+          "unresolved": 1
+        },
+        "closed": 1,
+        "wins": 0,
+        "losses": 1,
+        "breakeven": 0,
+        "closed_net_pnl_eur": "-4.376654190886118707173679058",
+        "expectancy_per_closed_trade_eur": "-4.376654190886118707173679058",
+        "profit_factor": "0",
+        "profit_factor_status": "defined",
+        "win_rate": "0",
+        "closed_fees_eur": "0.02",
+        "realized_drawdown_eur": "4.376654190886118707173679058",
+        "drawdown_scope": "closed_realized_only_not_mark_to_market",
+        "unknown_or_open_outcomes": 1,
+        "profitability_established": false,
+        "net_after_recorded_ai_cost_eur": "-4.376654190886118707173679058"
+      },
+      "uncertainty": {
+        "days_with_closes": 1,
+        "lower_95_eur": null,
+        "upper_95_eur": null,
+        "reason": "fewer_than_two_exit_days"
+      }
+    },
+    {
+      "profile": "usd_balance",
+      "arm": "ai_reviewed",
+      "metrics": {
+        "considered": 51,
+        "states": {
+          "blocked": 31,
+          "closed": 3,
+          "expired": 14,
+          "invalidated": 2,
+          "unresolved": 1
+        },
+        "closed": 3,
+        "wins": 1,
+        "losses": 2,
+        "breakeven": 0,
+        "closed_net_pnl_eur": "-4.422798597256836785272452615",
+        "expectancy_per_closed_trade_eur": "-1.474266199085612261757484205",
+        "profit_factor": "0.5461399667830830328763785044",
+        "profit_factor_status": "defined",
+        "win_rate": "0.3333333333333333333333333333",
+        "closed_fees_eur": "0.06",
+        "realized_drawdown_eur": "6.687277403842242887418415059",
+        "drawdown_scope": "closed_realized_only_not_mark_to_market",
+        "unknown_or_open_outcomes": 1,
+        "profitability_established": false,
+        "net_after_recorded_ai_cost_eur": null
+      },
+      "uncertainty": {
+        "days_with_closes": 2,
+        "lower_95_eur": "-3.057574033964384087187160864",
+        "upper_95_eur": "-0.6826122816462263490426458755",
+        "samples": 2000,
+        "seed": 20261118,
+        "reason": "exploratory_dependent_day_blocks"
+      }
+    },
+    {
+      "profile": "stressed",
+      "arm": "code_only",
+      "metrics": {
+        "considered": 1101,
+        "states": {
+          "blocked": 1101
+        },
+        "closed": 0,
+        "wins": 0,
+        "losses": 0,
+        "breakeven": 0,
+        "closed_net_pnl_eur": null,
+        "expectancy_per_closed_trade_eur": null,
+        "profit_factor": null,
+        "profit_factor_status": "no_closed_trades",
+        "win_rate": null,
+        "closed_fees_eur": null,
+        "realized_drawdown_eur": null,
+        "drawdown_scope": "closed_realized_only_not_mark_to_market",
+        "unknown_or_open_outcomes": 0,
+        "profitability_established": false,
+        "net_after_recorded_ai_cost_eur": null
+      },
+      "uncertainty": {
+        "days_with_closes": 0,
+        "lower_95_eur": null,
+        "upper_95_eur": null,
+        "reason": "fewer_than_two_exit_days"
+      }
+    },
+    {
+      "profile": "stressed",
+      "arm": "ai_reviewed",
+      "metrics": {
+        "considered": 51,
+        "states": {
+          "blocked": 51
+        },
+        "closed": 0,
+        "wins": 0,
+        "losses": 0,
+        "breakeven": 0,
+        "closed_net_pnl_eur": null,
+        "expectancy_per_closed_trade_eur": null,
+        "profit_factor": null,
+        "profit_factor_status": "no_closed_trades",
+        "win_rate": null,
+        "closed_fees_eur": null,
+        "realized_drawdown_eur": null,
+        "drawdown_scope": "closed_realized_only_not_mark_to_market",
+        "unknown_or_open_outcomes": 0,
+        "profitability_established": false,
+        "net_after_recorded_ai_cost_eur": null
+      },
+      "uncertainty": {
+        "days_with_closes": 0,
+        "lower_95_eur": null,
+        "upper_95_eur": null,
+        "reason": "fewer_than_two_exit_days"
+      }
+    }
+  ],
+  "independent_setups": [
+    {
+      "profile": "original_flat40_independent",
+      "arm": "code_only",
+      "allocation_scope": "independent_setups_not_a_capital_constrained_portfolio",
+      "metrics": {
+        "considered": 1101,
+        "states": {
+          "closed": 78,
+          "not_filled": 970,
+          "unresolved": 53
+        },
+        "closed": 78,
+        "wins": 17,
+        "losses": 61,
+        "breakeven": 0,
+        "closed_net_pnl_eur": "-163.1094117878886046348143566",
+        "expectancy_per_closed_trade_eur": "-2.091146304972930828651466110",
+        "profit_factor": "0.3366640371521458036155043000",
+        "profit_factor_status": "defined",
+        "win_rate": "0.2179487179487179487179487179",
+        "closed_fees_eur": "155.3784819840893194656866354",
+        "realized_drawdown_eur": "175.9480360723626163923518755",
+        "drawdown_scope": "closed_realized_only_not_mark_to_market",
+        "unknown_or_open_outcomes": 53,
+        "profitability_established": false
+      },
+      "uncertainty": {
+        "days_with_closes": 4,
+        "lower_95_eur": "-4.347234513984259659850200892",
+        "upper_95_eur": "-1.026953753552492700727534609",
+        "samples": 2000,
+        "seed": 20261118,
+        "reason": "exploratory_dependent_day_blocks"
+      }
+    },
+    {
+      "profile": "original_flat40_independent",
+      "arm": "ai_reviewed",
+      "allocation_scope": "independent_setups_not_a_capital_constrained_portfolio",
+      "metrics": {
+        "considered": 1101,
+        "states": {
+          "closed": 7,
+          "no_action": 21,
+          "not_filled": 40,
+          "not_reviewed": 1027,
+          "review_incomplete": 2,
+          "unresolved": 4
+        },
+        "closed": 7,
+        "wins": 2,
+        "losses": 5,
+        "breakeven": 0,
+        "closed_net_pnl_eur": "-22.98594728426518668455422076",
+        "expectancy_per_closed_trade_eur": "-3.283706754895026669222031537",
+        "profit_factor": "0.2233564021287806379211026675",
+        "profit_factor_status": "defined",
+        "win_rate": "0.2857142857142857142857142857",
+        "closed_fees_eur": "13.94422288380514959917499607",
+        "realized_drawdown_eur": "22.98594728426518668455422076",
+        "drawdown_scope": "closed_realized_only_not_mark_to_market",
+        "unknown_or_open_outcomes": 4,
+        "profitability_established": false
+      },
+      "uncertainty": {
+        "days_with_closes": 3,
+        "lower_95_eur": "-6.428159703979032158777140375",
+        "upper_95_eur": "-0.5176439202286822126037824213",
+        "samples": 2000,
+        "seed": 20261118,
+        "reason": "exploratory_dependent_day_blocks"
+      }
+    }
+  ],
+  "exceptions_by_kind": {
+    "unresolved_outcome": 2,
+    "review_cost_unsettled": 2,
+    "approved_alert_clock_missing": 4,
+    "independent_outcome_unresolved": 57
+  },
+  "manual": {
+    "as_of": "2026-11-18T14:58:16.010744+00:00",
+    "published_at": "2026-11-18T14:59:30.801544+00:00",
+    "protocol_id": "2080e2e70d7380759e1269d0b5603d6533d4e7ddc079cd354451182dc135a13f",
+    "source_sha256": "efe07145c40b6e19fae5cdeac411130c85586bc43114185247d9d50a6624aaf7",
+    "primary_scenario": "eur_conversion:300",
+    "costs_verified": false,
+    "books": [
+      {
+        "scenario": "eur_conversion:60",
+        "metrics": {
+          "considered": 27,
+          "states": {
+            "blocked": 27
+          },
+          "closed": 0,
+          "wins": 0,
+          "losses": 0,
+          "breakeven": 0,
+          "closed_net_pnl_eur": null,
+          "expectancy_per_closed_trade_eur": null,
+          "profit_factor": null,
+          "profit_factor_status": "no_closed_trades",
+          "win_rate": null,
+          "closed_fees_eur": null,
+          "realized_drawdown_eur": null,
+          "drawdown_scope": "closed_realized_only_not_mark_to_market",
+          "unknown_or_open_outcomes": 0,
+          "profitability_established": false
+        },
+        "uncertainty": {
+          "days_with_closes": 0,
+          "lower_95_eur": null,
+          "upper_95_eur": null,
+          "reason": "fewer_than_two_exit_days"
+        }
+      },
+      {
+        "scenario": "eur_conversion:180",
+        "metrics": {
+          "considered": 27,
+          "states": {
+            "blocked": 27
+          },
+          "closed": 0,
+          "wins": 0,
+          "losses": 0,
+          "breakeven": 0,
+          "closed_net_pnl_eur": null,
+          "expectancy_per_closed_trade_eur": null,
+          "profit_factor": null,
+          "profit_factor_status": "no_closed_trades",
+          "win_rate": null,
+          "closed_fees_eur": null,
+          "realized_drawdown_eur": null,
+          "drawdown_scope": "closed_realized_only_not_mark_to_market",
+          "unknown_or_open_outcomes": 0,
+          "profitability_established": false
+        },
+        "uncertainty": {
+          "days_with_closes": 0,
+          "lower_95_eur": null,
+          "upper_95_eur": null,
+          "reason": "fewer_than_two_exit_days"
+        }
+      },
+      {
+        "scenario": "eur_conversion:300",
+        "metrics": {
+          "considered": 27,
+          "states": {
+            "blocked": 27
+          },
+          "closed": 0,
+          "wins": 0,
+          "losses": 0,
+          "breakeven": 0,
+          "closed_net_pnl_eur": null,
+          "expectancy_per_closed_trade_eur": null,
+          "profit_factor": null,
+          "profit_factor_status": "no_closed_trades",
+          "win_rate": null,
+          "closed_fees_eur": null,
+          "realized_drawdown_eur": null,
+          "drawdown_scope": "closed_realized_only_not_mark_to_market",
+          "unknown_or_open_outcomes": 0,
+          "profitability_established": false
+        },
+        "uncertainty": {
+          "days_with_closes": 0,
+          "lower_95_eur": null,
+          "upper_95_eur": null,
+          "reason": "fewer_than_two_exit_days"
+        }
+      },
+      {
+        "scenario": "usd_balance:60",
+        "metrics": {
+          "considered": 27,
+          "states": {
+            "blocked": 22,
+            "closed": 1,
+            "expired": 2,
+            "invalidated": 1,
+            "unresolved": 1
+          },
+          "closed": 1,
+          "wins": 0,
+          "losses": 1,
+          "breakeven": 0,
+          "closed_net_pnl_eur": "-3.057574033964384087187160864",
+          "expectancy_per_closed_trade_eur": "-3.057574033964384087187160864",
+          "profit_factor": "0",
+          "profit_factor_status": "defined",
+          "win_rate": "0",
+          "closed_fees_eur": "0.02",
+          "realized_drawdown_eur": "3.057574033964384087187160864",
+          "drawdown_scope": "closed_realized_only_not_mark_to_market",
+          "unknown_or_open_outcomes": 1,
+          "profitability_established": false
+        },
+        "uncertainty": {
+          "days_with_closes": 1,
+          "lower_95_eur": null,
+          "upper_95_eur": null,
+          "reason": "fewer_than_two_exit_days"
+        }
+      },
+      {
+        "scenario": "usd_balance:180",
+        "metrics": {
+          "considered": 27,
+          "states": {
+            "blocked": 27
+          },
+          "closed": 0,
+          "wins": 0,
+          "losses": 0,
+          "breakeven": 0,
+          "closed_net_pnl_eur": null,
+          "expectancy_per_closed_trade_eur": null,
+          "profit_factor": null,
+          "profit_factor_status": "no_closed_trades",
+          "win_rate": null,
+          "closed_fees_eur": null,
+          "realized_drawdown_eur": null,
+          "drawdown_scope": "closed_realized_only_not_mark_to_market",
+          "unknown_or_open_outcomes": 0,
+          "profitability_established": false
+        },
+        "uncertainty": {
+          "days_with_closes": 0,
+          "lower_95_eur": null,
+          "upper_95_eur": null,
+          "reason": "fewer_than_two_exit_days"
+        }
+      },
+      {
+        "scenario": "usd_balance:300",
+        "metrics": {
+          "considered": 27,
+          "states": {
+            "blocked": 27
+          },
+          "closed": 0,
+          "wins": 0,
+          "losses": 0,
+          "breakeven": 0,
+          "closed_net_pnl_eur": null,
+          "expectancy_per_closed_trade_eur": null,
+          "profit_factor": null,
+          "profit_factor_status": "no_closed_trades",
+          "win_rate": null,
+          "closed_fees_eur": null,
+          "realized_drawdown_eur": null,
+          "drawdown_scope": "closed_realized_only_not_mark_to_market",
+          "unknown_or_open_outcomes": 0,
+          "profitability_established": false
+        },
+        "uncertainty": {
+          "days_with_closes": 0,
+          "lower_95_eur": null,
+          "upper_95_eur": null,
+          "reason": "fewer_than_two_exit_days"
+        }
+      },
+      {
+        "scenario": "stressed:60",
+        "metrics": {
+          "considered": 27,
+          "states": {
+            "blocked": 27
+          },
+          "closed": 0,
+          "wins": 0,
+          "losses": 0,
+          "breakeven": 0,
+          "closed_net_pnl_eur": null,
+          "expectancy_per_closed_trade_eur": null,
+          "profit_factor": null,
+          "profit_factor_status": "no_closed_trades",
+          "win_rate": null,
+          "closed_fees_eur": null,
+          "realized_drawdown_eur": null,
+          "drawdown_scope": "closed_realized_only_not_mark_to_market",
+          "unknown_or_open_outcomes": 0,
+          "profitability_established": false
+        },
+        "uncertainty": {
+          "days_with_closes": 0,
+          "lower_95_eur": null,
+          "upper_95_eur": null,
+          "reason": "fewer_than_two_exit_days"
+        }
+      },
+      {
+        "scenario": "stressed:180",
+        "metrics": {
+          "considered": 27,
+          "states": {
+            "blocked": 27
+          },
+          "closed": 0,
+          "wins": 0,
+          "losses": 0,
+          "breakeven": 0,
+          "closed_net_pnl_eur": null,
+          "expectancy_per_closed_trade_eur": null,
+          "profit_factor": null,
+          "profit_factor_status": "no_closed_trades",
+          "win_rate": null,
+          "closed_fees_eur": null,
+          "realized_drawdown_eur": null,
+          "drawdown_scope": "closed_realized_only_not_mark_to_market",
+          "unknown_or_open_outcomes": 0,
+          "profitability_established": false
+        },
+        "uncertainty": {
+          "days_with_closes": 0,
+          "lower_95_eur": null,
+          "upper_95_eur": null,
+          "reason": "fewer_than_two_exit_days"
+        }
+      },
+      {
+        "scenario": "stressed:300",
+        "metrics": {
+          "considered": 27,
+          "states": {
+            "blocked": 27
+          },
+          "closed": 0,
+          "wins": 0,
+          "losses": 0,
+          "breakeven": 0,
+          "closed_net_pnl_eur": null,
+          "expectancy_per_closed_trade_eur": null,
+          "profit_factor": null,
+          "profit_factor_status": "no_closed_trades",
+          "win_rate": null,
+          "closed_fees_eur": null,
+          "realized_drawdown_eur": null,
+          "drawdown_scope": "closed_realized_only_not_mark_to_market",
+          "unknown_or_open_outcomes": 0,
+          "profitability_established": false
+        },
+        "uncertainty": {
+          "days_with_closes": 0,
+          "lower_95_eur": null,
+          "upper_95_eur": null,
+          "reason": "fewer_than_two_exit_days"
+        }
+      }
+    ]
+  },
+  "source_run_ids": {
+    "execution": 44327854314,
+    "manual": 44330110361
+  },
+  "validation": {
+    "full_frozen_execution_report_identical": true,
+    "full_manual_report_and_ledger_identical": true,
+    "local_tests": 1968,
+    "subtests": 22,
+    "large_replay_seconds": 83.67,
+    "peak_rss_kib": 226684
+  },
+  "trade_authorized": false,
+  "model_calls": 0
+}

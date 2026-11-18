@@ -1,0 +1,80 @@
+name: Paper performance intelligence
+on:
+  schedule:
+    - cron: '20 7-23 * * 1-5'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/performance-intelligence.yml']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: market-radar-paper-performance-intelligence
+  cancel-in-progress: false
+jobs:
+  evaluate:
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Respect weekday Dublin collection window
+        id: window
+        run: |
+          python - <<'PY'
+          import os
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          now = datetime.now(ZoneInfo('Europe/Dublin'))
+          allowed = os.environ['GITHUB_EVENT_NAME'] != 'schedule' or (now.weekday() < 5 and 8 <= now.hour <= 23)
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              out.write('run=' + str(allowed).lower() + '\n')
+          PY
+      - uses: actions/checkout@v4
+        if: steps.window.outputs.run == 'true'
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        if: steps.window.outputs.run == 'true'
+        with:
+          python-version: '3.12'
+      - name: Install offline research reader
+        if: steps.window.outputs.run == 'true'
+        run: python -m pip install -e .
+      - name: Read existing research artifacts and preserve candidate history
+        id: intake
+        if: steps.window.outputs.run == 'true'
+        run: python -m market_radar_ai.agents.research_artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXECUTION_SOURCE_VERSION: guarded-v2
+      - name: Reproduce frozen portfolios and calculate performance
+        if: steps.intake.outcome == 'success'
+        env:
+          EXECUTION_SOURCE_VERSION: guarded-v2
+        run: |
+          args=(--execution artifacts/evidence-intake/execution --contexts artifacts/evidence-intake/contexts.json --output artifacts/performance)
+          if test -f artifacts/evidence-intake/manual/report.json; then
+            args+=(--manual artifacts/evidence-intake/manual)
+          fi
+          python -m market_radar_ai.agents.performance_intelligence "${args[@]}"
+          cat artifacts/performance/performance.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain additive intake even if a later check fails
+        if: always() && steps.window.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-evidence-bank-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/evidence-intake/evidence-bank.sqlite.gz
+          retention-days: 90
+          if-no-files-found: warn
+      - name: Retain performance, gaps and fixed experiment comparisons
+        if: always() && steps.window.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-intelligence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/performance/
+            artifacts/evidence-intake/intake.json
+            artifacts/evidence-intake/experiments.json
+          retention-days: 90
+          if-no-files-found: warn

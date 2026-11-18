@@ -126,10 +126,13 @@ def stall_exit(rows, events, arm):
 def fill_quote_quality(rows, events, arm):
     """Audit the exact fill observations, without changing fills or outcomes."""
     quotes=defaultdict(set)
+    needed={(r['candidate_id'],aware(at)) for r in rows
+            for side in ('entry','exit') if (at:=(r['arms'][arm].get('outcome') or {}).get(side+'_at'))}
     for event in events:
         if event['kind']!='quote':continue
         p=json.loads(event['payload_json']);q=p['quote']
-        quotes[(p['candidate_id'],aware(p['received_at']))].add((q.get('bid'),q.get('ask')))
+        key=(p['candidate_id'],aware(p['received_at']))
+        if key in needed:quotes[key].add((q.get('bid'),q.get('ask')))
     findings=[];checked=0;wide=0;unavailable=0;maximum=None
     for row in rows:
         outcome=row['arms'][arm].get('outcome') or {}

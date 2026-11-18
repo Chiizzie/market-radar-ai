@@ -228,7 +228,7 @@ class Book:
             'details': rows, 'details_omitted': max(0, len(self.rows) - len(rows))}
 
 
-def replay(events, *, now, dataset_kind='forward'):
+def replay(events, *, now, dataset_kind='forward', ledger_output=None):
     """Events must first pass LiveComparison's existing identity/chain validator."""
     validate_source_protocol()
     now = aware(now)
@@ -284,6 +284,13 @@ def replay(events, *, now, dataset_kind='forward'):
             'profitability claim. Gaps can exceed planned risk; unresolved positions retain their capital '
             'and risk reservations across days. Source watchers may leave observation gaps.'}
     if len(canonical(result).encode()) > 175000: raise ValueError('execution_report_capacity')
+    # Optional offline projection, matching manual_portfolio's existing export.
+    # Keep the frozen report, protocol and bounded public details unchanged.
+    if ledger_output is not None:
+        for book in books:
+            ledger_output.append(json.loads(json.dumps({'profile': book.profile,
+                'arm': book.arm, 'rows': list(book.rows.values())},
+                default=lambda v: money(v) if isinstance(v, D) else str(v))))
     return result
 
 
