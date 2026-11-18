@@ -58,19 +58,30 @@ def test_old_capture_does_not_become_current():
     ('duplicate','http_status',409), ('redirect','http_status',302),
     ('identity','acknowledgement_mismatch',None), ('invalid_type','acknowledgement_mismatch',None),
     ('invalid_json','invalid_json',None)])
-def test_failed_delivery_retains_exact_identity_without_retry_or_sensitive_data(fault, reason, code):
+def test_failed_delivery_retains_exact_identity_without_retry_or_sensitive_data(fault, reason, code, tmp_path):
     session=Session(fault)
+    archive = tmp_path/'dashboard.json'
+    archive.write_text('previous render')
     with pytest.raises(SnapshotDeliveryError) as error:
-        deliver(capture(), env=ENV, clock=lambda:NOW, session=session)
+        deliver(capture(), env=ENV, clock=lambda:NOW, session=session, snapshot_path=archive)
     receipt = error.value.receipt
     assert receipt['state'] == 'scanner_snapshot_delivery_unconfirmed'
     assert receipt['reason'] == reason and receipt.get('http_status') == code
     assert len(session.calls) == 1
+    assert archive.read_bytes() == session.calls[0]['data']
     assert receipt['snapshot_id'] == hashlib.sha256(session.calls[0]['data']).hexdigest()
     assert receipt['coverage'] == json.loads(session.calls[0]['data'])['coverage']
     details = str(error.value) + json.dumps(receipt)
     assert 'sensitive detail' not in details and 'x'*32 not in details
     assert receipt['trade_authorized'] is False
+
+
+def test_archive_failure_prevents_sending_unrecoverable_bytes(tmp_path):
+    session = Session()
+    with pytest.raises(OSError):
+        deliver(capture(), env=ENV, clock=lambda:NOW, session=session,
+                snapshot_path=tmp_path/'missing'/'dashboard.json')
+    assert not session.calls
 
 
 @pytest.mark.parametrize('field,value',[('GITHUB_REPOSITORY','Chiizzie/market-radar'),

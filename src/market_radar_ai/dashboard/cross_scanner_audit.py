@@ -148,8 +148,18 @@ def main():
         status = {'state': 'audit_recorded', 'original_signals': report['original_signals'],
                   'timing_status': report['timing_status'], 'comparison_details': comparison_details(report, trace)}
         try:
-            EventClient(os.environ.get('REVIEW_INGEST_SECRET')).append(EXPERIMENT, [envelope('audit', report, now)])
-        except (requests.RequestException, RuntimeError, ValueError, KeyError, TypeError):
+            receipt_path = args.collection/'delivery.json'
+            delivery = json.loads(receipt_path.read_text()) if receipt_path.exists() else {}
+            if not isinstance(delivery, dict):
+                raise ValueError('invalid_collection_receipt')
+            if delivery.get('state') == 'scanner_snapshot_delivery_unconfirmed':
+                # The ordinary scan has already tested this storage service.
+                # Keep the full comparison in its run artifact for reconciliation.
+                status['state'] = 'audit_saved_locally_publication_deferred'
+                status['reason'] = 'snapshot_delivery_unconfirmed'
+            else:
+                EventClient(os.environ.get('REVIEW_INGEST_SECRET')).append(EXPERIMENT, [envelope('audit', report, now)])
+        except (requests.RequestException, OSError, RuntimeError, ValueError, KeyError, TypeError):
             status['state'] = 'audit_saved_locally_publication_unconfirmed'
     status.update(model_calls=0, original_scanner_modified=False, trade_authorized=False)
     (root/'cross-scanner-status.json').write_text(json.dumps(status)+'\n')
