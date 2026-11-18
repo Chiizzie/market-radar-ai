@@ -217,3 +217,40 @@ def test_phase_metrics_use_actual_us_clock_and_preserve_book_net_and_unknowns():
     assert groups['30_to_100_minutes']['unknown_or_open_outcomes'] == 1
     assert groups['from_100_minutes']['closed_net_pnl_eur'] == '-4'
     assert book['metrics']['closed_net_pnl_eur'] == '-1'
+
+
+def test_manual_export_validates_late_pages_without_using_them_at_the_earlier_cutoff(tmp_path):
+    import gzip
+    from market_radar_ai.agents.performance_intelligence import manual_evidence
+    from market_radar_ai.agents import manual_portfolio
+    from test_manual_portfolio import CLOCK_ID, NOW as start, PROFILE, event, setup
+    cutoff = start + timedelta(seconds=10)
+    published = cutoff + timedelta(seconds=10)
+    first = setup('FIRST', start)[2]
+    later = setup('LATER', start + timedelta(seconds=4))[2]
+    # The export puts clocks after comparison events. Replay uses signed sequence.
+    rows = [event(2, 'report', {}, start + timedelta(seconds=3), received=cutoff + timedelta(seconds=1)),
+            event(1, 'audit', first, start, experiment=CLOCK_ID, received=cutoff),
+            event(3, 'audit', later, start + timedelta(seconds=4), experiment=CLOCK_ID)]
+    def write():
+        ledgers = []
+        report = manual_portfolio.replay(rows, now=cutoff, profile=PROFILE, ledger_output=ledgers)
+        report['as_of'] = published.isoformat()
+        (tmp_path / 'report.json').write_text(json.dumps(report))
+        with gzip.open(tmp_path / 'source-events.jsonl.gz', 'wt') as f:
+            f.writelines(json.dumps(r) + '\n' for r in rows)
+        with gzip.open(tmp_path / 'ledger.json.gz', 'wt') as f:
+            json.dump(ledgers, f)
+    write()
+    result = manual_evidence(tmp_path)
+    assert (result['source_events'], result['processed_events'], result['source_rows_deferred_after_cutoff']) == (3, 1, 2)
+    assert result['clocks'] == [first] and result['clock_available_at'] == {first['setup_id']: cutoff.isoformat()}
+    report_path = tmp_path / 'report.json'
+    report = json.loads(report_path.read_text())
+    report_path.write_text(json.dumps({**report, 'as_of': cutoff.isoformat()}))
+    with pytest.raises(ValueError, match='manual_source_after_publication'):
+        manual_evidence(tmp_path)
+    rows[-1] = {**rows[-1], 'event_id': '0' * 64}
+    write()
+    with pytest.raises(ValueError, match='manual_clock_source_binding'):
+        manual_evidence(tmp_path)

@@ -421,8 +421,9 @@ def build(events, execution, *, contexts=(), manual=None):
                 originals[key] = packet
             else:
                 reviews[key] = payload
+    clock_availability = (manual or {}).get('clock_available_at', {})
     clocks = {c['setup_id']: c for c in (manual or {}).get('clocks', [])
-              if aware(c['recorded_at']) <= now}
+              if aware(clock_availability.get(c['setup_id'], c['recorded_at'])) <= now}
     for r in rows:
         packet = originals[r['setup_id']]
         plan = packet['packet']['plan']
@@ -526,25 +527,43 @@ def manual_evidence(directory):
     if report.get('dataset_kind') != 'forward' or report.get('trade_authorized') is not False:
         raise ValueError('manual_forward_evidence_required')
     cutoff = aware(report['evaluated_through'])
-    if aware(report['as_of']) < cutoff:
+    published = aware(report['as_of'])
+    if published < cutoff:
         raise ValueError('manual_generation_before_evaluation')
     with read_archive(directory / 'source-events.jsonl.gz') as events, EventArchive() as comparison:
         if report['source_sha256'] != events.source_digest() or report['source_events'] != len(events):
             raise ValueError('manual_source_hash_mismatch')
-        clocks = []
-        for e in events:
+        clocks, clock_available_at = [], {}
+        deferred = 0
+        available = aware(manual_portfolio.PROTOCOL['since'] + 'T00:00:00+00:00')
+        for e in events.ordered():
+            occurred = aware(e['occurred_at'])
+            available = max(available, occurred, aware(e['received_at']))
+            if available > published:
+                raise ValueError('manual_source_after_publication')
+            if available > cutoff:
+                deferred += 1
             if e['experiment_id'] == CLOCK_ID:
-                clocks.append(validate_clock(json.loads(e['payload_json'])))
+                clock = validate_clock(json.loads(e['payload_json']))
+                if (e['kind'] != 'audit' or event_id(CLOCK_ID, e) != e['event_id']
+                        or e['day'] != occurred.date().isoformat() or aware(clock['recorded_at']) != occurred):
+                    raise ValueError('manual_clock_source_binding')
+                if available <= cutoff:
+                    clocks.append(clock)
+                    clock_available_at[clock['setup_id']] = available.isoformat()
             else:
                 comparison.append(e)
-        validate_projection(comparison, now=cutoff, protocol=GUARDED_PROTOCOL)
+        # The producer captures its valuation cutoff before fetching immutable
+        # pages. Authenticate the complete export through publication. Only the
+        # frozen replay below supplies outcomes at the earlier valuation time.
+        validate_projection(comparison, now=published, protocol=GUARDED_PROTOCOL)
         ledgers = []
         actual = manual_portfolio.replay(events, now=cutoff,
             profile=json.loads(PROFILE_PATH.read_text()), ledger_output=ledgers)
         # The producer deliberately stamps publication time after the replay.
         # Outcomes remain bound to evaluated_through, never to that later clock.
         actual.update(as_of=report['as_of'], evaluation_day=aware(report['as_of']).date().isoformat())
-        if actual != report:
+        if actual != report or len(clocks) != actual['clocks']:
             raise ValueError('manual_frozen_replay_mismatch')
         with gzip.open(directory / 'ledger.json.gz', 'rt') as f:
             saved = json.load(f)
@@ -552,7 +571,9 @@ def manual_evidence(directory):
             raise ValueError('manual_ledger_mismatch')
     return {'as_of': cutoff.isoformat(), 'published_at': report['as_of'], 'protocol_id': report['protocol_id'],
         'source_sha256': report['source_sha256'], 'primary_scenario': report['primary_scenario'],
-        'costs_verified': report['costs_verified'], 'clocks': clocks,
+        'costs_verified': report['costs_verified'], 'clocks': clocks, 'clock_available_at': clock_available_at,
+        'source_events': report['source_events'], 'processed_events': report['processed_events'],
+        'source_rows_deferred_after_cutoff': deferred,
         'books': [{'scenario': b['scenario'], 'rows': list(b['rows'].values()),
             'metrics': closed_metrics(list(b['rows'].values())),
             'uncertainty': day_bootstrap(list(b['rows'].values()))} for b in ledgers]}
