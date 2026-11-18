@@ -36,7 +36,9 @@ jobs:
           event=os.environ['GITHUB_EVENT_NAME']
           allowed=event in ('push','workflow_dispatch') or (d.weekday()<5 and 8<=d.hour<23)
           if event=='schedule': allowed=allowed and (d.hour==8 or n.hour==9)
-          with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('run='+str(allowed).lower()+'\n')
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write('run='+str(allowed).lower()+'\n')
+              f.write('day='+now.astimezone(ZoneInfo('UTC')).date().isoformat()+'\n')
           # Start a separate forward series at the next session; do not mix or
           # rewrite the original reference-quote outcomes.
           with open(os.environ['GITHUB_ENV'],'a') as f:
@@ -46,7 +48,7 @@ jobs:
         if: steps.window.outputs.run == 'true'
         with:
           # Publish the current conditional-chief experiment; historical events stay unchanged.
-          ref: 839af4f09abc6e7e21daa5bd41c56e587c96b25f
+          ref: 0e65af01a09ae6fc3bd9823a2f982f77e22d72df
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -54,12 +56,38 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -e .
         if: steps.window.outputs.run == 'true'
+      - name: Restore validated past-day comparison events
+        id: closed_history
+        uses: actions/cache/restore@v4
+        if: steps.window.outputs.run == 'true'
+        continue-on-error: true
+        with:
+          path: .scanner-cache/report-closed-history
+          key: report-closed-history-v1-${{ steps.window.outputs.day }}
+          restore-keys: report-closed-history-v1-
+      - name: Restore the current watcher prefix
+        uses: actions/cache/restore@v4
+        if: steps.window.outputs.run == 'true'
+        continue-on-error: true
+        with:
+          path: .scanner-cache/comparison-prefix
+          key: comparison-prefix-v1-${{ steps.window.outputs.day }}-${{ github.run_id }}
+          restore-keys: comparison-prefix-v1-${{ steps.window.outputs.day }}-
       - name: Reconstruct cost scenarios and shared portfolios from durable evidence
         id: portfolios
         if: steps.window.outputs.run == 'true'
         run: python -m market_radar_ai.agents.execution_research --publish
         env:
+          REPORT_CLOSED_HISTORY_DIR: .scanner-cache/report-closed-history
+          REPORT_LIVE_PREFIX_DIR: .scanner-cache/comparison-prefix
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
+      - name: Save validated past-day comparison events
+        uses: actions/cache/save@v4
+        if: steps.portfolios.outcome == 'success' && steps.closed_history.outputs.cache-hit != 'true' && hashFiles('.scanner-cache/report-closed-history/**/manifest.json') != ''
+        continue-on-error: true
+        with:
+          path: .scanner-cache/report-closed-history
+          key: report-closed-history-v1-${{ steps.window.outputs.day }}
       - name: Check operational readiness without paid AI or orders
         if: always() && steps.window.outputs.run == 'true'
         run: python -m market_radar_ai.dashboard.execution_readiness --publish

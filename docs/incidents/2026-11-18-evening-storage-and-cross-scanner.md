@@ -1,0 +1,28 @@
+# Dashboard storage and missed scanner signals on 18 November
+
+All times are Europe/Dublin. The scanner recorded five eligible stock candidates at 19:20. Its dashboard POST returned an ambiguous error and the collection job sent a failure notice. The run preserved the market and qualification files. Its old delivery code discarded the request fingerprint and underlying HTTP or transport reason. The dependent paper review skipped the capture. Five eligible candidates means five candidates passed initial screening. The review had issued no trade verdict. [19:20 run](https://github.com/Chiizzie/market-radar-ai/actions/runs/44379424183)
+
+The 19:15 run had already stored its snapshot, then timed out reading durable state for review. Other workflows reported storage timeouts and an independent database check returned HTTP 504. The database later answered at 19:36. A bounded read then found the 19:16 snapshot, and a 19:26 capture that reached storage at 19:29:17. It returned no row generated during the 19:20 scan. The records establish intermittent service and late delivery. The hosting cause is unknown. [19:15 run](https://github.com/Chiizzie/market-radar-ai/actions/runs/44378541132) · [19:25 run](https://github.com/Chiizzie/market-radar-ai/actions/runs/44380318027)
+
+## Where the scanners diverged
+
+| Symbol | Original scanner | Market Radar AI evidence |
+| --- | --- | --- |
+| VIA | Opening-range retest watch at 18:35:03, expiring at 18:39:26. [Original run](https://github.com/Chiizzie/market-radar/actions/runs/44370485580) | At 18:31 the IEX history had eight missing five-minute intervals and four consecutive bars at the end. At 18:36 and 18:41 the snapshot was fresh but the symbol was outside the rotating 1,200-symbol technical check. [AI capture](https://github.com/Chiizzie/market-radar-ai/actions/runs/44371317750) |
+| BLLN | Early-range breakout marked actionable at 17:19:45, expiring at 17:24:02. [Original run](https://github.com/Chiizzie/market-radar/actions/runs/44356603435) | Discovery rank 19 at 17:21. The IEX chart had five missing five-minute intervals and eight consecutive bars at the end. The 20-bar continuity check failed. [AI capture](https://github.com/Chiizzie/market-radar-ai/actions/runs/44357532667) |
+
+The original scanner used Yahoo Finance charts. The AI scanner used Alpaca IEX charts and its own strategy and coverage gates. Both differences occurred before the dashboard incident. Neither candidate reached model review. The local comparison status now records chart gaps, consecutive bars and discovery rank for matched stock signals. It also preserves the signal count when the signed journal write is unconfirmed. A failed publication remains visible.
+
+## TRIP and CCL
+
+Both earlier calls were chart-led continuation watches. The initial TRIP paper entry was observed at 16:38:00, before the Telegram server acknowledged the watch at 16:38:06. CCL was acknowledged at 16:57:31 and entered in the simulation at 16:58:20. Both initial entries still lacked exit evidence in the 19:20 GitHub journal. A separate TRIP attempt breached its trigger-gap limit. The frozen manual portfolio recorded no fill for either initial call in any of its nine scenarios. In the primary EUR scenario, modeled reward after costs fell below twice the risk. Its USD-balance replay had insufficient shared capital at 60 seconds and insufficient entry time at 180 and 300 seconds. Private account returns are outside the evidence in this repository. [TRIP](https://github.com/Chiizzie/market-radar-ai/actions/runs/44348930747) · [CCL](https://github.com/Chiizzie/market-radar-ai/actions/runs/44352751744) · [Manual portfolio](https://github.com/Chiizzie/market-radar-ai/actions/runs/44378188049) · [Offline development cases](../../knowledge/development-cases-20261118.json)
+
+## Repair and reproduction
+
+The collector saves the exact signed request fingerprint, capture time, expiry, coverage and a bounded failure reason for an unconfirmed snapshot write. Its operational notice identifies the affected stage. It sends the write once and blocks dependent review when acknowledgement is missing.
+
+Execution research previously fetched 155,248 immutable events over 166 storage pages. The 19:15 manual report also fetched its comparison history. Both jobs now restore authenticated watcher prefixes and locally revalidate all restored events. Each partition still requires a successful authoritative tail read. Empty, missing, invalid and expired caches use the existing signed read path. The execution job saves shared past-day prefixes once per UTC day. Replaying old data consumes local CPU and disk even with a cache hit. Cold startup still requires the initial authoritative history.
+
+With the genuine 16:44 archive as a prefix, a local replay of the later execution export used 33 fixture page reads, restored 130,186 events and fetched 25,062. The complete 155,248-event digest, all six portfolios and the entire report matched the hosted original. For the manual export, 53,128 comparison events were restored. The complete 79,888-event digest, all nine account ledgers and the report matched the original. The measured call count is an offline comparison. Production savings depend on cache availability and arrival times. [Original execution report](https://github.com/Chiizzie/market-radar-ai/actions/runs/44375441127) · [Original manual report](https://github.com/Chiizzie/market-radar-ai/actions/runs/44378188049)
+
+Regression coverage includes one-attempt ambiguous writes, the exact request hash, status sanitization, skipped review, an unavailable journal with a saved cross-scanner comparison, late-arriving events on a past day and a warm cache with unavailable storage.

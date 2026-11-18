@@ -1,0 +1,162 @@
+{
+  "schema_version": "development-case-intake-v1",
+  "recorded_date": "2026-11-18",
+  "timezone": "Europe/Dublin",
+  "scope": "offline_development_only",
+  "runtime_active": false,
+  "ongoing_validation_library_modified": false,
+  "selection_note": "Two chart-led continuation watches selected retrospectively. Selection cannot estimate a win rate.",
+  "privacy": "These records contain public scanner-generated measurements and simulated entry clocks. Account activity and private correspondence are excluded.",
+  "outcomes": "At the 19:20 scan the GitHub paper journal carried both initial entries as open simulations. Exit price and net EUR P/L were unknown.",
+  "cases": [
+    {
+      "case_id": "setup-20261118-trip",
+      "symbol": "TRIP",
+      "source": {
+        "archive_id": "1a168024cb8b6ef40eb93dc4db1c7cdb919411d8db44d1be6b2d795bc6b92492",
+        "packet_id": "36b40eabb4fa74a29cb7afaa6ee8d4c304cc14f4b8e1f6957169dd81544cc4cc",
+        "workflow_run": "https://github.com/Chiizzie/market-radar-ai/actions/runs/44348930747",
+        "assembled_at": "2026-11-18T16:37:07.011260+00:00",
+        "approved_at": "2026-11-18T16:37:57.572814+00:00",
+        "telegram_acknowledged_at": "2026-11-18T16:38:06.995987+00:00",
+        "runtime": "bb3731f50a77972e547402f5c23e719e201ca973",
+        "prompt_revision": "paper-compact-evidence-20261113-v2",
+        "source_ids": [
+          "market:a87cac14b85467e67c819fda0fb334bccb1e6940504fa1ea51feaf7c81ade0a9",
+          "news:a051a6a67b9e162ba191c9446dfa7d69a17047816a16a2dd4ba1119cbf7245cb",
+          "news:dba17d6ad139161de697ffd90437adea8a448a34127514e7c1c3f27f76742505",
+          "calendar:d1c1b4832e84057d8e611f83ed25a465ec8fe0107257609df7d5ff171d958022",
+          "news_check:2ab06633b0d0283b805b020a93762d0ef4c1ef18464c515bb4f28f3ffb192e90"
+        ]
+      },
+      "strategy_id": "trend_continuation_20bar_v1",
+      "technical_checks": {
+        "breakout_trigger_native": "7.272265",
+        "close_above_rolling_vwap": true,
+        "currency": "USD",
+        "momentum_20_bars_pct": "2.323943661971830985915493000",
+        "note": "Rolling 20-bar VWAP, not full-session VWAP. Measurements are not a buy signal. Separate chart-led continuation: recent volume at least its earlier baseline; a completed news risk check is required, a fresh positive headline is not.",
+        "relative_volume_5_vs_15": "2.069617809805687813666194827",
+        "rolling_20_bar_vwap": "7.171513732358615087826175247",
+        "state": "MEASURED",
+        "stop_native": "7.165",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "thesis_basis": "chart_led",
+        "trigger_state": "WAITING_FOR_TRIGGER"
+      },
+      "authoritative_plan": {
+        "schema_version": "conditional-eur-paper-scenario-v1",
+        "symbol": "TRIP",
+        "currency": "EUR",
+        "native_currency": "USD",
+        "entry_eur": "6.630851690525227711724822994",
+        "stop_eur": "6.533047456688288525584306505",
+        "target_eur": "6.906030378485408816546553848",
+        "quantity": "75.104676",
+        "planned_loss_eur": "9.337587165035352395248438309",
+        "assumed_round_trip_cost_eur": "1.992031871283797988461256929",
+        "paper_capital_eur": "500",
+        "assumed_round_trip_cost_bps": "40",
+        "entry_buffer_bps": "10",
+        "fx_rate": "0.9118000637387702059433784376",
+        "fx_source": "yahoo_finance:EURUSD=X:5m",
+        "expires_at": "2026-11-18T16:40:57.572814+00:00",
+        "exit_by": "2026-11-18T20:55:00+00:00",
+        "trade_authorized": false,
+        "assumptions": "Fictional EUR 500 allocation and assumed 40 bps round-trip costs. Not account funds or verified fees. Tick and quantity increments are unverified.",
+        "trigger": "Conditional break above prior five-bar high plus 10 bps; never enter after expiry.",
+        "invalidation": "Cancel if stop breaks before entry or any evidence expires. Exchange-session exit still needs verification.",
+        "loss_note": "EUR 20 is planned loss under fixed stop fill and FX assumptions; gaps and slippage can increase actual loss."
+      },
+      "comparison_role": "development_example",
+      "numeric_policy": "Original plan and measurement strings preserve the precision and currency of the archived packet.",
+      "paper_journal_as_of_run": 44379424183,
+      "simulated_entry_at": "2026-11-18T16:38:00.010741Z"
+    },
+    {
+      "case_id": "setup-20261118-ccl",
+      "symbol": "CCL",
+      "source": {
+        "archive_id": "f698ad7b5bf02fba30bf700edf5c12844c34633348157f053b40524743a22d4f",
+        "packet_id": "f086afcebd42ecee1464b03f027c5035191b7dfc6e772ebba649669c928ea1de",
+        "workflow_run": "https://github.com/Chiizzie/market-radar-ai/actions/runs/44352751744",
+        "assembled_at": "2026-11-18T16:56:45.263886+00:00",
+        "approved_at": "2026-11-18T16:57:25.274318+00:00",
+        "telegram_acknowledged_at": "2026-11-18T16:57:31.180328+00:00",
+        "runtime": "79afa4ec1c14515716aa00b6d778fd9c1539cab9",
+        "prompt_revision": "paper-compact-evidence-20261113-v2",
+        "source_ids": [
+          "market:43a7b3b30621168f408b6f86d4bf5ce032130c3e867ccb40b301810a71a0e6d9",
+          "news:2ca9e80a75ddae3479282e1a5122fbdea974dd73eab220fc6046b7e9899f1f8f",
+          "news:4d336f3ca58f4f4788baf1f187bfe3d47727abc0dd67705334bb2442686da9cf",
+          "calendar:ac7226b28773a22b024713d5ed2178e41cbc8a7b7bb888761ffcbcdaf7003e01",
+          "news_check:f6660df839bbe6b4e3c3577110d738250a4e5fbef3b79852d427169f7d480b75"
+        ]
+      },
+      "strategy_id": "trend_continuation_20bar_v1",
+      "technical_checks": {
+        "breakout_trigger_native": "29.084055",
+        "close_above_rolling_vwap": true,
+        "currency": "USD",
+        "momentum_20_bars_pct": "0.624133148404993065187239900",
+        "note": "Rolling 20-bar VWAP, not full-session VWAP. Measurements are not a buy signal. Separate chart-led continuation: recent volume at least its earlier baseline; a completed news risk check is required, a fresh positive headline is not.",
+        "relative_volume_5_vs_15": "3.154189294026377036462373933",
+        "rolling_20_bar_vwap": "28.90601376984760904978162332",
+        "state": "MEASURED",
+        "stop_native": "28.945",
+        "strategy_id": "trend_continuation_20bar_v1",
+        "thesis_basis": "chart_led",
+        "trigger_state": "WAITING_FOR_TRIGGER"
+      },
+      "authoritative_plan": {
+        "schema_version": "conditional-eur-paper-scenario-v1",
+        "symbol": "CCL",
+        "currency": "EUR",
+        "native_currency": "USD",
+        "entry_eur": "26.51593223102289785716506549",
+        "stop_eur": "26.38915579092935213042482627",
+        "target_eur": "27.08767629798226408493152471",
+        "quantity": "18.781461",
+        "planned_loss_eur": "4.373078553638163603333777034",
+        "assumed_round_trip_cost_eur": "1.992031788302398184845316993",
+        "paper_capital_eur": "500",
+        "assumed_round_trip_cost_bps": "40",
+        "entry_buffer_bps": "10",
+        "fx_rate": "0.9116999755028278504206193219",
+        "fx_source": "yahoo_finance:EURUSD=X:5m",
+        "expires_at": "2026-11-18T17:00:25.274318+00:00",
+        "exit_by": "2026-11-18T20:55:00+00:00",
+        "trade_authorized": false,
+        "assumptions": "Fictional EUR 500 allocation and assumed 40 bps round-trip costs. Not account funds or verified fees. Tick and quantity increments are unverified.",
+        "trigger": "Conditional break above prior five-bar high plus 10 bps; never enter after expiry.",
+        "invalidation": "Cancel if stop breaks before entry or any evidence expires. Exchange-session exit still needs verification.",
+        "loss_note": "EUR 20 is planned loss under fixed stop fill and FX assumptions; gaps and slippage can increase actual loss."
+      },
+      "comparison_role": "development_example",
+      "numeric_policy": "Original plan and measurement strings preserve the precision and currency of the archived packet.",
+      "paper_journal_as_of_run": 44379424183,
+      "simulated_entry_at": "2026-11-18T16:58:20.406860Z"
+    }
+  ],
+  "deduplication": {
+    "later_trip_packet_id": "d31fab4545b02151235ddedbddd6d64503c1c4538ccf172169181b37852a5675",
+    "reason": "trigger_gap_exceeds_protocol_limit",
+    "treatment": "Separate attempt. Count the first TRIP trigger once."
+  },
+  "hypotheses": [
+    "Compare same-strategy alerts using the original spread, chart participation, trigger gap and elapsed time from Telegram acknowledgement at 60 and 300 seconds. Include all eligible cases and missed entries."
+  ],
+  "validation": "Keep these two selected examples in development only. Use subsequent untouched sessions and the existing after-cost manual-response protocol for evaluation.",
+  "manual_portfolio_comparison": {
+    "source_run": "https://github.com/Chiizzie/market-radar-ai/actions/runs/44378188049",
+    "evaluated_through": "2026-11-18T19:13:40.463649+00:00",
+    "applies_to": [
+      "setup-20261118-trip",
+      "setup-20261118-ccl"
+    ],
+    "eur_conversion_60_180_300_seconds": "scenario_net_reward_below_2r",
+    "usd_balance_60_seconds": "insufficient_shared_capital",
+    "usd_balance_180_300_seconds": "response_exceeds_entry_window",
+    "stressed_60_180_300_seconds": "scenario_net_reward_below_2r"
+  }
+}
