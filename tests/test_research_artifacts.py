@@ -184,3 +184,16 @@ def test_failed_intake_never_marks_unvisited_dates_complete(tmp_path, monkeypatc
     assert list(bank.rows('day_inventory')) == []
     assert (output / 'evidence-bank.sqlite.gz').is_file()
     bank.close()
+
+
+def test_optional_opening_evidence_survives_intake_without_reclassifying_older_captures():
+    files=capture()
+    old=capture_snapshot(files,run=RUN,artifact=ARTIFACT)
+    assert 'opening_session' not in old and old['missing_files'] == []
+    brief={'schema_version':'opening-session-brief-v1','trade_authorized':False,'window':'opening_range','state':'observed'}
+    files['opening-session.json']=json.dumps(brief).encode()
+    new=capture_snapshot(files,run=RUN,artifact=ARTIFACT)
+    assert new['opening_session'] == brief and new['missing_files'] == []
+    files['opening-session.json']=json.dumps({**brief,'trade_authorized':True}).encode()
+    with pytest.raises(ValueError,match='opening_capture_scope'):
+        capture_snapshot(files,run=RUN,artifact=ARTIFACT)

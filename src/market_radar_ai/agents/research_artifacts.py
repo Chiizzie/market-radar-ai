@@ -92,7 +92,13 @@ def capture_snapshot(files, *, run, artifact):
         links.append({'packet_id': p['packet_id'], 'candidate_id': p['packet']['candidate_id'],
                       'assembled_at': p['packet']['assembled_at']})
     diagnostics = documents.get('run-diagnostics.json', {})
-    return {'schema_version': 'candidate-funnel-snapshot-v1',
+    opening = {}
+    if 'opening-session.json' in files:
+        brief = json.loads(files['opening-session.json'])
+        if brief.get('schema_version') != 'opening-session-brief-v1' or brief.get('trade_authorized') is not False:
+            raise ValueError('opening_capture_scope')
+        opening['opening_session'] = brief
+    return {'schema_version': 'candidate-funnel-snapshot-v1', **opening,
         'run_id': run['id'], 'attempt': run.get('run_attempt', 1), 'head_sha': run['head_sha'],
         'run_conclusion': run['conclusion'], 'artifact_id': artifact['id'],
         'artifact_created_at': artifact['created_at'], 'artifact_digest': artifact.get('digest'),
@@ -286,7 +292,7 @@ def collect(reader, runs, bank, output, *, maximum_new_artifacts=120):
                 continue
             if downloaded >= maximum_new_artifacts:
                 pending.append(artifact['id']); continue
-            names = CAPTURE_FILES if kind == 'capture' else {'report.json'}
+            names = CAPTURE_FILES | {'opening-session.json'} if kind == 'capture' else {'report.json'}
             files = zip_members(reader.download(artifact), names)
             downloaded += 1
             if kind == 'capture':

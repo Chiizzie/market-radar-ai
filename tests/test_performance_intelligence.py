@@ -190,3 +190,30 @@ def test_declared_regime_comparison_separates_training_and_unseen_data():
     assert holdout['unknown_context'] == holdout['missing_closed_outcome'] == 1
     assert holdout['pairs'][0]['no_action_policy_eur'] == '0'
     assert result['causal_improvement_established'] is False
+
+
+def test_opening_timing_uses_ack_and_strict_expiry_and_keeps_empty_days():
+    from market_radar_ai.agents.performance_intelligence import stock_session_timing
+    row = {'candidate_id':'stocks:A', 'enrolled_at':'2026-10-28T13:46:00Z',
+           'decision_at':'2026-10-28T15:09:20Z', 'arms':{'ai_reviewed':{'plan':{'expires_at':'2026-10-28T15:13:00Z'}}},
+           'alert_acknowledgement':{'clock':{'acknowledged_at':'2026-10-28T15:10:00Z'}}}
+    missing = {**row, 'alert_acknowledgement':{'clock':None}}
+    crypto = {**row, 'candidate_id':'crypto:BTC'}
+    timing = stock_session_timing([missing, crypto, row], ['2026-10-28','2026-10-29'])['sessions']
+    assert timing['2026-10-28']['acknowledged_before_20_bars'] == 0  # exactly the 100-minute boundary
+    assert timing['2026-10-28']['response_before_expiry'] == {'60s':1, '180s':0, '300s':0}
+    assert timing['2026-10-28']['approved_clock_unobserved'] == 1
+    assert timing['2026-10-29']['first_telegram_ack_dublin'] is None
+
+
+def test_phase_metrics_use_actual_us_clock_and_preserve_book_net_and_unknowns():
+    from market_radar_ai.agents.performance_intelligence import enrich_book
+    early = {**trade('3'), 'at':'2026-10-28T14:15:00Z'}
+    ordinary = {**trade('-4'), 'at':'2026-11-19T16:10:00Z'}
+    missing = {**trade(state='unresolved'), 'at':'2026-11-19T15:12:00Z'}
+    book = enrich_book({'rows':[early, ordinary, missing]}, {}, [])
+    groups = book['by_condition']['stock_session_phase']
+    assert groups['30_to_100_minutes']['closed_net_pnl_eur'] == '3'
+    assert groups['30_to_100_minutes']['unknown_or_open_outcomes'] == 1
+    assert groups['from_100_minutes']['closed_net_pnl_eur'] == '-4'
+    assert book['metrics']['closed_net_pnl_eur'] == '-1'

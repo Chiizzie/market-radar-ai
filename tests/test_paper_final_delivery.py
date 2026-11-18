@@ -55,3 +55,13 @@ def test_native_eur_watch_is_never_relabelled_usd(monkeypatch):
     archive['decision']['plan']['native_currency']='EUR'
     text=render(archive,NOW)
     assert 'BREAKOUT TRIGGER' in text and 'EUR or above' in text and '$' not in text
+
+
+def test_send_time_after_refresh_uses_exact_remaining_window(monkeypatch):
+    _,packet,audit,_=fixture(monkeypatch)
+    archive=export_archive(packet,audit,finalize(packet,audit,{},None,now=NOW))
+    expiry=datetime.fromisoformat(archive['decision']['plan']['expires_at'])
+    assert '2m 52s left at send' in render(archive,expiry-timedelta(seconds=172.8))
+    assert 'Even a 1-minute response reaches expiry' in render(archive,expiry-timedelta(seconds=60))
+    assert 'Even a 1-minute response' not in render(archive,expiry-timedelta(seconds=60.9))
+    assert 'left at send' not in render(archive,expiry)

@@ -1,5 +1,7 @@
 # Market Radar AI: continue here
 
+The [US opening-session investigation and paper rollout](experiments/opening-session-20261118.md) explains the 16:10 Dublin pattern, the new opening selection, the Telegram response-time measurements and the checks for the next US open.
+
 Latest operational check: **18 November 2026, 15:35 Europe/Dublin**. The 15:25, 15:20 and 15:15 scanner runs succeeded after the source restoration merge. The 14:45 entry observer demonstrably restored its checkpoint and completed 66 polls without errors. The provider root cause of yesterday's storage outage is still unproven; successful runs do not establish continuous quote coverage.
 
 ## Highest priority: measured performance and reliability
