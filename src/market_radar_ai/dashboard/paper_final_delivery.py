@@ -62,7 +62,15 @@ def render(archive, now):
             return symbol+format(value.quantize(Decimal('0.000001')),'f').rstrip('0').rstrip('.')+' '+currency
         def clock(at):
             return datetime.fromisoformat(at).astimezone(ZoneInfo('Europe/Dublin')).strftime('%d %b %H:%M:%S Dublin')
-        lines += ['WATCH ONLY — this message does not record an entry.',
+        seconds = (datetime.fromisoformat(p['expires_at']) - now).total_seconds()
+        minutes, remainder = divmod(int(seconds), 60)
+        left = f'{minutes}m {remainder:02d}s' if seconds >= 1 else 'Less than 1s'
+        timing = f'{left} left at send.'
+        if seconds <= 60:
+            timing += ' Even a 1-minute response reaches expiry.'
+        elif seconds <= 300:
+            timing += ' A 5-minute response reaches expiry.'
+        lines += [timing, 'WATCH ONLY — this message does not record an entry.',
                   'Wait for the breakout; do not enter just because this watch arrived.',
                   f"BREAKOUT TRIGGER: reference ask reaches {price('entry_eur')} or above.",
                   f"Stop {price('stop_eur')} | target {price('target_eur')}",
