@@ -11,7 +11,11 @@ from .snapshot_delivery import ENDPOINT
 
 
 class ReceiptUnavailable(RuntimeError):
-    pass
+    """Share a bounded error code without returning URLs, signatures, or provider bodies."""
+    def __init__(self, reason, status=None):
+        super().__init__(reason)
+        self.reason = reason
+        self.status = status
 
 
 def signed_headers(secret, now, message):
@@ -30,7 +34,7 @@ def lookup(ids, *, secret, now, session, seconds):
             headers=signed_headers(secret, now, b'scanner-snapshot-receipt-v1\n' + key.encode()),
             timeout=Timeout(total=seconds, connect=min(3.0, seconds)))
         if response.status_code != 200:
-            raise ReceiptUnavailable('receipt_lookup_unavailable')
+            raise ReceiptUnavailable('http_status', response.status_code)
         result = response.json()
         if not isinstance(result, dict) or result.get('ok') is not True:
             raise ReceiptUnavailable('invalid_receipt_response')
@@ -40,8 +44,14 @@ def lookup(ids, *, secret, now, session, seconds):
                     row.get('state') not in ('absent', 'stored') for key, row in zip(ids, rows))):
             raise ReceiptUnavailable('invalid_receipt_response')
         return rows
-    except (requests.RequestException, TimeoutError, ValueError):
-        raise ReceiptUnavailable('receipt_lookup_unavailable') from None
+    except requests.ConnectTimeout:
+        raise ReceiptUnavailable('connect_timeout') from None
+    except (requests.ReadTimeout, TimeoutError):
+        raise ReceiptUnavailable('read_timeout') from None
+    except ValueError:
+        raise ReceiptUnavailable('invalid_receipt_response') from None
+    except requests.RequestException:
+        raise ReceiptUnavailable('transport_error') from None
 
 
 def stored_at(row, original):

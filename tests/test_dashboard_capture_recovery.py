@@ -97,8 +97,45 @@ def test_ambiguous_write_is_read_back_and_never_resent_in_the_same_pass(bank, st
 def test_failed_authoritative_read_never_triggers_writes(bank):
     original(bank, 1, 240)
     db = Dashboard(unavailable=True)
-    assert recover(bank, db)['state'] == 'storage_unavailable'
+    report = recover(bank, db)
+    assert report['state'] == 'storage_unavailable' and report['unchecked'] == 1
+    assert report['failures'] == [{'phase': 'initial_lookup', 'reason': 'read_timeout',
+                                   'ids_requested': 1, 'elapsed_seconds': 0}]
     assert not db.writes
+
+
+def test_partial_lookup_preserves_missing_and_unchecked_counts(bank):
+    for i in range(17):
+        original(bank, i, 300 + i)
+
+    class CappedGateway(Dashboard):
+        def get(self, url, **kwargs):
+            assert len(requests.Request('GET', url, params=kwargs['params']).prepare().url) < 2048
+            if self.reads:
+                return SimpleNamespace(status_code=503)
+            return super().get(url, **kwargs)
+
+    db = CappedGateway()
+    report = recover(bank, db)
+    assert report['missing_observed'] == len(report['pending']) == 16 and report['unchecked'] == 1
+    assert report['failures'][0]['http_status'] == 503 and not db.writes
+
+
+def test_uncertain_write_and_failed_readback_survive_in_same_report(bank):
+    key, _ = original(bank, 1, 240)
+
+    class SlowGateway(Dashboard):
+        def get(self, url, **kwargs):
+            if self.writes:
+                raise requests.ConnectTimeout('sensitive provider text')
+            return super().get(url, **kwargs)
+
+    db = SlowGateway(drop=True)
+    report = recover(bank, db)
+    assert report['state'] == 'storage_unavailable' and report['pending'] == db.writes == [key]
+    assert [(f['phase'], f['reason']) for f in report['failures']] == [
+        ('archive_write', 'read_timeout'), ('readback', 'connect_timeout')]
+    assert 'sensitive' not in json.dumps(report)
 
 
 def test_inconsistent_stored_metadata_is_left_unresolved(bank):
