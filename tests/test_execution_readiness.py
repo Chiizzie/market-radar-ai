@@ -122,3 +122,51 @@ def test_quote_arriving_after_started_at_is_checked_at_receipt():
     assert states(future)['reference_quote_probe']=='unavailable'
     stale=result(now=now,session=Session(now,True,89),github=GitHub(now),receipt_clock=lambda:now+timedelta(seconds=3))
     assert states(stale)['reference_quote_probe']=='unavailable'
+
+
+def test_readiness_reuses_only_a_fresh_matching_execution_export(tmp_path):
+    import gzip
+    from market_radar_ai.agents.candidate_packages import canonical, digest
+    from market_radar_ai.dashboard import execution_readiness as ready
+    report_row={'kind':'report','seq':2,'occurred_at':NOW.isoformat(),'payload_json':json.dumps({'as_of':NOW.isoformat()})}
+    events=[{'kind':'audit','seq':1},report_row]
+    report={'schema_version':'execution-research-report-v1','dataset_kind':'forward',
+            'source_protocol_id':ready.SOURCE_PROTOCOL_ID,'protocol_id':digest(ready.EXECUTION_PROTOCOL),
+            'source_sha256':digest(events),'source_events':len(events),'as_of':NOW.isoformat()}
+    reference = tmp_path/'report.json'
+    source = tmp_path/'source-events.jsonl.gz'
+    reference.write_text(json.dumps(report))
+    assert ready.same_run_reports(tmp_path,now=NOW) is None
+    with gzip.open(source,'wt') as out:
+        for event in events:
+            out.write(canonical(event)+'\n')
+    assert ready.same_run_reports(tmp_path,now=NOW)==[report_row]
+    assert ready.same_run_reports(tmp_path,now=NOW+timedelta(seconds=1201)) is None
+    for key,value in [('source_sha256','0'*64),('source_events',99),('source_protocol_id','x'),('dataset_kind','other')]:
+        reference.write_text(json.dumps({**report,key:value}))
+        assert ready.same_run_reports(tmp_path,now=NOW) is None
+    reference.write_text(json.dumps(report))
+    source.write_bytes(b'damaged')
+    assert ready.same_run_reports(tmp_path,now=NOW) is None
+
+
+def test_absent_execution_export_preserves_readiness_without_a_second_history_read(tmp_path, monkeypatch):
+    import sys
+    from unittest.mock import Mock
+    from market_radar_ai.dashboard import execution_readiness as ready
+    output = tmp_path/'readiness.json'
+    monkeypatch.setattr(sys,'argv',['ready','--execution-directory',str(tmp_path),'--output',str(output)])
+    cold = Mock(side_effect=AssertionError('duplicate history read'))
+    monkeypatch.setattr(ready,'collect',cold)
+    monkeypatch.setattr(ready,'EventClient',lambda _:Client())
+    build = ready.build
+    def offline_build(**kwargs):
+        assert kwargs['source_events'] is None
+        return build(now=NOW, env=ENV, client=Client(), session=Session(), github=GitHub(),
+                     budget_store=Budget(), source_events=None, receipt_clock=lambda:NOW)
+    monkeypatch.setattr(ready,'build',offline_build)
+    ready.main()
+    report=json.loads(output.read_text())
+    assert states(report)['observer_under_load']=='unavailable' and report['status']=='attention_required'
+    assert 'ai_spending_headroom' in states(report)
+    cold.assert_not_called()

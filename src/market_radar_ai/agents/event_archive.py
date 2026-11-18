@@ -1,4 +1,5 @@
 """Bounded disk replay of validated events; preserves source order, bytes and hash."""
+import gzip
 import hashlib
 import json
 import sqlite3
@@ -75,3 +76,15 @@ class EventArchive:
     def __del__(self):
         if hasattr(self,'closed'):
             self.close()
+
+
+def read_archive(path):
+    archive = EventArchive()
+    try:
+        with gzip.open(path, 'rt') as source:
+            for line in source:
+                archive.append(json.loads(line))
+        return archive
+    except BaseException:
+        archive.close()
+        raise
