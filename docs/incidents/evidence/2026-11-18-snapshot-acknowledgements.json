@@ -1,0 +1,176 @@
+{
+  "scope": "Original signed request bodies reproduced exactly from the archived inputs. Direct database results use the original expiry. The injected HTTP acknowledgement times exercise the software only. They do not establish that any unacknowledged historical run could have received a response or produced a trade.",
+  "captures": 7,
+  "rows": [
+    {
+      "scanner_run": 44411385816,
+      "source_dublin": "2026-11-18T22:25:53.461830+00:00",
+      "archive_sha256": "c5896e95697c0dfc4bea1e9b33941dcaea2e9f03c113d9c5d6a0a49e48cca1df",
+      "snapshot_sha256": "8fcf1ab86fb324853e5a1d338b6c9c5bfd15168226901cb14f2fbebc0f7ae1e9",
+      "original_client_state": "scanner_snapshot_delivery_confirmed",
+      "original_server_check": {
+        "checked_at": "2026-11-18 22:55:40.212364+00",
+        "received_at": "2026-11-18 22:26:17.811555+00",
+        "server_outcome": "received_before_expiry",
+        "slot": "2225"
+      },
+      "offline_clock_checks": [
+        {
+          "injected_response_seconds": 35,
+          "receipt_before_expiry": true,
+          "otherwise_eligible_review_can_continue": true
+        },
+        {
+          "injected_response_seconds": 61,
+          "receipt_before_expiry": false,
+          "otherwise_eligible_review_can_continue": false
+        }
+      ]
+    },
+    {
+      "scanner_run": 44412226393,
+      "source_dublin": "2026-11-18T22:31:20.768746+00:00",
+      "archive_sha256": "e848f9acc04c004d1b1986870a028ed538ab02478ca031e8747ff7e63863f98e",
+      "snapshot_sha256": "aa50909f37c8e520ac11f47861d4e3b6bac6fc2d2891c36e610bb23fd60175fa",
+      "original_client_state": "scanner_snapshot_delivery_confirmed",
+      "original_server_check": {
+        "checked_at": "2026-11-18 22:55:40.212364+00",
+        "received_at": "2026-11-18 22:31:39.6223+00",
+        "server_outcome": "received_before_expiry",
+        "slot": "2230"
+      },
+      "offline_clock_checks": [
+        {
+          "injected_response_seconds": 35,
+          "receipt_before_expiry": true,
+          "otherwise_eligible_review_can_continue": true
+        },
+        {
+          "injected_response_seconds": 61,
+          "receipt_before_expiry": false,
+          "otherwise_eligible_review_can_continue": false
+        }
+      ]
+    },
+    {
+      "scanner_run": 44412973819,
+      "source_dublin": "2026-11-18T22:36:05.243182+00:00",
+      "archive_sha256": "1a2a3ab7b4389d78b53f7cce380fea33b589e40376beda54115a48b386966239",
+      "snapshot_sha256": "beae34fa16a99850f4054d88554e7d0872b846d7a68677b58fa4522cd8efb56e",
+      "original_client_state": "scanner_snapshot_delivery_unconfirmed",
+      "original_server_check": {
+        "checked_at": "2026-11-18 22:55:40.212364+00",
+        "received_at": "2026-11-18 22:36:34.584606+00",
+        "server_outcome": "received_before_expiry",
+        "slot": "2235"
+      },
+      "offline_clock_checks": [
+        {
+          "injected_response_seconds": 35,
+          "receipt_before_expiry": true,
+          "otherwise_eligible_review_can_continue": true
+        },
+        {
+          "injected_response_seconds": 61,
+          "receipt_before_expiry": false,
+          "otherwise_eligible_review_can_continue": false
+        }
+      ]
+    },
+    {
+      "scanner_run": 44413773785,
+      "source_dublin": "2026-11-18T22:41:13.062965+00:00",
+      "archive_sha256": "0246bfef7b170a4ed634a56d06cfd682b5e7b6c76df30eee832408e06def5ef8",
+      "snapshot_sha256": "d27816a4f1e9dd867de25cda4624d1eafca0230edae58232cd56d638c196e92e",
+      "original_client_state": "scanner_snapshot_delivery_unconfirmed",
+      "original_server_check": {
+        "checked_at": "2026-11-18 22:55:40.212364+00",
+        "received_at": "2026-11-18 22:43:33.943613+00",
+        "server_outcome": "received_after_expiry",
+        "slot": "2240"
+      },
+      "offline_clock_checks": [
+        {
+          "injected_response_seconds": 35,
+          "receipt_before_expiry": true,
+          "otherwise_eligible_review_can_continue": true
+        },
+        {
+          "injected_response_seconds": 61,
+          "receipt_before_expiry": false,
+          "otherwise_eligible_review_can_continue": false
+        }
+      ]
+    },
+    {
+      "scanner_run": 44414555452,
+      "source_dublin": "2026-11-18T22:46:11.658984+00:00",
+      "archive_sha256": "3a63673b60e2bd0898a82096ccaa6fe063b504951bac71e025d58d33e7013859",
+      "snapshot_sha256": "1d888b3b7650d0213a4f068d85e9e22ee995275f9c23c47f41ed5ca3eec4c22e",
+      "original_client_state": "scanner_snapshot_delivery_unconfirmed",
+      "original_server_check": {
+        "checked_at": "2026-11-18 22:55:40.212364+00",
+        "received_at": null,
+        "server_outcome": "absent_at_check",
+        "slot": "2245"
+      },
+      "offline_clock_checks": [
+        {
+          "injected_response_seconds": 35,
+          "receipt_before_expiry": true,
+          "otherwise_eligible_review_can_continue": true
+        },
+        {
+          "injected_response_seconds": 61,
+          "receipt_before_expiry": false,
+          "otherwise_eligible_review_can_continue": false
+        }
+      ]
+    },
+    {
+      "scanner_run": 44415319702,
+      "source_dublin": "2026-11-18T22:50:53.432601+00:00",
+      "archive_sha256": "5b123e3f4c0a4856f7d38e10c172e8f5af484ab58f1c3e47bcd563261cdea5bb",
+      "snapshot_sha256": "9a76b7248fb1607ac4498516a86840cb9fb36b6b13dc261d60c2b45fd22784c2",
+      "original_client_state": "scanner_snapshot_delivery_unconfirmed",
+      "original_server_check": {
+        "checked_at": "2026-11-18 22:55:40.212364+00",
+        "received_at": null,
+        "server_outcome": "absent_at_check",
+        "slot": "2250"
+      },
+      "offline_clock_checks": [
+        {
+          "injected_response_seconds": 35,
+          "receipt_before_expiry": true,
+          "otherwise_eligible_review_can_continue": true
+        },
+        {
+          "injected_response_seconds": 61,
+          "receipt_before_expiry": false,
+          "otherwise_eligible_review_can_continue": false
+        }
+      ]
+    },
+    {
+      "scanner_run": 44416073368,
+      "source_dublin": "2026-11-18T22:56:05.287616+00:00",
+      "archive_sha256": "f643cef1cbc8289e98af546236a6f9c456281ae1e542fe1babd893cc185a8faa",
+      "snapshot_sha256": "3c1594835664a4eafc4d4a510c5fec2f0c181a524c367321427dd41abfdc8296",
+      "original_client_state": "scanner_snapshot_delivery_unconfirmed",
+      "original_server_check": null,
+      "offline_clock_checks": [
+        {
+          "injected_response_seconds": 35,
+          "receipt_before_expiry": true,
+          "otherwise_eligible_review_can_continue": true
+        },
+        {
+          "injected_response_seconds": 61,
+          "receipt_before_expiry": false,
+          "otherwise_eligible_review_can_continue": false
+        }
+      ]
+    }
+  ]
+}

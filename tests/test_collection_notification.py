@@ -5,6 +5,18 @@ from market_radar_ai.dashboard.collection_notification import notify
 
 ENV={**ENV,'SEND_COLLECTION_TELEGRAM':'true','TELEGRAM_BOT_TOKEN':'fake','TELEGRAM_CHAT_ID':'123'}
 
+
+def test_late_receipt_reports_archival_delivery_and_skips_opening_alert():
+    receipt = {'state': 'scanner_snapshot_delivery_confirmed', 'acknowledged_before_expiry': False}
+    session, ledger = Mock(), Mock()
+    session.post.return_value = Mock(status_code=200, json=lambda: {
+        'ok': True, 'result': {'chat': {'id': 123}, 'message_id': 1}})
+    notify({'delivery': receipt, 'opening_session': {'window': 'premarket'}},
+           env=ENV, clock=lambda: NOW, session=session, ledger=ledger)
+    message = session.post.call_args.kwargs['json']['text']
+    assert 'acknowledgement arrived after expiry' in message and 'Paper review skipped' in message
+    assert 'OPENING UPDATE' not in message
+
 def test_delivery_status_is_independent_of_paid_review_and_reserved_before_send():
     events=[];ledger=Mock();ledger.reserve.side_effect=lambda _:events.append('reserve')
     session=Mock()

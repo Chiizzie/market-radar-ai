@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: e3a2f74b6cfa35d966d488186f418df4622ba082
+          ref: fd1a7e4401aab4a08e7abf675af120d1b5607fcb
           persist-credentials: false
       - name: Enforce Dublin operating hours before provider calls
         id: window
