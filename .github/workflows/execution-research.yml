@@ -48,7 +48,7 @@ jobs:
         if: steps.window.outputs.run == 'true'
         with:
           # Publish the current conditional-chief experiment; historical events stay unchanged.
-          ref: 0e65af01a09ae6fc3bd9823a2f982f77e22d72df
+          ref: 11d7495ae54e2994955e6d4e2e0d53eaeacad7b7
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -90,7 +90,7 @@ jobs:
           key: report-closed-history-v1-${{ steps.window.outputs.day }}
       - name: Check operational readiness without paid AI or orders
         if: always() && steps.window.outputs.run == 'true'
-        run: python -m market_radar_ai.dashboard.execution_readiness --publish
+        run: python -m market_radar_ai.dashboard.execution_readiness --execution-directory artifacts/execution-research --publish
         env:
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
           GH_BUDGET_TOKEN: ${{ github.token }}

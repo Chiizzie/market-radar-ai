@@ -18,7 +18,7 @@ from zoneinfo import ZoneInfo
 
 from .candidate_packages import canonical, digest
 from .comparison_live import LiveComparison, event_id
-from .event_archive import EventArchive
+from .event_archive import EventArchive, read_archive
 from . import execution_research as execution_engine
 from .paper_comparison import aware
 from .paper_verdict import paper_attempt_id
@@ -89,18 +89,6 @@ def stock_session_timing(rows, days):
                 state['response_before_expiry'][f'{seconds}s'] += 1
     return {'sessions': sessions, 'basis': 'observed_stock_events_by_enrolment_session',
             'response_scope': 'Telegram acknowledgement to original expiry only. A timely response still needs a valid quote and fill.'}
-
-
-def read_archive(path):
-    archive = EventArchive()
-    try:
-        with gzip.open(path, 'rt') as source:
-            for line in source:
-                archive.append(json.loads(line))
-        return archive
-    except BaseException:
-        archive.close()
-        raise
 
 
 def validate_projection(events, *, now, protocol):
