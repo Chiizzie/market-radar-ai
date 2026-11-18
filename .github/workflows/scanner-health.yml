@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 9703fa2ec60e4839576416726732c1c2e9fce5d4
+          ref: 4760253f5791cea2d14972be3582cb785df745a5
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -43,16 +43,31 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -e .
         if: steps.window.outputs.run == 'true'
+      - name: Read the original capture from the failed scanner run
+        id: primary_capture
+        if: >-
+          steps.window.outputs.run == 'true' && github.event_name == 'workflow_run' &&
+          github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.run_attempt == 1 &&
+          github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: scheduled-capture-${{ github.event.workflow_run.id }}
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/health-primary-capture
       - name: Record actual run and job metadata without AI or trading calls
         if: steps.window.outputs.run == 'true'
         run: python -m market_radar_ai.dashboard.scanner_operations
         env:
           GH_HEALTH_TOKEN: ${{ github.token }}
+          HEALTH_TIMEOUT_RUN_ID: ${{ steps.primary_capture.outcome == 'success' && github.event.workflow_run.id || '' }}
+          HEALTH_CAPTURE_DIR: ${{ runner.temp }}/health-primary-capture
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
       - uses: actions/upload-artifact@v4
         if: always() && steps.window.outputs.run == 'true'
         with:
           name: scanner-health-${{ github.run_id }}
-          path: artifacts/scanner-health/report.json
+          path: artifacts/scanner-health/*.json
           retention-days: 14
           if-no-files-found: warn
