@@ -20,6 +20,16 @@ def notify(report, *, env, clock, ledger=None, session=None):
     token,chat=env.get('TELEGRAM_BOT_TOKEN',''),env.get('TELEGRAM_CHAT_ID','')
     if not token or not chat.lstrip('-').isdigit():raise ValueError('telegram_secrets_missing_or_invalid')
     delivered=report.get('delivery',{}).get('state')=='scanner_snapshot_delivery_confirmed'
+    opening_text = []
+    if delivered and report.get('opening_session'):
+        from .opening_brief import lines as opening_lines, waiting_for_opening_update
+        try:
+            brief = report['opening_session']
+            if waiting_for_opening_update(brief, now):
+                return {'state':'collection_notice_waiting_for_opening_checkpoint','model_calls':0}
+            opening_text = opening_lines(brief, now)
+        except (ValueError, TypeError, KeyError, ArithmeticError, AttributeError):
+            opening_text = ['Opening evidence unavailable for this capture.']
     category='delivered' if delivered else 'failed'
     local=now.astimezone(ZoneInfo('Europe/Dublin'))
     key='research:'+sha256(('collection-status-v1:'+local.strftime('%Y-%m-%dT%H%z')+':'+category).encode()).hexdigest()
@@ -35,6 +45,9 @@ def notify(report, *, env, clock, ledger=None, session=None):
             if env.get('AI_FINAL_REVIEW_ENABLED')=='true' else
             'Paid AI is paused. This is a free operational update, not a trade call.')]
     if delivered:
+        if opening_text:
+            lines[0] = 'ℹ️ OPENING UPDATE — paper research'
+            lines.extend(opening_text)
         for market,counts in report['delivery'].get('coverage',{}).items():
             lines.append(f"{market.title()}: {counts['current']}/{counts['attempted']} current; {counts['unusable_or_stale']} unavailable/stale.")
     lines+=['Status updates: at most one success and one failure notice per hour.',

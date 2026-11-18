@@ -36,7 +36,7 @@ def reserve_screen(ordered, pool, sector, limit, related=()):
     return list(dict.fromkeys([s for s in (*CORE,*related,*sector) if s in members]+ordered))[:limit]
 
 
-def select_details(candidates, sector, now, limit, related=()):
+def select_details(candidates, sector, now, limit, related=(), *, opening_priority=(), opening_lane=None):
     from .discovery import select
     usable=set(candidates); chosen=[]; lanes={}
     def add(symbols, lane, cap):
@@ -47,7 +47,10 @@ def select_details(candidates, sector, now, limit, related=()):
     add(CORE,'liquid_core',12)
     add(related,'related_company_catalyst',4)
     add(sector,'sector_mover',8)
-    add(candidates,'technical_leader',10)
+    before_technical = len(chosen)
+    if opening_lane:
+        add(opening_priority, opening_lane, 10)
+    add(candidates,'technical_leader',10 - (len(chosen) - before_technical))
     rest=[s for s in candidates if s not in lanes]
     # Bounded catalyst reservations can use four of the normal rotation slots.
     if rest:

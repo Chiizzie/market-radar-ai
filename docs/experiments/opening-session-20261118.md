@@ -1,0 +1,29 @@
+# Earlier US opening research and paper-watch timing
+
+## What happened on 18 November
+
+All times below are Europe/Dublin. The US regular session opened at 14:30. The established momentum strategy requires twenty completed five-minute bars. Its first possible evaluation was 16:10. A separate opening continuation can qualify after six bars from 15:00 with current symbol-tagged news, volume, price and risk evidence. On 17 November the first stock-watch Telegram acknowledgement was at 15:03:28.
+
+| Actual source | Observation |
+|---|---|
+| [14:25 collection](https://github.com/Chiizzie/market-radar-ai/actions/runs/44324039639) | The premarket replay produced usable observed ranges for CUE, AAL and NVDA. AAL used the clearly identified delayed SIP feed. These names were replay observations. |
+| [14:45 collection](https://github.com/Chiizzie/market-radar-ai/actions/runs/44327741925) | Discovery screened 1,200. All 938 usable charts had zero technical priority because the previous ordering needed at least six bars. Only 79 detailed stock charts were retained. Three of those passed the opening chart and cost-cap prefilter in replay. None passed every current quote and range check for the brief. The other 859 usable charts have no retained full-chart replay here. |
+| [14:50 opening experiment](https://github.com/Chiizzie/market-radar-ai/actions/runs/44328670097) | The separate 15-minute experiment examined 79 names and admitted zero. Its recorded blockers included direction, turnover, incomplete bars, quotes and reward after assumed costs. |
+| [15:00 collection and review](https://github.com/Chiizzie/market-radar-ai/actions/runs/44330650440) | At 15:01:35 none of the 79 stocks qualified. Seventy lacked qualifying recent symbol news and 59 missed the required volume comparison. These groups overlap. |
+| [16:10 collection and review](https://github.com/Chiizzie/market-radar-ai/actions/runs/44344063788) | CPB received a conditional paper watch at 16:12:52. Telegram acknowledged it at 16:12:59. Its original expiry was 16:15:52, leaving 172.8 seconds after acknowledgement. |
+
+## What changes at the open
+
+Discovery uses up to ten existing technical-research slots for complete, current opening charts. The 15-minute research preference reuses the frozen range, directional, turnover and projected net 2R constraints. From 30 to 100 minutes, an intact continuation with recently retrieved issuer-tagged news from a previous capture gets priority. Actual eligibility is recomputed from the current evidence. The existing central stocks, related-company, sector and rotation allocations still operate. Each opening scan records both shortlists and the effect of active journal positions on the final collection.
+
+The two existing hourly success updates nearest the open use the first eligible regular collection at or after 45 minutes before the open and 15 minutes after it. These checkpoints target 13:45 and 14:45 Dublin on 19 November. Weekdays use the US exchange clock and the actual local offset. The pre-open message gives up to three USD observed ranges with publisher-tagged news, unique catalogue matches, source, bar time and delayed-feed labels. During the first 15 minutes after the open the range is forming. The completed-range update is research. From 30 minutes a qualified continuation can enter the ordinary final paper-review path.
+
+Final paper watches now display time remaining at the Telegram send attempt and their original expiry. The full-history performance report measures first stock qualification, approval and Telegram acknowledgement by Dublin session. For each independent arm and each shared cost scenario it also groups outcomes by the time elapsed since the US open. The immutable source archive can reproduce the 1,101-setup snapshot. The 27 acknowledged stock watches on 16–17 November all had time for a one-minute response and zero had time for either a three- or five-minute response. Four other approvals on 16 November lacked a bound acknowledgement clock. A Telegram acknowledgement cannot establish when someone viewed the message.
+
+## Validation and forward evidence
+
+The pre-merge suite passed 1,986 tests on the combined source, 1,612 on the exact collector tree and 1,691 on the exact review tree. Compilation passed on each tree. Coverage includes the normal broad discovery entry point, prior-news clocks and checksums, an exchange holiday, the US and Irish daylight-saving mismatch, bounded rotation, the Telegram send and expiry boundaries and per-session EUR accounting.
+
+For each fresh opening capture, inspect `opening-session.json`, `discovery.json`, the selection manifest and the original review receipt. Compare discovery matches and newly qualified names against the stored ordinary selection, record displaced or unobserved names, and follow each accepted plan through the existing paper fill and exit ledger. A chart outside the collected set has an unknown outcome. The 19 November holdout and existing cost, risk, expiry and intraday rules continue to apply. The recorded change in research selection must be considered when comparing sessions. Earlier research and higher coverage do not establish positive expectancy.
+
+The scheduled workflow pins only the [collector](https://github.com/Chiizzie/market-radar-ai/commit/1bb557be06964efbc68a0a80143853d47baf74c7) and [paper-alert delivery](https://github.com/Chiizzie/market-radar-ai/commit/79afa4ec1c14515716aa00b6d778fd9c1539cab9) to the individually tested source trees. It uses the existing provider requests and hourly notice allowance. The historic timing figures come from the [frozen execution export](https://github.com/Chiizzie/market-radar-ai/actions/runs/44327854314) and [manual receipt export](https://github.com/Chiizzie/market-radar-ai/actions/runs/44330110361).

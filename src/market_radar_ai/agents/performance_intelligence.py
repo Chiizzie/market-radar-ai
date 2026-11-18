@@ -48,6 +48,49 @@ def local_day(at):
     return aware(at).astimezone(ZONE).date().isoformat()
 
 
+def stock_session_timing(rows, days):
+    """First observed stock events and usable response time from bound receipts."""
+    ny = ZoneInfo('America/New_York')
+    def empty():
+        return {'first_qualified_dublin': None, 'first_decision_dublin': None,
+                'first_approved_watch_dublin': None, 'first_telegram_ack_dublin': None,
+                'acknowledged_before_20_bars': 0, 'acknowledged': 0,
+                'approved_clock_unobserved': 0,
+                'response_before_expiry': {'60s': 0, '180s': 0, '300s': 0}}
+    sessions = {day: empty() for day in days}
+    def first(state, field, at):
+        stamp = aware(at).astimezone(ZONE).isoformat()
+        if state[field] is None or aware(stamp) < aware(state[field]):
+            state[field] = stamp
+    for row in rows:
+        if not row['candidate_id'].startswith('stocks:'):
+            continue
+        day = local_day(row['enrolled_at'])
+        state = sessions.setdefault(day, empty())
+        first(state, 'first_qualified_dublin', row['enrolled_at'])
+        if row['decision_at']:
+            first(state, 'first_decision_dublin', row['decision_at'])
+        plan = row['arms']['ai_reviewed']['plan']
+        if not plan or not row['decision_at']:
+            continue
+        first(state, 'first_approved_watch_dublin', row['decision_at'])
+        receipt = row['alert_acknowledgement'].get('clock')
+        if not receipt:
+            state['approved_clock_unobserved'] += 1
+            continue
+        ack = aware(receipt['acknowledged_at'])
+        first(state, 'first_telegram_ack_dublin', ack)
+        state['acknowledged'] += 1
+        opening = aware(row['enrolled_at']).astimezone(ny).replace(hour=9, minute=30, second=0, microsecond=0)
+        if opening <= ack < opening + timedelta(minutes=100):
+            state['acknowledged_before_20_bars'] += 1
+        for seconds in (60, 180, 300):
+            if ack + timedelta(seconds=seconds) < aware(plan['expires_at']):
+                state['response_before_expiry'][f'{seconds}s'] += 1
+    return {'sessions': sessions, 'basis': 'observed_stock_events_by_enrolment_session',
+            'response_scope': 'Telegram acknowledgement to original expiry only. A timely response still needs a valid quote and fill.'}
+
+
 def read_archive(path):
     archive = EventArchive()
     try:
@@ -271,9 +314,24 @@ def enrich_book(book, metadata, contexts):
         row['regime'] = causal_regime(contexts, row['at'])
         row['decision_day_dublin'] = local_day(row['at'])
         row['decision_hour_dublin'] = aware(row['at']).astimezone(ZONE).strftime('%H:00')
+        ny = aware(row['at']).astimezone(ZoneInfo('America/New_York'))
+        minute = ny.hour * 60 + ny.minute - (9 * 60 + 30)
+        if not row['candidate_id'].startswith('stocks:'):
+            phase = 'other_market'
+        elif ny.weekday() >= 5 or not 0 <= minute < 390:
+            phase = 'outside_standard_us_hours'
+        elif minute < 15:
+            phase = 'first_15_minutes'
+        elif minute < 30:
+            phase = '15_to_30_minutes'
+        elif minute < 100:
+            phase = '30_to_100_minutes'
+        else:
+            phase = 'from_100_minutes'
+        row['stock_session_phase'] = phase
         rows.append(row)
     grouped = {}
-    for dimension in ('strategy_id', 'decision_day_dublin', 'decision_hour_dublin', 'regime'):
+    for dimension in ('strategy_id', 'decision_day_dublin', 'decision_hour_dublin', 'regime', 'stock_session_phase'):
         groups = defaultdict(list)
         for row in rows:
             key = row['regime']['label'] if dimension == 'regime' else row[dimension]
@@ -434,6 +492,7 @@ def build(events, execution, *, contexts=(), manual=None):
         'books': [{k: v for k, v in b.items() if k != 'rows'} for b in books],
         'independent_setups': [{k: v for k, v in b.items() if k != 'rows'} for b in independent],
         'paired_ai_policy': paired_ai(rows), 'fill_quote_quality': quality,
+        'stock_session_timing': stock_session_timing(rows, [s['day'] for s in sessions]),
         'reconciliation_exceptions': exceptions, 'upstream_candidate_history_complete': False,
         'manual': manual, 'model_calls': 0, 'trade_authorized': False,
         'limitations': ['Closed realized P/L only; unobserved exits remain unresolved.',
@@ -558,6 +617,15 @@ def markdown(report):
         'The primary manual scenario stays EUR conversion with a 300-second response; faster alternatives are sensitivities. '
         'No automatic trading promotion is possible.', '', '## Limits', '']
     lines += ['- ' + x for x in report['limitations']]
+    lines += ['', '## First observed stock watches and response time', '',
+              '| Dublin date | First qualified | First approved watch | First Telegram acknowledgement | Acknowledged before 20 bars | 1 / 3 / 5 min before expiry |',
+              '|---|---|---|---|---:|---|']
+    for day, stats in sorted(report['stock_session_timing']['sessions'].items()):
+        clocks = [aware(stats[key]).strftime('%H:%M:%S') if stats[key] else 'unobserved' for key in
+                  ('first_qualified_dublin', 'first_approved_watch_dublin', 'first_telegram_ack_dublin')]
+        delays = ' / '.join(str(n) for n in stats['response_before_expiry'].values())
+        lines.append('| ' + ' | '.join([day, *clocks, str(stats['acknowledged_before_20_bars']), delays]) + ' |')
+    lines.append(report['stock_session_timing']['response_scope'])
     return '\n'.join(lines) + '\n'
 
 

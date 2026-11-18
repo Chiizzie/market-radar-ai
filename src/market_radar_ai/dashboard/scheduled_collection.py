@@ -91,7 +91,7 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
                 or any(p not in ASSETS for p in crypto_symbols)):
             raise ValueError('invalid_targeted_crypto_pairs')
         crypto=tuple(crypto_symbols)
-    active_crypto = []
+    active, active_crypto = [], []
     stock_limit = STOCK_RESEARCH_LIMIT if env.get('ENABLE_BROAD_DISCOVERY')=='true' else 20
     stocks = STOCKS
     if stock_symbols is not None:
@@ -102,8 +102,10 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         stock_limit = max(stock_limit,len(stocks))
     if stock_symbols is None and env.get('ENABLE_STOCK_DISCOVERY') == 'true':
         from ..market_data.discovery import discover
+        from ..market_data.opening_discovery import phase, prior_news
+        opening_news = prior_news(cache_path, started) if phase(started) == 'opening_continuation' else ()
         discovery = discover(env=env, now=started, fallback=STOCKS,
-                             universe_cache_path=cache_path.with_name('discovery-universe.json'))
+                             universe_cache_path=cache_path.with_name('discovery-universe.json'), opening_news=opening_news)
         stocks = tuple(discovery['selected_symbols'])
     # User watchlist supplements rotating discovery, without replacing its candidates.
     if stock_symbols is None:
@@ -129,6 +131,11 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
         # The journal can displace rotating candidates. Report what will really
         # be researched, retaining the original discovery shortlist separately.
         discovery['collection_selected_symbols'] = list(stocks)
+        route = discovery.get('opening_route')
+        if route:
+            baseline = route['baseline_symbols'] or discovery['selected_symbols']
+            route['baseline_collection_symbols'] = list(dict.fromkeys([*active, *baseline, 'MU']))[:stock_limit]
+            route['routed_collection_symbols'] = list(stocks)
         discovery['displaced_symbols'] = [s for s in discovery['selected_symbols'] if s not in stocks]
         for row in discovery.get('selection_manifest', []):
             selected = row['symbol'] in stocks
@@ -254,6 +261,21 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
               'evidence_collection_started_at': cache['collection_started_at'] if cache else started.isoformat(),
               'failures': failed, 'target_interval_seconds': 300, 'model_calls': 0,
               'trade_authorized': False, 'stock_discovery': discovery,'crypto_discovery':crypto_discovery}
+    if stock_symbols is None and crypto_symbols is None:
+        from .opening_brief import build
+        from ..market_data.opening_discovery import phase
+        observed_at = clock()
+        if phase(observed_at):
+            try:
+                qualification = json.loads((output/'qualification.json').read_text())
+                brief = build(doc, feed, qualification, discovery, now=observed_at)
+            except (ValueError, KeyError, TypeError, ArithmeticError, AttributeError):
+                # Missing optional preparation must not erase a delivered capture.
+                brief = {'schema_version': 'opening-session-brief-v1', 'as_of': observed_at.isoformat(),
+                         'window': phase(observed_at), 'state': 'opening_evidence_unavailable',
+                         'model_calls': 0, 'trade_authorized': False}
+            write_json(output/'opening-session.json', brief)
+            report['opening_session'] = brief
     write_json(output/'collection-report.json', report)
     return report
 

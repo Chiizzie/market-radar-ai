@@ -5,7 +5,10 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['.github/workflows/performance-intelligence.yml']
+    paths:
+      - '.github/workflows/performance-intelligence.yml'
+      - 'src/market_radar_ai/agents/performance_intelligence.py'
+      - 'src/market_radar_ai/agents/research_artifacts.py'
 permissions:
   contents: read
   actions: read
