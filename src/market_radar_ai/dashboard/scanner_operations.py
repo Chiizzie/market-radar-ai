@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import re
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -27,22 +28,30 @@ def at(value):
 
 
 class GitHubRead:
-    def __init__(self,token,session=None):
+    def __init__(self,token,session=None,sleep=time.sleep):
         if not token: raise ValueError('github_read_not_configured')
-        self.token=token;self.session=session or requests.Session()
+        self.token=token;self.session=session or requests.Session();self.sleep=sleep
     def get(self,path):
         if not re.fullmatch(r'/actions/(workflows/scheduled-scanner\.yml/runs\?branch=main&per_page=20|runs/\d+/jobs\?per_page=100|artifacts/\d+)',path):
             raise ValueError('unsupported_health_path')
-        with self.session.get('https://api.github.com/repos/'+REPO+path,
-            headers={'Authorization':'Bearer '+self.token,'Accept':'application/vnd.github+json'},
-            timeout=(5,12),allow_redirects=False,stream=True) as response:
-            if response.status_code!=200: raise ValueError('github_health_unavailable')
-            raw=bytearray()
-            for part in response.iter_content(65536):
-                raw.extend(part)
-                if len(raw)>2_000_000: raise ValueError('health_response_capacity')
-        return json.loads(raw)
-
+        for attempt in range(4):
+            try:
+                with self.session.get('https://api.github.com/repos/'+REPO+path,
+                    headers={'Authorization':'Bearer '+self.token,'Accept':'application/vnd.github+json'},
+                    timeout=(5,12),allow_redirects=False,stream=True) as response:
+                    if response.status_code==200:
+                        raw=bytearray()
+                        for part in response.iter_content(65536):
+                            raw.extend(part)
+                            if len(raw)>2_000_000: raise ValueError('health_response_capacity')
+                        return json.loads(raw)
+                    retryable=response.status_code in (403,404,429,500,502,503,504)
+            except requests.RequestException:
+                if attempt==3: raise
+            else:
+                if not retryable or attempt==3: raise ValueError('github_health_unavailable')
+            self.sleep(min(2 ** attempt,4))
+        raise ValueError('github_health_unavailable')
 
 def run_row(r):
     if (type(r['id']) is not int or r['id']<=0 or r['head_branch']!='main'

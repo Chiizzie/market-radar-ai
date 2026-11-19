@@ -61,3 +61,46 @@ def test_health_uses_one_write_but_backup_receipts_keep_retries(tmp_path, monkey
     ops.main()
     assert json.loads(output.read_text()) == report
     client.assert_called_once_with('s'*32, retry_appends=backup)
+
+
+class _Response:
+    def __init__(self,status_code,payload=None):
+        self.status_code=status_code
+        self.payload=payload or {}
+    def __enter__(self): return self
+    def __exit__(self,*_args): return False
+    def iter_content(self,_size):
+        import json
+        yield json.dumps(self.payload).encode()
+
+
+class _Session:
+    def __init__(self,*responses):
+        self.responses=list(responses); self.calls=0
+    def get(self,*_args,**_kwargs):
+        self.calls+=1
+        return self.responses.pop(0)
+
+
+def test_github_read_retries_transient_artifact_metadata():
+    sleeps=[]
+    session=_Session(_Response(404),_Response(503),_Response(200,{'id':9}))
+    result=GitHubRead('test',session=session,sleep=sleeps.append).get('/actions/artifacts/9')
+    assert result=={'id':9}
+    assert session.calls==3 and sleeps==[1,2]
+
+
+def test_github_read_bounds_permanent_retryable_failures():
+    sleeps=[]
+    session=_Session(*[_Response(404) for _ in range(4)])
+    with pytest.raises(ValueError,match='github_health_unavailable'):
+        GitHubRead('test',session=session,sleep=sleeps.append).get('/actions/artifacts/9')
+    assert session.calls==4 and sleeps==[1,2,4]
+
+
+def test_github_read_does_not_retry_nonretryable_status():
+    sleeps=[]
+    session=_Session(_Response(401))
+    with pytest.raises(ValueError,match='github_health_unavailable'):
+        GitHubRead('test',session=session,sleep=sleeps.append).get('/actions/artifacts/9')
+    assert session.calls==1 and sleeps==[]
