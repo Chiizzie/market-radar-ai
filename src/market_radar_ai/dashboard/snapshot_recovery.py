@@ -49,12 +49,23 @@ def restore_batch(bank, *, secret, session, clock, limit):
         try:
             receipts = lookup(group, secret=secret, now=started, session=session, seconds=60)
         except ReceiptUnavailable as exc:
-            result['state'] = 'storage_unavailable'
             result['unchecked'] = len(keys) - start
             result['missing_observed'] = len(missing)
             result['pending'] = missing
             result['failures'].append(failure('initial_lookup', exc.reason, len(group), started, clock(), exc.status))
-            return result
+            # A slow batch must not hide the newest capture. Probe its exact identity
+            # once, using the same route and request shape as the live receipt check.
+            if exc.reason != 'read_timeout' or len(group) == 1:
+                result['state'] = 'storage_unavailable'
+                return result
+            started = clock()
+            try:
+                receipts = lookup(group[:1], secret=secret, now=started, session=session, seconds=45)
+            except ReceiptUnavailable as single:
+                result['failures'].append(failure('single_lookup', single.reason, 1, started, clock(), single.status))
+                result['state'] = 'storage_unavailable'
+                return result
+            result['unchecked'] -= 1
         for row in receipts:
             key = row['snapshot_id']
             if row['state'] == 'absent':
@@ -63,6 +74,8 @@ def restore_batch(bank, *, secret, session, clock, limit):
                 result['already_stored'] += 1
             else:
                 result['unverified'].append(key)
+        if result['unchecked']:
+            break
     result['missing_observed'] = len(missing)
     attempted = []
     for key in missing[:limit]:
@@ -125,7 +138,9 @@ def restore_batch(bank, *, secret, session, clock, limit):
                     'recovered_from_archive': row['recovered_from_archive'] is True})
     verified = {r['snapshot_id'] for r in result['verified']}
     result['pending'] = [k for k in missing if k not in verified]
-    if result['unverified'] or any(k not in verified for k in attempted):
+    if result['unchecked']:
+        result['state'] = 'storage_unavailable'
+    elif result['unverified'] or any(k not in verified for k in attempted):
         result['state'] = 'incomplete'
     elif result['pending']:
         result['state'] = 'more_pending'
