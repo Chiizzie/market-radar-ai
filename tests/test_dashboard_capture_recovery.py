@@ -138,6 +138,35 @@ def test_uncertain_write_and_failed_readback_survive_in_same_report(bank):
     assert 'sensitive' not in json.dumps(report)
 
 
+def test_slow_batch_can_verify_and_restore_the_newest_capture_without_guessing_the_rest(bank):
+    newest, _ = original(bank, 1, 240)
+    original(bank, 2, 300)
+
+    class SlowBatch(Dashboard):
+        def get(self, url, **kwargs):
+            if ',' in kwargs['params']['id']:
+                raise requests.ReadTimeout()
+            return super().get(url, **kwargs)
+
+    db = SlowBatch()
+    report = recover(bank, db)
+    assert db.writes == [newest] and report['verified'][0]['snapshot_id'] == newest
+    assert report['unchecked'] == 1 and report['state'] == 'storage_unavailable'
+    assert report['missing_observed'] == 1 and report['pending'] == []
+    again = recover(bank, db)
+    assert again['already_stored'] == 1 and db.writes == [newest]
+
+
+def test_unavailable_single_read_leaves_every_identity_untouched(bank):
+    for i in range(4):
+        original(bank, i, 240 + i)
+    db = Dashboard(unavailable=True)
+    report = recover(bank, db)
+    assert [(x['phase'], x['ids_requested']) for x in report['failures']] == [
+        ('initial_lookup', 4), ('single_lookup', 1)]
+    assert report['unchecked'] == 4 and db.reads == 2 and not db.writes
+
+
 def test_inconsistent_stored_metadata_is_left_unresolved(bank):
     key, rec = original(bank, 1, 240)
     db = Dashboard()
