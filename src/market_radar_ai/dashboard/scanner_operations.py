@@ -32,7 +32,7 @@ class GitHubRead:
         if not token: raise ValueError('github_read_not_configured')
         self.token=token;self.session=session or requests.Session();self.sleep=sleep
     def get(self,path):
-        if not re.fullmatch(r'/actions/(workflows/scheduled-scanner\\.yml/runs\\?branch=main&per_page=20|runs/\\d+/jobs\\?per_page=100|artifacts/\\d+)',path):
+        if not re.fullmatch(r'/actions/(workflows/scheduled-scanner\.yml/runs\?branch=main&per_page=20|runs/\d+/jobs\?per_page=100|artifacts/\d+)',path):
             raise ValueError('unsupported_health_path')
         for attempt in range(4):
             try:
