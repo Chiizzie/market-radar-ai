@@ -316,7 +316,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: 62f01f7eca21ef3fb2e4e8a899eb10491ef3bfa0
+          ref: 7d79ec4f00381722bf0c0bb082f130ab247bca95
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
@@ -433,7 +433,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.window.outputs.run == 'true'
         with:
-          ref: b15ace4f75bef0a3e79e758fb701b1d296041548
+          ref: 7d79ec4f00381722bf0c0bb082f130ab247bca95
           persist-credentials: false
       - uses: actions/setup-python@v5
         if: steps.window.outputs.run == 'true'
