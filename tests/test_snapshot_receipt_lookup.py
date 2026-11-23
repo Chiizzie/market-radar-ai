@@ -51,7 +51,7 @@ def run(transport, *, start=38, finished=42):
                    clock=lambda: next(clocks), session=transport)
 
 
-@pytest.mark.parametrize('fault', ['read_timeout', 'duplicate'])
+@pytest.mark.parametrize('fault', ['read_timeout', 'duplicate', 'connection_error'])
 def test_lost_original_reply_can_be_confirmed_without_resending(fault):
     transport = TimedOut(fault=fault)
     result = run(transport)
@@ -68,16 +68,18 @@ def test_read_completed_at_expiry_is_archival_only():
 
 @pytest.mark.parametrize('state,status', [('absent', 200), ('archived', 200), ('changed', 200),
                                          ('wrong_id', 200), ('future', 200), ('stored', 503)])
-def test_unusable_receipt_never_authorizes_review(state, status):
-    transport = TimedOut(state, status)
+@pytest.mark.parametrize('fault', ['read_timeout', 'connection_error'])
+def test_unusable_receipt_never_authorizes_review(state, status, fault):
+    transport = TimedOut(state, status, fault=fault)
     with pytest.raises(SnapshotDeliveryError) as exc:
         run(transport)
     assert exc.value.receipt['state'] == 'scanner_snapshot_delivery_unconfirmed'
-    assert exc.value.receipt['reason'] == 'read_timeout' and len(transport.calls) == transport.reads == 1
+    assert exc.value.receipt['reason'] == fault and len(transport.calls) == transport.reads == 1
 
 
-def test_no_read_or_resubmission_when_time_is_exhausted():
-    transport = TimedOut()
+@pytest.mark.parametrize('fault', ['read_timeout', 'connection_error'])
+def test_no_read_or_resubmission_when_time_is_exhausted(fault):
+    transport = TimedOut(fault=fault)
     with pytest.raises(SnapshotDeliveryError) as exc:
         run(transport, start=59)
     assert exc.value.receipt['receipt_lookup'] == 'insufficient_time'

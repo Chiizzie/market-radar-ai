@@ -2,7 +2,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 import hashlib, hmac, json, os, time, re
-from urllib.parse import urlsplit, parse_qs
+from urllib.parse import urlsplit, parse_qs, urlencode
 import requests
 
 BASE = 'https://live.trading212.com'
@@ -76,6 +76,7 @@ class Reader:
         self.session=session or requests.Session();self.session.auth=(key,secret)
         self.sleep,self.clock=sleep,clock
         self.stage='account_read';self.retries=0
+        self.history_page_reductions=0
     def __call__(self,path):
         path=safe_path(path)
         self.stage={'/api/v0/equity/account/summary':'account_summary',
@@ -106,6 +107,15 @@ class Reader:
                             raise RuntimeError('account_read_backoff_unusable') from None
             except (requests.Timeout,requests.ConnectionError):
                 code='account_read_transport_error'
+                # The response may be slow while the rest of the account API
+                # is healthy. Retry the same cursor with a smaller page, using
+                # the existing retry budget; never skip or invent history.
+                query=parse_qs(urlsplit(path).query)
+                if (self.stage=='order_history' and attempt==0 and self.retries<2
+                        and int(query.get('limit',['20'])[0])>20):
+                    query['limit']=['20']
+                    path=safe_path(urlsplit(path).path+'?'+urlencode(query,doseq=True))
+                    self.history_page_reductions+=1
             except requests.RequestException:
                 raise RuntimeError('account_read_transport_error') from None
             # At most two extra GETs across the entire account import. Never
@@ -154,6 +164,9 @@ def main():
         stage='dashboard_delivery'
         deliver(payload,ingest,datetime.now(timezone.utc))
         print('Private account sync delivered; no AI or order operations.')
+        if reader.history_page_reductions:
+            print(json.dumps({'status':'account_history_page_retry_recovered',
+                'page_reductions':reader.history_page_reductions,'history_complete':payload['history_complete']}))
     except Exception as e:
         # Allowlisted error codes only: no financial data or credentials in public logs.
         print(json.dumps({'status':'account_sync_failed','stage':reader.stage if reader and stage=='account_read' else stage,
