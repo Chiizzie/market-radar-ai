@@ -22,3 +22,11 @@ The same existing artifact now includes `manual-feasibility.json`. It uses the e
 ## Remaining acceptance gates
 
 Cost-aware admission before paid review requires a separately versioned controlled comparison and validated cost assumptions; it is not silently enabled here. The existing fresh-breakout comparison still needs genuine later 1/3/5-minute observations and closed outcomes. Coverage recovery, unresolved historical exposure and intake backlog remain as documented in the audit. No profitability gate is closed by this repair.
+
+## Bounded performance-intake follow-up
+
+The performance workflow now also listens for completed ordinary main scans. Only the first five-minute dispatch slot of each hour is eligible, the original parent must be less than 20 minutes old, and the existing Dublin weekday window applies. Forks, branches, retries and cancelled parents are excluded. A partially failed ordinary scan may still contribute saved evidence.
+
+The existing hourly timer remains a fallback. A bounded read checks for an actual, unexpired performance artifact from a successful run completed within 45 minutes, avoiding duplicate reconstructions. A green window-only job, missing/expired artifact or failed GitHub read cannot suppress intake. The artifact reader, append-only evidence bank, frozen portfolio replay, costs and strategy rules are unchanged; no trading/provider/model credentials are added.
+
+Tests execute the real workflow window script against normal/late/future parents, duplicate and expired receipts, GitHub timeout, weekend and summer Dublin clocks. The report-window and artifact-reader suite passed **33 tests**. Completion and backlog reduction must be verified from the next saved output; configuring a trigger does not establish a fresh source cutoff or complete outcomes.
