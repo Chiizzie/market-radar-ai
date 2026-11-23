@@ -376,7 +376,7 @@ def run_pipeline(document, feed, *, client, root, refresh, deliver, clock, enabl
     """
     import json
     from pathlib import Path
-    from .github_budget import GitHubSpendingLedger
+    from .github_budget import GitHubSpendingLedger, effective_limits
     from .openai_pilot import OpenAIPilot
     if enabled is not True or type(client) is not OpenAIPilot or type(client.ledger) is not GitHubSpendingLedger:
         raise ValueError('metered_paper_pipeline_not_enabled')
@@ -417,7 +417,7 @@ def run_pipeline(document, feed, *, client, root, refresh, deliver, clock, enabl
     day=now.astimezone(ZoneInfo('Europe/Dublin')).date().isoformat()
     # Record allowance, settled spending and held reservations separately.
     budget={'currency':'EUR','required_headroom_eur':'0.15','periods':{},'blocking_periods':[]}
-    for period,cap in state['limits_microeur'].items():
+    for period,cap in effective_limits(now).items():
         entries=[e for e in state['entries'].values() if period=='lifetime'
                  or period=='daily' and e['day']==day
                  or period=='monthly' and e['day'][:7]==day[:7]]

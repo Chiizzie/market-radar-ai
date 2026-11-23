@@ -4,7 +4,7 @@ import json
 import os
 import re
 import time
-from datetime import date
+from datetime import date, datetime
 from threading import RLock
 from zoneinfo import ZoneInfo
 from typing import Literal
@@ -18,6 +18,19 @@ BRANCH = 'state/ai-budget'
 PATH = 'state/ai-budget.json'
 URL = f'https://api.github.com/repos/{REPOSITORY}/contents/{PATH}'
 LIMITS = {'daily':1000000, 'monthly':10000000, 'lifetime':100000000}
+DUBLIN = ZoneInfo('Europe/Dublin')
+NOVEMBER_INCREASE_START = datetime(2026, 11, 23, 20, 12, 39, tzinfo=DUBLIN)
+NOVEMBER_INCREASE_END = datetime(2026, 12, 1, tzinfo=DUBLIN)
+
+
+def effective_limits(now):
+    """Apply the approved November allowance without changing archived ledger metadata."""
+    if now.tzinfo is None or now.utcoffset() is None:
+        raise ValueError('Aware budget clock required')
+    limits = dict(LIMITS)
+    if NOVEMBER_INCREASE_START <= now < NOVEMBER_INCREASE_END:
+        limits['monthly'] = 25_000_000
+    return limits
 
 
 class BudgetWriteError(RuntimeError):
@@ -286,8 +299,11 @@ class GitHubBudgetStore:
 
 class GitHubSpendingLedger:
     limit = LIMITS['daily']
-    monthly_limit = LIMITS['monthly']
     lifetime_limit = LIMITS['lifetime']
+
+    @property
+    def monthly_limit(self):
+        return effective_limits(datetime.now(DUBLIN))['monthly']
 
     def __init__(self, store):
         self.store = store
@@ -315,7 +331,7 @@ class GitHubSpendingLedger:
         if request_id in state['entries']:
             raise ValueError('Request ID already reserved; inspect before retry')
         day = now.astimezone(ZoneInfo('Europe/Dublin')).date().isoformat()
-        for period, limit in state['limits_microeur'].items():
+        for period, limit in effective_limits(now).items():
             entries = [e for e in state['entries'].values() if period == 'lifetime'
                        or (period == 'daily' and e['day'] == day)
                        or (period == 'monthly' and e['day'][:7] == day[:7])]
@@ -387,11 +403,11 @@ class GitHubSpendingLedger:
         if actual_microeur > row['reserved']:
             raise RuntimeError('reservation_exceeded_actual_charge_recorded')
 
-    def summary(self):
+    def summary(self, *, now=None):
         state, _ = self.store.load()
         entries = state['entries'].values()
         settled = sum(e['actual'] for e in entries if e['actual'] is not None)
         held = sum(e['reserved'] for e in entries if e['actual'] is None)
         return {'currency':'EUR', 'settled_microeur':settled, 'held_microeur':held,
                 'remaining_pilot_microeur':max(0, self.lifetime_limit-settled-held),
-                'requests':len(state['entries']), 'limits_microeur':state['limits_microeur']}
+                'requests':len(state['entries']), 'limits_microeur':effective_limits(now if now is not None else datetime.now(DUBLIN))}

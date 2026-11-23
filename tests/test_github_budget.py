@@ -209,3 +209,62 @@ def test_corrupt_successful_response_is_not_retried(monkeypatch):
     monkeypatch.setattr('market_radar_ai.agents.github_budget.requests.get',get)
     with pytest.raises(RuntimeError,match='invalid_payload'):GitHubBudgetStore('secret').load()
     assert len(calls)==1
+
+
+@pytest.mark.parametrize(('stamp', 'monthly'), [
+    ('2026-11-23T20:12:38.999999+00:00', 10_000_000),
+    ('2026-11-23T20:12:39+00:00', 25_000_000),
+    ('2026-12-01T00:59:59.999999+01:00', 25_000_000),
+    ('2026-11-30T19:00:00-05:00', 10_000_000),
+    ('2027-11-23T20:12:39+00:00', 10_000_000),
+])
+def test_time_scoped_budget_is_consistent_in_reports(stamp, monthly):
+    from market_radar_ai.dashboard.api_budget import summarize
+    now = datetime.fromisoformat(stamp)
+    store = MemoryStore()
+    ledger = GitHubSpendingLedger(store)
+    expected = {'daily': 1_000_000, 'monthly': monthly, 'lifetime': 100_000_000}
+    assert ledger.summary(now=now)['limits_microeur'] == expected
+    assert {name: period['limit_microeur'] for name, period in
+            summarize(store.state, now=now)['periods'].items()} == expected
+    assert store.state['limits_microeur']['monthly'] == 10_000_000
+
+
+def test_november_increase_preserves_holds_and_enforces_each_period():
+    from market_radar_ai.agents.scheduled_review import claim_review
+    from market_radar_ai.dashboard.api_budget import summarize
+
+    store = MemoryStore()
+    ledger = GitHubSpendingLedger(store)
+    store.state['entries'] = {
+        'older': {'day': '2026-10-18', 'reserved': 74_900_000, 'actual': 74_900_000, 'usage': None},
+        'settled': {'day': '2026-11-10', 'reserved': 9_800_000, 'actual': 9_800_000, 'usage': None},
+        'unsettled': {'day': '2026-11-11', 'reserved': 200_000, 'actual': None, 'usage': None},
+    }
+    start = datetime.fromisoformat('2026-11-23T20:12:39+00:00')
+    previous = start.replace(second=38)
+    assert not claim_review(store, 'stocks', previous)
+    with pytest.raises(RuntimeError, match='monthly_spending_limit'):
+        ledger.reserve('before', 1, previous)
+    assert claim_review(store, 'stocks', start)
+    assert summarize(store.state, now=start)['periods']['monthly']['remaining_microeur'] == 15_000_000
+    ledger.reserve('today', 1_000_000, start)
+    with pytest.raises(RuntimeError, match='daily_spending_limit'):
+        ledger.reserve('daily-block', 1, start)
+
+    # A near-limit ledger exercises a restart at the monthly boundary.
+    store.state['entries']['month-spend'] = {
+        'day': '2026-11-25', 'reserved': 13_900_000, 'actual': 13_900_000, 'usage': None}
+    last_day = datetime.fromisoformat('2026-11-30T23:59:59+00:00')
+    assert not claim_review(store, 'stocks', last_day)  # €0.10 below review reserve.
+    ledger = GitHubSpendingLedger(store)
+    ledger.reserve('last', 100_000, last_day)
+    with pytest.raises(RuntimeError, match='monthly_spending_limit'):
+        ledger.reserve('monthly-block', 1, last_day)
+    december = datetime.fromisoformat('2026-12-01T00:00:00+00:00')
+    assert summarize(store.state, now=december)['periods']['monthly']['remaining_microeur'] == 10_000_000
+    ledger.reserve('next-month', 100_000, december)
+    with pytest.raises(RuntimeError, match='lifetime_spending_limit'):
+        ledger.reserve('lifetime-block', 1, december)
+    assert store.state['entries']['unsettled']['actual'] is None
+    assert store.state['limits_microeur'] == initial_state()['limits_microeur']
