@@ -1,0 +1,98 @@
+{
+  "schema_version": "scanner-audit-evidence-v1",
+  "audit_date": "2026-11-23",
+  "timezone": "Europe/Dublin",
+  "main_sha": "9892f1a3494aed0e536fb84e78f9ebb3485c37f2",
+  "artifacts": [
+    {
+      "artifact_id": 14861575456,
+      "name": "entry-confirmation-45260077746",
+      "run_id": 45260077746,
+      "sha256": "7d5dc97f50ad8b74b1189465f1e9744f01a67eb517c6f1ebfa1ee4d9a56e6ff5",
+      "expires_at": "2026-12-23T20:36:32Z"
+    },
+    {
+      "artifact_id": 14861216408,
+      "name": "manual-alert-audit-45260077746",
+      "run_id": 45260077746,
+      "sha256": "ce3dfe0562771c8fa4bcdd6192bdc4ad86900efe0a56c3f04085f428b3771e46",
+      "expires_at": "2026-12-23T20:39:44Z"
+    },
+    {
+      "artifact_id": 14861051061,
+      "name": "scheduled-decision-45260077746",
+      "run_id": 45260077746,
+      "sha256": "ea8d68f86bd8c316e9ce93bf281c54dde2c6904ba084dccf0f780277ccc8205e",
+      "expires_at": "2026-11-30T20:38:36Z"
+    },
+    {
+      "artifact_id": 14860880537,
+      "name": "knowledge-shadow-45260077746",
+      "run_id": 45260077746,
+      "sha256": "6860f655d05f7720faeab95346cfc75b41d70ec5a78e684d32d9e38898ea1a29",
+      "expires_at": "2026-12-23T20:32:10Z"
+    },
+    {
+      "artifact_id": 14860561740,
+      "name": "strategy-experiment-45260077746",
+      "run_id": 45260077746,
+      "sha256": "4fd4955fc6b04f1d84d3391749ece0fb0d9322a10ad2ad4c79c2a8af2e24ad83",
+      "expires_at": "2026-12-23T20:38:41Z"
+    },
+    {
+      "artifact_id": 14860355559,
+      "name": "strategy-routing-45260077746",
+      "run_id": 45260077746,
+      "sha256": "2aac07d6b8e68ff7aad8d6d2f0adad145c896380aed21ecbd351b7e1d8c337ba",
+      "expires_at": "2026-12-23T20:32:16Z"
+    },
+    {
+      "artifact_id": 14859188355,
+      "name": "scheduled-capture-45260077746",
+      "run_id": 45260077746,
+      "sha256": "90937737df478bc3e28e453bc1c9d2db23973a4bed47ed9841e313f88e6703ab",
+      "expires_at": "2026-11-30T20:31:40Z"
+    },
+    {
+      "artifact_id": 14859774757,
+      "name": "manual-portfolio-45259740913",
+      "run_id": 45259740913,
+      "sha256": "809a5dec8baa8973071d9fe12ccdb7d40d643753ce02dfecf788b172432c43db",
+      "expires_at": "2026-12-23T20:30:28Z"
+    },
+    {
+      "artifact_id": 14859033897,
+      "name": "execution-research-45257898121",
+      "run_id": 45257898121,
+      "sha256": "ff40accb99ac06ce6b69335384fe0c467c241de191fb76eb6582987a98b4ef45",
+      "expires_at": "2026-12-23T20:24:38Z"
+    },
+    {
+      "artifact_id": 14856240053,
+      "name": "performance-intelligence-45247958233-1",
+      "run_id": 45247958233,
+      "sha256": "99e018b6c847e3785eaf65639728a8d5e6a0fc97d4f9ee2ef711c3d88a610c19",
+      "expires_at": "2027-02-21T19:20:44Z"
+    }
+  ],
+  "knowledge_runtime": "9ae20ef8454a654fabee488cba9c1fbed9ba664c",
+  "knowledge_replay": {
+    "capture_run": 45260077746,
+    "original_qualification_at": "2026-11-23T20:31:28.793137+00:00",
+    "original_packets": 30,
+    "pairs_at_capture_time": 30,
+    "worker_at": "2026-11-23T20:32:07.885606+00:00",
+    "pairs_at_worker_time": 0,
+    "stale_stock_quotes_at_worker_time": 80,
+    "scope": "offline clock-sensitivity diagnostic; not a retrospective live review"
+  },
+  "ordinary_dispatch_inventory": {
+    "through_dispatch": "2026-11-23T20:45:19Z",
+    "total": 154,
+    "success": 136,
+    "failure": 16,
+    "in_progress": 2
+  },
+  "changes_to_runtime": false,
+  "trade_authorized": false
+}
