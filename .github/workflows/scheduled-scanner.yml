@@ -863,7 +863,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 9ae20ef8454a654fabee488cba9c1fbed9ba664c
+          ref: 2589990ab537c527ee97c5c6ba410336aafea914
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
@@ -878,6 +878,7 @@ jobs:
           python -m market_radar_ai.agents.knowledge_shadow
           --capture artifacts/scheduled/enriched-capture.json
           --news artifacts/scheduled/news.json
+          --packets artifacts/scheduled/paper-review-packets.json
           --output artifacts/knowledge-shadow
       - uses: actions/upload-artifact@v4
         if: always()
