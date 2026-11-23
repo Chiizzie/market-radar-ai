@@ -81,3 +81,49 @@ def test_provider_verification_command_validates_current_capture(monkeypatch,cap
     assert result['trade_authorized'] is False
     assert result['state']==('current_crypto_reference_verified' if available else 'crypto_reference_unavailable')
     if available:assert result['verified_pairs']==['XBTEUR']
+
+
+@pytest.mark.parametrize(('section', 'field', 'value', 'reason'), [
+    ('market_clock', 'timestamp', (NOW + timedelta(milliseconds=300)).isoformat(), 'market_clock_future'),
+    ('market_clock', 'timestamp', (NOW - timedelta(seconds=61)).isoformat(), 'market_clock_stale'),
+    ('market_clock', 'timestamp', 'private_provider_body', 'market_clock_malformed'),
+    ('market_clock', 'next_close', NOW.isoformat(), 'market_clock_order'),
+    ('market_clock', 'is_open', False, 'market_closed'),
+    ('fx', 'observed_at', (NOW - timedelta(seconds=901)).isoformat(), 'fx_stale'),
+    ('fx', 'observed_at', (NOW + timedelta(seconds=1)).isoformat(), 'fx_future'),
+    ('fx', 'native_currency', 'GBP', 'fx_currency'),
+    ('plan', 'symbol', '^IBM', 'invalid_symbols'),
+])
+def test_rejected_stock_batch_reports_the_specific_reason(monkeypatch, section, field, value, reason):
+    from market_radar_ai.agents.watcher_diagnostics import record_failure, recovered_quote_gaps
+
+    data = payload()
+    selected = decision()
+    if section == 'plan':
+        selected[section][field] = value
+    else:
+        data[section][field] = value
+    observer, _, _ = stock_observer(monkeypatch, data)
+    rows, failures = observer.fetch([selected])
+    assert rows == []
+    assert failures == ['stock_validation_unavailable:' + reason]
+    health = {}
+    record_failure(health, failures[0], NOW)
+    assert health['failure_counts'] == {'stock_validation_unavailable': 1}
+    assert health['stock_validation_reasons'] == {reason: 1}
+    assert health['last_failure']['reason'] == reason
+    assert not recovered_quote_gaps(health)
+
+
+def test_unexpected_validation_exception_is_redacted(monkeypatch):
+    from market_radar_ai.agents.watcher_diagnostics import record_failure
+
+    observer, _, _ = stock_observer(monkeypatch)
+    monkeypatch.setattr('market_radar_ai.agents.paper_observer.assess',
+                        Mock(side_effect=ValueError('private_provider_body')))
+    rows, failures = observer.fetch([decision()])
+    assert rows == [] and failures == ['stock_validation_unavailable:unclassified']
+    health = {}
+    record_failure(health, 'stock_validation_unavailable:private_provider_body', NOW)
+    assert 'private_provider_body' not in str(health)
+    assert health['stock_validation_reasons'] == {'unclassified': 1}

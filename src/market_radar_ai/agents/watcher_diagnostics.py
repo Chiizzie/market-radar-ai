@@ -5,6 +5,17 @@ from datetime import datetime
 QUOTE_REASONS = {'missing_quote','stale_quote','future_quote','crossed_quote',
                  'nonpositive_or_nonfinite_quote','wrong_currency','malformed_quote'}
 
+STOCK_VALIDATION_REASONS = {
+    'paper_stock_capacity', 'invalid_symbols', 'invalid_or_stale_checks', 'aware_clock_required',
+    'market_closed', 'market_clock_malformed', 'market_clock_future', 'market_clock_stale',
+    'market_clock_order', 'fx_malformed', 'fx_currency', 'fx_future', 'fx_stale',
+}
+
+
+def stock_validation_reason(value):
+    """Only fixed internal identifiers may enter watcher logs or artifacts."""
+    return value if value in STOCK_VALIDATION_REASONS else 'unclassified'
+
 CODES = {'paper_journal_rate_limited', 'paper_journal_unavailable',
          'comparison_startup_deadline_exceeded',
          'stock_quote_unavailable', 'stock_reference_observation_unavailable',
@@ -25,6 +36,11 @@ def record_failure(health, failure, now):
     if hasattr(failure, 'attempts'): health['last_failure']['attempts'] = failure.attempts
     if getattr(failure, 'http_status', None) is not None:
         health['last_failure']['http_status'] = failure.http_status
+    if code == 'stock_validation_unavailable':
+        reason = stock_validation_reason(str(failure).partition(':')[2])
+        reasons = health.setdefault('stock_validation_reasons', {})
+        reasons[reason] = reasons.get(reason, 0) + 1
+        health['last_failure']['reason'] = reason
     if code == 'stock_quote_unavailable':
         parts = str(failure).split(':')
         if len(parts)==3 and re.fullmatch(r'[A-Z][A-Z0-9.\-]{0,14}',parts[1]) and parts[2] in QUOTE_REASONS:
