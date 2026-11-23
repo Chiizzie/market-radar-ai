@@ -7,7 +7,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from .candidate_packages import canonical
-from .github_budget import GitHubBudgetStore, GitHubSpendingLedger, validate_state
+from .github_budget import GitHubBudgetStore, GitHubSpendingLedger, validate_state, effective_limits
 from .knowledge_pair import PROTOCOL, run_pair, validate_pair
 from .knowledge_shadow import bounded_json, prepare
 from .openai_pilot import MODEL, OpenAIPilot, IncompleteModelResponse
@@ -21,7 +21,7 @@ def claim_pair(ledger, pair, library, *, now):
     markers = ['knowledge-pair-day-v1:'+day, 'knowledge-pair-attempt-v1:'+pair['pair_id']]
     if any(key in state['entries'] for key in markers):
         return False
-    for period, cap in state['limits_microeur'].items():
+    for period, cap in effective_limits(now).items():
         entries = [e for e in state['entries'].values() if period=='lifetime'
                    or (period=='daily' and e['day']==day) or (period=='monthly' and e['day'][:7]==day[:7])]
         if cap-sum(e['reserved'] if e['actual'] is None else e['actual'] for e in entries) < 150000:

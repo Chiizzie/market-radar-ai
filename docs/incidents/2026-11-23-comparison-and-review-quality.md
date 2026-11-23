@@ -35,3 +35,11 @@ The [18:40 workflow](https://github.com/Chiizzie/market-radar-ai/actions/runs/45
 After the first half-hour the display may use a checksummed same-symbol, same-feed chart with an identical most-recent candle, a valid receipt time and all three opening candles present in sequence. Replaying the original snapshot produced 37 stocks inside the opening range, 33 above and eight below. MDU lacked its first candle and remained unavailable. Only research diagnostics changed in the replay. If both charts have rolled past the open, the original opening levels cannot be reconstructed from that capture. This does not retrospectively produce trade alerts or populate absent candles.
 
 Only the comparison watcher (11ab30e00a792efe981c85d42cbde98b650be750) and collector (5b8871a7f8d46bfb38708892a1dcf06d0d448a5d) are repinned. The separate method worker shares the watcher's previous base revision and keeps that pin. The next performance check is whether a fully qualified opening plan gives an acknowledged user enough time to act, with a valid bid/ask, intact stop and recorded exit.
+
+## Approved November AI allowance
+
+On 23 November the owner increased the November 2026 monthly AI allowance to €25. The effective policy applies from 20:12:39 Dublin through the end of November. The €1 daily and €100 lifetime ceilings continue to apply. The recurring monthly ceiling returns to €10 at midnight Dublin on 1 December.
+
+The reviewer applies the same effective cap to its €0.15 preflight and each individual model-call reservation. The collector, dashboard usage figures and readiness report calculate period limits as of their own timestamps. November spending before approval and unsettled reservations still count. The persisted baseline metadata and seven immutable archive segments remain readable by earlier workers.
+
+Replaying ledger revision 98010196bee0ee7111c541e30f2a9e2674679a91, with 1,899 entries, gave €15.141439 available for November after €9.816368 settled and €0.042193 held. Later reviews may change these amounts.
