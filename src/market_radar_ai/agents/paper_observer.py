@@ -2,6 +2,7 @@
 from ..market_data.limits import STOCK_RESEARCH_LIMIT
 from datetime import datetime, timezone
 from .paper_outcomes import Quote
+from .watcher_diagnostics import stock_validation_reason
 from ..market_data.stock_checks import get, QUOTES, CLOCK, assess
 from ..market_data.providers.fx import YahooFxProvider
 from ..market_data.reference_quotes import capture_quotes, validate_capture, digest
@@ -44,8 +45,12 @@ class ReferenceObserver:
                 payload['retrieved_at']=self.clock().isoformat()
                 stage='validation'
                 checked=assess(payload,now=self.clock())
-                if checked['market_clock']['status']!='open' or checked['fx_status']!='current_indicative':
-                    raise ValueError('stock_reference_session_or_fx')
+                market_clock = checked['market_clock']
+                if market_clock['status'] != 'open':
+                    raise ValueError('market_closed' if market_clock['status'] == 'closed'
+                                     else market_clock['failure_reason'])
+                if checked['fx_status'] != 'current_indicative':
+                    raise ValueError(checked['fx_failure_reason'])
                 for row in checked['stocks']:
                     if row['quote_status']!='current_reference_only':
                         failures.append('stock_quote_unavailable:'+row['symbol']+':'+row.get('quote_failure_reason','malformed_quote')); continue
@@ -53,8 +58,11 @@ class ReferenceObserver:
                     source='alpaca_iex:'+digest({'symbol':row['symbol'],'quote':payload['quotes']['quotes'][row['symbol']],
                                                'fx':str(self.fx.eur_per_unit)})
                     quotes['stocks:'+row['symbol']]=(q,source)
-            except (requests.RequestException,RuntimeError,ValueError,KeyError,TypeError,ArithmeticError):
-                failures.append('stock_'+stage+'_unavailable')
+            except (requests.RequestException,RuntimeError,ValueError,KeyError,TypeError,ArithmeticError) as exc:
+                failure = 'stock_' + stage + '_unavailable'
+                if stage == 'validation':
+                    failure += ':' + stock_validation_reason(str(exc))
+                failures.append(failure)
         if crypto:
             try:
                 pairs=list(dict.fromkeys(d['plan']['symbol'] for d in crypto))

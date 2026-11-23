@@ -22,7 +22,7 @@ def test_delivery_status_is_independent_of_paid_review_and_reserved_before_send(
     session=Mock()
     def post(*a,**kw):
         events.append('post');assert 'Paid AI is paused' in kw['json']['text']
-        assert kw['json']['text'].startswith('ℹ️ NO ACTION')
+        assert kw['json']['text'].startswith('ℹ️ COLLECTION UPDATE')
         return Mock(status_code=200,json=lambda:{'ok':True,'result':{'chat':{'id':123},'message_id':1}})
     session.post.side_effect=post
     r=notify({'delivery':{'state':'scanner_snapshot_delivery_confirmed','coverage':{}}},env=ENV,clock=lambda:NOW,session=session,ledger=ledger)
@@ -57,3 +57,30 @@ def test_storage_failure_identifies_collection_and_skipped_review(reason, status
     assert 'Market data collected.' in message and 'Paper review skipped' in message and '80/80 current' in message
     ledger.reserve.assert_called_once()
     ledger.confirm.assert_called_once()
+
+
+@pytest.mark.parametrize('remaining,age,expected', [
+    (141439, 0, 'monthly €0.141439'),
+    (150000, 0, 'Paid review requires a qualified setup'),
+    (141439, 301, 'allowance could not be verified'),
+])
+def test_collection_notice_distinguishes_budget_block_at_capture(remaining, age, expected):
+    from datetime import timedelta
+    from market_radar_ai.agents.github_budget import initial_state
+    from market_radar_ai.dashboard.api_budget import summarize
+
+    usage = summarize(initial_state(), now=NOW - timedelta(seconds=age))
+    spent = usage['periods']['monthly']['limit_microeur'] - remaining
+    for period in ('monthly', 'lifetime'):
+        usage['periods'][period]['settled_microeur'] = spent
+        usage['periods'][period]['remaining_microeur'] -= spent
+    session = Mock()
+    session.post.return_value = Mock(status_code=200, json=lambda: {
+        'ok': True, 'result': {'chat': {'id': 123}, 'message_id': 1}})
+    notify({'delivery': {'state': 'scanner_snapshot_delivery_confirmed'}, 'api_budget': usage},
+           env={**ENV, 'AI_FINAL_REVIEW_ENABLED': 'true'}, clock=lambda: NOW,
+           session=session, ledger=Mock())
+    message = session.post.call_args.kwargs['json']['text']
+    assert expected in message
+    assert 'NO ACTION' not in message
+    assert ('€0.15 required' in message) == (age == 0 and remaining < 150000)

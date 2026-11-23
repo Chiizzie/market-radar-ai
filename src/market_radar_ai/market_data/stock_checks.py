@@ -44,19 +44,34 @@ def assess(payload, *, now):
     if not isinstance(symbols,list) or not 1<=len(symbols)<=STOCK_RESEARCH_LIMIT or len(set(symbols))!=len(symbols) or any(not isinstance(s,str) or not SYMBOL.fullmatch(s) for s in symbols):
         raise ValueError('invalid_symbols')
     clock={'status':'unavailable','instrument_halts_verified':False}
+    clock_reason = 'market_clock_malformed'
     try:
         c=payload['market_clock']
-        if type(c['is_open']) is not bool or not 0 <= (now-timestamp(c['timestamp'])).total_seconds() <=60:
-            raise ValueError('clock_stale')
-        if min(timestamp(c['next_open']),timestamp(c['next_close']))<=timestamp(c['timestamp']):
-            raise ValueError('clock_order')
+        clock_at = timestamp(c['timestamp'])
+        if type(c['is_open']) is not bool:
+            raise ValueError('clock_shape')
+        age = (now - clock_at).total_seconds()
+        if not 0 <= age <= 60:
+            clock_reason = 'market_clock_future' if age < 0 else 'market_clock_stale'
+            raise ValueError(clock_reason)
+        if min(timestamp(c['next_open']),timestamp(c['next_close'])) <= clock_at:
+            clock_reason = 'market_clock_order'
+            raise ValueError(clock_reason)
         clock={'status':'open' if c['is_open'] else 'closed','source':'alpaca_us_market_clock',
                'observed_at':c['timestamp'],'next_close':c['next_close'],'instrument_halts_verified':False}
-    except (KeyError,TypeError,ValueError,AttributeError): pass
+    except (KeyError,TypeError,ValueError,AttributeError):
+        clock['failure_reason'] = clock_reason
     fx=None
+    fx_reason = 'fx_malformed'
     try:
         q=FxQuote.model_validate(payload['fx'])
-        if q.native_currency!='USD' or not 0 <= (now-q.observed_at).total_seconds()<=900: raise ValueError('fx_stale')
+        if q.native_currency != 'USD':
+            fx_reason = 'fx_currency'
+            raise ValueError(fx_reason)
+        age = (now - q.observed_at).total_seconds()
+        if not 0 <= age <= 900:
+            fx_reason = 'fx_future' if age < 0 else 'fx_stale'
+            raise ValueError(fx_reason)
         fx=q
     except (KeyError,TypeError,ValueError): pass
     rows=[]
@@ -102,7 +117,8 @@ def assess(payload, *, now):
         if clock['status']!='open':row['remaining_blockers'].append('regular_session_not_confirmed_open')
         rows.append(row)
     return {'schema_version':'stock-check-readiness-v1','evaluated_at':now.isoformat(),'market_clock':clock,
-            'fx_status':'current_indicative' if fx else 'unavailable_or_stale','stocks':rows,'trade_authorized':False}
+            'fx_status':'current_indicative' if fx else 'unavailable_or_stale','stocks':rows,'trade_authorized':False,
+            **({'fx_failure_reason': fx_reason} if fx is None else {})}
 
 
 def reuse_catalogue(record, symbols, *, now):

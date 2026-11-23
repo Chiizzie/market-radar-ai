@@ -156,6 +156,7 @@ def test_usage_summary_reaches_delivery_and_context_gaps_remain_visible(tmp_path
         clock=lambda: NOW, run=stages, delivery=delivery)
     assert r['state'] == 'delivered_with_data_gaps' and r['failures'] == []
     assert r['context_unavailable_symbols'] == ['UNAVAILABLE']
+    assert r['api_budget'] == usage
 
 
 @pytest.mark.parametrize('key', ['OPENAI_API_KEY', 'OPEN_API_KEY', 'GH_BUDGET_TOKEN'])
