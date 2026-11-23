@@ -3,6 +3,9 @@ on:
   schedule:
     - cron: '20 7-23 * * 1-5'
   workflow_dispatch:
+  workflow_run:
+    workflows: ['Scheduled research collection']
+    types: [completed]
   push:
     branches: [main]
     paths:
@@ -17,19 +20,54 @@ concurrency:
   cancel-in-progress: false
 jobs:
   evaluate:
-    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main'
+    if: >-
+      github.repository == 'Chiizzie/market-radar-ai' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name != 'workflow_run' ||
+       (github.event.workflow_run.head_branch == 'main' &&
+        github.event.workflow_run.head_repository.full_name == github.repository &&
+        github.event.workflow_run.run_attempt == 1 &&
+        contains(fromJSON('["success","failure"]'), github.event.workflow_run.conclusion)))
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: Respect weekday Dublin collection window
         id: window
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           python - <<'PY'
-          import os
+          import json, os, subprocess
           from datetime import datetime
           from zoneinfo import ZoneInfo
           now = datetime.now(ZoneInfo('Europe/Dublin'))
-          allowed = os.environ['GITHUB_EVENT_NAME'] != 'schedule' or (now.weekday() < 5 and 8 <= now.hour <= 23)
+          event = os.environ['GITHUB_EVENT_NAME']
+          allowed = event in ('push','workflow_dispatch') or (now.weekday() < 5 and 8 <= now.hour <= 23)
+          if event == 'workflow_run':
+              with open(os.environ['GITHUB_EVENT_PATH']) as source:
+                  parent = json.load(source)['workflow_run']
+              dispatched = datetime.fromisoformat(parent['created_at'].replace('Z','+00:00'))
+              # One ordinary scan slot per hour; never replay a delayed parent.
+              allowed = allowed and dispatched.minute < 5 and 0 <= (now-dispatched).total_seconds() < 1200
+          if allowed and event in ('schedule','workflow_run'):
+              # Reuse the report workflows' bounded receipt check. Window-only
+              # green jobs do not count as a completed report. Timers are fallback.
+              api = 'repos/'+os.environ['GITHUB_REPOSITORY']+'/actions/'
+              def get(path):
+                  response = subprocess.run(['gh','api',api+path],capture_output=True,check=True,timeout=8)
+                  return json.loads(response.stdout)
+              try:
+                  runs = get('workflows/performance-intelligence.yml/runs?branch=main&status=success&per_page=8')
+                  for run in runs['workflow_runs']:
+                      ended = datetime.fromisoformat(run['updated_at'].replace('Z','+00:00'))
+                      if not 0 <= (now-ended).total_seconds() < 2700: continue
+                      artifacts = get('runs/'+str(run['id'])+'/artifacts')['artifacts']
+                      name = 'performance-intelligence-'+str(run['id'])+'-'
+                      if any(a['name'].startswith(name) and not a['expired'] for a in artifacts):
+                          allowed = False
+                          break
+              except (subprocess.SubprocessError,OSError,ValueError,KeyError):
+                  print('GitHub freshness check unavailable; using the bounded report window.')
           with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
               out.write('run=' + str(allowed).lower() + '\n')
           PY
