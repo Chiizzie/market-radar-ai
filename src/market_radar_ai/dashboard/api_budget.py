@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..agents.github_budget import GitHubBudgetStore, validate_state
+from ..agents.github_budget import GitHubBudgetStore, validate_state, effective_limits
 
 DUBLIN = ZoneInfo('Europe/Dublin')
 PERIODS = ('daily', 'monthly', 'lifetime')
@@ -61,13 +61,12 @@ def summarize(state, *, now):
     if any(date.fromisoformat(e['day']) > date.fromisoformat(day) for e in state['entries'].values()):
         raise ValueError('Future ledger day')
     periods = {}
-    for name in PERIODS:
+    for name, limit in effective_limits(now).items():
         rows = [e for e in state['entries'].values() if name == 'lifetime'
                 or (name == 'daily' and e['day'] == day)
                 or (name == 'monthly' and e['day'][:7] == day[:7])]
         settled = sum(e['actual'] for e in rows if e['actual'] is not None)
         held = sum(e['reserved'] for e in rows if e['actual'] is None)
-        limit = state['limits_microeur'][name]
         periods[name] = dict(settled_microeur=settled, reserved_microeur=held,
             limit_microeur=limit, remaining_microeur=max(0, limit-settled-held),
             completed_calls=sum(e['actual'] is not None and e['usage'] is not None for e in rows),
