@@ -24,6 +24,7 @@
           python -m market_radar_ai.agents.knowledge_shadow
           --capture artifacts/scheduled/enriched-capture.json
           --news artifacts/scheduled/news.json
+          --packets artifacts/scheduled/paper-review-packets.json
           --output artifacts/knowledge-shadow
       - uses: actions/upload-artifact@v4
         if: always()
