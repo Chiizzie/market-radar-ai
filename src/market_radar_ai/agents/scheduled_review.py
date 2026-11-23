@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 from .candidate_packages import build_packages
 from .session_briefing import build_briefing
 from .candidate_review import run_paid, reproduce
-from .github_budget import GitHubBudgetStore, GitHubSpendingLedger, validate_state, REPOSITORY
+from .github_budget import GitHubBudgetStore, GitHubSpendingLedger, validate_state, REPOSITORY, effective_limits
 from .openai_pilot import OpenAIPilot
 from ..market_data.providers.fx import YahooFxProvider
 from ..dashboard.candidate_delivery import export_archive, deliver
@@ -74,7 +74,7 @@ def claim_review(store, market, now):
         return False
     # Reserve headroom for the complete bounded review; per-call reservations
     # still enforce the actual hard caps. Do not begin near exhaustion.
-    for period, cap in state['limits_microeur'].items():
+    for period, cap in effective_limits(now).items():
         entries = [e for e in state['entries'].values() if period == 'lifetime'
                    or (period == 'daily' and e['day'] == day)
                    or (period == 'monthly' and e['day'][:7] == day[:7])]
@@ -146,7 +146,7 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
             raise ValueError('missing_review_credentials')
         store = GitHubBudgetStore(token)
         ledger = GitHubSpendingLedger(store)
-        save('budget-before.json', ledger.summary())
+        save('budget-before.json', ledger.summary(now=clock()))
         state, _ = store.load()
         day = clock().astimezone(ZoneInfo('Europe/Dublin')).date().isoformat()
         # Catch up only a failed opening attempt that never reserved a model call.
@@ -228,7 +228,7 @@ def execute(capture, feed, root, *, env, clock=lambda: datetime.now(timezone.utc
         save('status.json', status)
         if ledger is not None:
             try:
-                save('budget-after.json', ledger.summary())
+                save('budget-after.json', ledger.summary(now=clock()))
             except Exception:
                 save('budget-after.json', {'state':'unavailable','reconciliation_required':True})
 
