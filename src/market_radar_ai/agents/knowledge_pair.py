@@ -55,6 +55,8 @@ def prepare_pair(packet, library, *, now):
 
 
 def validate_pair(pair, library, *, now):
+    if pair.get('input_use') == 'offline_captured_preparation_only':
+        raise ValueError('captured_input_requires_fresh_preparation')
     rebuilt = prepare_pair(pair['packet'], library, now=aware(pair['prepared_at']))
     if rebuilt != pair:
         raise ValueError('paired_input_integrity_failure')
