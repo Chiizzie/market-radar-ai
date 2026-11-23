@@ -46,3 +46,52 @@ def test_redirect_disabled_and_only_signed_private_destination():
  assert calls[0][1]['headers']['X-Signature'].startswith('sha256=')
 def test_non_finite_rejected():
  with pytest.raises(ValueError):decimal('NaN')
+
+
+@pytest.mark.parametrize('failure', ['timeout', 'connection'])
+def test_history_retry_reduces_page_without_moving_cursor(failure):
+ import json
+ import requests
+ from urllib.parse import urlsplit, parse_qs
+ from market_radar_ai.dashboard.account_sync import Reader
+ from test_scanner_audit_repairs import Reply, Session
+ error=requests.ReadTimeout('private') if failure=='timeout' else requests.ConnectionError('private')
+ session=Session([error,Reply(body=json.dumps({'items':[], 'nextPagePath':None}).encode())])
+ waits=[]
+ reader=Reader('key','secret',session=session,sleep=waits.append)
+ assert reader('/api/v0/equity/history/orders?limit=50&cursor=123')=={'items':[], 'nextPagePath':None}
+ assert parse_qs(urlsplit(session.calls[1][0]).query)=={'limit':['20'],'cursor':['123']}
+ assert reader.retries==1 and reader.history_page_reductions==1 and waits==[5]
+
+
+def test_history_fallback_continues_all_pages_without_dropping_rows():
+ import json
+ import requests
+ from copy import deepcopy
+ from market_radar_ai.dashboard.account_sync import Reader
+ from test_scanner_audit_repairs import Reply, Session
+ first=deepcopy(provider('/api/v0/equity/history/orders?limit=50'))
+ first['nextPagePath']='/api/v0/equity/history/orders?limit=20&cursor=2'
+ second=deepcopy(provider('/api/v0/equity/history/orders?limit=20&cursor=2'))
+ second['items'][0]['order']['id']=2
+ second['items'][0]['fill']['id']='second'
+ answers=[Reply(body=json.dumps(provider(path)).encode()) for path in
+          ['/api/v0/equity/account/summary','/api/v0/equity/positions','/api/v0/equity/orders']]
+ answers += [requests.ReadTimeout('private'),Reply(body=json.dumps(first).encode()),
+             Reply(body=json.dumps(second).encode())]
+ session=Session(answers)
+ result=collect(Reader('key','secret',session=session,sleep=lambda _:None),NOW,sleep=lambda _:None)
+ assert result['history_complete'] and len(result['history'])==2
+ assert [r['fill']['id'] for r in result['history']]==['2','second']
+ assert session.calls[-1][0].endswith('?limit=20&cursor=2')
+
+
+def test_history_fallback_exhaustion_does_not_return_partial_account():
+ import requests
+ from market_radar_ai.dashboard.account_sync import Reader
+ from test_scanner_audit_repairs import Session
+ session=Session([requests.ReadTimeout('private'),requests.ReadTimeout('private')])
+ reader=Reader('key','secret',session=session,sleep=lambda _:None)
+ with pytest.raises(RuntimeError,match='account_read_transport_error'):
+  reader('/api/v0/equity/history/orders?limit=50')
+ assert len(session.calls)==2 and reader.retries==1

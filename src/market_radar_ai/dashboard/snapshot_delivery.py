@@ -106,7 +106,7 @@ def deliver(capture, *, env, clock, evidence=None, session=None, snapshot_path=N
     except (requests.Timeout, TimeoutError):
         raise SnapshotDeliveryError(receipt, 'timeout') from None
     except requests.ConnectionError:
-        raise SnapshotDeliveryError(receipt, 'connection_error') from None
+        return verify_uncertain_delivery(receipt, 'connection_error', env=env, clock=clock, session=transport)
     except requests.RequestException:
         raise SnapshotDeliveryError(receipt, 'transport_error') from None
     if response.status_code != 200:
