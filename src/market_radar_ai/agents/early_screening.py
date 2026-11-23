@@ -8,6 +8,38 @@ from ..market_data.models import Candle
 NY = ZoneInfo('America/New_York')
 
 
+def captured_opening_bars(captures, *, latest, opening, now):
+    """Read the opening from the same capture's longer regular-session IEX chart."""
+    if not isinstance(captures, list) or any(not isinstance(row, dict) for row in captures):
+        return []
+    matches = [row for row in captures if row.get('market') == 'stocks'
+               and row.get('requested_symbol') == latest.symbol]
+    if len(matches) != 1:
+        return []
+    try:
+        record = matches[0]
+        payload = record['payload']
+        received = datetime.fromisoformat(payload['retrieved_at'])
+        captured = datetime.fromisoformat(payload['captured_at_dublin'])
+        if (payload['provider'] != 'alpaca_iex' or payload['provider_status'] != 'ok'
+                or payload['quality_passed_at_capture'] is not True or payload['quality_issues']
+                or not latest.timestamp + timedelta(minutes=5) <= received <= captured <= now
+                or digest(payload) != record['payload_sha256']):
+            return []
+        bars = payload['candles']
+        if not isinstance(bars, list) or not 3 <= len(bars) <= 60 or Candle.model_validate(bars[-1]) != latest:
+            return []
+        first = [Candle.model_validate(bar) for bar in bars[:3]]
+        if all(bar.timestamp == opening + timedelta(minutes=5*i) and bar.source == latest.source
+               and bar.symbol == latest.symbol and bar.quote_currency == latest.quote_currency
+               and bar.interval == '5m' and all(value.is_finite() for value in
+                   (bar.open, bar.high, bar.low, bar.close, bar.volume)) for i, bar in enumerate(first)):
+            return first
+    except (KeyError, ValueError, TypeError, ArithmeticError):
+        pass
+    return []
+
+
 def screen(document, *, now):
     if now.tzinfo is None:
         raise ValueError('aware_clock_required')
@@ -62,6 +94,12 @@ def screen(document, *, now):
                 result['available_premarket_high_native'] = str(max(b.high for b in prem))
                 result['available_premarket_low_native'] = str(min(b.low for b in prem))
             first = regular[:3]
+            # After opening preparation ends the rolling context can lose the opening.
+            # The longer chart is already in the same collection and changes no review inputs.
+            if (not delayed and len(first) == 3 and first[0].timestamp > opening
+                    and now >= opening + timedelta(minutes=30)):
+                first = captured_opening_bars(document.get('captures', []), latest=regular[-1],
+                                              opening=opening, now=now)
             if len(first)==3 and all(b.timestamp == opening+timedelta(minutes=5*i) for i,b in enumerate(first)):
                 high, low = max(b.high for b in first), min(b.low for b in first)
                 result.update(opening_range_high_native=str(high), opening_range_low_native=str(low),
@@ -83,4 +121,4 @@ def screen(document, *, now):
         rows.append(result)
     return {'schema_version':'early-screening-v1', 'evaluated_at':now.isoformat(),
             'candidates':rows,'model_calls':0,'trade_authorized':False,
-            'note':'Research only; native-currency observations from available source bars. alpaca_sip_delayed is at least 15 minutes delayed and never current entry evidence. Coverage is incomplete. Exchange calendar, news, EUR risk and final review remain separate checks.'}
+            'note':'Research only. Opening levels use the observed 09:30, 09:35 and 09:40 New York bars. A waiting row after the first 15 minutes means a complete opening range is unavailable in the retained evidence. alpaca_sip_delayed is at least 15 minutes delayed. Exchange calendar, news, EUR risk and final review remain separate checks.'}

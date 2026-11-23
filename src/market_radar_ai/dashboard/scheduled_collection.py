@@ -294,7 +294,7 @@ def run_cycle(*, env, output, cache_path, clock=lambda: datetime.now(timezone.ut
     report = {'state': 'delivered_with_failures' if failed else 'delivered_with_data_gaps' if gaps or context_gaps else 'delivered',
               'unusable_or_stale_symbols': gaps,
               'context_unavailable_symbols': context_gaps,
-              'started_at': started.isoformat(), 'delivery': receipt, 'stages': stages,
+              'started_at': started.isoformat(), 'delivery': receipt, 'stages': stages, 'api_budget': doc['api_budget'],
               'evidence_cache': 'reused_original_timestamps' if cache else 'collected',
               'evidence_collection_started_at': cache['collection_started_at'] if cache else started.isoformat(),
               'failures': failed, 'target_interval_seconds': 300, 'model_calls': 0,

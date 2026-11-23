@@ -1,5 +1,6 @@
 """Hourly, zero-model collection status. Separate from research/trade alerts."""
 from datetime import datetime
+from decimal import Decimal
 from hashlib import sha256
 from zoneinfo import ZoneInfo
 import requests
@@ -11,6 +12,28 @@ class CollectionNoticeError(RuntimeError):
     def __init__(self, code):
         self.diagnostic_code = code
         super().__init__('Collection Telegram delivery unconfirmed; do not retry ['+code+']')
+
+
+def review_status(report, env, now):
+    if env.get('AI_FINAL_REVIEW_ENABLED') != 'true':
+        return 'Paid AI is paused. This collection used no AI.'
+    from .api_budget import validate_summary
+    from .execution_readiness import PROTOCOL
+
+    try:
+        usage = validate_summary(report.get('api_budget'), now=now)
+    except (TypeError, ValueError):
+        usage = None
+    if not usage or usage['status'] != 'available':
+        return 'Current AI review allowance could not be verified. This collection used no AI.'
+    required = PROTOCOL['budget_headroom_microeur']
+    euro = Decimal(1_000_000)
+    blocked = [f"{period} €{Decimal(row['remaining_microeur']) / euro:f}"
+               for period, row in usage['periods'].items() if row['remaining_microeur'] < required]
+    if blocked:
+        return (f"Paid reviews paused at capture. Remaining allowance ({', '.join(blocked)}) "
+                f"is below the €{Decimal(required) / euro:f} required for a review.")
+    return 'Paid review requires a qualified setup. This collection used no AI.'
 
 
 def notify(report, *, env, clock, ledger=None, session=None):
@@ -41,15 +64,11 @@ def notify(report, *, env, clock, ledger=None, session=None):
     except ValueError as exc:
         if str(exc)=='delivery_already_attempted_do_not_retry':return {'state':'collection_notice_already_attempted'}
         raise
-    lines=['ℹ️ NO ACTION — collection update' if delivered else '⚠️ SCANNER FAILURE — check required',
-           'Market Radar AI • Paper/research only',local.strftime('%d %b %H:%M Dublin'),
-           'Dashboard capture delivered.' if delivered else 'Collection failed. No new dashboard delivery confirmed.',
-           ('Final AI review is enabled only for qualified setups. This update used no AI.'
-            if env.get('AI_FINAL_REVIEW_ENABLED')=='true' else
-            'Paid AI is paused. This is a free operational update, not a trade call.')]
+    lines=['ℹ️ COLLECTION UPDATE' if delivered else '⚠️ SCANNER FAILURE — check required',
+           'Market Radar AI • Paper/research only', local.strftime('%d %b %H:%M Dublin'),
+           'Dashboard capture delivered.' if delivered else 'Collection failed. No new dashboard delivery confirmed.']
     if late:
-        lines[2] = 'Dashboard capture delivered. Its acknowledgement arrived after expiry.'
-        lines[3] = 'Paper review skipped for this scan.'
+        lines[3] = 'Dashboard capture delivered. Its acknowledgement arrived after expiry. Paper review skipped for this scan.'
     if unconfirmed:
         reason = delivery.get('reason')
         if reason in ('connect_timeout', 'read_timeout', 'timeout'):
@@ -59,6 +78,8 @@ def notify(report, *, env, clock, ledger=None, session=None):
         else:
             detail = 'Dashboard acknowledgement could not be verified.'
         lines[3] = f'Market data collected. {detail} Paper review skipped for this scan.'
+    if delivered and not late:
+        lines.append(review_status(report, env, now))
     if opening_text:
         lines[0] = 'ℹ️ OPENING UPDATE — paper research'
         lines.extend(opening_text)
