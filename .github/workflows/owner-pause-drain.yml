@@ -1,0 +1,43 @@
+name: Stop pre-pause scanner runs
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/owner-pause-drain.yml']
+permissions:
+  contents: read
+  actions: write
+jobs:
+  drain:
+    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Cancel only existing bot work for the owner-requested pause
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json, os, subprocess
+          names = {'Scheduled research collection', 'Scanner operational health',
+                   'Execution research and readiness', 'Manual shared paper portfolio',
+                   'Paper performance intelligence', 'Dashboard capture recovery'}
+          repo = os.environ['GITHUB_REPOSITORY']
+          assert repo == 'Chiizzie/market-radar-ai'
+          base = 'repos/' + repo + '/actions/runs'
+          response = subprocess.run(['gh', 'api', base + '?per_page=100'],
+                                    check=True, capture_output=True, text=True, timeout=20)
+          runs = json.loads(response.stdout)['workflow_runs']
+          for run in runs:
+              if run['name'] not in names or run['status'] == 'completed':
+                  continue
+              result = subprocess.run(['gh', 'api', '--method', 'POST',
+                                       base + '/' + str(run['id']) + '/cancel'],
+                                      capture_output=True, text=True, timeout=20)
+              if result.returncode:
+                  current = subprocess.run(['gh', 'api', base + '/' + str(run['id'])],
+                                           check=True, capture_output=True, text=True, timeout=20)
+                  if json.loads(current.stdout)['status'] != 'completed':
+                      raise RuntimeError('Could not stop bot run ' + str(run['id']))
+              print(json.dumps({'run_id': run['id'], 'workflow': run['name'],
+                                'cancel_requested_or_already_completed': True}))
+          PY
