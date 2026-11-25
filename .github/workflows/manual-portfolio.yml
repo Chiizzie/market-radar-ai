@@ -20,7 +20,9 @@ jobs:
   replay:
     # Main-scan completion is the primary trigger; the timer is a fallback.
     # Never trust a fork/branch run or run unpinned code with the ingest secret.
+    # Owner-requested pause, 25 November 2026. Revert this pause to resume.
     if: >-
+      false && (
       github.repository == 'Chiizzie/market-radar-ai' &&
       github.ref == 'refs/heads/main' &&
       vars.MANUAL_PORTFOLIO_ENABLED != 'false' &&
@@ -29,6 +31,7 @@ jobs:
         github.event.workflow_run.head_repository.full_name == github.repository &&
         github.event.workflow_run.run_attempt == 1 &&
         contains(fromJSON('["success","failure"]'), github.event.workflow_run.conclusion)))
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
