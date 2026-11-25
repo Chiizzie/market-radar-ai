@@ -18,11 +18,14 @@ concurrency:
   cancel-in-progress: false
 jobs:
   restore:
+    # Owner-requested pause, 25 November 2026. Revert this pause to resume.
     if: >-
+      false && (
       github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' &&
       (github.event_name != 'workflow_run' ||
        (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' &&
         github.event.workflow_run.head_repository.full_name == github.repository))
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 16
     steps:

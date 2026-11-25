@@ -20,7 +20,8 @@ jobs:
     concurrency:
       group: market-radar-ai-scheduled-capture
       cancel-in-progress: false
-    if: github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1
+    # Owner-requested pause, 25 November 2026. Revert this pause to resume.
+    if: ${{ false && (github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1) }}
     runs-on: ubuntu-latest
     timeout-minutes: 8
     env:
@@ -130,7 +131,8 @@ jobs:
 
   review:
     needs: collect
-    if: ${{ always() && needs.collect.outputs.review_ready == 'true' && github.run_attempt == 1 && !inputs.verify_outside_hours }}
+    # Owner-requested pause, 25 November 2026. Revert this pause to resume.
+    if: ${{ false && (always() && needs.collect.outputs.review_ready == 'true' && github.run_attempt == 1 && !inputs.verify_outside_hours) }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     permissions:
@@ -228,7 +230,8 @@ jobs:
           if-no-files-found: warn
 
   paper-watcher:
-    if: ${{ vars.PAPER_WATCHER_ENABLED != 'false' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours }}
+    # Owner-requested pause, 25 November 2026. Revert this pause to resume.
+    if: ${{ false && (vars.PAPER_WATCHER_ENABLED != 'false' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours) }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -289,7 +292,8 @@ jobs:
 
 
   comparison-watcher:
-    if: ${{ vars.PAPER_WATCHER_ENABLED != 'false' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours }}
+    # Owner-requested pause, 25 November 2026. Revert this pause to resume.
+    if: ${{ false && (vars.PAPER_WATCHER_ENABLED != 'false' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours) }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     permissions:
@@ -410,7 +414,8 @@ jobs:
 
   method-shadow:
     needs: collect
-    if: ${{ always() && needs.collect.result == 'success' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.METHOD_SHADOW_ENABLED != 'false' }}
+    # Owner-requested pause, 25 November 2026. Revert this pause to resume.
+    if: ${{ false && (always() && needs.collect.result == 'success' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.METHOD_SHADOW_ENABLED != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     permissions:
@@ -514,7 +519,8 @@ jobs:
           REVIEW_INGEST_SECRET: ${{ secrets.REVIEW_INGEST_SECRET }}
 
   account-sync:
-    if: ${{ vars.ACCOUNT_SYNC_ENABLED != 'false' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours }}
+    # Owner-requested pause, 25 November 2026. Revert this pause to resume.
+    if: ${{ false && (vars.ACCOUNT_SYNC_ENABLED != 'false' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours) }}
     runs-on: ubuntu-latest
     timeout-minutes: 8
     permissions:
@@ -550,7 +556,8 @@ jobs:
 
   market-context:
     needs: collect
-    if: ${{ always() && needs.collect.outputs.review_ready == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.CONTEXT_RESEARCH_ENABLED != 'false' }}
+    # Owner-requested pause, 25 November 2026. Revert this pause to resume.
+    if: ${{ false && (always() && needs.collect.outputs.review_ready == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.CONTEXT_RESEARCH_ENABLED != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 8
     permissions:
@@ -618,7 +625,8 @@ jobs:
   # Authorized isolated paper experiment; set STRATEGY_EXPERIMENT_ENABLED=false to pause.
   strategy-experiment:
     needs: [collect, market-context]
-    if: ${{ always() && needs.collect.outputs.review_ready == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.STRATEGY_EXPERIMENT_ENABLED != 'false' }}
+    # Owner-requested pause, 25 November 2026. Revert this pause to resume.
+    if: ${{ false && (always() && needs.collect.outputs.review_ready == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.STRATEGY_EXPERIMENT_ENABLED != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     # Experimental storage/provider faults must not interrupt ordinary scanning.
@@ -701,7 +709,8 @@ jobs:
   # Independent frozen comparison; ENTRY_CONFIRMATION_ENABLED=false pauses this worker.
   entry-enrol:
     needs: [collect, market-context]
-    if: ${{ always() && needs.collect.outputs.review_ready == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.ENTRY_CONFIRMATION_ENABLED != 'false' }}
+    # Owner-requested pause, 25 November 2026. Revert this pause to resume.
+    if: ${{ false && (always() && needs.collect.outputs.review_ready == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.ENTRY_CONFIRMATION_ENABLED != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     # Experimental storage/provider faults must not interrupt ordinary scanning.
@@ -787,7 +796,8 @@ jobs:
 
   # Observation never enrols: overlap retains the original five-second cadence.
   entry-confirmation:
-    if: ${{ github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.ENTRY_CONFIRMATION_ENABLED != 'false' }}
+    # Owner-requested pause, 25 November 2026. Revert this pause to resume.
+    if: ${{ false && (github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.ENTRY_CONFIRMATION_ENABLED != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     # Experimental storage/provider faults must not interrupt ordinary scanning.
@@ -855,7 +865,8 @@ jobs:
   # Frozen knowledge preparation is free and independent of the paid reviewer.
   knowledge-shadow:
     needs: collect
-    if: ${{ always() && needs.collect.outputs.review_ready == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.KNOWLEDGE_SHADOW_ENABLED != 'false' }}
+    # Owner-requested pause, 25 November 2026. Revert this pause to resume.
+    if: ${{ false && (always() && needs.collect.outputs.review_ready == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.KNOWLEDGE_SHADOW_ENABLED != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -891,7 +902,8 @@ jobs:
   # Independent strategy research; no model, budget, alert or order client.
   strategy-routing:
     needs: collect
-    if: ${{ always() && needs.collect.outputs.review_ready == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.STRATEGY_ROUTING_ENABLED != 'false' }}
+    # Owner-requested pause, 25 November 2026. Revert this pause to resume.
+    if: ${{ false && (always() && needs.collect.outputs.review_ready == 'true' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.STRATEGY_ROUTING_ENABLED != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 6
     permissions:
@@ -933,7 +945,8 @@ jobs:
   # Independent entry-feasibility audit; no model, alert, quote-provider or order calls.
   manual-alert-audit:
     needs: [collect, review, comparison-watcher]
-    if: ${{ always() && needs.collect.result == 'success' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.MANUAL_ALERT_AUDIT_ENABLED != 'false' }}
+    # Owner-requested pause, 25 November 2026. Revert this pause to resume.
+    if: ${{ false && (always() && needs.collect.result == 'success' && github.repository == 'Chiizzie/market-radar-ai' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && !inputs.verify_outside_hours && vars.MANUAL_ALERT_AUDIT_ENABLED != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 6
     continue-on-error: true
